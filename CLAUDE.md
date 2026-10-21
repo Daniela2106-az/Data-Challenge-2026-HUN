@@ -288,9 +288,24 @@ el 1 da contexto y el 4 sale de los dos anteriores.
 
 ---
 
+### Pruebas de modelos (21-oct) — por qué cambió el plan de modelos
+- Predecir `espera_mas_24h` solo con variables al llegar (train 2023-02/2025-06, test 2026-01/06): AUC 0,60 (logística) y
+  0,61 (árboles); con dx y laboratorios (no permitido) 0,64. Solo hora de llegada: 0,56. No sirve como alerta individual.
+- Espera mediana diaria frente a altas e ingresos del día o de los días previos: correlación de Spearman entre −0,02 y −0,10;
+  R² negativo en 2026. La hipótesis de las altas tardías no se sostiene a nivel diario.
+- Estancia en cama por paciente: R² ≈ 0,00–0,02 aun con dx provisional y laboratorios de 6 h; error igual a decir la mediana (47 h).
+- Ley de Little: 27,7 ingresos/día × 5,2 días de estancia media = 144 camas; ocupación observada media 145. El modelo
+  de capacidad (ingresos × distribución de estancias) es coherente con los datos.
+- Solo ~13 % de los episodios atendidos (sin solo-ER) termina hospitalizado: un modelo "al llegar" que use solo hospitalizados
+  no es aplicable a la entrada.
+- Decisión: Modelo A ampliado (llegadas e ingresos), modelo de camas y simulación, días atípicos y regresión logística
+  solo como análisis explicativo. Detalle en `docs/fichas_de_tareas.md`.
+
+---
+
 ## 7. Scripts y archivos de la carpeta
 
-Orden: `src/analisis_etapas.py` → `src/preparar_variables.py`. (`archivo/Revision_inicial.py` es una versión vieja: no usar.)
+Orden: `src/analisis_etapas.py` → `src/preparar_variables.py` → `src/exportar_para_equipo.py` (tablas para el drive). (`archivo/Revision_inicial.py` es una versión vieja: no usar.)
 
 ### CSV de entrada (exportados de DBeaver)
 | Archivo | Columnas | Origen |

@@ -1,98 +1,162 @@
-# Fichas de tareas (actualizado 20-oct-2026)
+# Fichas de tareas (actualizado 21-oct-2026)
 
-Cada ficha dice qué se entrega, con qué datos, qué reglas no se pueden romper y cómo sabemos que está terminada.
-Las fichas de la Persona 3 están escritas para pasarlas tal cual a la herramienta de IA que use.
-Contexto del proyecto y decisiones de método: `CLAUDE.md`.
+Cada ficha dice **qué pregunta responde, con qué datos, qué se hace paso a paso, qué se entrega y cuándo está terminada**.
+Las de Persona 3 están escritas para pasarlas tal cual a la herramienta de IA que use.
+Contexto y decisiones de método: `CLAUDE.md`. Reparto y calendario: `docs/plan_de_accion.md`.
+
+## Por qué cambiaron los modelos (pruebas del 21-oct)
+Se probó el plan anterior con los datos y se ajustó:
+
+| Prueba | Resultado | Consecuencia |
+|---|---|---|
+| Predecir si un paciente espera más de 24 h usando solo lo que se sabe al llegar | AUC 0,60 (0,5 = azar) | No sirve como alerta individual; queda como análisis **explicativo** |
+| Lo mismo, usando diagnóstico y laboratorios | AUC 0,64 | Ni haciendo trampa mejora mucho |
+| ¿Cuántas altas hubo en el día explica la espera de ese día? | Correlación cercana a −0,06 | La hipótesis de "altas tardías" no se confirma a nivel diario |
+| Predecir cuánto se queda hospitalizado cada paciente | R² cercano a 0 | No se predice por paciente; se usa la **distribución real** |
+| Ley de Little: ingresos por día × estancia media = camas ocupadas | 27,7 × 5,2 días = 144 camas; observado 145 | **El modelo de camas es coherente con los datos** |
+
+Lo que sí es predecible son las llegadas y los ingresos (patrón por hora, día y festivo) y la ocupación como
+resultado de ingresos y estancias. Por eso los modelos pasan a ser de **demanda y capacidad**.
 
 ## Reglas comunes
-- Los datos viven en el **drive privado del equipo**, nunca en git. Si un notebook los usa, se sube **sin salidas**.
-- Validación **temporal**: entrenar con el pasado y probar con el futuro. Nada de separar al azar.
-- Periodo confiable: enero 2023 a junio 2026. Julio 2026 está incompleto: no se usa para evaluar.
-- Cada resultado se acompaña de una frase en español simple que un médico o un gerente entienda.
-- Una rama por persona; *pull request* hacia `main`.
+- Los datos viven en el **drive privado del equipo**, nunca en git. Un notebook que los use se sube **sin salidas**.
+- Validación **temporal**: entrenar con el pasado y probar con el futuro; nunca separar al azar.
+- Periodo confiable: **2023-02-01 a 2026-05-31**. Julio 2026 está incompleto y no se usa para evaluar.
+- Cada resultado lleva **una frase en español simple** que un médico o un gerente entienda, y su limitación al lado.
+- Una rama por persona (`modelos`, `powerbi`, `docs`) y *pull request* hacia `main`; Daniela revisa.
+- Nada de afirmar causas: lo que mostramos son asociaciones y escenarios con supuestos explícitos.
+
+## Tablas que se comparten por el drive (las genera `src/exportar_para_equipo.py`)
+- `panel_diario.csv`: una fila por día (2023-02 a 2026-05): `llegadas, hospitalizados, ingresos_a_cama, altas,
+  altas_antes_mediodia, ocup_hosp_media, ocup_hosp_max, espera_cama_mediana_h, n_espera, dia_semana_num, mes, festivo,
+  dia_no_habil`.
+- `estancias_hospitalizacion.csv`: una fila por episodio hospitalizado (35.343): `ingreso_cama, alta, horas_hosp,
+  alta_completa, llegada, hora_llegada, edad, grupo_edad, sexo, tipo_visita, categoria_dx, espera_cama_h, ...`.
+  Usar solo `alta_completa == True` para estancias.
+- `serie_horaria.csv`: una fila por hora: `hora_inicio, llegadas, llegadas_que_se_hospitalizan, ocup_hosp, ocup_tu`.
+- `tabla_episodios.parquet`: una fila por episodio (337.194), 59 columnas.
 
 ---
 
-## PERSONA 3 — Modelo B, simulación y recomendaciones (carpetas `notebooks/modelos/`, `notebooks/simulacion/`, `docs/`)
+## PERSONA 3 — Capacidad de camas, simulación y recomendaciones
+Carpetas: `notebooks/modelos/`, `notebooks/simulacion/`, `docs/`.
 
-### Ficha 3.1 — Modelo B: riesgo de esperar más de 24 h por una cama
-**Datos:** `tabla_episodios.parquet` (una fila por episodio; 59 columnas). Usar solo filas con `espera_cama_h` no nula
-(34.537 episodios, 2023-2026). **Objetivo:** columna `espera_mas_24h` (1 si esperó más de 24 h).
+### Ficha 3.1 — Modelo de camas: ¿cuántas camas habrá ocupadas los próximos días?
+**Pregunta:** con las hospitalizaciones esperadas y el tiempo que suele quedarse cada paciente, ¿cuántas camas ocupadas
+habrá cada día y con qué probabilidad se superará un nivel de saturación?
+**Datos:** `estancias_hospitalizacion.csv` y `panel_diario.csv`.
+**Pasos:**
+1. **Describir las estancias:** distribución de `horas_hosp` (mediana 71 h, media 5,2 días, cola larga) en total y por
+   `grupo_edad`, `sexo` y `categoria_dx`. Ajustar una distribución (por ejemplo, log-normal o empírica).
+2. **Ingresos por día:** usar `ingresos_a_cama` del panel. Al inicio, el promedio por día de la semana; cuando Daniela
+   entregue el Modelo A, el pronóstico de ingresos.
+3. **Simulación de Monte Carlo:** para cada día futuro, tomar los ingresos esperados, asignar a cada uno una estancia
+   sacada de la distribución del paso 1 y contar cuántas camas están ocupadas cada día (censo). Repetir 1.000 veces para
+   obtener una banda (por ejemplo, 10 % a 90 %).
+4. **Prueba hacia atrás (backtest):** simular enero a mayo de 2026 con datos solo hasta diciembre de 2025 y comparar con
+   `ocup_hosp_media` del panel. Reportar el error absoluto medio y qué porcentaje de días cae dentro de la banda.
+5. **Alerta de saturación:** definir "día saturado" como ocupación por encima del percentil 90 del periodo de
+   entrenamiento y calcular la probabilidad de saturación para cada día futuro.
+**Entrega:** `notebooks/modelos/modelo_camas.ipynb`, `docs/modelo_camas.md` (método en lenguaje simple, gráfico de
+ocupación real contra proyectada con su banda, métricas) y `modelo_camas_proyeccion.csv` al drive.
+**Terminado cuando:** el backtest de 2026 tiene error reportado y entre 70 % y 90 % de los días caen dentro de la banda
+del 80 %; la alerta indica su acierto y sus falsas alarmas.
+**Limitación a escribir:** la ocupación es solo de los pacientes de esta base (se desconoce el total de camas del hospital).
+
+### Ficha 3.2 — Simulación de escenarios: ¿qué pasaría si cambiamos algo?
+**Pregunta:** ¿qué efecto tendrían cambios operativos sobre la ocupación y la disponibilidad de camas?
+**Datos:** el modelo de la ficha 3.1, `estancias_hospitalizacion.csv` y `altas_ingresos_por_hora.csv` (hora de las altas).
+**Escenarios mínimos (cada uno con sus supuestos escritos):**
+- **A.** El 30 % de las altas pasa de la tarde a antes del mediodía (cambia la hora de salida, no la estancia en días).
+- **B.** Los ingresos aumentan 10 % (por ejemplo, brote de dengue o temporada alta).
+- **C.** La estancia baja 5 % (más eficiencia en cuidados).
+**Qué se reporta por escenario:** ocupación media y máxima, número de días saturados, y camas libres por hora del día.
+**Cuidado:** hoy **no** se demuestra que adelantar las altas reduzca la espera; solo se mostrará cuántas camas
+quedarían libres antes. Si se quiere traducir eso en horas de espera, hay que decir claramente que es un supuesto.
+**Entrega:** `notebooks/simulacion/escenarios.ipynb` y `docs/simulacion.md` con una tabla de escenarios.
+**Terminado cuando:** cada escenario tiene supuestos, resultado y una frase de lectura para un gerente.
+
+### Ficha 3.3 — Modelo explicativo de la espera (antes "Modelo B")
+**Pregunta:** ¿qué factores se asocian a esperar más de 24 h, separando el efecto de cada uno?
+**Datos:** `tabla_episodios.parquet`, solo filas con `espera_cama_h` no nula (34.537). **Objetivo:** `espera_mas_24h`.
 **Variables permitidas (se conocen al llegar):** `hora`, `dia_semana_num`, `mes`, `festivo`, `dia_no_habil`, `edad`,
 `grupo_edad`, `sexo`, `tipo_visita`, `ocup_hosp`, `ocup_tu`, `llegadas_6h_previas`, `llegadas_24h_previas`,
-`n_episodios_previos`, `dias_desde_anterior`, `reingreso_72h`, `reingreso_30d`.
-**Prohibidas (se registran después de llegar; filtran la respuesta):** `categoria_dx`, `dx_*`, `n_dx_distintos`,
-`n_proc_distintos`, `n_lab*`, `horas_*`, `hueco_antes_hosp_h`, `ruta*`, `fin`, `dias_hasta_siguiente`, `vuelve_en_30d`.
-**Tarea:**
-1. Separación temporal: entrenar con 2023-01 a 2025-06, validar con 2025-07 a 2025-12, probar con 2026-01 a 2026-06.
-2. Un modelo **interpretable** (regresión logística) y uno más flexible (árboles con gradiente). Reportar AUC, PR-AUC,
-   Brier y la curva de calibración; comparar contra la tasa base (48 %).
-3. Explicar qué variables pesan (coeficientes y SHAP o importancia por permutación) y cuánto cambia el riesgo si se llega
-   de madrugada frente a la tarde, con congestión alta frente a baja.
-4. Una segunda versión opcional con `ocupacion_confiable == True` para ver si cambia algo.
-**Entrega:** notebook `modelo_B_espera.ipynb`; `modelo_B_predicciones.csv` (`visit_occurrence_id, episodio, ini,
-espera_mas_24h, prob`) al drive; `docs/modelo_B.md` con métricas, gráficos y 5 frases de interpretación.
-**Terminado cuando:** el modelo supera claramente la tasa base en 2026, está calibrado y las frases de interpretación
-dicen algo accionable (por ejemplo, "llegar entre las 12 y las 17 h sube el riesgo de 48 % a X %").
-**Aviso:** `tipo_visita` no describe bien por dónde pasó el paciente (ver `CLAUDE.md`, sección 3), pero sí se conoce
-al llegar y puede usarse como variable; no debe interpretarse como "ruta".
+`n_episodios_previos`, `reingreso_72h`, `reingreso_30d`.
+**Prohibidas (se registran después y filtran la respuesta):** `categoria_dx`, `dx_*`, `n_dx_distintos`, `n_proc_distintos`,
+`n_lab*`, `horas_*`, `hueco_antes_hosp_h`, `ruta*`, `fin`, `dias_hasta_siguiente`, `vuelve_en_30d`.
+**Pasos:**
+1. Regresión logística con variables estandarizadas, entrenando con 2023-02 a 2025-06, validando con 2025-07 a 2025-12 y
+   probando con 2026-01 a 2026-05.
+2. Reportar los efectos como **razones de probabilidades** con su intervalo (por ejemplo, "llegar de 12 a 17 h multiplica
+   por X las probabilidades de esperar más de 24 h").
+3. Reportar AUC y Brier del modelo **sin esconder que son bajos** (la prueba inicial dio AUC de 0,60).
+**Entrega:** `notebooks/modelos/modelo_espera_explicativo.ipynb` y `docs/modelo_espera.md`.
+**Terminado cuando:** la página dice con claridad qué factores pesan, que el modelo **no** sirve para alertar a un paciente
+individual y por qué (explica poco: el resto depende de procesos que la base no registra).
 
-### Ficha 3.2 — Simulación de escenarios (semana 10-16 nov)
-**Datos:** `modelo_B_predicciones.csv`, `altas_ingresos_por_hora.csv`, `espera_cama.csv` (del drive).
-**Tarea:** una simulación sencilla (por ejemplo, una cola con cupos de cama que se liberan según la hora de alta) que
-responda: si el 30 % de las altas pasara de la tarde a antes del mediodía, ¿cuánto bajaría la espera mediana y el
-porcentaje que espera más de 24 h?
-**Entrega:** `notebooks/simulacion/` y una tabla de escenarios (`docs/simulacion.md`) con supuestos explícitos.
-
-### Ficha 3.3 — Recomendaciones con números (componente 4, semana 10-16 nov)
-**Datos:** resultados del Modelo B y de la simulación; `factores_espera_cama.csv` y `altas_ingresos_por_hora.csv` (drive).
-**Tarea:**
-1. Investigar 5 a 8 prácticas conocidas para reducir la espera de cama (altas antes del mediodía, gestión diaria de camas,
-   unidades de decisión de ingreso, alertas tempranas de saturación) y anotar la fuente de cada una.
-2. Para cada práctica, indicar **qué se cambiaría**, **qué métrica del hospital lo mediría** y **cuánto bajaría la espera**
-   según la simulación (o por qué no se puede estimar).
-**Entrega:** `docs/recomendaciones.md` con una tabla (práctica, fuente, métrica, impacto estimado, limitaciones).
+### Ficha 3.4 — Recomendaciones con números (semana 10-16 nov)
+**Datos:** resultados de las fichas 3.1 a 3.3, `factores_espera_cama.csv` y `altas_ingresos_por_hora.csv`.
+**Pasos:**
+1. Investigar 5 a 8 prácticas conocidas (altas antes del mediodía, gestión diaria de camas, unidades de decisión de
+   ingreso, alertas tempranas de saturación) y anotar la fuente de cada una.
+2. Para cada una indicar qué se cambiaría, qué métrica del hospital lo mediría y qué impacto se estima con la simulación o
+   por qué no se puede estimar.
+**Entrega:** `docs/recomendaciones.md` con una tabla (práctica, fuente, métrica, impacto estimado, limitación).
 **Terminado cuando:** cada recomendación tiene un número o una razón clara de por qué no se puede calcular.
 
 ---
 
-## PERSONA 2 — Power BI (carpeta `powerbi/`)
-1. **Semana 20-26 oct:** instalar Power BI y conectar `serie_diaria`, `serie_horaria`, `mapa_calor_llegadas`,
-   `factores_espera_cama` (drive). Probar una página de llegadas por hora y día.
-2. **27 oct-2 nov:** páginas 1 a 3 (llegadas, rutas, espera de cama por hora/edad/diagnóstico).
-3. **3-9 nov:** página 4 con las predicciones de los modelos A (Daniela) y B (Persona 3), cuando las entreguen.
-4. **10-16 nov:** página 5 (recomendaciones) y pulido visual.
-5. **Esta semana:** enviar el correo al HUN con las preguntas de `CLAUDE.md` sección 8 y guardar sus respuestas en
-   `docs/hun/` (Daniela las revisa con Claude).
-6. **Todas las semanas:** guardar en el repo `powerbi/medidas_dax.md` y capturas; el `.pbix` NO se sube.
-7. **Documento:** escribir la sección "Dashboard" (qué responde cada página) y colocar las capturas.
-**Terminado cuando:** cada página responde una pregunta del hospital en una frase y el enlace público abre sin pedir datos.
+## PERSONA 2 — Power BI y contacto con el HUN
+Carpetas: `powerbi/`, `docs/hun/`.
+
+1. **Esta semana:**
+   - Enviar el correo al HUN con las preguntas de `CLAUDE.md`, sección 8, y guardar sus respuestas en `docs/hun/`
+     (Daniela las revisa con Claude).
+   - Instalar Power BI y conectar `panel_diario.csv`, `serie_horaria.csv` y las tablas de factores (drive).
+2. **Páginas del dashboard:**
+   1. **Llegadas:** por hora y día de la semana (mapa de calor), con filtros por año y tipo de visita.
+   2. **Rutas y tiempos:** rutas más frecuentes y su duración (solo episodios "medida").
+   3. **Espera de cama:** por hora de llegada, edad y diagnóstico, con la nota "asociación, no causa".
+   4. **Pronóstico y alertas:** llegadas y hospitalizaciones previstas y los días atípicos (modelo de Daniela).
+   5. **Camas y escenarios:** ocupación proyectada con su banda y los escenarios de la simulación (Persona 3).
+   6. **Recomendaciones:** tabla de acciones con su impacto estimado.
+3. **Repo:** `powerbi/medidas_dax.md`, capturas y la plantilla `.pbit`. El `.pbix` **no se sube**.
+4. **Documento:** escribir la sección "Dashboard" (qué pregunta responde cada página).
+**Terminado cuando:** cada página responde una pregunta del hospital en una frase y el enlace abre sin pedir datos.
 
 ---
 
-## DANIELA (con Claude) — Datos, coordinación y documento
-1. **Datos:** correr los scripts y las consultas en DBeaver; exportar cada martes y viernes las tablas al drive
-   (`tabla_episodios.parquet`, series, factores, mapa de calor) con fecha en el nombre.
-2. **Consultas pesadas** que pida Claude (la de laboratorios con hora mínima y máxima; consultas filtradas por persona).
-3. **Modelo A** (ficha D.1, abajo): Claude lo construye y Daniela lo corre, revisa y sube; usa solo tablas agregadas.
-4. **Repo:** revisar los *pull requests*, mantener `.gitignore`, hacer los commits de cierre sin datos.
-5. **Documento:** Claude redacta los borradores de contexto, metodología, limitaciones y componentes 1 y 2 a partir de los
-   scripts; Daniela revisa y corrige.
-6. **`mapeo_dx.csv`:** Claude deja el borrador; Daniela lo revisa con el navegador de SNOMED o con un docente de salud.
+## DANIELA (con Claude) — Modelo A, días atípicos, datos y documento
+Carpetas: `src/`, `sql/`, `docs/`, `datos/referencia/`, `notebooks/modelos/`.
 
-### Ficha D.1 — Modelo A: pronóstico de llegadas y alerta de saturación
-**Datos:** `serie_horaria.csv` (llegadas por hora: `hora_inicio, llegadas, llegadas_que_se_hospitalizan, ocup_hosp,
-ocup_tu, ocupacion_confiable`) y `serie_diaria.csv` (`fecha, llegadas, ..., dia_semana`).
-**Tarea:**
-1. Pronosticar las llegadas por **día** y por **hora**. Entrenar con 2023-01 a 2025-12; evaluar con 2026-01 a 2026-06.
-2. Comparar contra dos referencias simples: (a) el promedio histórico de la misma combinación día de la semana × hora,
-   (b) el mismo día de la semana de la semana anterior. Un modelo solo vale si las mejora.
-3. Usar el calendario como variables: día de la semana, hora, mes, festivos de Colombia (librería `holidays`).
-4. Definir **día congestionado** = llegadas del día por encima del percentil 90 del periodo de entrenamiento y construir
-   una **alerta**: la probabilidad de que mañana sea un día congestionado.
-**Entrega:** notebook `modelo_A_llegadas.ipynb`; `modelo_A_predicciones.csv` (`fecha_hora, real, pred, lim_inferior,
-lim_superior`) al drive; una página `docs/modelo_A.md` con métricas (MAE y MAPE por día y por hora, aciertos de la alerta),
-gráfico de real contra pronóstico y la regla de la alerta en lenguaje simple.
-**Terminado cuando:** el modelo mejora las dos referencias en 2026 y la alerta reporta precisión y cobertura.
+### Ficha D.1 — Modelo A ampliado: pronóstico de llegadas e ingresos y alerta de saturación
+**Pregunta:** ¿cuántas personas llegarán y cuántas se hospitalizarán cada día y cada hora, y mañana será un día congestionado?
+**Datos:** `panel_diario.csv` y `serie_horaria.csv`.
+**Pasos:**
+1. Pronosticar **llegadas** (por día y por hora) e **ingresos a hospitalización** (por día). Entrenar 2023-02 a 2025-12;
+   probar 2026-01 a 2026-05.
+2. Comparar con dos referencias simples: el promedio de la misma combinación día × hora, y el mismo día de la semana
+   anterior. Un modelo solo vale si las mejora.
+3. Variables: día de la semana, hora, mes, festivos de Colombia y las llegadas recientes.
+4. Alerta: "día congestionado" = llegadas por encima del percentil 90 del entrenamiento; probabilidad para el día siguiente.
+**Entrega:** `notebooks/modelos/modelo_A_demanda.ipynb`, `docs/modelo_A.md`, `modelo_A_predicciones.csv` al drive.
+**Terminado cuando:** el modelo mejora las dos referencias en 2026 y la alerta reporta su precisión y falsas alarmas.
+Los pronósticos de ingresos alimentan el modelo de camas de Persona 3.
 
+### Ficha D.2 — Detección de días atípicos (lo pide el instructivo)
+**Pregunta:** ¿qué días se salieron del patrón y qué los distingue?
+**Pasos:** comparar lo observado con lo que esperaba el Modelo A (residuo estandarizado) en llegadas, ingresos y
+espera mediana; marcar los días fuera de ±3 desviaciones; revisar si coinciden con festivos, puentes o brotes (dengue)
+y describirlos en palabras simples.
+**Entrega:** `docs/dias_atipicos.md` y `dias_atipicos.csv` al drive (para la página 4 de Power BI).
 
+### Ficha D.3 — Datos, coordinación y documento
+1. Correr los scripts y exportar al drive los martes y viernes: `python3 src/analisis_etapas.py`, luego
+   `preparar_variables.py` y `exportar_para_equipo.py`.
+2. Correr en DBeaver las consultas pesadas que pida Claude (laboratorios con hora mínima y máxima; consultas filtradas
+   por persona).
+3. Revisar los *pull requests* y hacer los commits de cierre (sin datos y sin `.pbix`).
+4. **Documento:** Claude redacta contexto, metodología, limitaciones y componentes 1 y 2 desde los scripts; Daniela revisa.
+5. **`mapeo_dx.csv`:** Claude deja el borrador de los ~300 diagnósticos más frecuentes; Daniela lo revisa con el
+   navegador de SNOMED o con un docente de salud.
+6. Compilar las respuestas del HUN y ajustar las limitaciones del documento.

@@ -39,21 +39,22 @@ Cada persona es dueña de un frente y de una carpeta del repo, para trabajar a l
 
 | Frente | Responsable | Carpeta del repo | Qué entrega |
 |---|---|---|---|
-| **Modelo B (espera de cama), simulación y recomendaciones** | **Persona 3** | `notebooks/modelos/`, `notebooks/simulacion/`, `docs/` | Riesgo de esperar más de 24 h, simulación de escenarios y recomendaciones con números |
-| **Dashboard Power BI y contacto con el HUN** | **Persona 2** | `powerbi/`, `docs/hun/` | Dashboard de 5 páginas, plantilla `.pbit`, sección "Dashboard" del documento y correo al HUN |
-| **Modelo A (llegadas), datos, coordinación y documento** | **Daniela con Claude** | `src/`, `sql/`, `docs/`, `datos/referencia/` | Pronóstico de llegadas con alerta de saturación, scripts y tablas, consultas en DBeaver, revisión de *pull requests*, commits y documento final |
+| **Capacidad de camas, simulación, modelo explicativo y recomendaciones** | **Persona 3** | `notebooks/modelos/`, `notebooks/simulacion/`, `docs/` | Proyección de camas ocupadas con alerta de saturación, simulación de escenarios, análisis de los factores de la espera y recomendaciones con números |
+| **Dashboard Power BI y contacto con el HUN** | **Persona 2** | `powerbi/`, `docs/hun/` | Dashboard de 6 páginas, plantilla `.pbit`, sección "Dashboard" del documento y correo al HUN |
+| **Modelo A (llegadas e ingresos), días atípicos, datos y documento** | **Daniela con Claude** | `src/`, `sql/`, `docs/`, `datos/referencia/` | Pronóstico de demanda con alerta, días atípicos, scripts y tablas, consultas en DBeaver, revisión de *pull requests*, commits y documento final |
 
-Todos los frentes se alimentan de las tablas que Daniela exporta al drive privado dos veces por semana.
+Todos los frentes se alimentan de las tablas que Daniela exporta al drive privado dos veces por semana
+(`src/exportar_para_equipo.py`). Qué hace cada modelo y por qué cambiaron: `docs/fichas_de_tareas.md`.
 
 ## 4. Calendario
 
-| Semana | Daniela + Claude | Persona 2 (Power BI y HUN) | Persona 3 (Modelo B, simulación, recomendaciones) | Entregable |
+| Semana | Daniela + Claude | Persona 2 (Power BI y HUN) | Persona 3 (camas, simulación, recomendaciones) | Entregable |
 |---|---|---|---|---|
-| **20–26 oct** | Scripts v3.6 (hecho). Primera exportación al drive. Borrador de `mapeo_dx.csv`. Empezar Modelo A (ficha D.1) | **Correo al HUN.** Instalar y conectar tablas; página de llegadas de prueba | Ficha 3.1: preparar datos y primer Modelo B con regresión logística | Repo |
-| **27 oct–2 nov** | Componentes 1 y 2; terminar Modelo A; borrador del documento | Páginas 1–3 | Modelo B con árboles, calibración e interpretación | Doc + primeras páginas de Power BI |
-| **3–9 nov** | Revisar el Modelo B; metodología y limitaciones | Página 4 con las predicciones de A y B | Terminar `modelo_B.md`; empezar la simulación (ficha 3.2) | Repo + doc |
-| **10–16 nov** | Respuestas del HUN; consolidar resultados | Página 5 y pulido | Terminar simulación; recomendaciones (ficha 3.3) | Power BI + doc |
-| **17–23 nov** | README técnico; reproducir todo desde cero | Publicar el enlace; sección "Dashboard" | `modelo_B.md`, `simulacion.md`, `recomendaciones.md` | Los 3 entregables |
+| **20–26 oct** | Exportar `panel_diario` y `estancias_hospitalizacion` al drive. Borrador de `mapeo_dx.csv`. Empezar ficha D.1 | **Correo al HUN.** Instalar Power BI y conectar tablas; página 1 de prueba | Ficha 3.1 pasos 1 y 2: describir estancias y ajustar la distribución | Repo |
+| **27 oct–2 nov** | Terminar Modelo A (D.1); componentes 1 y 2; borrador del documento | Páginas 1 a 3 | Ficha 3.1 pasos 3 a 5: simulación, backtest y alerta | Doc + primeras páginas de Power BI |
+| **3–9 nov** | Días atípicos (D.2); revisar el modelo de camas; metodología y limitaciones | Página 4 (pronóstico y atípicos) | Terminar `modelo_camas.md`; ficha 3.3 (modelo explicativo) | Repo + doc |
+| **10–16 nov** | Respuestas del HUN; consolidar resultados | Página 5 (camas y escenarios) | Ficha 3.2 (escenarios) y ficha 3.4 (recomendaciones) | Power BI + doc |
+| **17–23 nov** | README técnico; reproducir todo desde cero | Página 6 y pulido; publicar el enlace; sección "Dashboard" | Páginas `modelo_camas.md`, `simulacion.md`, `recomendaciones.md` | Los 3 entregables |
 | **24–30 nov** | Colchón y presentación | Colchón | Colchón | — |
 
 ## 5. Cómo trabajamos a la vez en el repositorio
