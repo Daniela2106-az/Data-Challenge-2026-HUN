@@ -34,52 +34,26 @@ No hace falta bajar otras tablas por ahora.
 Los entregables son tres: **documentación**, **repositorio en GitHub** y **dashboard en Power BI**. Se valora:
 hallazgos estratégicos, interpretabilidad, visualización efectiva y comunicación clara. Las propuestas pueden incluir
 modelos predictivos, dashboards, sistemas de alerta temprana, análisis de patrones y **modelos de simulación**.
-Cada persona es dueña de un entregable y de una carpeta del repo, para trabajar a la vez sin conflictos.
+Cada persona es dueña de un frente y de una carpeta del repo, para trabajar a la vez sin conflictos.
+**Las tareas detalladas, con datos, reglas y criterio de terminado, están en `docs/fichas_de_tareas.md`.**
 
-| Entregable | Responsable | Carpeta del repo | Qué entrega |
+| Frente | Responsable | Carpeta del repo | Qué entrega |
 |---|---|---|---|
-| **Datos + modelos** (alimenta a los tres) | **Daniela con Claude** | `src/`, `sql/`, `notebooks/modelos/` | Scripts, tabla de episodios, Modelo A (llegadas) y Modelo B (riesgo de esperar > 24 h), tablas agregadas para Power BI y documento |
-| **Dashboard Power BI** | **Persona 2** | `powerbi/` | Dashboard de 5 páginas, plantilla `.pbit` (sin datos), lista de medidas DAX y capturas |
-| **Documentación y propuestas** | **Persona 3** | `docs/`, `docs/hun/`, `datos/referencia/`, `notebooks/simulacion/` | Documento final, README, correspondencia con el HUN, `mapeo_dx.csv`, recomendaciones y simulación de escenarios |
+| **Modelos A y B y simulación** | **Persona 3** | `notebooks/modelos/`, `notebooks/simulacion/` | Pronóstico de llegadas con alerta de saturación, riesgo de esperar más de 24 h, simulación de escenarios y una página explicativa de cada uno |
+| **Dashboard Power BI** | **Persona 2** | `powerbi/` | Dashboard de 5 páginas, plantilla `.pbit`, medidas DAX y la sección "Dashboard" del documento |
+| **Datos, coordinación y documento** | **Daniela con Claude** | `src/`, `sql/`, `docs/`, `datos/referencia/` | Scripts y tablas, consultas en DBeaver, correo al HUN, revisión de *pull requests*, commits y documento final |
 
-### Detalle por persona
-
-**Daniela + Claude (datos y modelos)**
-- Mantener `src/` y correr las consultas en DBeaver.
-- Revisión: ¿se parecen los casos con y sin hora de salida? (define qué se puede afirmar sobre urgencias).
-- Modelo A: pronóstico de llegadas por día y hora. Modelo B: riesgo de esperar más de 24 h por cama.
-  Entrenar con 2023–2025 y probar con 2026; solo variables conocidas al llegar.
-- Exportar cada martes y viernes las tablas agregadas al **drive privado** del equipo (nunca a git).
-- Revisar los *pull requests* de los demás y hacer el commit final.
-
-**Persona 2 (Power BI)**
-- Semana 1: conectar `serie_diaria`, `serie_horaria`, `mapa_calor_llegadas`, `factores_espera_cama` (del drive).
-- Páginas: (1) llegadas por hora y día, (2) rutas del paciente, (3) espera de cama por hora, edad y diagnóstico,
-  (4) resultados del modelo, (5) recomendaciones.
-- Guardar en el repo solo la plantilla `.pbit`, el archivo `powerbi/medidas_dax.md` y capturas. El `.pbix` lleva datos
-  incrustados y **no se sube**.
-- Criterio: cada página responde una pregunta del hospital en una frase.
-
-**Persona 3 (documentación, HUN y propuestas)** — trabaja en paralelo desde el primer día
-- **Esta semana:** enviar el correo al HUN con las preguntas de `CLAUDE.md` sección 8; guardar sus respuestas en `docs/hun/`.
-- **Documento:** contexto, metodología en español claro, tabla de limitaciones (sección 1) y hallazgos. Se escribe mientras
-  salen los resultados, no al final.
-- **`datos/referencia/mapeo_dx.csv`:** Claude deja un borrador con los ~300 diagnósticos más frecuentes; Persona 3 lo
-  revisa con el navegador de SNOMED o con un docente de salud (nadie del equipo es médico). Este archivo sí va al repo.
-- **Componente 4 (propuestas):** investigar prácticas conocidas para bajar esperas de cama (altas antes del mediodía,
-  gestión diaria de camas, alertas tempranas) y respaldarlas con fuentes.
-- **Simulación** (`notebooks/simulacion/`): un modelo sencillo de "qué pasaría si" (por ejemplo, adelantar las altas al
-  mediodía) usando las tablas agregadas que entrega Daniela. Es lo que convierte las recomendaciones en números.
+Todos los frentes se alimentan de las tablas que Daniela exporta al drive privado dos veces por semana.
 
 ## 4. Calendario
 
-| Semana | Daniela + Claude | Persona 2 (Power BI) | Persona 3 (doc, HUN, propuestas) | Entregable |
+| Semana | Daniela + Claude | Persona 2 (Power BI) | Persona 3 (modelos) | Entregable |
 |---|---|---|---|---|
-| **20–26 oct** | Scripts v3.6 (hecho). Revisión de casos con/sin hora de salida. Borrador de `mapeo_dx.csv`. Primera exportación de tablas | Instalar Power BI, conectar tablas de ejemplo | **Correo al HUN.** Esqueleto del documento y README | Repo |
-| **27 oct–2 nov** | Componentes 1 y 2: rutas, llegadas, espera según hora, congestión, edad y diagnóstico | Páginas 1–3 | Metodología y limitaciones; revisar `mapeo_dx.csv` | Doc + primeras páginas de Power BI |
-| **3–9 nov** | Modelos A y B | Página 4 | Resultados del componente 2; empezar la simulación | Repo + doc |
-| **10–16 nov** | Cuantificar recomendaciones con la simulación | Página 5 y pulido | Recomendaciones y respuestas del HUN | Power BI + doc |
-| **17–23 nov** | README técnico; reproducir todo desde cero | Publicar el enlace de Power BI | Documento final | Los 3 entregables |
+| **20–26 oct** | Scripts v3.6 (hecho). Primera exportación al drive. **Correo al HUN.** Borrador de `mapeo_dx.csv` | Instalar y conectar tablas; página de llegadas de prueba | Ficha 3.1: empezar el Modelo A con `serie_horaria` | Repo |
+| **27 oct–2 nov** | Componentes 1 y 2 (rutas, espera según hora, edad, diagnóstico); borrador del documento | Páginas 1–3 | Terminar Modelo A; empezar Modelo B (ficha 3.2) | Doc + primeras páginas de Power BI |
+| **3–9 nov** | Revisar modelos; metodología y limitaciones | Página 4 con las predicciones | Modelo B terminado y explicado | Repo + doc |
+| **10–16 nov** | Cuantificar recomendaciones; respuestas del HUN | Página 5 y pulido | Simulación (ficha 3.3) | Power BI + doc |
+| **17–23 nov** | README técnico; reproducir todo desde cero | Publicar el enlace de Power BI; sección "Dashboard" | Páginas `modelo_A.md`, `modelo_B.md`, `simulacion.md` | Los 3 entregables |
 | **24–30 nov** | Colchón y presentación | Colchón | Colchón | — |
 
 ## 5. Cómo trabajamos a la vez en el repositorio
