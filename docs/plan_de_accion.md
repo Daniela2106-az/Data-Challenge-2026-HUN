@@ -39,21 +39,21 @@ Cada persona es dueña de un frente y de una carpeta del repo, para trabajar a l
 
 | Frente | Responsable | Carpeta del repo | Qué entrega |
 |---|---|---|---|
-| **Modelos A y B y simulación** | **Persona 3** | `notebooks/modelos/`, `notebooks/simulacion/` | Pronóstico de llegadas con alerta de saturación, riesgo de esperar más de 24 h, simulación de escenarios y una página explicativa de cada uno |
-| **Dashboard Power BI** | **Persona 2** | `powerbi/` | Dashboard de 5 páginas, plantilla `.pbit`, medidas DAX y la sección "Dashboard" del documento |
-| **Datos, coordinación y documento** | **Daniela con Claude** | `src/`, `sql/`, `docs/`, `datos/referencia/` | Scripts y tablas, consultas en DBeaver, correo al HUN, revisión de *pull requests*, commits y documento final |
+| **Modelo B (espera de cama), simulación y recomendaciones** | **Persona 3** | `notebooks/modelos/`, `notebooks/simulacion/`, `docs/` | Riesgo de esperar más de 24 h, simulación de escenarios y recomendaciones con números |
+| **Dashboard Power BI y contacto con el HUN** | **Persona 2** | `powerbi/`, `docs/hun/` | Dashboard de 5 páginas, plantilla `.pbit`, sección "Dashboard" del documento y correo al HUN |
+| **Modelo A (llegadas), datos, coordinación y documento** | **Daniela con Claude** | `src/`, `sql/`, `docs/`, `datos/referencia/` | Pronóstico de llegadas con alerta de saturación, scripts y tablas, consultas en DBeaver, revisión de *pull requests*, commits y documento final |
 
 Todos los frentes se alimentan de las tablas que Daniela exporta al drive privado dos veces por semana.
 
 ## 4. Calendario
 
-| Semana | Daniela + Claude | Persona 2 (Power BI) | Persona 3 (modelos) | Entregable |
+| Semana | Daniela + Claude | Persona 2 (Power BI y HUN) | Persona 3 (Modelo B, simulación, recomendaciones) | Entregable |
 |---|---|---|---|---|
-| **20–26 oct** | Scripts v3.6 (hecho). Primera exportación al drive. **Correo al HUN.** Borrador de `mapeo_dx.csv` | Instalar y conectar tablas; página de llegadas de prueba | Ficha 3.1: empezar el Modelo A con `serie_horaria` | Repo |
-| **27 oct–2 nov** | Componentes 1 y 2 (rutas, espera según hora, edad, diagnóstico); borrador del documento | Páginas 1–3 | Terminar Modelo A; empezar Modelo B (ficha 3.2) | Doc + primeras páginas de Power BI |
-| **3–9 nov** | Revisar modelos; metodología y limitaciones | Página 4 con las predicciones | Modelo B terminado y explicado | Repo + doc |
-| **10–16 nov** | Cuantificar recomendaciones; respuestas del HUN | Página 5 y pulido | Simulación (ficha 3.3) | Power BI + doc |
-| **17–23 nov** | README técnico; reproducir todo desde cero | Publicar el enlace de Power BI; sección "Dashboard" | Páginas `modelo_A.md`, `modelo_B.md`, `simulacion.md` | Los 3 entregables |
+| **20–26 oct** | Scripts v3.6 (hecho). Primera exportación al drive. Borrador de `mapeo_dx.csv`. Empezar Modelo A (ficha D.1) | **Correo al HUN.** Instalar y conectar tablas; página de llegadas de prueba | Ficha 3.1: preparar datos y primer Modelo B con regresión logística | Repo |
+| **27 oct–2 nov** | Componentes 1 y 2; terminar Modelo A; borrador del documento | Páginas 1–3 | Modelo B con árboles, calibración e interpretación | Doc + primeras páginas de Power BI |
+| **3–9 nov** | Revisar el Modelo B; metodología y limitaciones | Página 4 con las predicciones de A y B | Terminar `modelo_B.md`; empezar la simulación (ficha 3.2) | Repo + doc |
+| **10–16 nov** | Respuestas del HUN; consolidar resultados | Página 5 y pulido | Terminar simulación; recomendaciones (ficha 3.3) | Power BI + doc |
+| **17–23 nov** | README técnico; reproducir todo desde cero | Publicar el enlace; sección "Dashboard" | `modelo_B.md`, `simulacion.md`, `recomendaciones.md` | Los 3 entregables |
 | **24–30 nov** | Colchón y presentación | Colchón | Colchón | — |
 
 ## 5. Cómo trabajamos a la vez en el repositorio
