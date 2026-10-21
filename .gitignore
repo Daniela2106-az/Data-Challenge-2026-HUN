@@ -1,0 +1,17 @@
+# Datos de la base (clinicos, nunca al repositorio)
+datos/crudos/
+datos/procesados/
+archivo/*.csv
+*.parquet
+*.csv.gz
+
+# Sistema y Python
+.DS_Store
+__pycache__/
+*.pyc
+
+# Tablas derivadas de la base (agregadas o no): no se suben
+resultados/tablas/
+resultados/excel/
+sql/consulta_propiedad_copias.sql
+archivo/muestra_ids_values.txt
