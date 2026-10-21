@@ -8,6 +8,9 @@ analisis_etapas.py  -  version 3.5 (20-oct-2026)
      menor se quitan en la seccion 5 (si no, cada llegada contaria 2 o 3 veces), y lo propio de esa persona se queda;
    - diagnosticos, procedimientos y laboratorios solo se pasan a la raiz si la copia es de la misma persona
      (columna misma_persona de copias.csv).)
+(3.6: estado nuevo "minimo_conocido": episodios con tiempo pero cuya ULTIMA etapa TU/HOSP tiene inicio = fin.
+ La salida real es posterior a la ultima hora registrada, asi que la duracion es un minimo y no entra a las
+ estadisticas de tiempo. La espera de cama no cambia: solo usa el inicio de la primera HOSP.)
 (3.4: parametro MODO_COPIAS)
 (3.1: guarda bloques.csv | 3.2: guarda copias.csv y pasa diagnosticos/procedimientos de las
  copias a su visita original antes de clasificar los episodios | 3.3: las ETAPAS de una copia
@@ -89,7 +92,7 @@ MIN_DX_H = 0.25      # la duracion minima estimada por diagnosticos debe ser de 
 MIN_EPISODIOS = 30   # rutas con menos episodios medidos se marcan como poco confiables
 AMB, ER, TU, HOSP = 581479, 9203, 3045729, 9201
 TIPOS = {ER: "Urgencias", TU: "Treatment urgency", HOSP: "Inpatient", AMB: "Ambulatorio"}
-ESTADOS = ["medida", "minimo_dx", "sin_duracion", "sin_actividad"]
+ESTADOS = ["medida", "minimo_conocido", "minimo_dx", "sin_duracion", "sin_actividad"]
 
 pd.set_option("display.width", 220)
 pd.set_option("display.max_columns", None)
@@ -357,6 +360,10 @@ ep = bloques.groupby(K).agg(ruta=("etapa", " > ".join),
                             ini=("ini", "min"), fin=("fin", "max"),
                             n_etapas=("n_etapas", "sum"))
 ep["con_tiempo"] = vd.groupby(K).con_tiempo.any()
+# v3.6: la ultima etapa TU/HOSP del episodio debe tener fin > inicio; si no, la salida real es posterior
+# a la ultima hora registrada y la duracion que se calcula es solo un minimo
+_ult = vd[vd.etapa != "ER"].groupby(K).tail(1).set_index(K)
+ep["ultima_cerrada"] = (_ult.visit_detail_end_datetime > _ult.visit_detail_start_datetime).reindex(ep.index).fillna(False)
 ep["horas_total"] = (ep.fin - ep.ini).dt.total_seconds() / 3600
 ep = ep.reset_index()
 ep["ruta_simple"] = ep.ruta.str.replace(r"^ER > ", "", regex=True)
@@ -397,15 +404,16 @@ ep["n_proc"] = ep.n_proc.fillna(0)
 actividad = (ep.n_dx > 0) | (ep.n_proc > 0)
 
 ep["estado"] = np.select(
-    [ep.con_tiempo, ep.horas_dx >= MIN_DX_H, actividad],
-    ["medida", "minimo_dx", "sin_duracion"], "sin_actividad")
+    [ep.con_tiempo & ep.ultima_cerrada, ep.con_tiempo, ep.horas_dx >= MIN_DX_H, actividad],
+    ["medida", "minimo_conocido", "minimo_dx", "sin_duracion"], "sin_actividad")
 if not (hay_dx and hay_proc):
     print("\nAVISO: faltan dx_por_visita.csv o proc_por_visita.csv; 'sin_actividad' no es confiable.")
 
-ep["error_probable"] = (ep.estado == "medida") & (ep.horas_total > MAX_H)
+ep["error_probable"] = ep.con_tiempo & (ep.horas_total > MAX_H)
 
 titulo("7. ESTADO DE LOS EPISODIOS")
-print("medida = alguna etapa TU o HOSP con fin posterior al inicio")
+print("medida = alguna etapa TU o HOSP con fin posterior al inicio Y la ultima etapa TU/HOSP tambien cerrada")
+print("minimo_conocido = tiene etapas con tiempo, pero la ultima etapa no tiene fin: la duracion es solo un minimo")
 print("minimo_dx = sin fin real, pero con un diagnostico que da una duracion minima")
 print("sin_duracion = sin fin real y sin estimacion, pero con diagnosticos o procedimientos")
 print("sin_actividad = sin fin real y sin ningun diagnostico ni procedimiento")
@@ -440,7 +448,7 @@ cob_ruta = cobertura(ep, "ruta_simple")
 cob_tipo = cobertura(ep, "tipo_visita")
 glob = (100 * ep.estado.value_counts(normalize=True)).reindex(ESTADOS).fillna(0).round(1).rename("pct")
 glob_act = (100 * ep[ep.estado != "sin_actividad"].estado.value_counts(normalize=True)) \
-    .reindex(ESTADOS[:3]).fillna(0).round(1).rename("pct")
+    .reindex(ESTADOS[:-1]).fillna(0).round(1).rename("pct")
 
 titulo("8. COBERTURA")
 print("por ruta (las 10 mas frecuentes):\n" + cob_ruta.head(10).to_string())
@@ -475,7 +483,9 @@ print(por_etapa[por_etapa.ruta_simple.isin(orden[:4])].round(2).to_string(index=
 # ----------------------------------------------------------------------
 # 10) Espera de cama: del inicio del episodio a la primera HOSP
 # ----------------------------------------------------------------------
-bh = bloques.merge(ok[K + ["ini", "ruta_simple", "tipo_visita"]].rename(columns={"ini": "ini_ep"}), on=K)
+# la espera de cama solo necesita el inicio de la primera HOSP: sirve tambien si la ultima etapa quedo sin cierre
+ok_esp = ep[ep.con_tiempo & ~ep.error_probable]
+bh = bloques.merge(ok_esp[K + ["ini", "ruta_simple", "tipo_visita"]].rename(columns={"ini": "ini_ep"}), on=K)
 ini_hosp = bh[bh.etapa == "HOSP"].groupby(K).ini.min().rename("ini_hosp")
 bh = bh.merge(ini_hosp, left_on=K, right_index=True)
 antes = bh[bh.ini < bh.ini_hosp]
@@ -582,7 +592,7 @@ try:
     plt.close()
 
     pct = cob_ruta.head(6)[["pct_" + e for e in ESTADOS]]
-    pct.columns = ["medida", "minimo (diagnosticos)", "sin duracion", "sin actividad clinica"]
+    pct.columns = ["medida", "minimo conocido (ultima etapa sin cierre)", "minimo (diagnosticos)", "sin duracion", "sin actividad clinica"]
     ax = pct.iloc[::-1].plot(kind="barh", stacked=True, figsize=(10, 4))
     ax.set_xlabel("% de episodios")
     ax.set_ylabel("")

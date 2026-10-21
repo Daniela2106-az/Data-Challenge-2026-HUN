@@ -15,3 +15,7 @@ resultados/tablas/
 resultados/excel/
 sql/consulta_propiedad_copias.sql
 archivo/muestra_ids_values.txt
+
+# Power BI y notebooks: archivos con datos incrustados
+*.pbix
+*.ipynb_checkpoints/

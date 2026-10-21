@@ -416,7 +416,8 @@ print("\nLectura: esto muestra asociaciones, no causas. La ocupacion y la hora s
 print("el modelo de la semana 3 separa el efecto de cada una.")
 
 titulo("8b. FACTORES DE LA DURACION DE LOS EPISODIOS DE ALTA DESDE URGENCIAS (ruta TU, medidos)")
-print("OJO: solo el 45 % de estos episodios tiene hora de fin; puede haber sesgo.")
+_tu = ep[ep.ruta_simple == "TU"]
+print(f"OJO: solo el {100 * _tu.horas_validas.notna().mean():.0f} % de estos episodios tiene hora de fin completa; puede haber sesgo.")
 print(fac_tu.groupby("variable").rango_de_la_variable_h.first().sort_values(ascending=False).round(1).to_string())
 
 # ----------------------------------------------------------------------
@@ -426,7 +427,7 @@ DICC = {
     "visit_occurrence_id, episodio": "llave del episodio (una visita puede tener varios episodios)",
     "ruta / ruta_simple": "orden de etapas; ruta_simple quita la ER inicial",
     "ini / fin": "inicio de la primera etapa y fin de la ultima etapa del episodio",
-    "estado": "medida / minimo_dx / sin_duracion / sin_actividad (ver analisis_etapas.py)",
+    "estado": "medida / minimo_conocido / minimo_dx / sin_duracion / sin_actividad (ver analisis_etapas.py)",
     "horas_validas": "duracion total, solo si estado = medida y no es error probable",
     "espera_cama_h": "inicio del episodio hasta la primera HOSP (solo hospitalizados)",
     "hueco_antes_hosp_h": "tiempo sin ninguna etapa justo antes de la HOSP",

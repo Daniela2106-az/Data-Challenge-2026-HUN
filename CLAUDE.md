@@ -184,8 +184,12 @@ el 1 da contexto y el 4 sale de los dos anteriores.
   candidatas de otra persona se conservan como visitas; sus etapas idénticas a las de la visita de id menor se quitan
   en la sección 5 (319.784 visitas de otra persona quedan fuera por tener TODAS sus etapas repetidas) y lo propio de
   cada persona se queda. Si se conservaran enteras, los episodios subirían a 743.802 y el 67 % serían idénticos entre sí.
-- Resultados v3.5: episodios 337.194 · medida 45,2 % · TU medida 48,9 % · espera de cama mediana 22,4 h (n = 34.537) ·
-  llegadas por día mediana 264 · diagnóstico principal en 23,6 % de los episodios (antes 3 %).
+- Resultados v3.5: episodios 337.194 · espera de cama mediana 22,4 h (n = 34.537) · llegadas por día mediana 264 ·
+  diagnóstico principal en 23,6 % de los episodios (antes 3 %).
+- **v3.6 (estado nuevo `minimo_conocido`):** el 21,7 % de los episodios TU "medidos" terminaba en una etapa con inicio = fin,
+  o sea la salida real es posterior a lo que medimos (duración truncada). Ahora `medida` exige que la ÚLTIMA etapa TU/HOSP
+  esté cerrada. Estados: medida 37,3 % · minimo_conocido 7,9 % · minimo_dx 12,7 % · sin_duracion 20,4 % · sin_actividad 21,7 %.
+  TU medida 38,2 % (mediana 9,5 h). La espera de cama no cambia (solo usa el inicio de la primera HOSP).
 - Dx, procedimientos y laboratorios solo se pasan a la raíz desde copias de la MISMA persona (`misma_persona` en copias.csv).
   Pendiente opcional: re-exportar las consultas 2–4 filtrando `co.person_id = vo.person_id` para quitar los registros
   que una visita tiene de otra persona.
@@ -228,7 +232,8 @@ el 1 da contexto y el 4 sale de los dos anteriores.
 3. Ruta = secuencia de bloques (`ER > TU > HOSP`). `ruta_simple` quita la ER inicial (dura minutos).
    `hospitalizado` = el episodio tiene HOSP.
 4. **Estado de cada episodio:**
-   - `medida`: alguna etapa TU o HOSP con fin > inicio → duración confiable.
+   - `medida`: alguna etapa TU o HOSP con fin > inicio Y la última etapa TU/HOSP también cerrada → duración confiable.
+   - `minimo_conocido` (v3.6): tiene etapas con tiempo pero la última no tiene fin → la duración es solo un mínimo.
    - `minimo_dx`: sin fin real, con un diagnóstico que da una duración mínima (no usar para tiempos).
    - `sin_duracion`: sin fin, pero con diagnósticos o procedimientos.
    - `sin_actividad`: sin fin y sin nada clínico.
@@ -299,7 +304,7 @@ Orden: `src/analisis_etapas.py` → `src/preparar_variables.py`. (`archivo/Revis
 | procedimientos_por_visita.csv | visit_occurrence_id, n_proc_distintos | consulta 3 (opcional) |
 | laboratorios_por_visita.csv | visit_occurrence_id, n_lab, n_lab_distintos, n_lab_6h, n_lab_antes_hosp | consulta 4 v2 (la vieja solo trae n_lab y n_lab_distintos) |
 
-### analisis_etapas.py (v3.5)
+### analisis_etapas.py (v3.6)
 Secciones: 1 carga · 2 limpieza (AMB, abiertas) · 3 copias · 4 huecos y episodios · 5 etapas repetidas en otra
 visita · 6 bloques y episodios · 7 estado · 8 cobertura · 9 tiempos · 10 espera de cama · 11 extremos ·
 12 estimación por diagnósticos.

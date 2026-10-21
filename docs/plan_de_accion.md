@@ -14,7 +14,7 @@ Equipo de 3. Solo una persona tiene Claude (**Daniela**); las otras dos trabajan
 | 5 | **El tipo de visita no es confiable** | Visitas "ambulatorias" incluyen urgencias y hospitalización. | Usamos las etapas, no el tipo de visita. |
 | 6 | **Ocupación incompleta** | Solo vemos a los pacientes de esta base; no sabemos cuántas camas tiene el hospital. La ocupación casi no cambia la espera, pero puede ser por esto. | Se pide al HUN el número de camas. |
 
-Resultado actual: 337.194 episodios; 45 % con duración medida; **espera de cama: mediana 22,4 h, 48 % espera más de 24 h**;
+Resultado actual: 337.194 episodios; 37 % con duración medida y 8 % con un mínimo conocido (v3.6); **espera de cama: mediana 22,4 h, 48 % espera más de 24 h**;
 la espera es más larga si se llega en la tarde (26,8 h) que de madrugada (16,0 h).
 
 ## 2. Qué más podemos revisar (en orden de utilidad)
@@ -29,44 +29,68 @@ la espera es más larga si se llega en la tarde (26,8 h) que de madrugada (16,0 
 
 No hace falta bajar otras tablas por ahora.
 
-## 3. Quién hace qué
+## 3. Qué piden los organizadores y cómo lo repartimos
 
-### Daniela (con Claude): datos, modelos y repo
-- Mantener los scripts (`src/`), correr consultas en DBeaver y exportar.
-- Revisión 1 y 2 de la sección anterior.
-- **Modelo A** (llegadas por día y hora) y **Modelo B** (riesgo de esperar más de 24 h), validación temporal.
-- Exportar las tablas agregadas para Power BI y compartirlas por el drive privado.
-- Commits (sin datos de la base) y el README para reproducir todo.
+Los entregables son tres: **documentación**, **repositorio en GitHub** y **dashboard en Power BI**. Se valora:
+hallazgos estratégicos, interpretabilidad, visualización efectiva y comunicación clara. Las propuestas pueden incluir
+modelos predictivos, dashboards, sistemas de alerta temprana, análisis de patrones y **modelos de simulación**.
+Cada persona es dueña de un entregable y de una carpeta del repo, para trabajar a la vez sin conflictos.
 
-### Persona 2: Power BI (dashboard)
-- Semana 1: aprender la estructura de los datos con `docs/` y `CLAUDE.md`; armar el modelo en Power BI con
-  `serie_diaria`, `mapa_calor_llegadas`, `factores_espera_cama` (que entrega Daniela).
+| Entregable | Responsable | Carpeta del repo | Qué entrega |
+|---|---|---|---|
+| **Datos + modelos** (alimenta a los tres) | **Daniela con Claude** | `src/`, `sql/`, `notebooks/modelos/` | Scripts, tabla de episodios, Modelo A (llegadas) y Modelo B (riesgo de esperar > 24 h), tablas agregadas para Power BI y documento |
+| **Dashboard Power BI** | **Persona 2** | `powerbi/` | Dashboard de 5 páginas, plantilla `.pbit` (sin datos), lista de medidas DAX y capturas |
+| **Documentación y propuestas** | **Persona 3** | `docs/`, `docs/hun/`, `datos/referencia/`, `notebooks/simulacion/` | Documento final, README, correspondencia con el HUN, `mapeo_dx.csv`, recomendaciones y simulación de escenarios |
+
+### Detalle por persona
+
+**Daniela + Claude (datos y modelos)**
+- Mantener `src/` y correr las consultas en DBeaver.
+- Revisión: ¿se parecen los casos con y sin hora de salida? (define qué se puede afirmar sobre urgencias).
+- Modelo A: pronóstico de llegadas por día y hora. Modelo B: riesgo de esperar más de 24 h por cama.
+  Entrenar con 2023–2025 y probar con 2026; solo variables conocidas al llegar.
+- Exportar cada martes y viernes las tablas agregadas al **drive privado** del equipo (nunca a git).
+- Revisar los *pull requests* de los demás y hacer el commit final.
+
+**Persona 2 (Power BI)**
+- Semana 1: conectar `serie_diaria`, `serie_horaria`, `mapa_calor_llegadas`, `factores_espera_cama` (del drive).
 - Páginas: (1) llegadas por hora y día, (2) rutas del paciente, (3) espera de cama por hora, edad y diagnóstico,
   (4) resultados del modelo, (5) recomendaciones.
-- Criterio de calidad: que cada página responda una pregunta del hospital en una frase.
+- Guardar en el repo solo la plantilla `.pbit`, el archivo `powerbi/medidas_dax.md` y capturas. El `.pbix` lleva datos
+  incrustados y **no se sube**.
+- Criterio: cada página responde una pregunta del hospital en una frase.
 
-### Persona 3: documento, HUN y recomendaciones
-- **Enviar el correo al HUN esta semana** (preguntas 1–10 de `CLAUDE.md`, sección 8) y seguir las respuestas.
-- Armar el documento: contexto, metodología (en español claro), limitaciones (tabla de la sección 1) y hallazgos.
-- Revisar con apoyo de fuentes públicas el `mapeo_dx.csv` que prepare Claude (nadie del equipo es médico:
-  usar el navegador de SNOMED o consultar a un docente de salud).
-- Investigar prácticas conocidas para reducir esperas de cama (altas antes del mediodía, gestión de camas) para
-  respaldar las recomendaciones.
+**Persona 3 (documentación, HUN y propuestas)** — trabaja en paralelo desde el primer día
+- **Esta semana:** enviar el correo al HUN con las preguntas de `CLAUDE.md` sección 8; guardar sus respuestas en `docs/hun/`.
+- **Documento:** contexto, metodología en español claro, tabla de limitaciones (sección 1) y hallazgos. Se escribe mientras
+  salen los resultados, no al final.
+- **`datos/referencia/mapeo_dx.csv`:** Claude deja un borrador con los ~300 diagnósticos más frecuentes; Persona 3 lo
+  revisa con el navegador de SNOMED o con un docente de salud (nadie del equipo es médico). Este archivo sí va al repo.
+- **Componente 4 (propuestas):** investigar prácticas conocidas para bajar esperas de cama (altas antes del mediodía,
+  gestión diaria de camas, alertas tempranas) y respaldarlas con fuentes.
+- **Simulación** (`notebooks/simulacion/`): un modelo sencillo de "qué pasaría si" (por ejemplo, adelantar las altas al
+  mediodía) usando las tablas agregadas que entrega Daniela. Es lo que convierte las recomendaciones en números.
 
 ## 4. Calendario
 
-| Semana | Daniela + Claude | Persona 2 | Persona 3 | Entregable |
+| Semana | Daniela + Claude | Persona 2 (Power BI) | Persona 3 (doc, HUN, propuestas) | Entregable |
 |---|---|---|---|---|
-| **20–26 oct** | Scripts v3.5 listos (hecho). Revisión 1. `mapeo_dx.csv` borrador. Exportar tablas para Power BI | Instalar Power BI y conectar las tablas de ejemplo | **Enviar correo al HUN.** Esqueleto del documento | Repo |
-| **27 oct–2 nov** | Componentes 1 y 2: rutas, llegadas, espera según hora/congestión/edad/diagnóstico; probar altas tardías | Páginas 1–3 del dashboard | Redactar metodología y limitaciones | Doc + primeras páginas de Power BI |
-| **3–9 nov** | Modelo A y B; entrenar 2023–2025, probar 2026 | Página 4 (modelo) | Redactar resultados del componente 2 | Repo + doc |
-| **10–16 nov** | Cuantificar recomendaciones ("si las altas fueran antes del mediodía, la espera bajaría X h") | Página 5 y pulido visual | Recomendaciones y respuestas del HUN | Power BI + doc |
-| **17–23 nov** | README; reproducir todo desde cero en otra máquina | Publicar el enlace de Power BI | Documento final | Los 3 entregables |
+| **20–26 oct** | Scripts v3.6 (hecho). Revisión de casos con/sin hora de salida. Borrador de `mapeo_dx.csv`. Primera exportación de tablas | Instalar Power BI, conectar tablas de ejemplo | **Correo al HUN.** Esqueleto del documento y README | Repo |
+| **27 oct–2 nov** | Componentes 1 y 2: rutas, llegadas, espera según hora, congestión, edad y diagnóstico | Páginas 1–3 | Metodología y limitaciones; revisar `mapeo_dx.csv` | Doc + primeras páginas de Power BI |
+| **3–9 nov** | Modelos A y B | Página 4 | Resultados del componente 2; empezar la simulación | Repo + doc |
+| **10–16 nov** | Cuantificar recomendaciones con la simulación | Página 5 y pulido | Recomendaciones y respuestas del HUN | Power BI + doc |
+| **17–23 nov** | README técnico; reproducir todo desde cero | Publicar el enlace de Power BI | Documento final | Los 3 entregables |
 | **24–30 nov** | Colchón y presentación | Colchón | Colchón | — |
 
-## 5. Reglas del equipo
-- **Nada de datos de la base en git.** Las carpetas `datos/` y `resultados/tablas|excel` están ignoradas. Las tablas
-  agregadas se comparten por un drive privado del equipo.
-- Las decisiones de método viven en `CLAUDE.md` (sección 5); si alguien quiere cambiar una, se discute primero.
+## 5. Cómo trabajamos a la vez en el repositorio
+- **Cada quien en su carpeta** (tabla de la sección 3): casi no hay conflictos. `src/` es solo de Daniela; si alguien
+  necesita un cambio, lo pide.
+- **Una rama por persona** (`powerbi`, `docs`, `modelos`) y *pull request* hacia `main`; Daniela revisa. Mensajes de
+  commit en español y sin datos.
+- **Nada de datos de la base en git.** `datos/crudos`, `datos/procesados`, `resultados/tablas`, `resultados/excel` y los
+  `.pbix` están ignorados. Antes de cada commit: `git status` y comprobar que no hay `.csv`, `.parquet`, `.xlsx` ni `.pbix`.
+  La única excepción es `datos/referencia/` (listas hechas a mano, como `mapeo_dx.csv`, sin datos de pacientes).
+- Las tablas agregadas se comparten por un drive privado del equipo, con el nombre y la fecha de la corrida.
+- Las decisiones de método viven en `CLAUDE.md` (sección 5); para cambiar una, se discute antes.
 - Cada hallazgo en el documento lleva su limitación al lado (por ejemplo, la falta de hora de salida).
-- No pulir más la limpieza: lo que queda no cambia las medianas.
+- No pulir más la limpieza: lo que queda no cambia las medianas de la espera de cama.
