@@ -11,9 +11,9 @@ Se probó el plan anterior con los datos y se ajustó:
 |---|---|---|
 | Predecir si un paciente espera más de 24 h usando solo lo que se sabe al llegar | AUC 0,60 (0,5 = azar) | No sirve como alerta individual; queda como análisis **explicativo** |
 | Lo mismo, usando diagnóstico y laboratorios | AUC 0,64 | Ni haciendo trampa mejora mucho |
-| ¿Cuántas altas hubo en el día explica la espera de ese día? | Correlación cercana a −0,06 | La hipótesis de "altas tardías" no se confirma a nivel diario |
+| ¿Cuántas altas hubo en el día explica la espera de ese día? | Correlación cercana a −0,06 | No se confirma a nivel diario. **(22-oct) Sí se sostiene dentro del día:** el 61 % de las altas es de 14 a 18:59 y la cama se asigna a las 17–18 h (ver `CLAUDE.md`, sección 6b) |
 | Predecir cuánto se queda hospitalizado cada paciente | R² cercano a 0 | No se predice por paciente; se usa la **distribución real** |
-| Ley de Little: ingresos por día × estancia media = camas ocupadas | 27,7 × 5,2 días = 144 camas; observado 145 | **El modelo de camas es coherente con los datos** |
+| Ley de Little: ingresos por día × estancia media = camas ocupadas | 27,7 × 5,2 días = 144 camas; observado 145. **(22-oct) Esas cifras contaban dos veces las estancias replicadas entre dos personas.** Con estancias únicas: ~22 × 5,2 ≈ 113 camas; observado 113 | **El modelo de camas es coherente con los datos** (con los números corregidos) |
 
 Lo que sí es predecible son las llegadas y los ingresos (patrón por hora, día y festivo) y la ocupación como
 resultado de ingresos y estancias. Por eso los modelos pasan a ser de **demanda y capacidad**.
@@ -30,11 +30,17 @@ resultado de ingresos y estancias. Por eso los modelos pasan a ser de **demanda 
 - `panel_diario.csv`: una fila por día (2023-02 a 2026-05): `llegadas, hospitalizados, ingresos_a_cama, altas,
   altas_antes_mediodia, ocup_hosp_media, ocup_hosp_max, espera_cama_mediana_h, n_espera, dia_semana_num, mes, festivo,
   dia_no_habil`.
-- `estancias_hospitalizacion.csv`: una fila por episodio hospitalizado (35.343): `ingreso_cama, alta, horas_hosp,
-  alta_completa, llegada, hora_llegada, edad, grupo_edad, sexo, tipo_visita, categoria_dx, espera_cama_h, ...`.
-  Usar solo `alta_completa == True` para estancias.
+- `estancias_hospitalizacion.csv`: una fila por **estancia en cama** (27.956, v2 del 22-oct): `ingreso_cama, alta, horas_hosp,
+  alta_completa, n_registros, llegada, hora_llegada, edad, grupo_edad, sexo, tipo_visita, categoria_dx, espera_cama_h, ...`.
+  La misma estancia replicada entre dos personas (41 % de los episodios hospitalizados) se cuenta **una vez**
+  (`n_registros` dice cuántos registros tenía). Usar solo `alta_completa == True` para estancias.
+  **Descargar de nuevo: la versión anterior (35.343 filas) tenía las estancias duplicadas.**
 - `serie_horaria.csv`: una fila por hora: `hora_inicio, llegadas, llegadas_que_se_hospitalizan, ocup_hosp, ocup_tu`.
-- `tabla_episodios.parquet`: una fila por episodio (337.194), 59 columnas.
+  **Aviso (22-oct):** `llegadas_que_se_hospitalizan` y `ocup_hosp` de esta tabla todavía cuentan las estancias gemelas
+  (~146 camas en vez de ~113). Para camas e ingresos usar `panel_diario.csv` o `estancias_hospitalizacion.csv`.
+- `tabla_episodios.parquet`: una fila por episodio (337.194), 59 columnas. También incluye los episodios gemelos: para
+  hospitalizados, quedarse solo con las filas que estén en `estancias_hospitalizacion.csv` (llaves `visit_occurrence_id`
+  y `episodio`).
 
 ---
 
@@ -73,12 +79,19 @@ del 80 %; la alerta indica su acierto y sus falsas alarmas.
 **Qué se reporta por escenario:** ocupación media y máxima, número de días saturados, y camas libres por hora del día.
 **Cuidado:** hoy **no** se demuestra que adelantar las altas reduzca la espera; solo se mostrará cuántas camas
 quedarían libres antes. Si se quiere traducir eso en horas de espera, hay que decir claramente que es un supuesto.
+**Ya hecho por Daniela (22-oct, `src/simulacion_altas.py`):** el escenario A con la hora del día y una cota de la espera
+evitada. Con el 30 % de las altas de la tarde antes del mediodía salen ~37 horas-cama liberadas por día (hasta 5,5 camas
+libres adicionales a las 12 h), lo que evitaría **como máximo ~8 % del exceso de espera** (estimación ~3 %). La ocupación de
+2025 es 13 % mayor que la de 2023 por la **estancia** (+16 %), no por más ingresos. Las tablas `escenario_altas_antes.csv`,
+`escenario_camas_por_hora.csv` y `escenarios_little.csv` (Daniela las sube al drive). **No repetir el escenario A: construir B y C y
+la tabla de escenarios sobre eso.**
 **Entrega:** `notebooks/simulacion/escenarios.ipynb` y `docs/simulacion.md` con una tabla de escenarios.
 **Terminado cuando:** cada escenario tiene supuestos, resultado y una frase de lectura para un gerente.
 
 ### Ficha 3.3 — Modelo explicativo de la espera (antes "Modelo B")
 **Pregunta:** ¿qué factores se asocian a esperar más de 24 h, separando el efecto de cada uno?
-**Datos:** `tabla_episodios.parquet`, solo filas con `espera_cama_h` no nula (34.537). **Objetivo:** `espera_mas_24h`.
+**Datos:** `tabla_episodios.parquet`, solo filas con `espera_cama_h` no nula **y que estén en `estancias_hospitalizacion.csv`**
+(estancias únicas, ~27 mil; sin ese filtro cada estancia replicada entra dos veces). **Objetivo:** `espera_mas_24h`.
 **Variables permitidas (se conocen al llegar):** `hora`, `dia_semana_num`, `mes`, `festivo`, `dia_no_habil`, `edad`,
 `grupo_edad`, `sexo`, `tipo_visita`, `ocup_hosp`, `ocup_tu`, `llegadas_6h_previas`, `llegadas_24h_previas`,
 `n_episodios_previos`, `reingreso_72h`, `reingreso_30d`.

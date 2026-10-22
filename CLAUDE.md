@@ -373,7 +373,20 @@ el 1 da contexto y el 4 sale de los dos anteriores.
   diagnóstico 3,9 puntos de R² (ojo: depende de si hay diagnóstico traducido, dato administrativo y registrado tarde), tipo de
   visita 2,3 (quien entra por urgencias espera más: ambulatorio −39 %, treatment urgency −42 %), edad y sexo 1,2, hora 0,6,
   laboratorios de 6 h 0,4, año 0,2, carga 0,1, calendario ~0.
-- Scripts: `construir_segmentos.py`, `ranking_cuellos.py`, `dependencia_carga.py`, `altas_y_factores.py`.
+- **Ocupación y escenario de altas (Fase 6, `simulacion_altas.py`):**
+  - La ocupación sube de 105 camas (2023) a 119 (2025) y 117 (ene–abr 2026); es **por la estancia** (media de 4,70 a 5,46
+    días, +16 %), no por más ingresos (22,3 → 21,7 por día; 20,4 en ene–abr 2026). Con Little: volver a la estancia de 2023
+    liberaría ~16 camas; bajar la estancia 5 % ~6; subir los ingresos 10 % añadiría ~12.
+  - El orden de llegada casi no predice el orden de cama (53 % de pares consecutivos en orden, azar 50 %): una fila FIFO no
+    está respaldada por los datos y no se simula.
+  - Por la tarde la ocupación baja de 115 a 108 camas (las altas). Con el 30 % de las altas de la tarde pasando a las 9–12 h
+    quedan hasta 5,5 camas libres adicionales a las 12 h (~37 horas-cama por día).
+  - Traducido a espera, **como máximo ~8 % del exceso de espera (448 horas-paciente por día)** y una estimación de ~3 %
+    (cada alta extra se vuelve a ocupar con ~0,35 ingresos en 6 h). Adelantar el 100 % de las altas de la tarde: máximo 27 %.
+    Adelantar altas ayuda pero no resuelve: el 83 % de las horas de espera viene de esperas de más de 24 h y el 57 % de esperas
+    de más de 48 h (el 19 % de los pacientes), y unas horas menos no deshacen esperas de varios días.
+  - Supuestos: el alta de los demás no cambia y la capacidad total (camas) se desconoce; es una cota, no una predicción.
+- Scripts: `construir_segmentos.py`, `ranking_cuellos.py`, `dependencia_carga.py`, `altas_y_factores.py`, `simulacion_altas.py`.
 
 ---
 
