@@ -56,6 +56,10 @@ el 1 da contexto y el 4 sale de los dos anteriores.
   (que vuelve a correr la consulta completa). Ojo: copiar desde la grilla exporta solo lo cargado.
 - Periodo de datos: **enero 2023 a junio 2026 completos**; julio 2026 parcial (último día con datos:
   2026-07-17); agosto casi vacío. Tendencias y pronósticos se cortan en junio 2026.
+  **Aviso (22-oct): las llegadas bajan de forma sostenida desde abril de 2026** (por día: 244 en ene–abr, 186 en mayo, 171 en
+  junio, 158 en 1–16 de julio) y los ingresos a cama también (~19–22 en ene–abr, 15,6 en mayo). Coincide con la caída de laboratorios
+  de may–jun. Puede ser carga de datos incompleta o menos demanda real: no se sabe (pregunta 14). Mayo–julio 2026 se tratan
+  con cautela y no se usan para evaluar modelos.
 
 ### Tamaños
 
@@ -386,7 +390,32 @@ el 1 da contexto y el 4 sale de los dos anteriores.
     Adelantar altas ayuda pero no resuelve: el 83 % de las horas de espera viene de esperas de más de 24 h y el 57 % de esperas
     de más de 48 h (el 19 % de los pacientes), y unas horas menos no deshacen esperas de varios días.
   - Supuestos: el alta de los demás no cambia y la capacidad total (camas) se desconoce; es una cota, no una predicción.
-- Scripts: `construir_segmentos.py`, `ranking_cuellos.py`, `dependencia_carga.py`, `altas_y_factores.py`, `simulacion_altas.py`.
+- **Tendencia de la espera, con la caída de 2026 aparte:** exceso medio de espera por episodio 16,4 h (2023), 17,6 (2024),
+  21,5 (2025) y 22,3 (ene–abr 2026), así que el empeoramiento (+36 %) se ve en periodos completos. En may–jul 2026 la espera
+  mediana sube a 24 h (antes 15–18 h) mientras llegan 25 % menos pacientes: no se puede separar un efecto real de uno de registro.
+- **Pronóstico de demanda (Modelo A, `pronostico_demanda.py` v1.2; entrenado hasta 2025-12, probado en ene–abr 2026, método
+  elegido con la validación de 2025-07 a 2025-12 sin mirar la prueba):**
+  - **Llegadas por día:** regresión de Poisson con día de la semana, festivos (entre semana y fin de semana por separado), semana
+    santa, nivel de los últimos 28 días y la "sorpresa" del último día conocido (los errores tienen memoria: autocorrelación 0,35).
+    Error relativo **7,9 % a 1 día** (MAE 19 personas por día) y 9,1 % a 7 días (8,6 % con la variante de sorpresa, que la validación
+    no eligió), contra 9,9 % y 10,5 % de la mejor referencia (día de la semana × nivel reciente). Por hora: 26,6 % frente a 28,8 %.
+  - **Ingresos a cama por día:** ningún método mejora a "día de la semana × nivel reciente" (error ~22,5–23,3 % con todos; la
+    varianza de los ingresos es igual a su media, es ruido de conteo y su piso teórico es ~18 %). **Por semana el error baja a 9,4 %**
+    (frente a 14,7 % de repetir la semana anterior, 16 semanas): para planear camas usar el pronóstico semanal. Llegadas por
+    semana: 5,6 %, sin ventaja sobre repetir la semana anterior (5,2 %).
+  - **Bandas del 80 %** con los errores de los 60 días conocidos más recientes: cobertura 78 % (1 d) y 83 % (7 d) en llegadas; en
+    ingresos solo ~68 % (siguen angostas).
+  - **Alerta de día congestionado** (llegadas > percentil 90 del mismo día de la semana en 12 semanas; clasificador logístico, corte
+    elegido en validación): AUC 0,80 a 1 día (0,61 la referencia). A 1 día: 26 alertas, 9 aciertos (precisión 35 %, detección
+    50 %, 17 falsas alarmas); a 7 días: 44 alertas, 12 aciertos (precisión 27 %, detección 67 %, 32 falsas alarmas). Es un aviso, no una
+    alarma confiable: 2 de cada 3 alertas a 1 día son falsas.
+  - **Probado y descartado:** nivel con mediana de 28 días (empeora) y cambiar la ventana del nivel (casi no cambia).
+    **No probado:** modelar los ingresos como fracción de las llegadas pronosticadas.
+  - **Limitaciones:** en mayo 2026 el modelo sobrestima las llegadas 11 % (a 1 día) y 33 % (a 7 días) y los ingresos ~30 % por la
+    caída no anticipada (la banda a 7 días cubre solo 58 % en mayo); no anticipa brotes, sábados aislados con casi nadie
+    (28-mar-2026: 88 llegadas) ni cambios de registro. Las llegadas incluyen ≥ 4 % de réplicas (4.6).
+- Scripts: `construir_segmentos.py`, `ranking_cuellos.py`, `dependencia_carga.py`, `altas_y_factores.py`, `simulacion_altas.py`,
+  `pronostico_demanda.py`.
 
 ---
 
@@ -451,6 +480,9 @@ Pendiente: `mapeo_dx.csv` (columnas dx_nombre, categoria_dx) a partir de dx_frec
 12. Hay episodios de varios días en urgencias (TU) sin hospitalización registrada (ej. visita 2405100, 177 h): ¿esperan
     cama sin que se registre, observación prolongada o error?
 13. Estancias gemelas (4.6): ¿cuál es la persona real cuando la misma estancia aparece en dos pacientes? (ampliación de la 1)
+14. Desde abril de 2026 las llegadas bajan ~25–35 % (y los ingresos ~20–30 %) y los laboratorios caen a la mitad en may–jun:
+    ¿cambió el volumen real (cierre de servicio, cambio de triage) o el registro, o la extracción está incompleta en los
+    últimos meses?
 
 ---
 
