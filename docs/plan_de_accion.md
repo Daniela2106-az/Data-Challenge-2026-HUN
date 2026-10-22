@@ -1,7 +1,51 @@
-# Plan de acción — Data Challenge HUN 2026 (actualizado 20-oct-2026)
+# Plan de acción — Data Challenge HUN 2026 (actualizado 21-oct-2026)
 
 Equipo de 3. Solo una persona tiene Claude (**Daniela**); las otras dos trabajan con lo que ella les pasa
 (tablas agregadas por un drive privado, nunca por git) y con las herramientas que ya tengan.
+
+## 0. Cuello de botella: definición congelada (21-oct-2026)
+
+> **Cuello de botella** = segmento del recorrido donde el paciente espera un recurso, que muestra un exceso de
+> tiempo frente a una referencia de "cuando funciona bien", con impacto alto (volumen × retraso) y que se agrava
+> con la carga.
+
+Por qué esta definición (para no reabrirla): un **atípico** es un caso raro; un **cuello de botella** es un retraso
+que le pasa a muchos. El promedio no sirve como referencia porque el propio cuello de botella lo infla. Por eso:
+
+1. **Segmento** = duración de una etapa (TU, HOSP), hueco entre dos etapas consecutivas, o tiempo entre dos hitos
+   (inicio del episodio → inicio de la primera HOSP = espera de cama). Las etapas van pegadas, así que parte de la
+   espera está *dentro* de TU. No se comparan segmentos de tipos distintos entre sí (HOSP es servicio clínico).
+2. **Referencia** (tres, y el ranking debe ser el mismo con las tres): (a) mediana del mismo segmento con baja
+   carga (quintil más bajo de llegadas de las 6 h previas); (b) percentil 25 del segmento; (c) meta del HUN, si
+   la dan. Se calculan por estrato (hospitalizado o no × adulto/niño).
+3. **Impacto** = Σ `max(0, horas − referencia)` = horas-paciente perdidas; más el % de episodios con exceso mayor
+   a 6 h y a 24 h ("le pasa a todos").
+4. **Dependencia de la carga:** el tiempo del segmento dividido entre su referencia, por decil de carga (llegadas
+   de 6 h, ocupación, hora, día). Sube fuerte con la carga → falta capacidad; varía por hora pero no por carga →
+   proceso o turnos; plano pero largo → proceso lento. No todo aumento con la carga es cuello de botella: se compara
+   la pendiente entre segmentos.
+5. **Dos niveles de alerta:** de sistema (ocupación proyectada mayor al umbral) y de paciente (tiempo mayor al p90
+   de su referencia). Los atípicos sirven a la alerta, no definen el cuello de botella.
+6. **Agrupar por ruta:** solo de forma gruesa (`ruta_simple`) para comparar parejo; nunca por cadena exacta
+   (se fragmenta, y la ruta se conoce solo al final).
+
+Límites que se declaran: la referencia es interna al hospital; la espera dentro de TU no se separa de la atención;
+la duración de TU de quienes se van de alta no se mide (~58 % sin hora de salida); el número de camas no está en
+la base.
+
+### Fases y consultas (`sql/consultas_cuellos_botella.sql`)
+
+| Fase | Qué se hace | Consulta | Puerta de decisión |
+|---|---|---|---|
+| 0 | Enviar al HUN: número de camas por año y meta de tiempo | — | — |
+| 1 | Cuadrar la base y confirmar dónde está el tiempo muerto entre etapas | Q0, Q1, Q2 | Q0 cuadra con CLAUDE.md; Q1 y Q2 dentro de los rangos esperados |
+| 2 | Construir episodios y segmentos; inventario: n, % medido, percentiles, sesgo de medición | Q3 | Elegir segmentos candidatos (≥ ~50 % medidos, sin sesgo claro) |
+| 3 | Referencias, exceso, impacto y ranking (con las tres referencias) | Q3 | ¿El orden se mantiene entre referencias? |
+| 4 | Dependencia de la carga y controles por edad y diagnóstico | Q3, Q4 | Clasificar cada segmento (capacidad, turnos, proceso) |
+| 5 | Altas tardías por hora; factores del exceso | Q3 (+ dx y laboratorios ya exportados) | ¿Se sostiene la hipótesis de altas tardías? |
+| 6 | Demanda, estancias, simulación de camas, escenarios | Q3, Q4 | La diferencia ocupación por horas (~100) frente a Little (~144) ya tiene explicación (21-oct): el 41 % de los episodios hospitalizados tiene una estancia "gemela" replicada entre dos personas. Falta decidir si se cuenta cada estancia una sola vez (~113 camas, ~22 ingresos/día) |
+| 7 | Alertas de sistema y de paciente, probadas sobre días pasados | Q3, Q4 | Pocas alertas por día y con anticipación |
+| 8 | Power BI, documento, README | — | — |
 
 ## 1. Qué problemas encontramos (en palabras simples)
 
