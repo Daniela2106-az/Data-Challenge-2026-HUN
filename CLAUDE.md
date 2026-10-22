@@ -251,7 +251,7 @@ el 1 da contexto y el 4 sale de los dos anteriores.
   estaban infladas por lo mismo. Q4 (intervalos distintos por etapa) da ~100 camas; el nivel absoluto depende del método
   (100–113) y el número real de camas lo tiene que dar el HUN.
 - **Lo que NO cambia:** los peores casos siguen empeorando de 2023 a 2026 (espera de cama p90 de 61 h en 2023 a 80 h en 2026
-  con estancias únicas; la mediana se queda en 17–19 h), y urgencias antes de la cama sigue siendo el componente que más horas pierde (77 % de la espera).
+  con estancias únicas; la mediana se queda en 17–20 h), y urgencias antes de la cama sigue siendo el componente que más horas pierde (77 % de la espera).
 - **Llegadas (medido el 22-oct, cota inferior):** 13.615 pares de episodios empiezan en el mismo segundo, con personas de
   `person_id` cercano (≤ 10) y `visit_occurrence_id` a un desfase de copia conocido: ≥ 4 % de las llegadas (4.0 % del total)
   son réplicas (20,8 % de los episodios con cama, 6,6 % de los demás). La cifra real es mayor (solo se contaron pares
@@ -345,6 +345,35 @@ el 1 da contexto y el 4 sale de los dos anteriores.
   no es aplicable a la entrada.
 - Decisión: Modelo A ampliado (llegadas e ingresos), modelo de camas y simulación, días atípicos y regresión logística
   solo como análisis explicativo. Detalle en `docs/fichas_de_tareas.md`.
+
+---
+
+## 6b. Cuellos de botella: resultados (22-oct, estancias únicas; fases 2 a 5 de `docs/plan_de_accion.md`)
+
+- **Segmentos candidatos** (27.167 estancias): espera de cama (mediana 18,0 h, p90 71,5 h), urgencias antes de la cama
+  (77 % de las horas de espera) y hueco sin etapa antes de la cama (lo tiene ~24 % de los hospitalizados, mediana 19,7 h
+  entre ellos; 23 % de las horas). La estancia en cama es servicio (va a la simulación) y urgencias sin hospitalizar solo
+  es descriptiva (38 % medida, sesgada por tipo de visita, edad y año).
+- **Ranking:** el 64 % de las horas de espera de cama queda por encima de la referencia de carga baja (518 mil de 812 mil
+  horas-paciente). Urgencias antes de la cama lidera con las 4 referencias y los 3 cortes de episodio (72, 168, 336 h);
+  el peso del hueco (17–24 %) depende del corte.
+- **Tendencia:** exceso medio por episodio de 16,4 h (2023) a 22,9 h (2026), +40 %; el p90 sube de 61 a 80 h; la mediana
+  se queda en 17–20 h. Empeoran los peores casos.
+- **Carga (Fase 4):** la mediana de espera sube de 14,2 h (decil con menos llegadas en 6 h) a 25,9 h (decil con más), +2,5 %
+  por decil controlando edad, año y hora. La ocupación pesa poco y las llegadas de 24 h casi nada.
+- **Hora de llegada:** mediana de 12–15 h de madrugada y ~25 h al llegar entre las 13 y las 16 h (salto a las 13:00). La carga
+  explica unos dos quintos del efecto de la tarde; el resto no.
+- **Altas tardías (Fase 5, hipótesis sostenida descriptivamente, 4 de 4 criterios):** el 61,5 % de las altas ocurre entre las
+  14:00 y las 18:59 y solo el 15 % antes del mediodía (estable 13–16 % por año). La cama se asigna con mediana a las 17–18 h
+  sin importar la hora de llegada (7 a 21 h). Quien llega a las 8 h recibe cama al día siguiente en el 50 %; a las 16 h, en el
+  72 %. Los ingresos a cama siguen a las altas en la misma hora (correlación cruzada 0,17 sin el patrón horario). La prueba a nivel
+  diario del 21-oct fallaba porque el mecanismo es dentro del día. Asociación, no causa: el efecto de adelantar altas se
+  estima en la simulación de camas (Fase 6).
+- **Factores de la espera** (modelo sobre log(espera+1), R² = 12 %: casi toda la variación no se explica con lo observado):
+  diagnóstico 3,9 puntos de R² (ojo: depende de si hay diagnóstico traducido, dato administrativo y registrado tarde), tipo de
+  visita 2,3 (quien entra por urgencias espera más: ambulatorio −39 %, treatment urgency −42 %), edad y sexo 1,2, hora 0,6,
+  laboratorios de 6 h 0,4, año 0,2, carga 0,1, calendario ~0.
+- Scripts: `construir_segmentos.py`, `ranking_cuellos.py`, `dependencia_carga.py`, `altas_y_factores.py`.
 
 ---
 
