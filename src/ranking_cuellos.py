@@ -220,6 +220,10 @@ else:
     ax2.set_ylabel("exceso medio por episodio (h)", color=TINTA2, fontsize=9)
     ax2.set_title("Espera de cama: exceso medio por anio", loc="left", color=TINTA, fontsize=11.5,
                   fontweight="bold")
-    fig.tight_layout()
+    n_cama = int(rk[rk.segmento == "espera_cama"].n.iloc[0])
+    fig.tight_layout(rect=(0, .05, 1, 1))
+    fig.text(.01, .01, f"Cada estancia en cama se cuenta una vez (n = {n_cama:,}). El hueco tiene referencia 0 por "
+             "definicion. La espera de cama es la suma de los otros dos: sus excesos no se suman entre filas.",
+             color=TINTA2, fontsize=8)
     fig.savefig(GRAFICOS / f"ranking_cuellos{SUFIJO}.png", dpi=150, facecolor=SUPERFICIE)
     print("\nguardado: resultados/graficos/ranking_cuellos.png")

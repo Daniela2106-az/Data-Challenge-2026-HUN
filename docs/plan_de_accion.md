@@ -43,7 +43,7 @@ la base.
 | 3 | Referencias, exceso, impacto y ranking (con las tres referencias) | Q3 | ¿El orden se mantiene entre referencias? |
 | 4 | Dependencia de la carga y controles por edad y diagnóstico | Q3, Q4 | Clasificar cada segmento (capacidad, turnos, proceso) |
 | 5 | Altas tardías por hora; factores del exceso | Q3 (+ dx y laboratorios ya exportados) | ¿Se sostiene la hipótesis de altas tardías? |
-| 6 | Demanda, estancias, simulación de camas, escenarios | Q3, Q4 | La diferencia ocupación por horas (~100) frente a Little (~144) ya tiene explicación (21-oct): el 41 % de los episodios hospitalizados tiene una estancia "gemela" replicada entre dos personas. Falta decidir si se cuenta cada estancia una sola vez (~113 camas, ~22 ingresos/día) |
+| 6 | Demanda, estancias, simulación de camas, escenarios | Q3, Q4 | La diferencia ocupación por horas (~100) frente a Little (~144) ya tiene explicación (21-oct): el 41 % de los episodios hospitalizados tiene una estancia "gemela" replicada entre dos personas. **Decidido el 22-oct: se cuenta cada estancia una vez** (~113 camas, ~22 ingresos/día; CLAUDE.md 4.6). Falta medir si las llegadas también están infladas |
 | 7 | Alertas de sistema y de paciente, probadas sobre días pasados | Q3, Q4 | Pocas alertas por día y con anticipación |
 | 8 | Power BI, documento, README | — | — |
 

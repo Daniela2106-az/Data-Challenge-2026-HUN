@@ -1,10 +1,20 @@
 """
-exportar_para_equipo.py  -  tablas listas para el equipo (21-oct-2026)
+exportar_para_equipo.py  -  tablas listas para el equipo (v2, 22-oct-2026)
 Corre DESPUES de analisis_etapas.py y preparar_variables.py. Deja en datos/procesados/para_equipo/ las tablas
 que usan los modelos y Power BI. Esa carpeta NO se sube a git: se comparte por el drive privado del equipo.
 
+QUE CAMBIO EN v2 (22-oct): ESTANCIAS GEMELAS
+  El 41 % de los episodios hospitalizados tiene otro episodio con exactamente el mismo inicio y fin de cama:
+  es la misma estancia replicada entre dos personas distintas. Contarlas todas inflaba los ingresos por dia
+  (27,7 en vez de ~22), la ocupacion (~146 en vez de ~113 camas) y la espera de cama (mediana 22,4 h en vez de 18 h).
+  Ahora estancias_hospitalizacion.csv trae UNA fila por estancia (se queda el episodio de menor
+  visit_occurrence_id) y n_registros indica cuantos registros tenia esa estancia. El panel diario cuenta
+  ingresos, altas, hospitalizados, espera y ocupacion con esas estancias unicas.
+  OJO: la columna `llegadas` sigue contando todos los episodios (puede incluir replicas de otras personas
+  que no tienen cama; ver CLAUDE.md, seccion 4.6).
+
 SALIDAS
-  estancias_hospitalizacion.csv  una fila por episodio hospitalizado: ingreso a cama, alta, horas en cama,
+  estancias_hospitalizacion.csv  una fila por ESTANCIA en cama: ingreso, alta, horas en cama, n_registros
                                  y las variables del paciente (insumo del modelo de camas y la simulacion)
   panel_diario.csv               una fila por dia: llegadas, hospitalizados, ingresos a cama, altas, ocupacion,
                                  espera de cama y calendario (insumo del Modelo A y de la deteccion de dias atipicos)
@@ -20,6 +30,7 @@ SALIDA = PROC / "para_equipo"
 SALIDA.mkdir(parents=True, exist_ok=True)
 OCUP_DESDE, OCUP_HASTA = "2023-02-01", "2026-06-01"   # mismo rango confiable de preparar_variables.py
 K = ["visit_occurrence_id", "episodio"]
+LLAVE_ESTANCIA = ["ingreso_cama", "alta"]
 
 ep = pd.read_parquet(PROC / "tabla_episodios.parquet")
 bl = pd.read_csv(PROC / "bloques.csv", parse_dates=["ini", "fin"])
@@ -33,23 +44,40 @@ cols = ["ini", "hora", "dia_semana_num", "mes", "festivo", "edad", "grupo_edad",
         "categoria_dx", "n_lab_6h", "espera_cama_h", "espera_mas_24h", "ocup_hosp", "llegadas_6h_previas",
         "ocupacion_confiable"]
 est = est.merge(ep[K + cols].rename(columns={"ini": "llegada", "hora": "hora_llegada"}), on=K, how="left")
+
+# estancias gemelas: mismo inicio y fin de cama en otro episodio -> se cuenta una vez
+est = est.sort_values(K).reset_index(drop=True)
+est["n_registros"] = est.groupby(LLAVE_ESTANCIA).visit_occurrence_id.transform("size")
+n_antes = len(est)
+est = est[~est.duplicated(LLAVE_ESTANCIA, keep="first")].reset_index(drop=True)
 est.to_csv(SALIDA / "estancias_hospitalizacion.csv", index=False)
 
 # ---- panel diario ------------------------------------------------------------------------------
 dias = pd.date_range(OCUP_DESDE, pd.Timestamp(OCUP_HASTA) - pd.Timedelta(days=1))
 sd = pd.read_csv(PROC / "serie_diaria.csv", parse_dates=["fecha"]).set_index("fecha")
 completas = est[est.alta_completa]
+
+# ocupacion con estancias unicas: pacientes en cama al final de cada hora (los ingresados antes de
+# OCUP_DESDE entran por sus eventos, asi que el arranque no queda en cero)
+horas = pd.date_range(est.ingreso_cama.min().floor("h"), est.alta.max().floor("h"), freq="h")
+delta = (est.ingreso_cama.dt.floor("h").value_counts()
+         .sub(est.alta.dt.floor("h").value_counts(), fill_value=0)
+         .reindex(horas, fill_value=0))
+ocup_h = delta.cumsum()
+ocup_d = ocup_h.groupby(ocup_h.index.normalize()).agg(["mean", "max"])
+
 d = pd.DataFrame(index=dias)
 d.index.name = "fecha"
 d["llegadas"] = sd.llegadas
-d["hospitalizados"] = sd.llegadas_que_se_hospitalizan
+d["hospitalizados"] = est.llegada.dt.normalize().value_counts().reindex(dias, fill_value=0)
 d["ingresos_a_cama"] = est.ingreso_cama.dt.normalize().value_counts().reindex(dias, fill_value=0)
 d["altas"] = completas.alta.dt.normalize().value_counts().reindex(dias, fill_value=0)
 d["altas_antes_mediodia"] = completas[completas.alta.dt.hour < 12].alta.dt.normalize().value_counts().reindex(dias, fill_value=0)
-d["ocup_hosp_media"] = sd.ocup_hosp_media
-d["ocup_hosp_max"] = sd.ocup_hosp_max
-d["espera_cama_mediana_h"] = sd.espera_cama_mediana_h
-d["n_espera"] = sd.n_espera
+d["ocup_hosp_media"] = ocup_d["mean"].reindex(dias)
+d["ocup_hosp_max"] = ocup_d["max"].reindex(dias)
+esp = est.dropna(subset=["espera_cama_h"]).assign(fecha=lambda x: x.llegada.dt.normalize())
+d["espera_cama_mediana_h"] = esp.groupby("fecha").espera_cama_h.median().reindex(dias)
+d["n_espera"] = esp.groupby("fecha").size().reindex(dias, fill_value=0)
 d["dia_semana_num"] = d.index.dayofweek
 d["mes"] = d.index.month
 try:
@@ -62,6 +90,8 @@ except ImportError:
 d["dia_no_habil"] = (d.dia_semana_num >= 5) | (d.festivo == True)  # noqa: E712
 d.round(2).to_csv(SALIDA / "panel_diario.csv")
 
-print(f"estancias_hospitalizacion.csv: {len(est)} filas | con alta completa: {int(est.alta_completa.sum())}")
+print(f"estancias_hospitalizacion.csv: {len(est)} estancias unicas ({n_antes - len(est)} registros gemelos quitados de {n_antes}) "
+      f"| con alta completa: {int(est.alta_completa.sum())}")
 print(f"panel_diario.csv: {len(d)} dias ({d.index.min().date()} a {d.index.max().date()})")
-print(d[["llegadas", "hospitalizados", "ingresos_a_cama", "altas", "altas_antes_mediodia"]].describe().round(1).to_string())
+print(d[["llegadas", "hospitalizados", "ingresos_a_cama", "altas", "altas_antes_mediodia",
+         "ocup_hosp_media", "espera_cama_mediana_h"]].describe().round(1).to_string())

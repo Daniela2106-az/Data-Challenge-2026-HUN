@@ -21,6 +21,10 @@ SALIDAS
   resultados/tablas/urgencias_antes_cama_por_anio.csv
 
 REGLAS
+  - (v1.1, 22-oct) ESTANCIAS GEMELAS: si dos episodios tienen exactamente el mismo inicio y fin de HOSP, es la misma
+    estancia replicada entre dos personas (41 % de los episodios hospitalizados). Los segmentos de hospitalizacion
+    (espera de cama, urgencias antes de la cama, hueco, estancia en cama) cuentan cada estancia UNA vez: se queda
+    el episodio de menor visit_occurrence_id. Con DEDUP=0 se desactiva (solo para comparar).
   - Los segmentos se calculan para TODOS los episodios (el corte de 168 h solo decide como se forman).
   - La numeracion de "episodio" viene de antes de quitar episodios replicados: un 1 no significa que
     la visita este partida. Para eso se cuentan las filas por visita.
@@ -50,6 +54,8 @@ for _d in (PROC, TABLAS):
 # Parametros
 # ----------------------------------------------------------------------
 MAX_H = 2160                 # igual que analisis_etapas.py
+DEDUP_ESTANCIAS = os.environ.get("DEDUP", "1") != "0"   # True: cada estancia en cama se cuenta una vez
+K = ["visit_occurrence_id", "episodio"]
 N_ESPERADO = 336_844         # filas de Q3 en la prueba (referencia, no es una regla)
 TIPOS = {9203: "Urgencias", 3045729: "Treatment urgency", 9201: "Inpatient", 581479: "Ambulatorio"}
 SEXOS = {8507: "Hombre", 8532: "Mujer"}
@@ -114,6 +120,20 @@ print(f"hospitalizacion directa (primera etapa ya es HOSP): {int(ep.hosp_directa
 print("hueco < 0 (alguna etapa previa termina despues de ini_hosp):",
       int((horas(ep.fin_previo_hosp, ep.ini_hosp) < 0).sum()), "-> se recorta a 0")
 
+# estancias gemelas (v1.1, 22-oct): la misma estancia en cama registrada en dos personas distintas
+# (mismo inicio y mismo fin de HOSP). Se cuenta UNA vez: se queda el episodio de menor visit_occurrence_id.
+_hh = ep.hospitalizado & ep.fin_hosp.notna()
+_h = ep[_hh].sort_values(K)
+ep["estancia_gemela"] = False
+ep.loc[_h.index, "estancia_gemela"] = _h.duplicated(["ini_hosp", "fin_hosp"], keep=False).values
+ep["estancia_unica"] = True
+ep.loc[_h.index[_h.duplicated(["ini_hosp", "fin_hosp"], keep="first").values], "estancia_unica"] = False
+print(f"estancias gemelas: {int(ep.estancia_gemela.sum())} episodios hospitalizados ({100 * ep.estancia_gemela.sum() / _hh.sum():.1f} %) "
+      f"comparten inicio y fin de cama con otro | estancias unicas: {int((_hh & ep.estancia_unica).sum())} de {int(_hh.sum())}")
+print(f"DEDUP_ESTANCIAS = {DEDUP_ESTANCIAS}: " + ("los segmentos de hospitalizacion cuentan cada estancia una vez"
+                                                  if DEDUP_ESTANCIAS else "NO se deduplica (solo para comparar)"))
+USO = ep.estancia_unica if DEDUP_ESTANCIAS else pd.Series(True, index=ep.index)
+
 # contexto de cada episodio
 ep["edad"] = ep.ini.dt.year - ep.year_of_birth
 mala_edad = (ep.year_of_birth < 1900) | (ep.edad > 110) | (ep.edad < 0)
@@ -135,8 +155,8 @@ ep.loc[ep.ini < t0 + pd.Timedelta(hours=6), "llegadas_6h_previas"] = np.nan
 ep.loc[ep.ini < t0 + pd.Timedelta(hours=24), "llegadas_24h_previas"] = np.nan
 print("primera llegada de la base:", t0)
 
-CONTEXTO = ["anio", "mes", "hora", "dia_semana", "franja", "fin_de_semana", "edad", "grupo_edad", "sexo",
-            "tipo_visita", "llegadas_6h_previas", "llegadas_24h_previas"]
+CONTEXTO = ["ini", "anio", "mes", "hora", "dia_semana", "franja", "fin_de_semana", "edad", "grupo_edad", "sexo",
+            "tipo_visita", "llegadas_6h_previas", "llegadas_24h_previas", "estancia_gemela"]
 K = ["visit_occurrence_id", "episodio"]
 
 # ----------------------------------------------------------------------
@@ -155,14 +175,14 @@ def agregar(nombre, mask, h, medido):
     piezas.append(d)
 
 
-con_cama = ep.hospitalizado & ~ep.hosp_directa
+con_cama = ep.hospitalizado & ~ep.hosp_directa & USO
 todos = pd.Series(True, index=ep.index)
 agregar("espera_cama", con_cama, ep.espera_h, todos)
 agregar("urgencias_antes_cama", con_cama & ep.fin_previo_hosp.notna(),
         horas(ep.ini, ep.fin_previo_hosp).clip(lower=0), todos)
 agregar("hueco_antes_cama", con_cama & ep.fin_previo_hosp.notna(),
         horas(ep.fin_previo_hosp, ep.ini_hosp).clip(lower=0), todos)
-agregar("estancia_cama", ep.hospitalizado, horas(ep.ini_hosp, ep.fin_hosp), ep.ultima_cerrada.fillna(False))
+agregar("estancia_cama", ep.hospitalizado & USO, horas(ep.ini_hosp, ep.fin_hosp), ep.ultima_cerrada.fillna(False))
 sin_hosp = (ep.n_hosp == 0) & (ep.n_tu > 0)
 agregar("urgencias_sin_hospitalizar", sin_hosp, horas(ep.ini, ep.fin_max),
         (ep.con_tiempo.fillna(False)) & (ep.ultima_cerrada.fillna(False)))
@@ -174,6 +194,34 @@ print("segmentos:", len(seg), "| fuera de estadisticas por tope o negativos:",
       int((seg.medido & ~seg.horas.between(0, MAX_H)).sum()))
 seg.to_csv(PROC / f"segmentos{SUFIJO}.csv", index=False)
 print(f"guardado: datos/procesados/segmentos{SUFIJO}.csv")
+
+# ----------------------------------------------------------------------
+# 2b) Efecto de contar cada estancia una vez
+# ----------------------------------------------------------------------
+titulo("2b. EFECTO DE CONTAR CADA ESTANCIA UNA VEZ (antes y despues)")
+DIAS = (pd.Timestamp("2026-07-01") - pd.Timestamp("2023-01-01")).days   # enero 2023 a junio 2026
+V0, V1 = pd.Timestamp("2023-03-01"), pd.Timestamp("2026-05-01")          # ventana confiable para camas
+
+
+def camas_little(g):
+    """Camas ocupadas en promedio: horas de cama de la ventana / horas de la ventana."""
+    s, e = g.ini_hosp.clip(lower=V0), g.fin_hosp.clip(upper=V1)
+    return (e - s)[e > s].dt.total_seconds().sum() / 3600 / ((V1 - V0).total_seconds() / 3600)
+
+
+hosp_ok = ep[_hh]
+filas = []
+for nombre, g_all in [("sin deduplicar", hosp_ok), ("una vez por estancia", hosp_ok[hosp_ok.estancia_unica])]:
+    g = g_all[~g_all.hosp_directa]
+    s = g.espera_h
+    filas.append({"version": nombre, "estancias": len(g_all), "ingresos_por_dia": round(len(g_all) / DIAS, 1),
+                  "camas_medias": round(camas_little(g_all), 1), "n_espera": len(s),
+                  "espera_p25": round(s.quantile(.25), 1), "espera_p50": round(s.median(), 1),
+                  "espera_p75": round(s.quantile(.75), 1), "espera_p90": round(s.quantile(.90), 1),
+                  "pct_espera_mas_24h": round(100 * (s > 24).mean(), 1)})
+comp = pd.DataFrame(filas)
+print(comp.to_string(index=False))
+comp.to_csv(TABLAS / f"comparacion_dedup{SUFIJO}.csv", index=False)
 
 # ----------------------------------------------------------------------
 # 3) Inventario por segmento

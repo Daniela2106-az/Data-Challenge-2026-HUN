@@ -3,7 +3,8 @@
 Este archivo resume TODO lo que ya se averiguó de la base de datos en semanas de consultas.
 **Léelo completo antes de proponer consultas nuevas.** La base es lenta (consultas pesadas de 10–30 min
 que traban el computador), así que antes de pedir una consulta comprueba aquí si la respuesta ya existe.
-Última actualización: 20-oct-2026.
+Última actualización: 22-oct-2026. (Cambio del 22-oct: las estancias en cama replicadas entre dos personas se cuentan
+una sola vez; ver sección 4.6. Las cifras de espera de cama, ingresos y ocupación anteriores a esa fecha están infladas.)
 
 ---
 
@@ -222,6 +223,41 @@ el 1 da contexto y el 4 sale de los dos anteriores.
   actividad de las copias). Probablemente pacientes que se fueron sin atención o registros administrativos.
 - El 25,8 % de episodios "sin actividad" puede estar inflado por la actividad colgada de copias.
 
+### 4.6 Estancias gemelas en cama (22-oct-2026) — cambia las cifras de espera, ingresos y ocupación
+- **Hallazgo:** 14.615 de 35.322 episodios con hospitalización (41,4 %) comparten exactamente `ini_hosp` y `fin_hosp`
+  con otro episodio. Son la MISMA estancia registrada en DOS PERSONAS: en los pares el `person_id` difiere en ≤ 2 en el 78 %
+  (al azar sería 0,005 %), y los `visit_occurrence_id` difieren por los desfases de copia conocidos (1.746.478–89) en ~90 %.
+  Las esperas de los dos miembros casi coinciden (diferencia p90 = 0,8 h). Es el mismo fenómeno de la sección 4.1, pero en
+  la hospitalización sobrevive a la regla v3.5 porque esa solo quita episodios con TODAS sus etapas repetidas.
+- **Decisión (regla v3.7 de análisis, no del pipeline de limpieza):** cada estancia se cuenta UNA vez, deduplicando por
+  (`ini_hosp`, `fin_hosp`) y quedándose con el episodio de menor `visit_occurrence_id`. Elegir uno u otro no cambia la
+  espera (casi idéntica). No se sabe cuál de las dos personas es la real (pregunta 1 al HUN); para tiempos y camas no importa.
+- **Dónde se aplica:** `src/construir_segmentos.py` (v1.1, `DEDUP=0` para desactivarlo) y `src/exportar_para_equipo.py` (v2:
+  `estancias_hospitalizacion.csv` trae una fila por estancia con `n_registros`, y `panel_diario.csv` cuenta ingresos, altas,
+  hospitalizados, espera y ocupación con estancias únicas). **NO se aplica todavía** en `analisis_etapas.py`,
+  `preparar_variables.py` ni `tabla_episodios`: ahí cada episodio gemelo sigue contando.
+- **Efecto (ene-2023 a jun-2026):**
+
+| | Antes (sin deduplicar) | Después (una vez por estancia) |
+|---|---|---|
+| Estancias con cama | 35.322 | 27.934 |
+| Ingresos a cama por día | 27,7 | **21,9** |
+| Camas ocupadas en promedio | ~146 | **~113** |
+| Espera de cama mediana / p75 / p90 | 22,4 / 42,4 / 77,5 h | **18,0 / 37,2 / 71,5 h** |
+| Espera de cama mayor a 24 h | 47,9 % | 42,7 % |
+| Hueco sin etapa, como % de la espera | 17 % | 23 % |
+
+  La coincidencia de la ley de Little (27,7 × 5,2 ≈ 144) con la ocupación observada (145) era real, pero las dos cifras
+  estaban infladas por lo mismo. Q4 (intervalos distintos por etapa) da ~100 camas; el nivel absoluto depende del método
+  (100–113) y el número real de camas lo tiene que dar el HUN.
+- **Lo que NO cambia:** los peores casos siguen empeorando de 2023 a 2026 (espera de cama p90 de 61 h en 2023 a 80 h en 2026
+  con estancias únicas; la mediana se queda en 17–19 h), y urgencias antes de la cama sigue siendo el componente que más horas pierde (77 % de la espera).
+- **Llegadas (medido el 22-oct, cota inferior):** 13.615 pares de episodios empiezan en el mismo segundo, con personas de
+  `person_id` cercano (≤ 10) y `visit_occurrence_id` a un desfase de copia conocido: ≥ 4 % de las llegadas (4.0 % del total)
+  son réplicas (20,8 % de los episodios con cama, 6,6 % de los demás). La cifra real es mayor (solo se contaron pares
+  exactos). Afecta al Modelo A (demanda por día) y a `llegadas_6h_previas`, que se usa como medida RELATIVA de carga
+  (su nivel está algo inflado, su variación no). Falta decidir si se deduplican las llegadas.
+
 ---
 
 ## 5. Decisiones de método (ya tomadas, no reabrir sin un motivo nuevo)
@@ -248,10 +284,18 @@ el 1 da contexto y el 4 sale de los dos anteriores.
    calculada con las mismas etapas. Poco confiable fuera de feb-2023 a may-2026.
 9. Reingreso: llegada ≤ 72 h / ≤ 30 días tras un episodio anterior **con atención** (no cuenta un registro
    solo-ER sin actividad).
+10. **Estancia única (22-oct):** en análisis de espera de cama, camas e ingresos, cada estancia en cama (mismo `ini_hosp`
+    y `fin_hosp`) se cuenta una vez. Motivo y efecto en la sección 4.6.
+11. **Cuello de botella (21-oct):** segmento de espera con exceso sobre una referencia de "cuando funciona bien", impacto
+    alto (volumen × retraso) que se agrava con la carga. Definición completa y fases en `docs/plan_de_accion.md`, sección 0.
 
 ---
 
 ## 6. Resultados actuales (corrida v3, 20-oct; pueden cambiar con v3.3)
+
+> **Aviso (22-oct):** las cifras de espera de cama, ingresos por día y ocupación de esta sección y de "Pruebas de modelos"
+> cuentan dos veces las estancias gemelas (sección 4.6). Valores vigentes: espera de cama mediana 18,0 h, ~22 ingresos/día,
+> ~113 camas ocupadas.
 
 - Etapas: 3.281.613 → quitando AMB (1.539.340) y abiertas (2.053) quedan 1.740.220.
 - Visitas que quedan sin copias: 1.193.956; con alguna etapa: 338.925. **Episodios: 295.790** (164.954 pacientes).
@@ -295,7 +339,8 @@ el 1 da contexto y el 4 sale de los dos anteriores.
   R² negativo en 2026. La hipótesis de las altas tardías no se sostiene a nivel diario.
 - Estancia en cama por paciente: R² ≈ 0,00–0,02 aun con dx provisional y laboratorios de 6 h; error igual a decir la mediana (47 h).
 - Ley de Little: 27,7 ingresos/día × 5,2 días de estancia media = 144 camas; ocupación observada media 145. El modelo
-  de capacidad (ingresos × distribución de estancias) es coherente con los datos.
+  de capacidad (ingresos × distribución de estancias) es coherente con los datos. **(22-oct: ambas cifras estaban
+  infladas por las estancias gemelas; con estancias únicas son ~22 ingresos/día y ~113 camas. Ver 4.6.)**
 - Solo ~13 % de los episodios atendidos (sin solo-ER) termina hospitalizado: un modelo "al llegar" que use solo hospitalizados
   no es aplicable a la entrada.
 - Decisión: Modelo A ampliado (llegadas e ingresos), modelo de camas y simulación, días atípicos y regresión logística
@@ -305,7 +350,11 @@ el 1 da contexto y el 4 sale de los dos anteriores.
 
 ## 7. Scripts y archivos de la carpeta
 
-Orden: `src/analisis_etapas.py` → `src/preparar_variables.py` → `src/exportar_para_equipo.py` (tablas para el drive). (`archivo/Revision_inicial.py` es una versión vieja: no usar.)
+Orden: `src/analisis_etapas.py` → `src/preparar_variables.py` → `src/exportar_para_equipo.py` (tablas para el drive).
+Cuellos de botella (22-oct): `sql/consultas_cuellos_botella.sql` (Q0–Q4, Q3b; se guardan en `datos/crudos/`) →
+`src/construir_segmentos.py` (episodios de Q3 → `segmentos.csv`, inventario, sesgo de medición) →
+`src/ranking_cuellos.py` (referencias, exceso, ranking y gráfico). Q3 es una versión simplificada de la limpieza
+(337 mil episodios, casi igual al pipeline); `SUFIJO=_u72` o `_u336` repite todo con otro corte de episodios. (`archivo/Revision_inicial.py` es una versión vieja: no usar.)
 
 ### CSV de entrada (exportados de DBeaver)
 | Archivo | Columnas | Origen |
@@ -355,6 +404,11 @@ Pendiente: `mapeo_dx.csv` (columnas dx_nombre, categoria_dx) a partir de dx_frec
 8. Columnas del instructivo ausentes o vacías: ¿habrá versión actualizada?
 9. Número de camas y cubículos de urgencias por año (para ocupación en %).
 10. Rúbrica de evaluación, repo público, Power BI con datos agregados.
+11. ~1 de cada 4 hospitalizados tiene tiempo sin ninguna etapa antes de la cama (mediana 19,7 h entre ellos): ¿dónde está
+    el paciente y se registra la asignación de cama? (ampliación de la 5)
+12. Hay episodios de varios días en urgencias (TU) sin hospitalización registrada (ej. visita 2405100, 177 h): ¿esperan
+    cama sin que se registre, observación prolongada o error?
+13. Estancias gemelas (4.6): ¿cuál es la persona real cuando la misma estancia aparece en dos pacientes? (ampliación de la 1)
 
 ---
 
