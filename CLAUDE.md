@@ -414,8 +414,26 @@ el 1 da contexto y el 4 sale de los dos anteriores.
   - **Limitaciones:** en mayo 2026 el modelo sobrestima las llegadas 11 % (a 1 día) y 33 % (a 7 días) y los ingresos ~30 % por la
     caída no anticipada (la banda a 7 días cubre solo 58 % en mayo); no anticipa brotes, sábados aislados con casi nadie
     (28-mar-2026: 88 llegadas) ni cambios de registro. Las llegadas incluyen ≥ 4 % de réplicas (4.6).
+- **Alertas (Fase 7, `alertas.py`; cortes elegidos con 2025-07 a 2025-12, prueba en ene–abr 2026 reproduciendo los días):**
+  - **A. Día congestionado en tiempo real** (llegadas del día > percentil 90 del mismo día de la semana en 12 semanas): estimar el
+    total del día con lo que ya llegó, mezclado con el pronóstico. Con el corte elegido en validación, **a las 12 h** AUC 0,94,
+    28 alertas (0,23 por día), 15 aciertos: precisión 54 %, detección 83 %; a las 15 h: 15 alertas, 11 aciertos (73 % y 61 %);
+    a las 9 h: 8 alertas, 5 aciertos (62 % y 28 %). **Un día antes** (solo pronóstico): AUC 0,61, 7 alertas, 3 aciertos (43 % y 17 %).
+    Avisa a media jornada, no con un día de margen. Solo 18 días congestionados en la prueba: las cifras se mueven.
+  - **B. Camas a 24 h desde las 12 h:** la proyección (camas ahora − altas esperadas + ingresos esperados) **no mejora a la
+    persistencia** ("lo mismo que ahora"): error 4,3 contra 3,5 camas. Las altas esperadas tienen sesgo de +2,6 camas (22,4 esperadas
+    contra 19,8 reales) y correlación de 0,17 con las reales (posible causa sin comprobar: las estancias del entrenamiento son más
+    cortas que las de 2026). La alerta de "ocupación alta" (≥ percentil 80 de las 12 h del entrenamiento, 123 camas; 42 % de los
+    días de 2026) funciona mejor con la persistencia: AUC 0,92, precisión 75 %, detección 90 %, 0,5 alertas por día. Se recomienda
+    la persistencia y reportar las altas esperadas solo como orden de magnitud (~20 camas se liberan por día).
+  - **C. Paciente sin cama** (solo los que luego se hospitalizan; cota inferior de la carga real): alerta a las 24 h, 9,1 por día,
+    23 % termina esperando más de 72 h; a las 36 h, 5,5 por día, 38 %; **a las 48 h, 4,1 por día, 51 %, con 24 h de margen**; a las 60 h,
+    2,7 por día, 79 %, con 12 h de margen. Más anticipación = más alertas y menos precisión.
+  - **Carga total con el diseño recomendado** (A a las 12 h, B persistencia, C a las 48 h): ~4,9 alertas por día, casi todas del
+    tipo C. La ocupación cae de ~115 camas a mediados de abril 2026 a 87 el 29-abr: coincide con la caída de datos de
+    abril–mayo (pregunta 14) y no se interpreta como un cambio real.
 - Scripts: `construir_segmentos.py`, `ranking_cuellos.py`, `dependencia_carga.py`, `altas_y_factores.py`, `simulacion_altas.py`,
-  `pronostico_demanda.py`.
+  `pronostico_demanda.py`, `alertas.py`.
 
 ---
 
