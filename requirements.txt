@@ -1,0 +1,12 @@
+# Versiones con las que se corrio todo el proyecto (Python 3.14, octubre de 2026). Instalar con:
+#   pip install -r requirements.txt
+numpy>=2.5
+pandas>=3.0
+pyarrow>=26.0          # tabla_episodios.parquet
+matplotlib>=3.11       # graficos
+holidays>=0.107        # festivos de Colombia
+python-dateutil>=2.9   # semana santa (pronostico_demanda.py)
+openpyxl>=3.1          # analisis_etapas.py y preparar_variables.py guardan hojas de Excel
+
+# Solo para src/generar_q3_q4_desde_csv.py (alternativa a exportar Q3 y Q4 desde DBeaver):
+duckdb>=2.0

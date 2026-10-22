@@ -108,6 +108,9 @@ la tabla de escenarios sobre eso.**
 individual y por qué (explica poco: el resto depende de procesos que la base no registra).
 
 ### Ficha 3.4 — Recomendaciones con números (semana 10-16 nov)
+**Estado (22-oct):** Daniela dejó un borrador completo en `docs/recomendaciones.md` (7 recomendaciones con sus números, límites
+y fuentes). **Persona 3 lo revisa y lo amplía:** leer las fuentes originales (el borrador solo vio resúmenes de búsqueda), añadir
+5 a 8 prácticas si hacen falta y verificar que cada cifra coincide con `CLAUDE.md` 6b.
 **Datos:** resultados de las fichas 3.1 a 3.3, `factores_espera_cama.csv` y `altas_ingresos_por_hora.csv`.
 **Pasos:**
 1. Investigar 5 a 8 prácticas conocidas (altas antes del mediodía, gestión diaria de camas, unidades de decisión de
