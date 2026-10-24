@@ -16,10 +16,10 @@ demanda, alertas, días atípicos, borrador de recomendaciones y un repositorio 
 
 | Persona | Pendientes | Prioridad |
 |---|---|---|
-| **Daniela** | A1 perfiles de pacientes, A2 factores de la estancia hospitalaria, A3 `mapeo_dx.csv`, y la coordinación (C1 a C3) | Ahora |
+| **Daniela** | A1 perfiles de pacientes, A2 factores de la estancia hospitalaria (con la ampliación A2b: qué comparten las estancias que se disparan), A3 `mapeo_dx.csv`, y la coordinación (C1 a C3) | Ahora |
 | **Anthony** | A4 explicar mejor los retrasos, A5 simulación Monte Carlo de camas | Ahora |
-| **Samuel** | B1 dashboard de Power BI, B2 recomendaciones (verificar fuentes y dejarlas finales) | Al final (B2 puede empezar antes) |
-| Por decidir más adelante | A6 estimar tiempos de atención, B3 documento final, B4 presentación | Después |
+| **Samuel** | B1 dashboard de Power BI, B2 recomendaciones (verificar fuentes y dejarlas finales), **A6 estimar tiempos de atención** | Al final (B2 puede empezar antes; A6 después de los análisis A) |
+| Por decidir más adelante | A7 sistema repetible de diagnóstico de cuellos de botella, B3 documento final, B4 presentación | Después |
 
 ---
 
@@ -36,6 +36,7 @@ demanda, alertas, días atípicos, borrador de recomendaciones y un repositorio 
   esperan más y por qué podría ser".
 - **Insumos:** `tabla_episodios.parquet` (filtrar `estancia_unica == True` para espera y estancia), `segmentos.csv`.
 - **Depende de:** A3 para el diagnóstico (se puede empezar sin él).
+- **Nota de la sugerencia de Anthony (23-oct):** los perfiles también deben servir para A2b y A7: dejar la tabla de perfiles con el mismo identificador de estancia que usará A2b, para poder cruzar "perfil" con "estancia disparada".
 
 ### A2. Factores de la estancia hospitalaria · **Daniela**
 - **Qué pide el instructivo:** componente 2: "factores asociados a incrementos en [...] la duración de las estancias hospitalarias". Hoy solo describimos la estancia.
@@ -47,6 +48,25 @@ demanda, alertas, días atípicos, borrador de recomendaciones y un repositorio 
   (la prueba del 21-oct dio R² cercano a 0 al predecir la estancia por paciente: aquí el objetivo es explicar, no predecir).
 - **Insumos:** `tabla_episodios.parquet`, `estancias_hospitalizacion.csv`.
 - **Depende de:** A3 para el diagnóstico.
+- **Nota de la sugerencia de Anthony (23-oct):** al terminar A2, seguir con A2b (qué comparten las estancias que se disparan); es la misma pregunta con más variables (procedimientos y laboratorios). Reutilizar la definición de "estancia disparada" entre ambas.
+
+### A2b. Qué tienen en común las estancias que se "disparan" · **Daniela** (ampliación de A2, idea de Anthony del 23-oct)
+- **La idea:** ya sabemos que el problema está en las camas y que la estancia sube (4,70 a 5,46 días). Falta preguntar: **¿cuándo se disparan las estancias y qué
+  comparten las que se disparan?** (edad, sexo, diagnóstico, procedimientos, laboratorios, ruta). La respuesta convierte "hay un cuello de botella" en "este tipo
+  de estancias lo causa".
+- **Qué hacer:**
+  1. **Localizar en el tiempo:** estancia mediana, percentil 90 y % de estancias de más de 7 días **por mes** (2023 a abr 2026, estancias únicas). Definir "estancia
+     disparada" (por ejemplo, más de 280 h = percentil 90) y ver si se concentra en ciertos meses o se da todo el año. Esto también acota el universo si hace falta.
+  2. **Nueva extracción de la base** (hoy solo tenemos el primer diagnóstico y conteos): para las ~28 mil visitas con hospitalización, los diagnósticos, los procedimientos
+     y los laboratorios distintos de cada una. **Filtrar `person_id` igual al de la visita** para no mezclar las dos personas de las estancias duplicadas. Son tablas de
+     38 M, 47 M y 16,6 M de filas sin índices: 10 a 30 min por consulta; Daniela las corre en DBeaver. Nuevo archivo: `sql/estancias_perfil.sql`.
+  3. **Comparar disparadas contra no disparadas** con todas esas variables, midiendo el tamaño de cada diferencia (razón de probabilidades con intervalo) y cuidando la
+     confusión (los mayores de edad tienen más diagnósticos). Ver si el patrón explica el aumento de 2023 a 2025.
+- **Ojo:** `race_concept_id` está 95 % vacío y la etnia es casi toda la misma: no sirven para este análisis. Las acciones que salgan deben ser de **proceso** (por ejemplo,
+  preparar el alta con anticipación en los perfiles de estancia larga), no excluir tipos de pacientes. Los laboratorios sirven como "qué exámenes se pidieron": casi no
+  tienen valores numéricos. Todo es asociación, no causa.
+- **Entrega:** se suma a `src/factores_estancia.py` y `docs/factores_estancia.md`, más `sql/estancias_perfil.sql`.
+- **Estado:** anotada, sin empezar. Cuándo hacerla se decide después de A3 y A1.
 
 ### A3. Agrupar diagnósticos (`datos/referencia/mapeo_dx.csv`) · **Daniela**
 - **Qué:** los diagnósticos vienen en SNOMED sin jerarquía; agrupar los ~300 más frecuentes (`dx_nombre`, `categoria_dx`). El 62 % de las estancias no tiene
@@ -79,20 +99,30 @@ demanda, alertas, días atípicos, borrador de recomendaciones y un repositorio 
 - **Insumos:** `estancias_hospitalizacion.csv`, `panel_diario.csv`; referencias: `src/simulacion_altas.py`, `src/pronostico_demanda.py`, `docs/HALLAZGOS.md` 4.6 y 5.1.
 - **Ojo:** la ocupación observada debe salir de estancias únicas (~113 camas), no de `serie_horaria.csv` viejo.
 
-### A6. Estimar tiempos de atención (componente 3) · **Por decidir (queda para después)**
+### A6. Estimar tiempos de atención (componente 3) · **Samuel** (asignado por Daniela el 23-oct; queda para después de los análisis A)
 - **Qué pide el instructivo:** "modelos analíticos o predictivos que permitan estimar tiempos de atención". Es decir: cuando llega un paciente, ¿cuántas horas va a estar
   en urgencias, cuánto va a esperar cama o cuánto se va a quedar hospitalizado?
 - **Dónde estamos:** por paciente no se logra (esperar más de 24 h: AUC 0,60; estancia: R² cercano a 0; duración de urgencias de quien se va de alta: solo el 38 % tiene
   hora de salida). Lo que sí funciona es pronosticar la demanda y avisar de congestión.
+- **Sinergia con Power BI:** la opción 1 (rango por perfil y hora) se puede hacer **dentro del dashboard** como una página "Estimador de espera" (ver `powerbi/roadmap_powerbi.md`, página 8).
 - **Opciones para cuando se retome:** (1) dar el tiempo como **rango por perfil y hora** (percentiles) en vez de un número; (2) un modelo de **tiempo restante** que se
   actualice durante la visita con diagnóstico y laboratorios de las primeras horas; (3) estimar la probabilidad de hospitalización al llegar. Cualquiera debe declarar que
   la duración de urgencias está sesgada.
+
+### A7. Sistema repetible de diagnóstico de cuellos de botella · **Por decidir** (idea de Anthony del 23-oct)
+- **La idea:** que la lógica con la que encontramos que el cuello de botella eran las camas se pueda **repetir sobre datos nuevos** y diga si el cuello de botella
+  sigue siendo ese u otro: (1) detectar cuál segmento tiene más exceso, (2) con la simulación ver qué se dispara, (3) sacar los registros que se disparan,
+  (4) caracterizarlos (A2b y A1) y (5) explicar qué hacer. No hay datos en tiempo real: se haría **repitiendo el análisis en una ventana nueva** (reproducir un periodo).
+- **Qué ya existe:** el paso 1 (`src/ranking_cuellos.py`, `src/alertas.py`); falta el 2 (A5, Anthony), el 4 (A2b, Daniela) y juntarlos en un solo flujo.
+- **Entrega futura:** `src/diagnostico_cuello_botella.py` que reciba un periodo y devuelva un reporte (cuello de botella, qué se dispara, qué tienen en común).
+- **Encaja con el instructivo:** "sistemas de alerta temprana" y "herramientas de apoyo a decisiones". **Depende de** A2b, A1 y A5. Se decide después de ellas.
 
 ---
 
 ## B. Entregables (al final)
 
-### B1. Dashboard de Power BI · **Samuel**
+### B1. Dashboard de Power BI · **Samuel** — **va de último** (roadmap: `powerbi/roadmap_powerbi.md`; guía para su Claude: `powerbi/CLAUDE.md`)
+- **Estado de los datos (23-oct):** el paquete actual es una **versión parcial**. Sirve para las páginas 1 a 7 y 10; las páginas 8 (A6), 9 (B2) y 11 (A1, A2, A2b) y las bandas Monte Carlo de la 7 (A5) esperan análisis pendientes. Empieza cuando A1 a A5 y B2 estén entregados (análisis cerrados hacia el 13-nov); lo que ya está listo se puede ir armando antes. Regenerar el paquete: `python3 src/exportar_para_powerbi.py`.
 - **Qué:** ficha de Persona 2: 6 páginas (llegadas, rutas y tiempos, espera de cama, pronóstico y alertas, camas y escenarios, recomendaciones), plantilla `.pbit`, medidas DAX
   y enlace de acceso. El `.pbix` no se sube a git.
 - **Insumos:** tablas del drive (`panel_diario.csv`, `serie_horaria.csv`, `serie_diaria.csv`, `estancias_hospitalizacion.csv`, tablas de `resultados/tablas/`). **Volver a descargarlas:
@@ -129,8 +159,10 @@ Estructura sugerida (la del instructivo): contexto, datos y calidad, componentes
 A3 mapeo_dx ──► A1 perfiles ──► A5 simulación (tipo de recorrido, opcional)
       │             │
       ├──► A2 factores de la estancia ──► A5 (estancias por grupo)
+      ├──► A2b qué comparten las estancias disparadas (necesita una consulta nueva a la base)
       └──► A4 explicar retrasos (usa A1 y A3)
 
+A2b + A1 + A5 ──► A7 sistema repetible de diagnóstico
 A1 a A5 ──► B3 documento final ──► B4 presentación
 tablas del drive (C3) ──► B1 Power BI ;  B2 recomendaciones ◄── cifras de A4 y A5
 ```

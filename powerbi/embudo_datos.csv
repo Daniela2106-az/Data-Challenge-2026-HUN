@@ -1,0 +1,5 @@
+orden,paso,etapas,visitas,nota
+1,Etapas en la base,3281613,1706001,"Incluye 889.935 visitas que solo tienen etapas administrativas (AMB) y 83.320 sin ninguna etapa"
+2,Etapas de urgencias y hospitalizacion cerradas,1740220,732302,"Se quitan las 1.539.340 etapas AMB y 2.053 abiertas"
+3,Sin copias ni duplicados,1584096,656406,"Se quitan 238.674 visitas copia de la misma persona, 143.598 etapas duplicadas y 12.410 de duracion cero repetidas"
+4,Episodios finales,337194,336609,"Se quitan ~320 mil visitas que son replicas completas de otra persona y se agrupan las etapas en episodios"

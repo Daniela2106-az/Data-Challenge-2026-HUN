@@ -185,3 +185,16 @@ y describirlos en palabras simples.
 5. **`mapeo_dx.csv`:** Claude deja el borrador de los ~300 diagnósticos más frecuentes; Daniela lo revisa con el
    navegador de SNOMED o con un docente de salud.
 6. Compilar las respuestas del HUN y ajustar las limitaciones del documento.
+
+### Ficha D.4 — Perfiles de pacientes y factores de la estancia (A1 y A2; detalle en `docs/pendientes_y_reparto.md`)
+Comparar perfiles (edad × sexo × tipo de visita, y diagnóstico agrupado cuando exista `mapeo_dx.csv`) en llegadas, ruta, % hospitalizado, espera, estancia y reingreso;
+y explicar la estancia en cama, incluida la pregunta de si el +16 % (4,70 a 5,46 días) viene de un cambio en el tipo de pacientes o de dentro de cada tipo.
+**Nota de la sugerencia de Anthony (23-oct):** dejar la tabla de perfiles con el mismo identificador de estancia que usará D.5 y reutilizar allí la definición de "estancia disparada".
+Entrega: `src/perfiles_pacientes.py`, `src/factores_estancia.py` y sus documentos.
+
+### Ficha D.5 — Qué comparten las estancias que se "disparan" (A2b) y sistema repetible de diagnóstico (A7, por decidir)
+Idea de Anthony: ya sabemos que el problema está en las camas; falta saber **cuándo se disparan las estancias y qué comparten** (edad, sexo, diagnóstico, procedimientos,
+laboratorios, ruta). Pasos: (1) estancia mediana, percentil 90 y % de más de 7 días por mes; (2) nueva extracción `sql/estancias_perfil.sql` filtrando `co.person_id = vo.person_id`
+(10 a 30 min por consulta, la corre Daniela en DBeaver); (3) comparar disparadas con no disparadas con razón de probabilidades e intervalo, cuidando la confusión por edad.
+`race_concept_id` está 95 % vacío: las acciones que salgan deben ser de proceso, no de exclusión de pacientes. Todo es asociación.
+A7 (flujo repetible detectar → simular → extraer → caracterizar → explicar) se decide después de A2b, A1 y la simulación Monte Carlo de Anthony.

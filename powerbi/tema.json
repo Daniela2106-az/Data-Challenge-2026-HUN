@@ -1,0 +1,95 @@
+{
+  "name": "Data Challenge HUN 2026",
+  "dataColors": [
+    "#2a78d6",
+    "#eb6834",
+    "#1baf7a",
+    "#eda100",
+    "#e87ba4",
+    "#6250d6",
+    "#008300",
+    "#52514e"
+  ],
+  "background": "#fcfcfb",
+  "foreground": "#0b0b0b",
+  "tableAccent": "#2a78d6",
+  "good": "#1baf7a",
+  "neutral": "#eda100",
+  "bad": "#d95926",
+  "minimum": "#dbe8f9",
+  "center": "#7aa9e6",
+  "maximum": "#2a78d6",
+  "textClasses": {
+    "callout": {
+      "fontSize": 28,
+      "fontFace": "Segoe UI Semibold",
+      "color": "#0b0b0b"
+    },
+    "title": {
+      "fontSize": 12,
+      "fontFace": "Segoe UI Semibold",
+      "color": "#0b0b0b"
+    },
+    "header": {
+      "fontSize": 12,
+      "fontFace": "Segoe UI Semibold",
+      "color": "#0b0b0b"
+    },
+    "label": {
+      "fontSize": 10,
+      "fontFace": "Segoe UI",
+      "color": "#52514e"
+    }
+  },
+  "visualStyles": {
+    "*": {
+      "*": {
+        "title": [
+          {
+            "show": true,
+            "fontColor": {
+              "solid": {
+                "color": "#0b0b0b"
+              }
+            },
+            "fontSize": 12
+          }
+        ],
+        "background": [
+          {
+            "show": true,
+            "color": {
+              "solid": {
+                "color": "#fcfcfb"
+              }
+            },
+            "transparency": 0
+          }
+        ],
+        "border": [
+          {
+            "show": false
+          }
+        ],
+        "gridlineColor": [
+          {
+            "color": {
+              "solid": {
+                "color": "#e5e4df"
+              }
+            }
+          }
+        ],
+        "labels": [
+          {
+            "color": {
+              "solid": {
+                "color": "#52514e"
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

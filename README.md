@@ -60,7 +60,7 @@ preguntas que puedes hacerle:
 | Perfiles de pacientes y factores de la estancia (instructivo: perfiles y duración de estancias) | **Pendiente (Daniela)** |
 | Explicar mejor los retrasos y simulación Monte Carlo de camas | **Pendiente (Anthony)** |
 | Recomendaciones (componente 4) | Borrador; Samuel verifica las fuentes |
-| Dashboard de Power BI | Pendiente (Samuel) |
+| Dashboard de Power BI | Pendiente (Samuel; va de último, guía en `powerbi/`) |
 | `mapeo_dx.csv` (grupos de diagnóstico) | Pendiente (Daniela) |
 | Estimar tiempos de atención (componente 3) | Para después |
 | Sesión de preguntas con el HUN | Preguntas listas (`docs/hun/`); falta la sesión |
@@ -83,7 +83,8 @@ preguntas que puedes hacerle:
 | `sql/` | Consultas para la base: `exportaciones_base.sql` y `consultas_semana1.sql` (los 8 CSV de entrada) y `consultas_cuellos_botella.sql` (Q0 a Q5 y Q3b) |
 | `src/` | Scripts de Python (ver el orden abajo) |
 | `resultados/graficos/` | Gráficos (sí están en git) |
-| `notebooks/`, `powerbi/` | Carpetas del equipo (pendientes) |
+| `powerbi/` | Guía, especificación y medidas del dashboard (`powerbi/CLAUDE.md` para el Claude de Samuel) |
+| `notebooks/` | Carpeta del equipo (pendiente) |
 | `datos/`, `resultados/tablas/`, `resultados/excel/` | **No están en git** (datos clínicos) |
 
 ## Cómo reproducirlo (requiere acceso a los datos)

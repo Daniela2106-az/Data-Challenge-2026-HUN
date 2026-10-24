@@ -561,7 +561,8 @@ escenarios y supuestos escritos y se declara como limitación en el documento fi
 | **Reparto completo de lo que falta** | Ver **`docs/pendientes_y_reparto.md`** (Daniela: perfiles, factores de la estancia, `mapeo_dx.csv`; Anthony: explicar retrasos y Monte Carlo de camas; Samuel: Power BI y recomendaciones) | `docs/pendientes_y_reparto.md` |
 | Perfiles de pacientes y factores de la estancia | Pendiente (Daniela) | A1 y A2 |
 | Explicar mejor los retrasos; simulación Monte Carlo de camas | Pendiente (Anthony) | A4 y A5 |
-| Dashboard de Power BI y verificar fuentes de las recomendaciones | Pendiente (Samuel) | B1 y B2 |
+| Qué comparten las estancias que se disparan (idea de Anthony) y sistema repetible de diagnóstico | Pendiente (Daniela; A7 por decidir) | A2b y A7 |
+| Dashboard de Power BI (**va de último**, datos parciales; guía para su Claude en `powerbi/CLAUDE.md`) y verificar fuentes de las recomendaciones | Pendiente (Samuel) | B1 y B2 |
 | `mapeo_dx.csv` (grupos de diagnóstico, ~300 diagnósticos) | Pendiente (Daniela) | A3 |
 | Estimar tiempos de atención (componente 3) | Para después | A6 |
 | README y reproducibilidad desde cero | README y `requirements.txt` hechos; falta probar desde cero con alguien que no tiene los datos | `README.md` |
