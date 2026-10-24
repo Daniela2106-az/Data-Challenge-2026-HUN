@@ -36,11 +36,10 @@ resultado de ingresos y estancias. Por eso los modelos pasan a ser de **demanda 
   (`n_registros` dice cuántos registros tenía). Usar solo `alta_completa == True` para estancias.
   **Descargar de nuevo: la versión anterior (35.343 filas) tenía las estancias duplicadas.**
 - `serie_horaria.csv`: una fila por hora: `hora_inicio, llegadas, llegadas_que_se_hospitalizan, ocup_hosp, ocup_tu`.
-  **Aviso (22-oct):** `llegadas_que_se_hospitalizan` y `ocup_hosp` de esta tabla todavía cuentan las estancias gemelas
-  (~146 camas en vez de ~113). Para camas e ingresos usar `panel_diario.csv` o `estancias_hospitalizacion.csv`.
-- `tabla_episodios.parquet`: una fila por episodio (337.194), 59 columnas. También incluye los episodios gemelos: para
-  hospitalizados, quedarse solo con las filas que estén en `estancias_hospitalizacion.csv` (llaves `visit_occurrence_id`
-  y `episodio`).
+  **(23-oct)** `llegadas_que_se_hospitalizan` y `ocup_hosp` ya cuentan cada estancia una vez (~113 camas, ~22 por día). `ocup_tu` y
+  `llegadas` siguen contando todos los episodios. Si descargaron esta tabla antes del 23-oct, **descargarla de nuevo**.
+- `tabla_episodios.parquet`: una fila por episodio (337.194), 63 columnas. Incluye los episodios gemelos con la marca
+  `estancia_unica`: para espera de cama, camas e ingresos usar `estancia_unica == True` (`espera_cama_h` ya viene vacía en los gemelos).
 
 ---
 

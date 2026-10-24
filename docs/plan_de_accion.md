@@ -1,4 +1,6 @@
-# Plan de acción — Data Challenge HUN 2026 (actualizado 21-oct-2026)
+# Plan de acción — Data Challenge HUN 2026 (actualizado 23-oct-2026)
+
+> **Estado:** las fases 0 a 7 del análisis de cuellos de botella están hechas (ver `CLAUDE.md` sección 9 y `docs/HALLAZGOS.md`). Quedan el dashboard, los notebooks del equipo, el documento final y la presentación. Esta página conserva el plan original; las secciones 2 a 5 (revisiones posibles, reparto y calendario) son de antes de terminar el análisis.
 
 Equipo de 3. Solo una persona tiene Claude (**Daniela**); las otras dos trabajan con lo que ella les pasa
 (tablas agregadas por un drive privado, nunca por git) y con las herramientas que ya tengan.
@@ -58,8 +60,8 @@ la base.
 | 5 | **El tipo de visita no es confiable** | Visitas "ambulatorias" incluyen urgencias y hospitalización. | Usamos las etapas, no el tipo de visita. |
 | 6 | **Ocupación incompleta** | Solo vemos a los pacientes de esta base; no sabemos cuántas camas tiene el hospital. La ocupación casi no cambia la espera, pero puede ser por esto. | Se pide al HUN el número de camas. |
 
-Resultado actual: 337.194 episodios; 37 % con duración medida y 8 % con un mínimo conocido (v3.6); **espera de cama: mediana 22,4 h, 48 % espera más de 24 h**;
-la espera es más larga si se llega en la tarde (26,8 h) que de madrugada (16,0 h).
+Resultado actual (23-oct, con estancias en cama contadas una sola vez): 337.194 episodios; **espera de cama: mediana 18 h, percentil 90 de 71,5 h, 43 % espera más de 24 h**;
+la espera es más larga si se llega a media tarde (mediana ~25 h entre las 13 y las 16 h) que de madrugada (12–15 h). Todos los hallazgos con cifras y fuentes: `docs/HALLAZGOS.md`.
 
 ## 2. Qué más podemos revisar (en orden de utilidad)
 

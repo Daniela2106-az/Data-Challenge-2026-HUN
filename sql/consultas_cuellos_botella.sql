@@ -506,3 +506,77 @@ UNION ALL SELECT '21 episodios 2024', COUNT(*) FILTER (WHERE EXTRACT(YEAR FROM i
 UNION ALL SELECT '22 episodios 2025', COUNT(*) FILTER (WHERE EXTRACT(YEAR FROM ini) = 2025), NULL FROM x
 UNION ALL SELECT '23 episodios 2026', COUNT(*) FILTER (WHERE EXTRACT(YEAR FROM ini) = 2026), NULL FROM x
 ORDER BY 1;
+
+-- =====================================================================
+-- Q5) q5_carnaval.csv   (verifica el efecto del Carnaval de Barranquilla; ~3-8 min, 21 filas)
+--     Cuenta las visitas del Carnaval (sabado a martes antes del miercoles de ceniza) de 2023 a 2026 y las compara
+--     con el MISMO dia de la semana en las 4 semanas anteriores y las 4 posteriores (controla el dia de la semana y
+--     la tendencia). "Visita" = visita con su primera etapa ER, TU u HOSP ese dia; incluye copias y replicas (no se
+--     quitan), que afectan por igual al Carnaval y a los dias de comparacion, por eso se mira la razon.
+--     Fechas del Carnaval: 2023-02-18 a 02-21, 2024-02-10 a 02-13, 2025-03-01 a 03-04, 2026-02-14 a 02-17.
+--     Probada con los CSV locales (DuckDB): todos los dias del Carnaval juntos -17,3 %; sabados -24 %, lunes -28 %,
+--     domingos -6 %, martes -8 %. Los dias de comparacion pueden incluir algun festivo (no se excluyen).
+-- =====================================================================
+SET statement_timeout = 0;
+
+WITH primera AS (
+    SELECT visit_occurrence_id,
+           MIN(visit_detail_start_datetime) AS ini
+    FROM uninorte_omop.visit_detail
+    WHERE visit_detail_concept_id IN (9203, 3045729, 9201)
+    GROUP BY visit_occurrence_id
+),
+dias AS (
+    SELECT ini::date AS fecha, COUNT(*) AS visitas
+    FROM primera
+    WHERE ini >= TIMESTAMP '2023-01-01' AND ini < TIMESTAMP '2026-05-01'
+    GROUP BY 1
+),
+carnaval AS (
+    SELECT c.anio, d.fecha, d.visitas
+    FROM dias d
+    JOIN (VALUES (2023, DATE '2023-02-18', DATE '2023-02-21'),
+                 (2024, DATE '2024-02-10', DATE '2024-02-13'),
+                 (2025, DATE '2025-03-01', DATE '2025-03-04'),
+                 (2026, DATE '2026-02-14', DATE '2026-02-17')) AS c(anio, ini, fin)
+      ON d.fecha BETWEEN c.ini AND c.fin
+),
+base AS (
+    SELECT c.fecha,
+           AVG(d.visitas) AS promedio_mismo_dia_4_semanas_antes_y_despues,
+           COUNT(*)       AS dias_en_la_base
+    FROM carnaval c
+    JOIN dias d
+      ON d.fecha IN (c.fecha - 28, c.fecha - 21, c.fecha - 14, c.fecha - 7,
+                     c.fecha + 7,  c.fecha + 14, c.fecha + 21, c.fecha + 28)
+    GROUP BY c.fecha
+),
+detalle AS (
+    SELECT c.anio, c.fecha,
+           EXTRACT(dow FROM c.fecha)::int AS dow,
+           CASE EXTRACT(dow FROM c.fecha)::int WHEN 0 THEN 'domingo' WHEN 1 THEN 'lunes' WHEN 2 THEN 'martes'
+                WHEN 3 THEN 'miercoles' WHEN 4 THEN 'jueves' WHEN 5 THEN 'viernes' ELSE 'sabado' END AS dia,
+           c.visitas,
+           b.promedio_mismo_dia_4_semanas_antes_y_despues AS promedio_vecino,
+           b.dias_en_la_base
+    FROM carnaval c
+    JOIN base b ON b.fecha = c.fecha
+)
+SELECT anio, fecha::text AS fecha, dia, visitas,
+       ROUND(promedio_vecino::numeric, 1) AS promedio_mismo_dia_en_4_semanas_antes_y_despues,
+       dias_en_la_base,
+       ROUND((visitas / promedio_vecino)::numeric, 3) AS razon,
+       ROUND((100 * (visitas / promedio_vecino - 1))::numeric, 1) AS cambio_pct
+FROM detalle
+UNION ALL
+SELECT NULL, 'TOTAL ' || dia, dia, SUM(visitas), ROUND(SUM(promedio_vecino)::numeric, 1), NULL,
+       ROUND((SUM(visitas) / SUM(promedio_vecino))::numeric, 3),
+       ROUND((100 * (SUM(visitas) / SUM(promedio_vecino) - 1))::numeric, 1)
+FROM detalle
+GROUP BY dow, dia
+UNION ALL
+SELECT NULL, 'TOTAL CARNAVAL (todos los dias)', NULL, SUM(visitas), ROUND(SUM(promedio_vecino)::numeric, 1), NULL,
+       ROUND((SUM(visitas) / SUM(promedio_vecino))::numeric, 3),
+       ROUND((100 * (SUM(visitas) / SUM(promedio_vecino) - 1))::numeric, 1)
+FROM detalle
+ORDER BY 1 NULLS LAST, 2;

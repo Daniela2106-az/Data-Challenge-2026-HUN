@@ -6,9 +6,37 @@ que traban el computador), así que antes de pedir una consulta comprueba aquí 
 Última actualización: 22-oct-2026. (Cambio del 22-oct: las estancias en cama replicadas entre dos personas se cuentan
 una sola vez; ver sección 4.6. Las cifras de espera de cama, ingresos y ocupación anteriores a esa fecha están infladas.)
 
+## Lee esto primero (si eres un Claude que abre este repositorio por primera vez)
+
+**Qué es:** proyecto del Data Challenge HUN 2026 (Hospital Universidad del Norte + Ciencia de Datos, Uninorte): entender y optimizar el
+flujo de pacientes, hallar cuellos de botella, modelar demanda y proponer acciones. Casi todo el trabajo ya está hecho; este archivo y
+`docs/HALLAZGOS.md` dicen **qué se encontró** con cifras y fuentes.
+
+**Orden de lectura:** (1) `README.md`, (2) **`docs/HALLAZGOS.md`** (hallazgos, glosario, preguntas frecuentes, mapa de archivos),
+(3) este archivo: sección 4.6 (estancias gemelas), 6b (resultados de cuellos de botella), 8 (preguntas al HUN), (4) `docs/plan_de_accion.md`
+(definición de cuello de botella y fases), (5) `docs/recomendaciones.md` y `docs/dias_atipicos.md`, (6) `docs/fichas_de_tareas.md` (reparto del equipo).
+
+**Lo que NO hay en el repositorio:** los datos (`datos/`) ni las tablas de resultados (`resultados/tablas/`, `resultados/excel/`) están fuera de git
+porque son datos clínicos. Solo hay código, consultas SQL, documentos y los gráficos de `resultados/graficos/`. Por eso contesta **desde los
+documentos**; si te piden una cifra que no está escrita, di que no está registrada, señala el script que la produce y que hace falta
+tener los datos (ver `README.md`, "Cómo reproducirlo"). Nunca pidas ni escribas la contraseña de la base.
+
+**Reglas al contestar:**
+- Cita el archivo o la sección de donde sale cada cifra. No inventes números ni causas.
+- Distingue **asociación** de **causa** y di siempre la limitación al lado del hallazgo (casi todo son asociaciones y escenarios).
+- **Cifras obsoletas:** las de espera de cama mediana 22,4 h, 27,7 ingresos por día y ~145 camas (secciones 5 y 6 y algunos textos viejos) estaban
+  infladas por estancias duplicadas. **Vigentes (22-oct): espera mediana 18 h, ~22 ingresos por día, ~113 camas.**
+- El número de camas, la meta de tiempos y la causa de la caída de llegadas desde abril de 2026 **no se conocen**; el correo al HUN no tuvo respuesta, pero el HUN abrirá una **sesión de preguntas** (se anota en `docs/hun/sesion_de_preguntas.md`).
+
+**Dónde está cada respuesta:** espera de cama y cuello de botella → `HALLAZGOS.md` 4; altas tardías y factores → 6b; pronóstico y alertas → 6b;
+calidad de datos y duplicados → 4.1 y 4.6; recomendaciones → `docs/recomendaciones.md`; qué falta → sección 9.
+
 ---
 
 ## 0. Cómo trabajar conmigo (preferencias del equipo)
+
+*(Son las preferencias de la persona que lleva el proyecto, que habla en primera persona. Si eres otra persona del equipo, sigue
+las mismas salvo que te digan otra cosa.)*
 
 - Habla en español, claro y explícito, para que no haga falta preguntar dos veces.
 - Cuando cambies código, entrega SIEMPRE el archivo completo, nunca "cambia esta partecita".
@@ -238,8 +266,13 @@ el 1 da contexto y el 4 sale de los dos anteriores.
   espera (casi idéntica). No se sabe cuál de las dos personas es la real (pregunta 1 al HUN); para tiempos y camas no importa.
 - **Dónde se aplica:** `src/construir_segmentos.py` (v1.1, `DEDUP=0` para desactivarlo) y `src/exportar_para_equipo.py` (v2:
   `estancias_hospitalizacion.csv` trae una fila por estancia con `n_registros`, y `panel_diario.csv` cuenta ingresos, altas,
-  hospitalizados, espera y ocupación con estancias únicas). **NO se aplica todavía** en `analisis_etapas.py`,
-  `preparar_variables.py` ni `tabla_episodios`: ahí cada episodio gemelo sigue contando.
+  hospitalizados, espera y ocupación con estancias únicas). **También en el pipeline (23-oct):** `analisis_etapas.py` v3.7 marca cada episodio con `ini_hosp`, `fin_hosp`, `estancia_gemela` y
+  `estancia_unica` (14.614 gemelos de 35.343 hospitalizados; 27.956 estancias únicas; no se borra ningún episodio) y
+  `preparar_variables.py` v2.1 usa solo estancias únicas para la ocupación, los ingresos y las series. Resultado del pipeline:
+  `espera_cama.csv` 27.162 estancias con mediana 18,0 h (antes 34.537 y 22,4 h), ocupación media 112,9 camas (antes 146,7),
+  22,0 llegadas por día que se hospitalizan (antes 28,0); las llegadas totales no cambian (265 por día). `tabla_episodios` conserva
+  todos los episodios con la marca `estancia_unica`: para espera, camas e ingresos filtrar `estancia_unica == True`. Pendiente:
+  la ocupación de TU (`ocup_tu`) y la cobertura por ruta siguen contando todos los episodios.
 - **Efecto (ene-2023 a jun-2026):**
 
 | | Antes (sin deduplicar) | Después (una vez por estancia) |
@@ -319,7 +352,7 @@ el 1 da contexto y el 4 sale de los dos anteriores.
 - Espera de cama: 48,7 % > 24 h, 83,4 % > 6 h; 35 % tiene > 1 h sin ninguna etapa justo antes de la HOSP.
   Por tipo de visita: urgencias 25,2 h, treatment urgency 13,0 h, ambulatorio 11,2 h.
 - Visitas tipo "Treatment urgency" no hospitalizadas: mediana 43 h (frente a 8,3 h en urgencias) → otro servicio.
-- Extremos: máximo 2.867,8 h (visita 1409498); 3 episodios > 90 días; 370 TU > HOSP > 30 días.
+- Extremos: máximo 2.867,8 h (id de visita omitido por privacidad); 3 episodios > 90 días; 370 TU > HOSP > 30 días.
 - Llegadas: mediana 229 episodios/día (p10 168, p90 289). Pico 9–11 am (~19/h), mínimo 3–4 am.
   Lunes el día más cargado; fin de semana ~30 % menos. A las 19 h baja (posible cambio de turno).
 - Pacientes: 54 % mujeres; 22 % menores de 15 años.
@@ -489,14 +522,15 @@ Pendiente: `mapeo_dx.csv` (columnas dx_nombre, categoria_dx) a partir de dx_frec
 
 ## 8. Preguntas enviadas al HUN (no inventar respuestas)
 
-**Estado (22-oct): el correo ya se envió y NO se espera respuesta.** Ningún paso del plan depende de ella: cada incógnita (número
+**Estado (23-oct): el correo se envió y no hubo respuesta; el HUN abrirá una sesión de preguntas.** Las preguntas priorizadas y el espacio para
+anotar las respuestas están en **`docs/hun/sesion_de_preguntas.md`**. Mientras tanto ningún paso del plan depende de ellas: cada incógnita (número
 de camas, meta de tiempos, causa de la caída de llegadas desde abril, persona real en las estancias gemelas) se trabaja con
 escenarios y supuestos escritos y se declara como limitación en el documento final.
 
 1. ¿Las visitas con id = otra + 1.746.478…1.746.489 o + 1.757.764 son duplicados de extracción/anonimización?
-   ¿Cuál es el paciente correcto si el person_id difiere? (ej. 1091701, 2838179, 2849465)
-2. Etapas 3045729 con inicio = fin (ej. 1037555): ¿falta la hora de salida? ¿hay otra fecha de alta?
-3. Visitas solo con 9203 y sin nada clínico (ej. 1013223): ¿se fueron sin atención?
+   ¿Cuál es el paciente correcto si el person_id difiere? (se enviaron ejemplos al HUN; ids omitidos del repositorio)
+2. Etapas 3045729 con inicio = fin (ejemplo enviado al HUN; id omitido): ¿falta la hora de salida? ¿hay otra fecha de alta?
+3. Visitas solo con 9203 y sin nada clínico (ejemplo enviado al HUN; id omitido): ¿se fueron sin atención?
 4. ¿Qué proceso es 9203 y cuál 3045729? ¿El paso a 9201 es la asignación de cama o la llegada al piso?
 5. > 1 h sin etapa antes de 9201 en el 35 %: ¿dónde está el paciente? ¿se registra la asignación de cama?
 6. Fines con milisegundos en julio 2026: ¿pacientes aún hospitalizados al extraer?
@@ -506,7 +540,7 @@ escenarios y supuestos escritos y se declara como limitación en el documento fi
 10. Rúbrica de evaluación, repo público, Power BI con datos agregados.
 11. ~1 de cada 4 hospitalizados tiene tiempo sin ninguna etapa antes de la cama (mediana 19,7 h entre ellos): ¿dónde está
     el paciente y se registra la asignación de cama? (ampliación de la 5)
-12. Hay episodios de varios días en urgencias (TU) sin hospitalización registrada (ej. visita 2405100, 177 h): ¿esperan
+12. Hay episodios de varios días en urgencias (TU) sin hospitalización registrada (ej. una visita de enero de 2023 con 177 h): ¿esperan
     cama sin que se registre, observación prolongada o error?
 13. Estancias gemelas (4.6): ¿cuál es la persona real cuando la misma estancia aparece en dos pacientes? (ampliación de la 1)
 14. Desde abril de 2026 las llegadas bajan ~25–35 % (y los ingresos ~20–30 %) y los laboratorios caen a la mitad en may–jun:
@@ -515,25 +549,31 @@ escenarios y supuestos escritos y se declara como limitación en el documento fi
 
 ---
 
-## 9. Plan de acción
+## 9. Plan de acción y estado (actualizado 23-oct-2026)
 
-| Semana | Trabajo | Entregable |
+| Frente | Estado | Dónde |
 |---|---|---|
-| 20–26 oct | v3.3 de copias; correr preparar_variables v2; mapeo_dx.csv; enviar preguntas al HUN | Repo |
-| 27 oct–2 nov | Componentes 1 y 2: rutas, llegadas, perfiles; espera de cama según hora, congestión, edad, diagnóstico; altas tardías | Doc + Power BI |
-| 3–9 nov | Componente 3: modelo A (llegadas por día/hora, saturación) y modelo B (riesgo de espera de cama > 24 h). Entrenar 2023–2025, probar 2026 | Repo + doc |
-| 10–16 nov | Componente 4: recomendaciones cuantificadas; Power BI completo | Power BI + doc |
-| 17–23 nov | Documento final, README, reproducibilidad desde cero | Los 3 |
-| 24–30 nov | Colchón y presentación | — |
+| Limpieza, copias y episodios (v3.7, con estancias gemelas) | **Hecho** | `src/analisis_etapas.py`, 4.1 y 4.6 |
+| Componente 1: flujo del paciente | **Hecho** | `docs/HALLAZGOS.md` 3 |
+| Componente 2: cuellos de botella (fases 0 a 5) | **Hecho** | 6b, `docs/plan_de_accion.md` |
+| Componente 3: pronóstico, alertas, simulación de camas, días atípicos | **Hecho** | 6b, `docs/dias_atipicos.md` |
+| Componente 4: recomendaciones | **Borrador hecho**; Persona 3 debe revisar las fuentes originales | `docs/recomendaciones.md` |
+| Dashboard de Power BI | Pendiente (Persona 2) | `powerbi/`, `docs/fichas_de_tareas.md` |
+| Notebooks de camas y escenarios B y C | Pendiente (Persona 3) | fichas 3.1 y 3.2 |
+| `mapeo_dx.csv` (grupos de diagnóstico, ~300 diagnósticos) | Pendiente | ver 3 (diagnósticos) |
+| README y reproducibilidad desde cero | README y `requirements.txt` hechos; falta probar desde cero con alguien que no tiene los datos | `README.md` |
+| Documento final y presentación | Pendiente (plazo: fin de noviembre de 2026) | — |
+| Sesión de preguntas con el HUN | **Por agendar**: el correo no tuvo respuesta; preguntas listas | `docs/hun/sesion_de_preguntas.md`, sección 8 |
 
 Reglas para los modelos:
 - Un modelo "al llegar" solo puede usar lo que se sabe al llegar: hora, día, festivo, edad, sexo,
   congestión y ocupación. **No** diagnósticos ni laboratorios posteriores.
-- No modelar la duración de los pacientes de alta desde urgencias (solo ~45 % tiene hora de fin → sesgo).
+- No modelar la duración de los pacientes de alta desde urgencias (solo ~38 % tiene hora de fin → sesgo).
   Sí la espera de cama (100 % medida en hospitalizados) y las llegadas (100 % de los episodios).
 - Validación temporal (entrenar con pasado, probar con futuro), nunca aleatoria.
 
-Limitaciones a declarar en el documento: copias (30 %), TU sin hora de fin (~38 % de las etapas TU),
-diagnósticos tardíos y sin jerarquía, ocupación parcial, procedimientos sin fecha, sin signos vitales.
+Limitaciones a declarar en el documento: copias (30 %) y estancias gemelas (41 % de los hospitalizados), etapas TU sin hora de fin
+(36–42 %), diagnósticos tardíos y sin jerarquía, número de camas desconocido, procedimientos sin fecha, sin signos vitales, caída de llegadas
+desde abril de 2026 sin explicar, y que casi todo son asociaciones.
 
 Documento del equipo (Claude Docs): "Exploración BD — Data Challenge HUN 2026".

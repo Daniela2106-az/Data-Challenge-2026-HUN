@@ -1,5 +1,9 @@
 """
-analisis_etapas.py  -  version 3.5 (20-oct-2026)
+analisis_etapas.py  -  version 3.7 (22-oct-2026)
+(3.7: ESTANCIAS GEMELAS. El 41 % de los episodios hospitalizados comparte el inicio y el fin de cama con otro episodio:
+ es la misma estancia replicada entre dos personas. Nuevas columnas en episodios.csv: ini_hosp, fin_hosp, estancia_gemela y
+ estancia_unica. Los tiempos por ruta, la espera de cama (espera_cama.csv) y, en preparar_variables.py, la ocupacion, las series y
+ los ingresos cuentan cada estancia UNA vez. Los episodios NO se borran: las llegadas y la cobertura siguen contando todos.)
 (3.5: PRUEBA EN LA BASE (75 pares): en las candidatas "mismo fin" / "solo mismo inicio" la persona es siempre
  distinta (edad mediana 21 anios de diferencia) y cada visita tiene diagnosticos propios; en las visitas de id
  menor los diagnosticos son 100 % de su persona, en las de id mayor mezclan dos personas. Por eso:
@@ -368,6 +372,17 @@ ep["horas_total"] = (ep.fin - ep.ini).dt.total_seconds() / 3600
 ep = ep.reset_index()
 ep["ruta_simple"] = ep.ruta.str.replace(r"^ER > ", "", regex=True)
 ep["hospitalizado"] = ep.ruta.str.contains("HOSP")
+# v3.7: ESTANCIAS GEMELAS. El 41 % de los episodios hospitalizados comparte exactamente el inicio y el fin de cama
+# (primera y ultima HOSP) con otro episodio: es la misma estancia replicada entre dos personas (CLAUDE.md 4.6).
+# `estancia_unica` = True para el episodio de menor visit_occurrence_id de cada estancia (y para los no hospitalizados).
+# Las tablas de espera de cama, tiempos por ruta, ocupacion e ingresos usan solo estancias unicas.
+_h = bloques[bloques.etapa == "HOSP"].groupby(K).agg(ini_hosp=("ini", "min"), fin_hosp=("fin", "max")).reset_index()
+ep = ep.merge(_h, on=K, how="left")
+_hh = ep[ep.ini_hosp.notna()].sort_values(K)
+ep["estancia_gemela"] = False
+ep.loc[_hh.index, "estancia_gemela"] = _hh.duplicated(["ini_hosp", "fin_hosp"], keep=False).values
+ep["estancia_unica"] = True
+ep.loc[_hh.index[_hh.duplicated(["ini_hosp", "fin_hosp"], keep="first").values], "estancia_unica"] = False
 ep["n_ep_visita"] = ep.groupby("visit_occurrence_id").episodio.transform("size")
 ep = ep.merge(vo[["visit_occurrence_id", "person_id", "tipo_visita"]], on="visit_occurrence_id", how="left")
 
@@ -376,6 +391,9 @@ print("episodios:", len(ep), "| visitas:", ep.visit_occurrence_id.nunique())
 dup = ep.duplicated(["ini", "fin", "ruta"], keep=False)
 print(f"episodios que aun son identicos a otro (inicio, fin y ruta): {int(dup.sum())} ({dup.mean():.1%})")
 print("  (si es alto, quedan copias sin detectar; si es bajo, son coincidencias de cierres a la misma hora)")
+_n_h = int(ep.ini_hosp.notna().sum())
+print(f"estancias gemelas (mismo inicio y fin de cama en otro episodio): {int(ep.estancia_gemela.sum())} de {_n_h} episodios "
+      f"hospitalizados ({100 * ep.estancia_gemela.sum() / max(_n_h, 1):.1f} %) | estancias unicas: {int(ep.ini_hosp.notna().sum() - (~ep.estancia_unica).sum())}")
 
 # ----------------------------------------------------------------------
 # 7) Estado de cada episodio
@@ -458,7 +476,7 @@ print("\nsobre episodios con actividad clinica (sin contar sin_actividad):\n" + 
 # ----------------------------------------------------------------------
 # 9) Tiempos (solo episodios medidos y sin error probable)
 # ----------------------------------------------------------------------
-ok = ep[(ep.estado == "medida") & ~ep.error_probable]
+ok = ep[(ep.estado == "medida") & ~ep.error_probable & ep.estancia_unica]    # v3.7: cada estancia en cama cuenta una vez
 tot = ok.groupby("ruta_simple").horas_total.apply(resumen_horas).unstack()
 tot = tot.sort_values("n", ascending=False)
 tot["confiable"] = tot.n >= MIN_EPISODIOS
@@ -484,7 +502,7 @@ print(por_etapa[por_etapa.ruta_simple.isin(orden[:4])].round(2).to_string(index=
 # 10) Espera de cama: del inicio del episodio a la primera HOSP
 # ----------------------------------------------------------------------
 # la espera de cama solo necesita el inicio de la primera HOSP: sirve tambien si la ultima etapa quedo sin cierre
-ok_esp = ep[ep.con_tiempo & ~ep.error_probable]
+ok_esp = ep[ep.con_tiempo & ~ep.error_probable & ep.estancia_unica]          # v3.7: estancias unicas
 bh = bloques.merge(ok_esp[K + ["ini", "ruta_simple", "tipo_visita"]].rename(columns={"ini": "ini_ep"}), on=K)
 ini_hosp = bh[bh.etapa == "HOSP"].groupby(K).ini.min().rename("ini_hosp")
 bh = bh.merge(ini_hosp, left_on=K, right_index=True)

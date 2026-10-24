@@ -99,6 +99,14 @@ def a_raiz(df, nombre):
 ep = pd.read_csv(PROC / "episodios.csv", parse_dates=["ini", "fin"])
 ep = ep.drop(columns=[c for c in ["n_proc", "n_dx", "dx_max"] if c in ep.columns])
 K = ["visit_occurrence_id", "episodio"]
+# v2.1: estancias gemelas (analisis_etapas.py v3.7). Una estancia en cama replicada entre dos personas cuenta UNA vez en la
+# ocupacion, los ingresos y la espera de cama. Los episodios no se borran: las llegadas siguen contando todos.
+if "estancia_unica" in ep.columns:
+    for _c in ["ini_hosp", "fin_hosp"]:
+        ep[_c] = pd.to_datetime(ep[_c])
+else:
+    print("AVISO: episodios.csv no trae estancia_unica (corre analisis_etapas.py v3.7): no se deduplican las estancias.")
+    ep["estancia_unica"], ep["estancia_gemela"] = True, False
 n0 = len(ep)
 titulo("1. EPISODIOS")
 print("episodios:", n0, "| pacientes:", ep.person_id.nunique())
@@ -244,7 +252,7 @@ if ep.n_lab_6h.isna().all():
 # 5) Ocupacion del hospital en el momento de la llegada
 # ----------------------------------------------------------------------
 bl = pd.read_csv(PROC / "bloques.csv", parse_dates=["ini", "fin"])
-hosp = bl[bl.etapa == "HOSP"]
+hosp = bl[bl.etapa == "HOSP"].merge(ep.loc[ep.estancia_unica, K], on=K)      # v2.1: solo estancias unicas
 tu = bl[(bl.etapa == "TU") & (bl.fin > bl.ini)]
 
 
@@ -313,7 +321,7 @@ print("OJO: los datos empiezan en enero 2023; en los primeros meses no se ven lo
 horas = pd.date_range(ep.ini.min().floor("h"), ep.ini.max().ceil("h"), freq="h")
 sh = pd.DataFrame({"hora_inicio": horas})
 cnt = ep.groupby(ep.ini.dt.floor("h")).size()
-cnt_h = ep[ep.hospitalizado].groupby(ep.ini.dt.floor("h")).size()
+cnt_h = ep[ep.hospitalizado & ep.estancia_unica].groupby(ep.ini.dt.floor("h")).size()
 sh["llegadas"] = sh.hora_inicio.map(cnt).fillna(0).astype(int)
 sh["llegadas_que_se_hospitalizan"] = sh.hora_inicio.map(cnt_h).fillna(0).astype(int)
 sh["ocup_hosp"] = abiertos(hosp.ini, hosp.fin, sh.hora_inicio)
@@ -348,7 +356,7 @@ hb = hb[hb.alta < pd.Timestamp(OCUP_HASTA)]
 ah = pd.DataFrame({
     "pct_ingresos_a_cama": 100 * hb.ingreso_cama.dt.hour.value_counts(normalize=True),
     "pct_altas": 100 * hb.alta.dt.hour.value_counts(normalize=True),
-    "pct_llegadas_que_se_hospitalizan": 100 * ep[ep.hospitalizado].hora.value_counts(normalize=True),
+    "pct_llegadas_que_se_hospitalizan": 100 * ep[ep.hospitalizado & ep.estancia_unica].hora.value_counts(normalize=True),
 }).reindex(range(24)).fillna(0)
 ah["mediana_espera_cama_h_segun_hora_llegada"] = \
     ep[ep.espera_cama_h.notna()].groupby("hora").espera_cama_h.median().reindex(range(24))
@@ -440,7 +448,11 @@ DICC = {
     "n_lab_6h": "laboratorios tomados en las primeras 6 h de la visita (sirve como factor)",
     "n_lab_antes_hosp": "laboratorios tomados antes de la primera HOSP (solo hospitalizados)",
     "tras_registro_vacio": "llego <=72 h despues de un episodio solo-ER sin actividad (probable registro doble)",
-    "ocup_hosp": "pacientes en cama en el momento de la llegada",
+    "ini_hosp / fin_hosp": "inicio de la primera HOSP y fin de la ultima HOSP del episodio (solo hospitalizados)",
+    "estancia_gemela / estancia_unica": "gemela = otro episodio tiene el mismo inicio y fin de cama (replica entre dos personas); "
+                                        "unica = se queda el de menor visit_occurrence_id y los no hospitalizados. "
+                                        "Espera de cama, ocupacion e ingresos cuentan solo estancias unicas (CLAUDE.md 4.6)",
+    "ocup_hosp": "pacientes en cama en el momento de la llegada (cada estancia cuenta una vez)",
     "ocup_tu": "pacientes en urgencias con TU medida en el momento de la llegada (se queda corta)",
     "llegadas_6h_previas / 24h": "llegadas en las 6 / 24 horas anteriores",
     "ocupacion_confiable": f"llegada entre {OCUP_DESDE} y {OCUP_HASTA}",
