@@ -15,7 +15,7 @@ PREGUNTAS
 ENTRADA  datos/procesados/para_equipo/estancias_hospitalizacion.csv (exportar_para_equipo.py v2: una fila por
          estancia en cama, sin estancias gemelas)
 SALIDAS  resultados/tablas/altas_ingresos_llegadas_por_hora.csv, asignacion_cama_por_hora_llegada.csv,
-         correlacion_altas_ingresos.csv, factores_espera_cama.csv, importancia_factores.csv
+         correlacion_altas_ingresos.csv, coeficientes_espera_cama.csv, importancia_factores.csv
          resultados/graficos/altas_y_factores.png
 
 OJO AL LEER
@@ -222,7 +222,7 @@ print(imp.to_string(index=False))
 coef = pd.DataFrame({"variable": Xf.columns, "pct_cambio": (100 * (np.exp(beta_f) - 1)).round(1)})
 coef = coef[coef.variable != "const"].copy()
 coef["referencia"] = [REFS_USADAS.get(next((c_ for c_ in todas if v == c_ or v.startswith(c_ + "_")), ""), "") for v in coef.variable]
-coef.to_csv(TABLAS / "factores_espera_cama.csv", index=False)
+coef.to_csv(TABLAS / "coeficientes_espera_cama.csv", index=False)   # no se llama factores_espera_cama.csv: ese nombre es de preparar_variables.py
 print("\nefecto de cada nivel (% de cambio de la espera frente a la categoria de referencia de su factor; "
       "lab6 y carga: por cada unidad, es decir por cada x2,7 en laboratorios o cada 10 llegadas):")
 print(coef.to_string(index=False))

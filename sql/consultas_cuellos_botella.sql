@@ -295,7 +295,7 @@ SELECT b.*,
        COUNT(*) OVER (ORDER BY b.ini
                       RANGE BETWEEN INTERVAL '24 hours' PRECEDING AND INTERVAL '1 second' PRECEDING) AS llegadas_24h_previas
 FROM base b
-ORDER BY b.ini;
+ORDER BY b.ini, b.visit_occurrence_id, b.episodio;   -- orden completo: sin esto los empates salen en orden distinto cada vez
 
 -- =====================================================================
 -- Q4) q4_ocupacion_por_hora.csv   (~2-5 min; ~30 mil filas)

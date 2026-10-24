@@ -77,7 +77,7 @@ preguntas que puedes hacerle:
 | `docs/hun/sesion_de_preguntas.md` | Preguntas para la sesión con el HUN y espacio para anotar las respuestas |
 | `docs/Diccionario_datos.md` | Diccionario de las tablas OMOP |
 | `docs/DATA CHALLENGE HUN 2026 (2).pdf` | Instructivo oficial del reto |
-| `sql/` | Consultas para la base (`consultas_cuellos_botella.sql` Q0 a Q5 y Q3b; `consultas_semana1.sql`) |
+| `sql/` | Consultas para la base: `exportaciones_base.sql` y `consultas_semana1.sql` (los 8 CSV de entrada) y `consultas_cuellos_botella.sql` (Q0 a Q5 y Q3b) |
 | `src/` | Scripts de Python (ver el orden abajo) |
 | `resultados/graficos/` | Gráficos (sí están en git) |
 | `notebooks/`, `powerbi/` | Carpetas del equipo (pendientes) |
@@ -85,10 +85,18 @@ preguntas que puedes hacerle:
 
 ## Cómo reproducirlo (requiere acceso a los datos)
 
+**Solo hay 8 archivos que no se pueden regenerar con los scripts:** los CSV que se exportan de la base (PostgreSQL, esquema `uninorte_omop`,
+solo lectura, con VPN). Todo lo demás (`datos/procesados/`, `resultados/tablas/`, los `q3_*` y `q4_*`) lo producen los scripts.
+Probado el 23-oct-2026 en un clon limpio con solo esos 8 CSV: los 12 scripts corren en menos de un minuto y los 56 archivos de
+resultados que se compararon salen idénticos a los del proyecto (sin contar las variantes opcionales de sensibilidad `_u72` y `_u336`).
+
+| CSV en `datos/crudos/` | Consulta que lo exporta |
+|---|---|
+| `visit_detail.csv`, `visit_occurrence.csv`, `dx_por_visita.csv`, `proc_por_visita.csv` | `sql/exportaciones_base.sql` (las dos últimas están reconstruidas y sin probar contra la base; ver el encabezado) |
+| `person.csv`, `diagnosticos_por_visita.csv`, `procedimientos_por_visita.csv`, `laboratorios_por_visita.csv` | consultas 1 a 4 de `sql/consultas_semana1.sql` |
+
 1. `pip install -r requirements.txt` (Python 3.14; probado con pandas 3, numpy 2.5).
-2. Exportar de la base (PostgreSQL, esquema `uninorte_omop`, solo lectura, con VPN) a `datos/crudos/`:
-   `visit_detail.csv`, `visit_occurrence.csv`, `person.csv` y los demás de `sql/consultas_semana1.sql`.
-   **Nunca se guarda la contraseña en el repositorio.**
+2. Poner los 8 CSV en `datos/crudos/`. **Nunca se guarda la contraseña de la base en el repositorio.**
 3. Correr en este orden:
    ```bash
    python3 src/analisis_etapas.py          # limpia, arma episodios, marca estancias gemelas
@@ -104,7 +112,13 @@ preguntas que puedes hacerle:
    python3 src/alertas.py
    python3 src/dias_atipicos.py
    ```
-4. Las salidas quedan en `datos/procesados/` y `resultados/` (fuera de git, salvo los gráficos).
+4. Opcional, prueba de sensibilidad al corte de episodios: `python3 src/generar_q3_q4_desde_csv.py --umbral 72` y luego
+   `SUFIJO=_u72 python3 src/construir_segmentos.py` y `SUFIJO=_u72 python3 src/ranking_cuellos.py` (igual con 336).
+5. Las salidas quedan en `datos/procesados/` y `resultados/` (fuera de git, salvo los gráficos).
+
+**Sin los 8 CSV** no se puede recalcular nada. Alternativa para quien solo quiera consultar resultados: pedir las tablas agregadas
+(`resultados/tablas/`, `resultados/excel/`, `datos/procesados/para_equipo/panel_diario.csv`, `datos/procesados/serie_*.csv`) al equipo y
+dejarlas en esas mismas rutas.
 
 ## Reglas del repositorio
 

@@ -244,7 +244,7 @@ otro hospital no halló efecto); las fuentes se leyeron solo en resumen y hay qu
 | ¿Se puede predecir la demanda? | Llegadas sí (7,5 % de error); ingresos diarios no, por semana 9,5 % | 5.1 |
 | ¿Qué alertas se proponen? | Día congestionado a las 12 h; ocupación alta; paciente a las 48 h sin cama | 5.2 |
 | ¿Por qué se quitaron datos como "duplicados"? | 41 % de las estancias estaban en dos personas | 2 |
-| ¿Se puede reproducir sin la base? | No: los datos no están en git. Hay que exportarlos (ver README) | `README.md` |
+| ¿Se puede reproducir sin la base? | No: hay 8 CSV exportados de la base que no están en git y no se pueden regenerar. Con ellos todo se regenera en menos de un minuto (probado en un clon limpio) | `README.md` |
 | ¿Qué dijo el HUN? | Nada por correo; habrá una sesión de preguntas (preguntas listas en `docs/hun/sesion_de_preguntas.md`) | 7 |
 
 ---
@@ -265,6 +265,7 @@ otro hospital no halló efecto); las fuentes se leyeron solo en resumen y hay qu
 | `src/pronostico_demanda.py` (v1.3) | Pronóstico de demanda | `pronostico_metricas.csv` |
 | `src/alertas.py` | Alertas A, B y C | `alertas_*.csv` |
 | `src/dias_atipicos.py` | Días atípicos | `dias_atipicos.csv` |
+| `sql/exportaciones_base.sql`, `sql/consultas_semana1.sql` | Exportan de la base los 8 CSV de entrada | `datos/crudos/*.csv` |
 | `sql/consultas_cuellos_botella.sql` | Q0 a Q5 y Q3b | — |
 
 **Gráficos (en `resultados/graficos/`, sí están en git):** `ranking_cuellos.png` (impacto por segmento y tendencia), `dependencia_carga.png`
