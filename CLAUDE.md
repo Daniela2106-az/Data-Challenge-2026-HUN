@@ -558,9 +558,12 @@ escenarios y supuestos escritos y se declara como limitación en el documento fi
 | Componente 2: cuellos de botella (fases 0 a 5) | **Hecho** | 6b, `docs/plan_de_accion.md` |
 | Componente 3: pronóstico, alertas, simulación de camas, días atípicos | **Hecho** | 6b, `docs/dias_atipicos.md` |
 | Componente 4: recomendaciones | **Borrador hecho**; Persona 3 debe revisar las fuentes originales | `docs/recomendaciones.md` |
-| Dashboard de Power BI | Pendiente (Persona 2) | `powerbi/`, `docs/fichas_de_tareas.md` |
-| Notebooks de camas y escenarios B y C | Pendiente (Persona 3) | fichas 3.1 y 3.2 |
-| `mapeo_dx.csv` (grupos de diagnóstico, ~300 diagnósticos) | Pendiente | ver 3 (diagnósticos) |
+| **Reparto completo de lo que falta** | Ver **`docs/pendientes_y_reparto.md`** (Daniela: perfiles, factores de la estancia, `mapeo_dx.csv`; Anthony: explicar retrasos y Monte Carlo de camas; Samuel: Power BI y recomendaciones) | `docs/pendientes_y_reparto.md` |
+| Perfiles de pacientes y factores de la estancia | Pendiente (Daniela) | A1 y A2 |
+| Explicar mejor los retrasos; simulación Monte Carlo de camas | Pendiente (Anthony) | A4 y A5 |
+| Dashboard de Power BI y verificar fuentes de las recomendaciones | Pendiente (Samuel) | B1 y B2 |
+| `mapeo_dx.csv` (grupos de diagnóstico, ~300 diagnósticos) | Pendiente (Daniela) | A3 |
+| Estimar tiempos de atención (componente 3) | Para después | A6 |
 | README y reproducibilidad desde cero | README y `requirements.txt` hechos; falta probar desde cero con alguien que no tiene los datos | `README.md` |
 | Documento final y presentación | Pendiente (plazo: fin de noviembre de 2026) | — |
 | Sesión de preguntas con el HUN | **Por agendar**: el correo no tuvo respuesta; preguntas listas | `docs/hun/sesion_de_preguntas.md`, sección 8 |

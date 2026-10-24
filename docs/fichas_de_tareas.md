@@ -43,7 +43,8 @@ resultado de ingresos y estancias. Por eso los modelos pasan a ser de **demanda 
 
 ---
 
-## PERSONA 3 — Capacidad de camas, simulación y recomendaciones
+## PERSONA 3 (Anthony) — Capacidad de camas, simulación y modelo explicativo
+*(La ficha 3.4 de recomendaciones pasó a Samuel el 23-oct. Pendientes de Anthony: A4 y A5 de `docs/pendientes_y_reparto.md`.)*
 Carpetas: `notebooks/modelos/`, `notebooks/simulacion/`, `docs/`.
 
 ### Ficha 3.1 — Modelo de camas: ¿cuántas camas habrá ocupadas los próximos días?
@@ -107,6 +108,7 @@ la tabla de escenarios sobre eso.**
 individual y por qué (explica poco: el resto depende de procesos que la base no registra).
 
 ### Ficha 3.4 — Recomendaciones con números (semana 10-16 nov)
+**Reasignada (23-oct): la lleva Samuel (Persona 2), no Anthony** (ver `docs/pendientes_y_reparto.md`, B2). Donde dice "Persona 3", leer Samuel.
 **Estado (22-oct):** Daniela dejó un borrador completo en `docs/recomendaciones.md` (7 recomendaciones con sus números, límites
 y fuentes). **Persona 3 lo revisa y lo amplía:** leer las fuentes originales (el borrador solo vio resúmenes de búsqueda), añadir
 5 a 8 prácticas si hacen falta y verificar que cada cifra coincide con `CLAUDE.md` 6b.
@@ -121,7 +123,8 @@ y fuentes). **Persona 3 lo revisa y lo amplía:** leer las fuentes originales (e
 
 ---
 
-## PERSONA 2 — Power BI y contacto con el HUN
+## PERSONA 2 (Samuel) — Power BI, recomendaciones y contacto con el HUN
+*(Pendientes de Samuel: B1 y B2 de `docs/pendientes_y_reparto.md`.)*
 Carpetas: `powerbi/`, `docs/hun/`.
 
 1. **Esta semana:**

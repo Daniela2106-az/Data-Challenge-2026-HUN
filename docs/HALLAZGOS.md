@@ -227,7 +227,7 @@ otro hospital no halló efecto); las fuentes se leyeron solo en resumen y hay qu
 - **La espera en urgencias mezcla atención y espera de cama**; no se pueden separar con los datos.
 - Las **llegadas** incluyen ≥ 4 % de réplicas (sin deduplicar a propósito); la ocupación de urgencias (`ocup_tu`) y la cobertura por ruta cuentan todos los episodios.
 - Todo son **asociaciones y escenarios**, no causas probadas.
-- Pendiente de ensamblaje: documento final, dashboard de Power BI (Persona 2), notebooks de camas y escenarios B y C (Persona 3),
+- **El reparto de lo que falta, con responsable y entrega, está en `docs/pendientes_y_reparto.md`.** Pendiente de ensamblaje: documento final, dashboard de Power BI (Samuel), simulación Monte Carlo de camas y modelo explicativo (Anthony), perfiles de pacientes y factores de la estancia (Daniela),
   `mapeo_dx.csv` (grupos de diagnóstico), sesión de preguntas con el HUN y una simulación estocástica (Monte Carlo) de la ocupación de camas.
 
 ---

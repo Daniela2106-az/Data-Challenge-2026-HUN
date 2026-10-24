@@ -57,10 +57,12 @@ preguntas que puedes hacerle:
 | Flujo del paciente (componente 1) | Hecho |
 | Cuellos de botella (componente 2) | Hecho |
 | Modelos: pronóstico, alertas, simulación, días atípicos (componente 3) | Hecho |
-| Recomendaciones (componente 4) | Borrador (falta revisar las fuentes originales) |
-| Dashboard de Power BI | Pendiente |
-| Notebooks de camas y escenarios | Pendiente |
-| `mapeo_dx.csv` (grupos de diagnóstico) | Pendiente |
+| Perfiles de pacientes y factores de la estancia (instructivo: perfiles y duración de estancias) | **Pendiente (Daniela)** |
+| Explicar mejor los retrasos y simulación Monte Carlo de camas | **Pendiente (Anthony)** |
+| Recomendaciones (componente 4) | Borrador; Samuel verifica las fuentes |
+| Dashboard de Power BI | Pendiente (Samuel) |
+| `mapeo_dx.csv` (grupos de diagnóstico) | Pendiente (Daniela) |
+| Estimar tiempos de atención (componente 3) | Para después |
 | Sesión de preguntas con el HUN | Preguntas listas (`docs/hun/`); falta la sesión |
 | Documento final y presentación | Pendiente (fin de noviembre de 2026) |
 
@@ -73,7 +75,8 @@ preguntas que puedes hacerle:
 | `docs/plan_de_accion.md` | Definición de cuello de botella y fases del análisis |
 | `docs/recomendaciones.md` | Siete recomendaciones con sus números, límites y fuentes (borrador) |
 | `docs/dias_atipicos.md` | Días que se salieron del patrón y por qué |
-| `docs/fichas_de_tareas.md` | Reparto de tareas del equipo |
+| `docs/pendientes_y_reparto.md` | **Qué falta para cubrir el instructivo y quién lo hace** (Daniela, Samuel, Anthony) |
+| `docs/fichas_de_tareas.md` | Fichas detalladas de cada tarea |
 | `docs/hun/sesion_de_preguntas.md` | Preguntas para la sesión con el HUN y espacio para anotar las respuestas |
 | `docs/Diccionario_datos.md` | Diccionario de las tablas OMOP |
 | `docs/DATA CHALLENGE HUN 2026 (2).pdf` | Instructivo oficial del reto |

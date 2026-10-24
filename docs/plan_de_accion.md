@@ -1,8 +1,10 @@
 # Plan de acción — Data Challenge HUN 2026 (actualizado 23-oct-2026)
 
+> **Pendientes y reparto actual: `docs/pendientes_y_reparto.md`** (quién hace qué, con entrega y criterio de terminado).
+
 > **Estado:** las fases 0 a 7 del análisis de cuellos de botella están hechas (ver `CLAUDE.md` sección 9 y `docs/HALLAZGOS.md`). Quedan el dashboard, los notebooks del equipo, el documento final y la presentación. Esta página conserva el plan original; las secciones 2 a 5 (revisiones posibles, reparto y calendario) son de antes de terminar el análisis.
 
-Equipo de 3. Solo una persona tiene Claude (**Daniela**); las otras dos trabajan con lo que ella les pasa
+Equipo de 3: **Daniela**, **Samuel** (Persona 2) y **Anthony** (Persona 3). Daniela y Anthony usan Claude Code; Samuel trabaja con lo que ellos le pasan
 (tablas agregadas por un drive privado, nunca por git) y con las herramientas que ya tengan.
 
 ## 0. Cuello de botella: definición congelada (21-oct-2026)
@@ -85,8 +87,8 @@ Cada persona es dueña de un frente y de una carpeta del repo, para trabajar a l
 
 | Frente | Responsable | Carpeta del repo | Qué entrega |
 |---|---|---|---|
-| **Capacidad de camas, simulación, modelo explicativo y recomendaciones** | **Persona 3** | `notebooks/modelos/`, `notebooks/simulacion/`, `docs/` | Proyección de camas ocupadas con alerta de saturación, simulación de escenarios, análisis de los factores de la espera y recomendaciones con números |
-| **Dashboard Power BI y contacto con el HUN** | **Persona 2** | `powerbi/`, `docs/hun/` | Dashboard de 6 páginas, plantilla `.pbit`, sección "Dashboard" del documento y correo al HUN |
+| **Capacidad de camas, simulación y modelo explicativo** | **Persona 3 (Anthony)** | `notebooks/modelos/`, `notebooks/simulacion/`, `docs/` | Proyección de camas ocupadas con alerta de saturación, simulación de escenarios, análisis de los factores de la espera y recomendaciones con números |
+| **Dashboard Power BI, recomendaciones y contacto con el HUN** | **Persona 2 (Samuel)** | `powerbi/`, `docs/hun/` | Dashboard de 6 páginas, plantilla `.pbit`, sección "Dashboard" del documento y correo al HUN |
 | **Modelo A (llegadas e ingresos), días atípicos, datos y documento** | **Daniela con Claude** | `src/`, `sql/`, `docs/`, `datos/referencia/` | Pronóstico de demanda con alerta, días atípicos, scripts y tablas, consultas en DBeaver, revisión de *pull requests*, commits y documento final |
 
 Todos los frentes se alimentan de las tablas que Daniela exporta al drive privado dos veces por semana
@@ -94,7 +96,7 @@ Todos los frentes se alimentan de las tablas que Daniela exporta al drive privad
 
 ## 4. Calendario
 
-| Semana | Daniela + Claude | Persona 2 (Power BI y HUN) | Persona 3 (camas, simulación, recomendaciones) | Entregable |
+| Semana | Daniela + Claude | Persona 2, Samuel (Power BI, recomendaciones y HUN) | Persona 3, Anthony (camas, simulación, modelo explicativo) | Entregable |
 |---|---|---|---|---|
 | **20–26 oct** | Exportar `panel_diario` y `estancias_hospitalizacion` al drive. Borrador de `mapeo_dx.csv`. Empezar ficha D.1 | **Correo al HUN.** Instalar Power BI y conectar tablas; página 1 de prueba | Ficha 3.1 pasos 1 y 2: describir estancias y ajustar la distribución | Repo |
 | **27 oct–2 nov** | Terminar Modelo A (D.1); componentes 1 y 2; borrador del documento | Páginas 1 a 3 | Ficha 3.1 pasos 3 a 5: simulación, backtest y alerta | Doc + primeras páginas de Power BI |
