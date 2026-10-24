@@ -157,15 +157,16 @@ Carpetas: `src/`, `sql/`, `docs/`, `datos/referencia/`, `notebooks/modelos/`.
 4. Alerta: "día congestionado" = llegadas por encima del percentil 90 del entrenamiento; probabilidad para el día siguiente.
 **Entrega:** `notebooks/modelos/modelo_A_demanda.ipynb`, `docs/modelo_A.md`, `modelo_A_predicciones.csv` al drive.
 **Terminado cuando:** el modelo mejora las dos referencias en 2026 y la alerta reporta su precisión y falsas alarmas.
-**Hecho el 22-oct (`src/pronostico_demanda.py` v1.2, resultados en `CLAUDE.md` 6b):** las **llegadas** sí mejoran a las referencias
-(error 7,9 % a 1 día) y la alerta tiene AUC 0,80 (precisión 35 %, detección 50 %). Los **ingresos a cama diarios** NO se pueden
-pronosticar mejor que "día de la semana × nivel reciente" (error ~23 %, es ruido de conteo), pero **por semana el error baja a 9,4 %**:
+**Hecho el 22-oct (`src/pronostico_demanda.py` v1.3, resultados en `CLAUDE.md` 6b):** las **llegadas** sí mejoran a las referencias
+(error 7,5 % a 1 día) y la alerta de un día antes tiene AUC 0,79 (la de media jornada, mucho mejor, está en `src/alertas.py`). Los **ingresos a cama diarios** NO se pueden
+pronosticar mejor que "día de la semana × nivel reciente" (error ~23 %, es ruido de conteo), pero **por semana el error baja a 9,5 %**:
 **para el modelo de camas (ficha 3.1) usar el pronóstico semanal de ingresos, repartido por día con el patrón del día de la semana**.
 Ojo: desde abril de 2026 llegadas e ingresos bajan 20–35 % (posible carga incompleta, pregunta 14 al HUN); para el escenario base de
 camas conviene usar el nivel de 2025 (~22 ingresos por día) y el nivel reciente (~19 en ene–abr 2026) como escenario bajo.
 Los pronósticos de ingresos alimentan el modelo de camas de Persona 3.
 
 ### Ficha D.2 — Detección de días atípicos (lo pide el instructivo)
+**Hecho el 22-oct:** `src/dias_atipicos.py`, `docs/dias_atipicos.md` y `resultados/tablas/dias_atipicos.csv` (Daniela sube el CSV al drive para la página 4 de Power BI).
 **Pregunta:** ¿qué días se salieron del patrón y qué los distingue?
 **Pasos:** comparar lo observado con lo que esperaba el Modelo A (residuo estandarizado) en llegadas, ingresos y
 espera mediana; marcar los días fuera de ±3 desviaciones; revisar si coinciden con festivos, puentes o brotes (dengue)

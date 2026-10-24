@@ -393,27 +393,34 @@ el 1 da contexto y el 4 sale de los dos anteriores.
 - **Tendencia de la espera, con la caída de 2026 aparte:** exceso medio de espera por episodio 16,4 h (2023), 17,6 (2024),
   21,5 (2025) y 22,3 (ene–abr 2026), así que el empeoramiento (+36 %) se ve en periodos completos. En may–jul 2026 la espera
   mediana sube a 24 h (antes 15–18 h) mientras llegan 25 % menos pacientes: no se puede separar un efecto real de uno de registro.
-- **Pronóstico de demanda (Modelo A, `pronostico_demanda.py` v1.2; entrenado hasta 2025-12, probado en ene–abr 2026, método
+- **Pronóstico de demanda (Modelo A, `pronostico_demanda.py` v1.3; entrenado hasta 2025-12, probado en ene–abr 2026, método
   elegido con la validación de 2025-07 a 2025-12 sin mirar la prueba):**
   - **Llegadas por día:** regresión de Poisson con día de la semana, festivos (entre semana y fin de semana por separado), semana
-    santa, nivel de los últimos 28 días y la "sorpresa" del último día conocido (los errores tienen memoria: autocorrelación 0,35).
-    Error relativo **7,9 % a 1 día** (MAE 19 personas por día) y 9,1 % a 7 días (8,6 % con la variante de sorpresa, que la validación
-    no eligió), contra 9,9 % y 10,5 % de la mejor referencia (día de la semana × nivel reciente). Por hora: 26,6 % frente a 28,8 %.
+    santa, 24/31 de diciembre y 25 de diciembre/1 de enero por separado, **Carnaval de Barranquilla** (~16 % menos llegadas),
+    nivel de los últimos 28 días y la "sorpresa" del último día conocido. Error relativo **7,5 % a 1 día** (MAE 18 personas por día) y
+    8,8 % a 7 días, contra 9,9 % y 10,5 % de la mejor referencia (día de la semana × nivel reciente). Por hora: 26,5 % frente a 28,8 %.
+    El fin de año se confirma en la validación de 2025; el Carnaval se descubrió en los residuos de 2024–2025 (ver
+    `docs/dias_atipicos.md`) y 2026 solo lo confirma. Se asume que el HUN está en Barranquilla.
   - **Ingresos a cama por día:** ningún método mejora a "día de la semana × nivel reciente" (error ~22,5–23,3 % con todos; la
-    varianza de los ingresos es igual a su media, es ruido de conteo y su piso teórico es ~18 %). **Por semana el error baja a 9,4 %**
+    varianza de los ingresos es igual a su media, es ruido de conteo y su piso teórico es ~18 %). **Por semana el error baja a 9,5 %**
     (frente a 14,7 % de repetir la semana anterior, 16 semanas): para planear camas usar el pronóstico semanal. Llegadas por
-    semana: 5,6 %, sin ventaja sobre repetir la semana anterior (5,2 %).
-  - **Bandas del 80 %** con los errores de los 60 días conocidos más recientes: cobertura 78 % (1 d) y 83 % (7 d) en llegadas; en
-    ingresos solo ~68 % (siguen angostas).
-  - **Alerta de día congestionado** (llegadas > percentil 90 del mismo día de la semana en 12 semanas; clasificador logístico, corte
-    elegido en validación): AUC 0,80 a 1 día (0,61 la referencia). A 1 día: 26 alertas, 9 aciertos (precisión 35 %, detección
-    50 %, 17 falsas alarmas); a 7 días: 44 alertas, 12 aciertos (precisión 27 %, detección 67 %, 32 falsas alarmas). Es un aviso, no una
-    alarma confiable: 2 de cada 3 alertas a 1 día son falsas.
+    semana: 6,1 %, sin ventaja sobre repetir la semana anterior (5,2 %).
+  - **Bandas del 80 %** con los errores de los 60 días conocidos más recientes: cobertura 79 % (1 d) y 81 % (7 d) en llegadas; en
+    ingresos solo ~71 % (siguen angostas).
+  - **Alerta de día congestionado un día antes** (llegadas > percentil 90 del mismo día de la semana en 12 semanas; clasificador
+    logístico, corte elegido en validación): AUC 0,79 a 1 día y 0,74 a 7 días (0,61 la referencia). A 1 día: 27 alertas, 10
+    aciertos (precisión 37 %, detección 56 %, 17 falsas alarmas); a 7 días: 59 alertas, 12 aciertos (precisión 20 %, detección 67 %,
+    47 falsas alarmas). Es un aviso débil; la alerta a media jornada (A, abajo) es mucho mejor.
   - **Probado y descartado:** nivel con mediana de 28 días (empeora) y cambiar la ventana del nivel (casi no cambia).
     **No probado:** modelar los ingresos como fracción de las llegadas pronosticadas.
   - **Limitaciones:** en mayo 2026 el modelo sobrestima las llegadas 11 % (a 1 día) y 33 % (a 7 días) y los ingresos ~30 % por la
-    caída no anticipada (la banda a 7 días cubre solo 58 % en mayo); no anticipa brotes, sábados aislados con casi nadie
-    (28-mar-2026: 88 llegadas) ni cambios de registro. Las llegadas incluyen ≥ 4 % de réplicas (4.6).
+    caída no anticipada (la banda a 7 días cubre solo 58 % en mayo); no anticipa brotes, cortes de sistema (28-mar-2026: 88
+    llegadas y 1 ingreso a cama) ni cambios de registro. Las llegadas incluyen ≥ 4 % de réplicas (4.6).
+- **Días atípicos (ficha D.2, `dias_atipicos.py`, `docs/dias_atipicos.md`):** con |z| > 3 frente al pronóstico: 14 días de llegadas,
+  9 de ingresos y 7 de espera (3 esperados por azar). Casi todos son de menos actividad. Con el calendario ya modelado, solo 3 de 14
+  tienen causa de calendario. Los dos más extremos (sábados 28-mar-2026 y 15-jun-2024) tienen caídas simultáneas de llegadas e
+  ingresos: parecen cortes de registro o sistema, hipótesis sin comprobar. **Ningún día tuvo espera más alta de lo esperado**: el
+  problema de la espera es crónico y de cola larga, no de días puntuales.
 - **Alertas (Fase 7, `alertas.py`; cortes elegidos con 2025-07 a 2025-12, prueba en ene–abr 2026 reproduciendo los días):**
   - **A. Día congestionado en tiempo real** (llegadas del día > percentil 90 del mismo día de la semana en 12 semanas): estimar el
     total del día con lo que ya llegó, mezclado con el pronóstico. Con el corte elegido en validación, **a las 12 h** AUC 0,94,
@@ -433,7 +440,7 @@ el 1 da contexto y el 4 sale de los dos anteriores.
     tipo C. La ocupación cae de ~115 camas a mediados de abril 2026 a 87 el 29-abr: coincide con la caída de datos de
     abril–mayo (pregunta 14) y no se interpreta como un cambio real.
 - Scripts: `construir_segmentos.py`, `ranking_cuellos.py`, `dependencia_carga.py`, `altas_y_factores.py`, `simulacion_altas.py`,
-  `pronostico_demanda.py`, `alertas.py`.
+  `pronostico_demanda.py`, `alertas.py`, `dias_atipicos.py`.
 
 ---
 
@@ -480,7 +487,11 @@ Pendiente: `mapeo_dx.csv` (columnas dx_nombre, categoria_dx) a partir de dx_frec
 
 ---
 
-## 8. Preguntas enviadas/por enviar al HUN (no inventar respuestas)
+## 8. Preguntas enviadas al HUN (no inventar respuestas)
+
+**Estado (22-oct): el correo ya se envió y NO se espera respuesta.** Ningún paso del plan depende de ella: cada incógnita (número
+de camas, meta de tiempos, causa de la caída de llegadas desde abril, persona real en las estancias gemelas) se trabaja con
+escenarios y supuestos escritos y se declara como limitación en el documento final.
 
 1. ¿Las visitas con id = otra + 1.746.478…1.746.489 o + 1.757.764 son duplicados de extracción/anonimización?
    ¿Cuál es el paciente correcto si el person_id difiere? (ej. 1091701, 2838179, 2849465)

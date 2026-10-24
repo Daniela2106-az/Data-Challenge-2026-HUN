@@ -1,7 +1,14 @@
 """
-pronostico_demanda.py  -  version 1.2 (22-oct-2026)
+pronostico_demanda.py  -  version 1.3 (22-oct-2026)
 Fase 6 del plan de cuellos de botella y ficha D.1 (Modelo A): pronostico de llegadas e ingresos a cama,
 con alerta de "dia congestionado". Entrena con el pasado y prueba con el futuro (validacion temporal).
+
+CAMBIOS DE LA v1.3 (hallados con src/dias_atipicos.py, que revisa los dias que el modelo erro mas)
+  - Fin de anio: el 24 y el 31 de diciembre bajan las llegadas y el 25 de diciembre y el 1 de enero las suben; antes
+    iban juntos en una sola marca y se cancelaban. La mejora SE VE TAMBIEN en la validacion de 2025-07 a 2025-12.
+  - Carnaval de Barranquilla (sabado a martes antes del miercoles de ceniza): llegadas ~16 % menores. Se descubrio
+    con los residuos de 2024 y 2025 (en muestra) y 2026 solo lo CONFIRMA; la validacion de 2025 no tiene carnavales,
+    asi que esta marca no se pudo elegir con ella. Se asume que el HUN esta en Barranquilla (por la universidad).
 
 CAMBIOS DE LA v1.2 (cada uno se probo antes con la validacion de 2025-07 a 2025-12 y se confirmo en 2026)
   - Calendario: festivo entre semana y festivo en fin de semana por separado (un festivo en sabado o domingo no
@@ -135,11 +142,15 @@ d["fest_habil"] = d.festivo & (d.dow < 5)          # un festivo en sabado o domi
 d["fest_finde"] = d.festivo & (d.dow >= 5)
 d["vispera"] = d.festivo.shift(-1, fill_value=False)
 d["despues"] = d.festivo.shift(1, fill_value=False)
-d["fin_anio"] = ((d.index.month == 12) & d.index.day.isin([24, 25, 31])) | ((d.index.month == 1) & (d.index.day == 1))
+# fin de anio: el 24 y el 31 de diciembre bajan las llegadas y el 25 de diciembre y el 1 de enero las suben (efectos opuestos)
+d["bajo_fin"] = (d.index.month == 12) & d.index.day.isin([24, 31])
+d["alto_fin"] = ((d.index.month == 12) & (d.index.day == 25)) | ((d.index.month == 1) & (d.index.day == 1))
 d["semana_santa"] = False
+d["carnaval"] = False        # Carnaval de Barranquilla: sabado a martes antes del miercoles de ceniza (pascua - 50 a - 47 dias)
 for _a in range(d.index.min().year, d.index.max().year + 1):
     _e = pd.Timestamp(easter(_a))
     d.loc[(d.index >= _e - pd.Timedelta(days=7)) & (d.index <= _e), "semana_santa"] = True
+    d.loc[(d.index >= _e - pd.Timedelta(days=50)) & (d.index <= _e - pd.Timedelta(days=47)), "carnaval"] = True
 d["mes"] = d.index.month
 print(f"{len(d)} dias ({d.index.min().date()} a {d.index.max().date()})")
 tend = d.groupby(d.index.to_period("M"))[["llegadas", "ingresos_a_cama"]].mean().round(1)
@@ -175,7 +186,8 @@ def sorpresa(col, h, entr_fin):
 def diseno(col, h, variante, entr_fin):
     nv, ms, so = VARIANTES[variante]
     X = pd.concat([pd.Series(1.0, index=d.index, name="const"), DOW,
-                   d[["fest_habil", "fest_finde", "vispera", "despues", "fin_anio", "semana_santa"]].astype(float)], axis=1)
+                   d[["fest_habil", "fest_finde", "vispera", "despues", "bajo_fin", "alto_fin", "semana_santa",
+                      "carnaval"]].astype(float)], axis=1)
     if nv:
         X["log_nivel"] = np.log(nivel_h(col, h))
     if so:
@@ -275,6 +287,13 @@ for col, nombre in OBJETIVOS.items():
 print("\nCOBERTURA de la banda del 80 % (lo ideal es cerca de 80):")
 print(pd.DataFrame(filas).to_string(index=False))
 sal.to_csv(TABLAS / "pronostico_diario_test.csv")
+
+# pronostico a 1 dia de TODOS los dias con el metodo elegido (hasta 2025-12 es en muestra; desde 2026-01 es fuera de muestra).
+# Lo usa src/dias_atipicos.py.
+completo = pd.DataFrame({f"{c}_real": d[c] for c in OBJETIVOS})
+for c in OBJETIVOS:
+    completo[f"{c}_pronostico_h1"] = pred_all[(c, 1)][elegido[(c, 1)]]
+completo.dropna().round(2).to_csv(TABLAS / "pronostico_diario_completo.csv")
 
 # ----------------------------------------------------------------------
 # 2b) Ingresos y llegadas por SEMANA
