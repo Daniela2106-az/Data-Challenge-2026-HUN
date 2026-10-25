@@ -212,7 +212,7 @@ de las llegadas pronosticadas; factores externos (clima, dengue, eventos).
 3. Reunión diaria de camas a media mañana apoyada en las alertas.
 4. Meta de altas antes del mediodía (empezar con 25–30 %): hasta 5,5 camas libres, como máximo 8 % del exceso de espera.
 5. Alerta por paciente a las 48 h sin cama, con un responsable (~4 por día).
-6. Protocolo para quien llega entre las 13 y las 18 h y se hospitaliza (entre ~10 y ~46 horas-paciente por día; confianza baja).
+6. Protocolo para quien llega entre las 13 y las 18 h y se hospitaliza (entre ~9 y ~51 horas-paciente por día, ver `src/impacto_llegada_tarde.py`; confianza baja).
 7. Revisión semanal de estancias largas (−5 % de estancia ≈ 6 camas).
 **Los datos no respaldan:** "hacen falta más camas" (se desconoce la capacidad), más personal según el día de la semana, ni priorizar pacientes
 concretos por riesgo de esperar. La literatura externa sobre altas antes del mediodía es **mixta** (un programa reportó 0,30 días menos de estancia;

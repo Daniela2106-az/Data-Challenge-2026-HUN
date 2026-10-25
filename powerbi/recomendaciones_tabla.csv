@@ -4,5 +4,5 @@ prioridad,recomendacion,impacto_estimado,firmeza,limite,estado
 3,Reunion diaria de camas a media manana con alertas,Alerta de las 12 h detecta 83 % de los dias congestionados,Media,Pocos dias congestionados en la prueba (18),Borrador (B2: verificar fuentes)
 4,Meta de altas antes del mediodia (empezar con 25-30 %),"Hasta 5,5 camas libres a las 12 h; evita como maximo 8 % del exceso de espera (estimacion ~3 %)",Media-baja,Es una cota con supuestos; capacidad total desconocida,Borrador (B2: verificar fuentes)
 5,Alerta por paciente a las 48 h sin cama con responsable,~4 alertas por dia; 51 % termina esperando mas de 72 h; 24 h de margen,Media,Solo cuenta a quienes luego se hospitalizan,Borrador (B2: verificar fuentes)
-6,Protocolo para quien llega entre las 13 y las 18 h y se hospitaliza,Entre ~10 y ~46 horas-paciente por dia (2-10 % del exceso),Baja,El rango depende de usar promedios o medianas,Borrador (B2: verificar fuentes)
+6,Protocolo para quien llega entre las 13 y las 18 h y se hospitaliza,Entre ~9 y ~51 horas-paciente por dia (2-11 % del exceso),Baja,El rango depende de usar promedios o medianas,Borrador (B2: verificar fuentes)
 7,Revisar sistematicamente las estancias largas,-5 % de estancia = ~6 camas; volver a la de 2023 = ~16 camas,Media,No se conoce por que subio la estancia,Borrador (B2: verificar fuentes)

@@ -28,7 +28,7 @@ número de camas del hospital ni el motivo clínico de cada espera. Donde un efe
 | 3 | Reunión diaria de camas a media mañana, con alertas | No cuantificable; la alerta de las 12 h detecta 83 % de los días congestionados | Media |
 | 4 | Meta de altas antes del mediodía (empezar con 25–30 %) | Hasta 5,5 camas libres a las 12 h; evita como máximo 8 % del exceso de espera (estimación central ~3 %) | Media-baja |
 | 5 | Alerta por paciente a las 48 h sin cama, con responsable | ~4 alertas por día; 51 % termina esperando más de 72 h; 24 h de margen | Media |
-| 6 | Protocolo para quien llega entre las 13 y las 18 h y se hospitaliza | Entre ~10 y ~46 horas-paciente por día (2–10 % del exceso) si igualaran a quien llega por la mañana | Baja (el rango depende de usar promedios o medianas) |
+| 6 | Protocolo para quien llega entre las 13 y las 18 h y se hospitaliza | Entre ~9 y ~51 horas-paciente por día (2–11 % del exceso de 448) si igualaran a quien llega por la mañana | Baja (el rango depende de usar promedios o medianas) |
 | 7 | Revisar sistemáticamente las estancias largas | −5 % de estancia ≈ 6 camas; volver a la de 2023 ≈ 16 camas | Media (la causa del aumento no se conoce) |
 
 ## 3. Detalle
@@ -52,7 +52,7 @@ Valores de partida con nuestros datos:
 | % de pacientes con más de 48 h sin cama | 19 % |
 | % de altas antes del mediodía | 15 % |
 | Hora mediana de asignación de cama | 17–18 h |
-| Camas ocupadas a las 12 h (promedio) | ~115 (2025: 119) |
+| Camas ocupadas a las 12 h (promedio mar-2023 a abr-2026) | ~115 (`escenario_camas_por_hora.csv`, `simulacion_altas.py`). Ocupación media de todo el día en 2025: 119 |
 | Estancia media | 5,46 días (2025) |
 
 ### R3. Reunión diaria de camas con alertas (prioridad 3)
@@ -96,11 +96,12 @@ Valores de partida con nuestros datos:
 ### R6. Protocolo para quien llega entre las 13 y las 18 h y se hospitaliza (prioridad 6)
 - **Qué hacer:** anticipar la decisión de ingreso y la solicitud de cama durante la tarde, para no esperar al ciclo de altas del día
   siguiente.
-- **Por qué:** mediana de 25 h al llegar de 13 a 16 h contra 15–17 h por la mañana. Llegan unos 6,7 pacientes por día en esa franja.
-  Si su espera bajara a la de la mañana, se evitarían **~46 horas-paciente por día midiendo con medianas (10 % del exceso de 448
-  horas por día) pero solo ~10 midiendo con promedios (2 %)**, porque los promedios de la mañana y de la tarde son parecidos
-  (~31 h) y los dominan las esperas largas. Por eso es una recomendación de confianza baja: ayuda a la espera típica, no a la cola.
+- **Por qué:** mediana de 23,6 h al llegar de 13:00 a 18:59 contra 15,7 h al llegar de 6:00 a 11:59. Llegan unos 6,4 pacientes por día en esa franja.
+  Si su espera bajara a la de la mañana, se evitarían **~51 horas-paciente por día midiendo con medianas (11 % del exceso de 448
+  horas por día) pero solo ~9 midiendo con promedios (2 %)**, porque los promedios de la mañana y de la tarde son parecidos
+  (~31–32 h) y los dominan las esperas largas. Por eso es una recomendación de confianza baja: ayuda a la espera típica, no a la cola.
 - **Límite:** la espera mezcla atención clínica con espera de cama y no se pueden separar con los datos (preguntas 4 y 5 al HUN).
+- **Fuente:** `src/impacto_llegada_tarde.py` → `resultados/tablas/impacto_llegada_tarde.csv` (estancias únicas, feb-2023 a abr-2026). Es asociación por hora de llegada, no causa.
 
 ### R7. Revisar las estancias largas (prioridad 7)
 - **Qué hacer:** revisión semanal de pacientes con estancias de más de 7 días, con gestión de casos.
