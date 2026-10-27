@@ -563,7 +563,7 @@ escenarios y supuestos escritos y se declara como limitación en el documento fi
 | Explicar mejor los retrasos; simulación Monte Carlo de camas | Pendiente (Anthony) | A4 y A5 |
 | Qué comparten las estancias que se disparan (idea de Anthony) y sistema repetible de diagnóstico | Pendiente (Daniela; A7 por decidir) | A2b y A7 |
 | Dashboard de Power BI (**va de último**, datos parciales; guía para su Claude en `powerbi/CLAUDE.md`) y verificar fuentes de las recomendaciones | Pendiente (Samuel) | B1 y B2 |
-| `mapeo_dx.csv` (grupos de diagnóstico, ~300 diagnósticos) | Pendiente (Daniela) | A3 |
+| `mapeo_dx.csv` (grupos de diagnóstico) y tiempos por diagnóstico | **Hecho como borrador** (falta validación clínica); `docs/diagnosticos_y_tiempos.md` | A3 |
 | Estimar tiempos de atención (componente 3) | Para después | A6 |
 | README y reproducibilidad desde cero | README y `requirements.txt` hechos; falta probar desde cero con alguien que no tiene los datos | `README.md` |
 | Documento final y presentación | Pendiente (plazo: fin de noviembre de 2026) | — |
