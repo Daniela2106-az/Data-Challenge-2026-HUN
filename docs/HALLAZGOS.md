@@ -153,6 +153,9 @@ espera más: ambulatorio −39 %, treatment urgency −42 %), edad y sexo 1,2, h
 calendario ~0. **El 88 % de la variación no se explica con lo que se observa.** Un modelo "al llegar" para predecir si un paciente esperará
 más de 24 h tiene AUC de 0,60: no sirve para alertar a un paciente individual.
 
+### 4.5b Espera y estancia por grupo de diagnóstico (`docs/diagnosticos_y_tiempos.md`)
+Dentro de los hospitalizados con diagnóstico traducido (38 %), esperan cama ~4 h cardiovascular y neurológico y 22–32 h musculoesquelético, renal, digestivo y cáncer; el patrón sigue tras controlar tipo de visita, hora, año y edad (cardiovascular −71 %, IC 95 % −73 a −69, frente a digestivo) y es estable por año. **Advertencia:** el diagnóstico se registra más cuando la cama llega rápido (60 % con diagnóstico si espera ≤ 6 h; 27 % si espera > 24 h), así que los grupos no representan a todos y no es causa. Hipótesis sin comprobar: la espera larga se concentra en cirugía, urología y ortopedia (sin dato de servicio).
+
 ### 4.6 Ocupación, estancia y escenario de altas
 *Aclaración: lo que aquí se llama "simulación" (`src/simulacion_altas.py`) es un **análisis de escenarios sobre datos históricos** con cotas, no una simulación
 estocástica de pacientes llegando. La simulación Monte Carlo de camas (ficha 3.1) está pendiente.*
@@ -254,6 +257,7 @@ otro hospital no halló efecto); las fuentes se leyeron solo en resumen y hay qu
 | Script | Qué hace | Salida principal |
 |---|---|---|
 | `src/analisis_etapas.py` (v3.7) | Limpia etapas y copias, arma episodios, marca estancias gemelas, espera de cama | `episodios.csv`, `bloques.csv`, `espera_cama.csv` |
+| `src/generar_borrador_mapeo_dx.py` → `src/diagnosticos_y_tiempos.py` | Agrupa diagnósticos y compara tiempos por grupo | `datos/referencia/mapeo_dx.csv`, `tiempos_por_dx.csv`, `efecto_dx_espera.csv` |
 | `src/preparar_variables.py` (v2.1) | Agrega calendario, paciente, diagnóstico, ocupación, series | `tabla_episodios.parquet`, `serie_horaria.csv`, `serie_diaria.csv` |
 | `src/exportar_para_equipo.py` (v2) | Tablas para el equipo y Power BI | `estancias_hospitalizacion.csv`, `panel_diario.csv` |
 | `src/generar_q3_q4_desde_csv.py` | Reproduce Q3 y Q4 sobre los CSV con DuckDB | `q3_episodios.csv`, `q4_ocupacion_por_hora.csv` |

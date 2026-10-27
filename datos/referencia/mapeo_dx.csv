@@ -1,0 +1,2405 @@
+dx_nombre,categoria_dx,regla
+Renal colic,Renal y urinario,correccion manual
+Disorder of intestine,Digestivo,intestin
+Urinary tract infectious disease,Renal y urinario,Urin
+Headache,Neurologico,Headache
+Common cold,Respiratorio,Common cold
+Chest pain,Dolor y sintomas generales,Chest
+Localized infection of skin AND/OR subcutaneous tissue,Infecciosas,infect
+Pelvic and perineal pain,"Embarazo, parto y ginecologia",Pelvic and perineal
+Low back pain,Musculoesqueletico y dolor,back
+Abdominal pain,Digestivo,Abdom
+Genitourinary tract hemorrhage,"Embarazo, parto y ginecologia",Genitourinary tract hemorrhage
+Threatened miscarriage,"Embarazo, parto y ginecologia",miscarriage
+Essential hypertension,Cardiovascular,hypertension
+False labor at or after 37 completed weeks of gestation,"Embarazo, parto y ginecologia",labor
+Mixed anxiety and depressive disorder,Salud mental,anxiety
+Dengue,Infecciosas,Dengue
+Injury of head,Trauma y lesiones,Injury
+Fever,Dolor y sintomas generales,correccion manual
+Congestive heart failure,Cardiovascular,heart
+Gastrointestinal hemorrhage,Digestivo,Gastro
+False labor,"Embarazo, parto y ginecologia",labor
+Lumbago with sciatica,Musculoesqueletico y dolor,Lumbago
+False labor before 37 completed weeks of gestation,"Embarazo, parto y ginecologia",labor
+Acute lower respiratory tract infection,Respiratorio,respirat
+Cellulitis,Piel y tejidos blandos,Cellulitis
+Lower abdominal pain,Digestivo,abdom
+Cerebrovascular accident,Cardiovascular,Cerebrovascular
+Contusion of knee,Trauma y lesiones,Contusion
+General examination of patient,Dolor y sintomas generales,General examination
+Pneumonia,Respiratorio,Pneumon
+Upper abdominal pain,Digestivo,abdom
+Contusion of finger,Trauma y lesiones,Contusion
+Epilepsy,Neurologico,Epilep
+Nonulcer dyspepsia,Digestivo,dyspepsia
+Contusion of upper limb,Trauma y lesiones,Contusion
+Tietze's disease,Musculoesqueletico y dolor,Tietze
+Bacterial pneumonia,Respiratorio,pneumon
+Heart failure,Cardiovascular,Heart
+Acute cholecystitis,Digestivo,cholecyst
+Seizure,Neurologico,Seizure
+Contusion of hand,Trauma y lesiones,Contusion
+Hyperglycemia,Endocrino y metabolico,glyc
+Syncope and collapse,Cardiovascular,Syncope
+Open wound of finger,Trauma y lesiones,Open wound
+Neck pain,Musculoesqueletico y dolor,Neck pain
+Acute appendicitis,Digestivo,appendic
+Urinary tract infection in pregnancy,"Embarazo, parto y ginecologia",pregnan
+Premature rupture of membranes,"Embarazo, parto y ginecologia",membranes
+Anxiety disorder,Salud mental,Anxiety
+Pain in limb,Musculoesqueletico y dolor,Pain in
+Contusion of ankle,Trauma y lesiones,Contusion
+Acute vaginitis,"Embarazo, parto y ginecologia",vaginitis
+Asthma,Respiratorio,Asthma
+Acute tonsillitis,Respiratorio,tonsill
+Contusion of chest,Trauma y lesiones,Contusion
+Biliary calculus,Digestivo,Biliary
+Peripheral vertigo,Neurologico,vertigo
+Calculus of gallbladder with acute cholecystitis,Digestivo,gallbladder
+Acute bronchiolitis,Respiratorio,bronch
+Anemia,Sangre e inmunologia,correccion manual
+Dyspnea,Respiratorio,Dyspnea
+Open wound of head,Trauma y lesiones,Open wound
+Umbilical hernia,Digestivo,hernia
+Contusion of forearm,Trauma y lesiones,Contusion
+Benign paroxysmal positional vertigo,Neurologico,vertigo
+Postprocedural state finding,Dolor y sintomas generales,state
+Retention of urine,Renal y urinario,Retention of urine
+Contusion of foot,Trauma y lesiones,Contusion
+Fracture of distal end of radius,Trauma y lesiones,Fracture
+Kidney stone,Renal y urinario,Kidney
+Superficial injury of head,Trauma y lesiones,Superficial injur
+Constipation,Digestivo,Constipation
+Missed miscarriage,"Embarazo, parto y ginecologia",miscarriage
+Sepsis,Infecciosas,Sepsis
+Acute myocardial infarction,Cardiovascular,myocard
+Disorder of brain,Neurologico,brain
+Blood in urine,Renal y urinario,Blood in urine
+Contusion of buttock,Trauma y lesiones,Contusion
+Viral disease,Infecciosas,Viral
+Inguinal hernia,Digestivo,hernia
+Allergic disposition,Sangre e inmunologia,correccion manual
+Contusion of elbow,Trauma y lesiones,Contusion
+Generalized anxiety disorder,Salud mental,anxiety
+Allergic urticaria,Piel y tejidos blandos,urticaria
+Carpal tunnel syndrome,Neurologico,Carpal tunnel
+"Moderate major depression, single episode",Salud mental,depress
+Ureteric stone,Renal y urinario,Ureter
+Peripheral venous insufficiency,Cardiovascular,venous
+Maternal hypertension,"Embarazo, parto y ginecologia",Maternal
+Contusion of hip,Trauma y lesiones,Contusion
+Appendicitis,Digestivo,Appendic
+Bipolar disorder,Salud mental,Bipolar
+Acute non-ST segment elevation myocardial infarction,Cardiovascular,myocard
+Pain of joint,Musculoesqueletico y dolor,Pain of
+Sprain of ankle,Trauma y lesiones,Sprain
+Female pelvic inflammatory disease,"Embarazo, parto y ginecologia",Female
+Type 1 diabetes mellitus,Endocrino y metabolico,diabet
+Contusion of toe,Trauma y lesiones,Contusion
+Superficial injury of upper limb,Trauma y lesiones,Superficial injur
+Atrial arrhythmia,Cardiovascular,Atrial
+Otitis media,"Ojo, oido, boca y dientes",Otitis
+Fracture of phalanx of finger,Trauma y lesiones,Fracture
+Angina pectoris,Cardiovascular,Angina
+Severe protein-calorie malnutrition (Gomez: less than 60 percent of standard weight),Endocrino y metabolico,malnutrition
+Dizziness and giddiness,Neurologico,Dizziness
+Gestational edema,"Embarazo, parto y ginecologia",Gestation
+Irritable bowel syndrome,Digestivo,bowel
+"Severe major depression, single episode, without psychotic features",Salud mental,depress
+Eating disorder,Salud mental,Eating disorder
+Incomplete miscarriage,"Embarazo, parto y ginecologia",miscarriage
+Gastritis,Digestivo,Gastritis
+Cellulitis of face,Piel y tejidos blandos,Cellulitis
+Acute severe refractory exacerbation of asthma,Respiratorio,asthma
+Dental caries extending into dentin,"Ojo, oido, boca y dientes",correccion manual
+Early stage of pregnancy,"Embarazo, parto y ginecologia",pregnan
+Injury of ankle,Trauma y lesiones,Injury
+Migraine,Neurologico,Migraine
+Mild hyperemesis gravidarum,"Embarazo, parto y ginecologia",hyperemesis
+Calculus of gallbladder without cholecystitis or cholangitis,Digestivo,gallbladder
+"Mental state, behavior and/or psychosocial function finding",Salud mental,Mental
+Cardiac arrest,Cardiovascular,Cardiac
+Type 2 diabetes mellitus,Endocrino y metabolico,diabet
+Acute pain,Dolor y sintomas generales,pain
+Moderate recurrent major depression,Salud mental,depress
+Backache,Musculoesqueletico y dolor,Back
+Osteoarthritis of knee,Musculoesqueletico y dolor,Osteo
+Open wound of upper limb,Trauma y lesiones,Open wound
+Foreign body in digestive tract,Trauma y lesiones,Foreign body
+Chronic obstructive pulmonary disease,Respiratorio,Chronic obstructive
+Benign prostatic hyperplasia,Renal y urinario,prostat
+Disorder of rotator cuff,Musculoesqueletico y dolor,rotator cuff
+Nerve root disorder,Neurologico,Nerve
+Palpitations,Cardiovascular,Palpitation
+Accidental wound during procedure,"Ojo, oido, boca y dientes",dental
+Contusion of lower leg,Trauma y lesiones,Contusion
+Malocclusion of teeth,"Ojo, oido, boca y dientes",teeth
+Traumatic lesion during delivery,"Embarazo, parto y ginecologia",delivery
+Severe pre-eclampsia,"Embarazo, parto y ginecologia",eclampsia
+Superficial injury of lower limb,Trauma y lesiones,Superficial injur
+Pain,Dolor y sintomas generales,Pain
+Acute sinusitis,Respiratorio,sinusitis
+Depressive episode,Salud mental,Depress
+Cellulitis of digit,Piel y tejidos blandos,Cellulitis
+Obesity,Endocrino y metabolico,Obesity
+Cholecystitis,Digestivo,Cholecyst
+Uterine leiomyoma,"Embarazo, parto y ginecologia",Uterine
+Injury of nail,Trauma y lesiones,Injury
+Cerebrovascular disease,Cardiovascular,Cerebrovascular
+Fetal condition affecting obstetrical care of mother,"Embarazo, parto y ginecologia",Fetal
+Psychotherapy,Salud mental,Psychotherapy
+Impaction of intestine,Digestivo,Impaction
+Hypoglycemia,Endocrino y metabolico,glyc
+Migraine without aura,Neurologico,Migraine
+Psychosocial problems related to unwanted pregnancy,"Embarazo, parto y ginecologia",pregnan
+Hemoglobin SS disease with crisis,Sangre e inmunologia,correccion manual
+Paranoid schizophrenia,Salud mental,schizophren
+Systemic lupus erythematosus,Sangre e inmunologia,correccion manual
+Inflammatory disorder of male genital organ,Renal y urinario,genital
+Transient cerebral ischemia,Cardiovascular,ischemi
+Open wound of forearm,Trauma y lesiones,Open wound
+Ulcer of lower extremity,Piel y tejidos blandos,Ulcer of lower
+Schizophrenia,Salud mental,Schizophren
+Disorder of testis and epididymis,Renal y urinario,testis
+Sexual abuse,Trauma y lesiones,Sexual abuse
+Bleeding from nose,Respiratorio,nose
+Acute exacerbation of chronic obstructive pulmonary disease,Respiratorio,chronic obstructive
+Ectopic pregnancy,"Embarazo, parto y ginecologia",Ectopic
+Acute pancreatitis,Digestivo,pancrea
+Loss of all teeth,"Ojo, oido, boca y dientes",teeth
+Multiple superficial injuries of shoulder and upper arm,Trauma y lesiones,Multiple superficial
+Nausea and vomiting,Digestivo,Nausea
+Fracture of fibula,Trauma y lesiones,Fracture
+Vulvovaginal disease,"Embarazo, parto y ginecologia",Vulvo
+Acute ST segment elevation myocardial infarction,Cardiovascular,myocard
+Disorder of fluid AND/OR electrolyte,Endocrino y metabolico,fluid
+Erysipelas,Piel y tejidos blandos,Erysipelas
+Tension-type headache,Neurologico,headache
+Fracture of distal end of radius and ulna,Trauma y lesiones,Fracture
+Multiple superficial injuries of wrist and hand,Trauma y lesiones,Multiple superficial
+Acute bronchitis,Respiratorio,bronch
+Pregnancy-induced hypertension,"Embarazo, parto y ginecologia",Pregnan
+Acute secretory otitis media,"Ojo, oido, boca y dientes",otitis
+Edema,Cardiovascular,Edema
+Acute upper respiratory infection,Respiratorio,respirat
+Localized edema,Cardiovascular,edema
+Bell's palsy,Neurologico,palsy
+Preinfarction syndrome,Cardiovascular,Preinfarction
+Derangement of knee,Trauma y lesiones,Derangement of knee
+Ketoacidosis due to type 1 diabetes mellitus,Endocrino y metabolico,Ketoacidosis
+Fracture of distal end of humerus,Trauma y lesiones,Fracture
+Calcific tendinitis of shoulder,Musculoesqueletico y dolor,tendin
+Dysmenorrhea,"Embarazo, parto y ginecologia",Dysmenorrhea
+Moderate protein-calorie malnutrition (weight for age 60-74 percent of standard),Endocrino y metabolico,malnutrition
+Acute respiratory failure,Respiratorio,respirat
+Pulmonary tuberculosis,Respiratorio,tubercul
+Multiple superficial injuries of ankle and foot,Trauma y lesiones,Multiple superficial
+Supraventricular tachycardia,Cardiovascular,ventricular
+Muscle contracture,Musculoesqueletico y dolor,Muscle
+Thromboembolism of vein,Cardiovascular,Thrombo
+Allergic rhinitis,Respiratorio,rhinitis
+"Attention deficit hyperactivity disorder, predominantly inattentive type",Salud mental,Attention deficit
+Acute stimulant intoxication,Trauma y lesiones,intoxication
+Herpes simplex,Infecciosas,Herpes
+Pregnancy with abortive outcome,"Embarazo, parto y ginecologia",Pregnan
+Arthropathy,Musculoesqueletico y dolor,Arthr
+Multiple superficial injuries of head,Trauma y lesiones,Multiple superficial
+Superficial injury of forearm,Trauma y lesiones,Superficial injur
+Fracture of upper end of humerus,Trauma y lesiones,Fracture
+Dementia,Salud mental,Dementia
+Cirrhosis of liver,Digestivo,Cirrhosis
+Open wound in mouth,Trauma y lesiones,Open wound
+Precordial pain,Dolor y sintomas generales,pain
+Fracture of femur,Trauma y lesiones,Fracture
+Disorder of speech and language development,Neurologico,speech and language
+Disorders of initiating and maintaining sleep,Salud mental,sleep
+Degeneration of intervertebral disc,Musculoesqueletico y dolor,disc
+Abscess of Bartholin's gland,"Embarazo, parto y ginecologia",Bartholin
+Acute abdomen,Digestivo,abdom
+Pregnancy not yet confirmed,"Embarazo, parto y ginecologia",Pregnan
+Pulmonary embolism,Cardiovascular,embol
+Open wound of scalp,Trauma y lesiones,Open wound
+Viral pneumonia,Respiratorio,pneumon
+Pulpitis,"Ojo, oido, boca y dientes",Pulp
+Pleural effusion,Respiratorio,Pleur
+Spontaneous subarachnoid hemorrhage,Neurologico,subarachnoid
+Disorder of skin and/or subcutaneous tissue,Piel y tejidos blandos,skin
+Asymptomatic periapical periodontitis,"Ojo, oido, boca y dientes",periapical
+Polyneuropathy,Neurologico,Polyneuro
+Open wound of lower leg,Trauma y lesiones,Open wound
+External hemorrhoids,Digestivo,hemorrhoid
+Dislocation of shoulder joint,Trauma y lesiones,Dislocation
+Physical aggression,Trauma y lesiones,Physical aggression
+Obstructed inguinal hernia,Digestivo,hernia
+Intestinal obstruction,Digestivo,Intestin
+Arthritis,Musculoesqueletico y dolor,Arthr
+Varicose veins of lower limb without ulcer and without inflammation,Cardiovascular,Varicose
+Open wound of foot,Trauma y lesiones,Open wound
+Non-suppurative otitis media,"Ojo, oido, boca y dientes",otitis
+Calculus of bile duct,Digestivo,bile
+Gastroesophageal reflux disease without esophagitis,Digestivo,Gastro
+Child health care,Dolor y sintomas generales,health care
+Attention to gastrostomy,Dolor y sintomas generales,correccion manual
+Injury of shoulder and upper arm,Trauma y lesiones,Injury
+Fracture of proximal end of radius,Trauma y lesiones,Fracture
+Fracture of distal end of tibia,Trauma y lesiones,Fracture
+Mild neurocognitive disorder,Salud mental,neurocognitive
+Organic anxiety disorder,Salud mental,anxiety
+Respiratory tuberculosis,Respiratorio,tubercul
+Injury of upper extremity,Trauma y lesiones,Injury
+Abnormal weight loss,Endocrino y metabolico,weight
+Parkinson's disease,Neurologico,Parkinson
+Diverticular disease,Digestivo,Diverticul
+Hypothyroidism,Endocrino y metabolico,Hypothyroid
+Herpes zoster,Infecciosas,Herpes
+Acute suppurative otitis media,"Ojo, oido, boca y dientes",otitis
+Injury to multiple structures of knee,Trauma y lesiones,Injury
+Contracted pelvis,"Embarazo, parto y ginecologia",Contracted pelvis
+Hemoptysis,Respiratorio,Hemoptysis
+Allergic asthma,Respiratorio,asthma
+Multiple open wounds of wrist and hand,Trauma y lesiones,Multiple open
+Fracture of shaft of radius,Trauma y lesiones,Fracture
+Rheumatoid arthritis,Musculoesqueletico y dolor,Rheumat
+Atopic dermatitis,Piel y tejidos blandos,dermat
+Fetal growth abnormality,"Embarazo, parto y ginecologia",Fetal
+Counseling,Salud mental,Counseling
+Diverticulosis of large intestine without diverticulitis,Digestivo,Diverticul
+Autistic disorder of childhood onset,Salud mental,Autis
+Jaundice,Digestivo,Jaundice
+Febrile convulsion,Neurologico,convulsion
+Traumatic amputation of finger,Trauma y lesiones,Traumatic
+Bacterial infectious disease,Infecciosas,Bacterial
+Alzheimer's disease,Salud mental,Alzheimer
+Uterine scar from previous surgery affecting pregnancy,"Embarazo, parto y ginecologia",Uterine scar
+Diabetes mellitus,Endocrino y metabolico,Diabet
+Fracture of metacarpal bone,Trauma y lesiones,Fracture
+Multiple injuries of head,Trauma y lesiones,Multiple injur
+Small for gestational age fetus,"Embarazo, parto y ginecologia",gestation
+Fracture of shaft of radius and/or ulna,Trauma y lesiones,Fracture
+Dysphagia,Digestivo,Dysphagia
+Non-organic psychosis,Salud mental,psychosis
+Prem rupture of membranes onset of labor within 24 hours,"Embarazo, parto y ginecologia",membranes
+Intracranial injury,Trauma y lesiones,injur
+Neoplasm of uncertain behavior of ovary,Cancer y tumores,correccion manual
+Primary malignant neoplasm of skin of face,Cancer y tumores,malignant
+Temporomandibular joint disorder,Musculoesqueletico y dolor,Temporomandibular
+Spontaneous hemorrhage of cerebral hemisphere,Neurologico,cerebr
+Functional disorder of penis,Renal y urinario,penis
+Human immunodeficiency virus infection,Infecciosas,immunodeficiency
+Urticaria,Piel y tejidos blandos,Urticaria
+Chest injury,Trauma y lesiones,injur
+Cellulitis and abscess of face,Piel y tejidos blandos,correccion manual
+Chronic gingivitis,"Ojo, oido, boca y dientes",gingiv
+Rheumatism,Musculoesqueletico y dolor,Rheumat
+Thrombocytopenic disorder,Sangre e inmunologia,correccion manual
+Vertigo of central origin,Neurologico,Vertigo
+Superficial injury of nose,Trauma y lesiones,Superficial injur
+Miscarriage,"Embarazo, parto y ginecologia",Miscarriage
+Elevated blood-pressure reading without diagnosis of hypertension,Cardiovascular,blood-pressure
+Ascites,Digestivo,Ascites
+"Neoplasm of uncertain or unknown behavior of brain, supratentorial",Cancer y tumores,Neoplasm
+Disorder of soft tissue of lower limb,Musculoesqueletico y dolor,soft tissue
+Foreign body in esophagus,Trauma y lesiones,Foreign body
+Trigeminal neuralgia,Neurologico,neuralg
+Chronic kidney disease,Renal y urinario,kidney
+Lateral epicondylitis,Musculoesqueletico y dolor,epicondylitis
+Low blood pressure,Cardiovascular,blood pressure
+Pulmonary edema,Cardiovascular,edema
+Open wound of back wall of thorax,Trauma y lesiones,Open wound
+Pregnancy,"Embarazo, parto y ginecologia",Pregnan
+Adverse reaction to drug,Trauma y lesiones,Adverse reaction
+Intrinsic asthma,Respiratorio,asthma
+Emotional state finding,Salud mental,Emotional
+Migraine with aura,Neurologico,Migraine
+Diffuse cervicobrachial syndrome,Musculoesqueletico y dolor,cervicobrachial
+Injury of free lower limb,Trauma y lesiones,Injury
+Retained dental root,"Ojo, oido, boca y dientes",dental
+Injury of lower leg,Trauma y lesiones,Injury
+Acute gingivitis,"Ojo, oido, boca y dientes",gingiv
+Infestation by Sarcoptes scabiei var hominis,Infecciosas,Infestation
+Hernia of anterior abdominal wall,Digestivo,Hernia
+Disorder caused by psychoactive substance,Salud mental,substance
+Fracture of clavicle,Trauma y lesiones,Fracture
+Chest pain on breathing,Dolor y sintomas generales,Chest
+Abscess of skin and/or subcutaneous tissue,Infecciosas,Abscess
+Disorder associated with urogenital device,Renal y urinario,genital
+Contusion of thigh,Trauma y lesiones,Contusion
+Traumatic or non-traumatic injury,Trauma y lesiones,Traumatic
+Multiple superficial injuries of forearm,Trauma y lesiones,Multiple superficial
+Cystocele,Piel y tejidos blandos,Cyst
+Neonatal jaundice,Digestivo,jaundice
+Urolithiasis,Renal y urinario,Urolith
+Inflammatory dermatosis,Piel y tejidos blandos,dermat
+Pre-eclampsia,"Embarazo, parto y ginecologia",eclampsia
+Incomplete induced termination of pregnancy,"Embarazo, parto y ginecologia",pregnan
+Fracture of neck of femur,Trauma y lesiones,Fracture
+Acne vulgaris,Piel y tejidos blandos,Acne
+Calculus of gallbladder with cholecystitis,Digestivo,gallbladder
+Numbness and tingling sensation of skin,Piel y tejidos blandos,skin
+Cyst of ovary,"Embarazo, parto y ginecologia",ovar
+Obstructed umbilical hernia,Digestivo,hernia
+Toxic gastroenteritis,Digestivo,gastro
+"Primary degenerative dementia of the Alzheimer type, senile onset",Salud mental,dementia
+Bilateral inguinal hernia,Digestivo,hernia
+Chronic ulcer of skin,Piel y tejidos blandos,skin
+Synovitis and tenosynovitis,Musculoesqueletico y dolor,Synovitis
+Hemorrhage of rectum and anus,Digestivo,rectum
+Partial thickness burn of lower limb,Trauma y lesiones,burn
+Acute pharyngitis,Respiratorio,pharyng
+Sciatica,Musculoesqueletico y dolor,Sciatica
+Disorder of vein,Cardiovascular,vein
+Acute amebic dysentery,Digestivo,dysentery
+Fracture of tooth,Trauma y lesiones,Fracture
+"Bipolar affective disorder, current episode depression",Salud mental,Bipolar
+Delivery by emergency cesarean section,"Embarazo, parto y ginecologia",Delivery
+Supervision of high risk pregnancy,"Embarazo, parto y ginecologia",pregnan
+Conduct disorder,Salud mental,Conduct
+Hernia of abdominal cavity,Digestivo,Hernia
+Tick-borne relapsing fever,Infecciosas,fever
+Superficial injury of anterior wall of thorax,Trauma y lesiones,Superficial injur
+History of event,Dolor y sintomas generales,History of
+Impetigo,Piel y tejidos blandos,Impetigo
+Inflammatory polyarthropathy,Musculoesqueletico y dolor,arthr
+Bradycardia,Cardiovascular,Bradycardia
+Otitis externa,"Ojo, oido, boca y dientes",Otitis
+Disorder due to type 2 diabetes mellitus,Endocrino y metabolico,diabet
+Multiple open wounds of head,Trauma y lesiones,Multiple open
+Status migrainosus,Dolor y sintomas generales,Status
+Osteomyelitis,Musculoesqueletico y dolor,Osteo
+Sleep apnea,Respiratorio,Sleep apnea
+Open wound of thorax,Trauma y lesiones,Open wound
+Crushing injury of finger,Trauma y lesiones,Crush
+Prematurity of infant,Recien nacido,Prematur
+Gestational diabetes mellitus,"Embarazo, parto y ginecologia",Gestation
+Multiple injuries,Trauma y lesiones,Multiple injur
+Intestinal parasitism,Digestivo,Intestin
+Contusion of toe(s) with damage to nail,Trauma y lesiones,Contusion
+Partial thickness burn of wrist and hand,Trauma y lesiones,burn
+Crushing injury of face,Trauma y lesiones,Crush
+Psychoactive substance dependence,Salud mental,substance
+Urethral stricture,Renal y urinario,Urethr
+Cerebral infarction due to thrombosis of cerebral arteries,Cardiovascular,infarct
+Adjustment disorder,Salud mental,Adjustment
+Neoplasm of uncertain behavior of liver and/or biliary passages,Cancer y tumores,Neoplasm
+Hematemesis,Digestivo,Hematemesis
+Non-traumatic subdural hemorrhage,Trauma y lesiones,traumatic
+Developmental academic disorder,Salud mental,mental
+Disorder of soft tissue,Musculoesqueletico y dolor,soft tissue
+Chloasma,Piel y tejidos blandos,Chloasma
+Bacterial sepsis of newborn,Infecciosas,Bacterial
+"Mild major depression, single episode",Salud mental,depress
+Embedded teeth,"Ojo, oido, boca y dientes",teeth
+Overlapping malignant neoplasm of skin,Cancer y tumores,malignant
+Acute non-suppurative serous otitis media,"Ojo, oido, boca y dientes",otitis
+Muscle pain,Musculoesqueletico y dolor,Muscle
+Panic disorder,Salud mental,Panic
+Pain in thoracic spine,Musculoesqueletico y dolor,Pain in
+Calcaneal spur,Musculoesqueletico y dolor,spur
+Localized swelling of abdominal wall,Digestivo,abdom
+Delirium,Salud mental,Delirium
+Necrosis of the pulp,"Ojo, oido, boca y dientes",pulp
+Hypertrophy of breast,"Embarazo, parto y ginecologia",breast
+Croup,Respiratorio,Croup
+Neoplasm of uncertain behavior of cerebral meninges,Cancer y tumores,Neoplasm
+Pain of ear,"Ojo, oido, boca y dientes",Pain of ear
+Periodontal disease,"Ojo, oido, boca y dientes",Periodont
+Metatarsal bone fracture,Trauma y lesiones,fracture
+Impacted cerumen,"Ojo, oido, boca y dientes",cerumen
+Fracture of forearm,Trauma y lesiones,Fracture
+Acute kidney injury,Renal y urinario,kidney injury
+Cystitis,Renal y urinario,Cystitis
+Drug-induced intrahepatic cholestasis,Digestivo,hepat
+Functional diarrhea,Digestivo,diarrhea
+Foreign body in pharynx,Trauma y lesiones,Foreign body
+Superficial injury of lower leg,Trauma y lesiones,Superficial injur
+Open wound of ocular adnexa,Trauma y lesiones,Open wound
+Obstetric non-purulent mastitis,"Embarazo, parto y ginecologia",Obstetric
+Itching of skin,Piel y tejidos blandos,skin
+Fracture of upper end of tibia,Trauma y lesiones,Fracture
+Tachycardia,Cardiovascular,Tachycardia
+Open wound of front wall of thorax,Trauma y lesiones,Open wound
+Varicose veins of lower extremity with ulcer AND inflammation,Cardiovascular,Varicose
+Conjunctivitis,"Ojo, oido, boca y dientes",Conjunctiv
+Pneumonitis caused by inhalation of vomitus,Respiratorio,Pneumon
+Disorder of thyroid gland,Endocrino y metabolico,thyroid
+Open wound of upper arm,Trauma y lesiones,Open wound
+Respiratory distress syndrome in the newborn,Respiratorio,Respirat
+Neck swelling,Piel y tejidos blandos,swelling
+Triggering of digit,Musculoesqueletico y dolor,Triggering
+Atherosclerosis of arteries of the extremities,Cardiovascular,arter
+Open wound of neck,Trauma y lesiones,Open wound
+Acute alcohol intoxication,Trauma y lesiones,intoxication
+Tear of meniscus of knee,Musculoesqueletico y dolor,knee
+Organic mental disorder,Salud mental,mental
+Internal hemorrhoids,Digestivo,hemorrhoid
+Disorder of breast,"Embarazo, parto y ginecologia",breast
+Burn of upper limb,Trauma y lesiones,Burn
+Secondary hypertension,Cardiovascular,hypertension
+Status epilepticus,Neurologico,epilep
+Acute conjunctivitis,"Ojo, oido, boca y dientes",conjunctiv
+Scoliosis deformity of spine,Musculoesqueletico y dolor,Scoliosis
+Partial thickness burn,Trauma y lesiones,burn
+Iron deficiency anemia,Sangre e inmunologia,anemia
+Peripheral vascular disease,Cardiovascular,vascular
+Contusion of anterior abdominal wall,Trauma y lesiones,Contusion
+Childhood disorder of conduct and emotion,Salud mental,Childhood disorder
+Seborrheic keratosis,Piel y tejidos blandos,keratosis
+Acute transient psychotic disorder,Salud mental,psychotic
+Torsion of testis,Renal y urinario,testis
+"Tuberculosis of lung, bacteriological and histological examination not done",Respiratorio,Tubercul
+Open wound of anterior abdominal wall,Trauma y lesiones,Open wound
+Fracture of shaft of tibia,Trauma y lesiones,Fracture
+Pressure injury,Trauma y lesiones,injur
+Varicose ulcer of lower extremity,Cardiovascular,Varicose
+Obsessive-compulsive disorder,Salud mental,Obsessive
+Congenital pes planus,Renal y urinario,genital
+Varicocele,Renal y urinario,Varicocele
+Disorder of Bartholin's gland,"Embarazo, parto y ginecologia",Bartholin
+Localized enlarged lymph nodes,Sangre e inmunologia,lymph
+Acne,Piel y tejidos blandos,Acne
+Fracture of shaft of humerus,Trauma y lesiones,Fracture
+Open wound of thigh,Trauma y lesiones,Open wound
+Vomiting of pregnancy,"Embarazo, parto y ginecologia",pregnan
+Open wound of knee,Trauma y lesiones,Open wound
+Abscess of vulva,Infecciosas,Abscess
+Severe recurrent major depression without psychotic features,Salud mental,depress
+Superficial injury of trunk,Trauma y lesiones,Superficial injur
+Superficial injury of shoulder and upper arm,Trauma y lesiones,Superficial injur
+Balanitis,Renal y urinario,Balanitis
+Cyst of Bartholin's gland duct,"Embarazo, parto y ginecologia",Bartholin
+Spontaneous cerebral hemorrhage,Neurologico,cerebr
+Actinic keratosis,Piel y tejidos blandos,keratosis
+Melena,Digestivo,Melena
+Open wound of toe,Trauma y lesiones,Open wound
+Lipoma of head and/or neck,Piel y tejidos blandos,Lipoma
+Mild protein-calorie malnutrition (weight for age 75-89 percent of standard),Endocrino y metabolico,malnutrition
+Partial thickness burn of upper limb,Trauma y lesiones,burn
+Contusion of ocular adnexa and periocular tissues,Trauma y lesiones,Contusion
+Bacterial meningitis,Infecciosas,meningitis
+Labyrinthine disorder,"Ojo, oido, boca y dientes",Labyrinth
+Inflammatory disorder of breast,"Embarazo, parto y ginecologia",breast
+Allergic gastroenteritis and colitis,Digestivo,gastro
+Hearing loss,"Ojo, oido, boca y dientes",Hearing
+Thrombosed external hemorrhoids,Digestivo,hemorrhoid
+Effusion of joint,Musculoesqueletico y dolor,joint
+Undernutrition,Endocrino y metabolico,Undernutrition
+Headache disorder,Neurologico,Headache
+Acute anterior ST segment elevation myocardial infarction,Cardiovascular,myocard
+Irritable bowel syndrome with diarrhea,Digestivo,bowel
+Mumps,Infecciosas,Mumps
+Chronic gastritis,Digestivo,gastritis
+Focal epilepsy,Neurologico,epilep
+"Multiple superficial injuries of abdomen, lower back and pelvis",Trauma y lesiones,Multiple superficial
+Varicella,Infecciosas,Varicella
+Fetal disorder due to maternal disorder during pregnancy,"Embarazo, parto y ginecologia",Fetal
+Disorder due to type 1 diabetes mellitus,Endocrino y metabolico,diabet
+Hydrocele of testis,Renal y urinario,testis
+Disorder of skin AND/OR subcutaneous tissue of head,Piel y tejidos blandos,skin
+Seropositive rheumatoid arthritis,Musculoesqueletico y dolor,rheumat
+Allergic contact dermatitis,Piel y tejidos blandos,dermat
+Uterovaginal prolapse,"Embarazo, parto y ginecologia",vaginal
+Hyperlipidemia,Endocrino y metabolico,Hyperlipid
+Simple obesity,Endocrino y metabolico,obesity
+Intervertebral disc disorder,Musculoesqueletico y dolor,disc
+Alcohol intoxication,Trauma y lesiones,intoxication
+Complete atrioventricular block,Cardiovascular,ventricular
+Neoplasm of uncertain behavior of respiratory tract,Cancer y tumores,Neoplasm
+Breast lump,"Embarazo, parto y ginecologia",Breast
+Nephrotic syndrome,Renal y urinario,Nephr
+Delivery AND/OR maternal condition affecting management,"Embarazo, parto y ginecologia",Delivery
+Fracture of phalanx of foot,Trauma y lesiones,Fracture
+"Severe major depression, single episode, with psychotic features",Salud mental,depress
+Exanthema subitum,Piel y tejidos blandos,Exanthema
+Poisoning,Trauma y lesiones,Poisoning
+Complication due to diabetes mellitus,Endocrino y metabolico,diabet
+Dysuria,Renal y urinario,Dysuria
+Bronchopneumonia,Respiratorio,Bronch
+Dental caries,"Ojo, oido, boca y dientes",Dental
+Recurrent major depression in remission,Salud mental,depress
+Lichen planus,Digestivo,anus
+Injury of lower limb,Trauma y lesiones,Injury
+Diabetic ketoacidosis,Endocrino y metabolico,Diabet
+Traumatic subdural hemorrhage,Trauma y lesiones,Traumatic
+Fracture of lumbar spine,Trauma y lesiones,Fracture
+Acute gastritis,Digestivo,gastritis
+Tinea corporis,Piel y tejidos blandos,Tinea
+Calculus of bile duct with cholecystitis,Digestivo,bile
+Fracture of patella,Trauma y lesiones,Fracture
+Delivery by elective cesarean section,"Embarazo, parto y ginecologia",Delivery
+Third degree uterine prolapse,"Embarazo, parto y ginecologia",uterine
+"Bipolar affective disorder, currently manic, severe, with psychosis",Salud mental,Bipolar
+Generalized epilepsy,Neurologico,epilep
+Malaise and fatigue,Dolor y sintomas generales,Malaise
+Hypertensive heart disease with congestive heart failure,Cardiovascular,heart
+Cholangitis,Digestivo,Cholangitis
+Hypertrophic scar,Piel y tejidos blandos,scar
+Verruca vulgaris,Piel y tejidos blandos,Verruca
+Polycystic ovary syndrome,"Embarazo, parto y ginecologia",ovar
+Mild recurrent major depression,Salud mental,depress
+Acute cystitis,Renal y urinario,cystitis
+Deliveries by cesarean,"Embarazo, parto y ginecologia",cesarean
+Depressive disorder,Salud mental,Depress
+Seborrheic dermatitis,Piel y tejidos blandos,dermat
+Mixed disorder of scholastic skills,Salud mental,scholastic
+Hidradenitis suppurativa,Piel y tejidos blandos,Hidradenitis
+Acquired pes planus,Digestivo,anus
+Peripheral circulatory disorder due to type 2 diabetes mellitus,Endocrino y metabolico,diabet
+Endometriosis (clinical),"Embarazo, parto y ginecologia",Endometri
+Candidal vulvovaginitis,"Embarazo, parto y ginecologia",vulvo
+Postmenopausal bleeding,Sangre e inmunologia,bleeding
+Hydronephrosis due to calculus of kidney and ureter,Renal y urinario,nephr
+Thrombosis of arteries of lower extremity,Cardiovascular,Thrombo
+Fracture of shaft of ulna,Trauma y lesiones,Fracture
+Acute laryngotracheitis,Respiratorio,laryng
+Mononeuropathy of lower limb,Neurologico,neuropath
+Open wound of nose,Trauma y lesiones,Open wound
+Obstruction of bile duct,Digestivo,Obstruction
+Childhood emotional disorder,Salud mental,emotional
+Muscle strain,Musculoesqueletico y dolor,Muscle
+Torticollis,Musculoesqueletico y dolor,Torticollis
+Disorder of bone development,Musculoesqueletico y dolor,bone
+Urinary bladder stone,Renal y urinario,Urin
+Fracture of proximal end of ulna,Trauma y lesiones,Fracture
+Phobic disorder,Salud mental,Phobic
+Mild intellectual disability,Salud mental,intellectual
+Astigmatism,"Ojo, oido, boca y dientes",Astigmatism
+Generalized edema,Cardiovascular,edema
+Genital herpes simplex,Renal y urinario,Genital herpes
+Hypokalemia,Endocrino y metabolico,Hypokal
+Multiple superficial injuries of thorax,Trauma y lesiones,Multiple superficial
+Partial thickness burn of head and/or neck,Trauma y lesiones,burn
+Hemorrhoids,Digestivo,Hemorrhoid
+Tremor,Neurologico,Tremor
+Expressive language disorder,Salud mental,Expressive language
+Open wound of ear,Trauma y lesiones,Open wound
+Cardiac arrest with successful resuscitation,Cardiovascular,Cardiac
+Injury of forearm,Trauma y lesiones,Injury
+Injury of eye region,Trauma y lesiones,Injury
+Dengue hemorrhagic fever,Infecciosas,Dengue
+Monoarthritis,Musculoesqueletico y dolor,arthr
+Systemic sclerosis,Sangre e inmunologia,Systemic sclerosis
+Gynecologic examination,Dolor y sintomas generales,examination
+Urinary incontinence,Renal y urinario,Urin
+Partial thickness burn of trunk,Trauma y lesiones,burn
+Hypertensive encephalopathy,Neurologico,encephal
+Polyarthropathy,Musculoesqueletico y dolor,arthr
+Psoriasis,Piel y tejidos blandos,Psoriasis
+Disorder of endocrine testis,Renal y urinario,testis
+Blood coagulation disorder,Sangre e inmunologia,coagul
+Gestational proteinuria,"Embarazo, parto y ginecologia",Gestation
+Hypovolemic shock,Cardiovascular,Hypovolem
+Somnolence syndrome,Salud mental,Somnolence
+Hematoma of obstetric wound,"Embarazo, parto y ginecologia",obstetric
+Gout,Musculoesqueletico y dolor,Gout
+Fracture of phalanx of multiple fingers,Trauma y lesiones,Fracture
+Fracture of shaft of femur,Trauma y lesiones,Fracture
+Generalized ischemic myocardial dysfunction,Cardiovascular,ischemi
+Impingement syndrome of shoulder region,Musculoesqueletico y dolor,shoulder
+Disorder of shoulder,Musculoesqueletico y dolor,shoulder
+Fracture of distal end of femur,Trauma y lesiones,Fracture
+Fracture of skull and facial bones,Trauma y lesiones,Fracture
+Mononeuropathy of upper limb,Neurologico,neuropath
+Psoriasis vulgaris,Piel y tejidos blandos,Psoriasis
+Vitiligo,Piel y tejidos blandos,Vitiligo
+Personality disorder,Salud mental,Personality
+Epidermal burn of wrist and hand,Trauma y lesiones,burn
+Feeding problems in newborn,Recien nacido,newborn
+Injury of neck,Trauma y lesiones,Injury
+Amenorrhea,"Embarazo, parto y ginecologia",Amenorrhea
+Disorder of skin of trunk,Piel y tejidos blandos,skin
+Chronic obstructive pulmonary disease with acute lower respiratory infection,Respiratorio,Chronic obstructive
+Exceptionally large at birth,Recien nacido,birth
+Patellar tendonitis,Musculoesqueletico y dolor,tendonitis
+Thrombophlebitis,Cardiovascular,Thrombo
+Open wound of shoulder region,Trauma y lesiones,Open wound
+Fasciitis,Musculoesqueletico y dolor,Fasciitis
+"Tuberculosis of lung, confirmed by sputum microscopy with or without culture",Respiratorio,Tubercul
+Poor fetal growth affecting management,"Embarazo, parto y ginecologia",fetal
+Interstitial lung disease,Respiratorio,lung
+Fracture of orbital floor,Trauma y lesiones,Fracture
+Suppurative arthritis,Musculoesqueletico y dolor,arthr
+Cardiac arrhythmia,Cardiovascular,Cardiac
+Thrombophlebitis of lower extremities,Cardiovascular,Thrombo
+Lesion of oral mucosa,"Ojo, oido, boca y dientes",oral
+Endometrial hyperplasia,"Embarazo, parto y ginecologia",Endometri
+Cough,Respiratorio,Cough
+Congenital anomaly of jaw,Renal y urinario,genital
+Fracture of great toe,Trauma y lesiones,Fracture
+Hyperkalemia,Endocrino y metabolico,Hyperkal
+Periapical abscess,"Ojo, oido, boca y dientes",Periapical
+Ketoacidosis due to type 2 diabetes mellitus,Endocrino y metabolico,Ketoacidosis
+Eclampsia in puerperium,"Embarazo, parto y ginecologia",Eclampsia
+Crushing injury of skull,Trauma y lesiones,Crush
+Viral hemorrhagic fever,Infecciosas,Viral
+Neoplasm of uncertain behavior of thyroid gland,Cancer y tumores,Neoplasm
+Disorder of eye region,"Ojo, oido, boca y dientes",eye
+Dystonia,Neurologico,Dystonia
+Superficial injury of mouth,Trauma y lesiones,Superficial injur
+Benign neoplasm of skin of face,Cancer y tumores,neoplasm
+Multiple superficial injuries of lower leg,Trauma y lesiones,Multiple superficial
+Abdominal aortic aneurysm without rupture,Cardiovascular,aort
+Streptococcal tonsillitis,Respiratorio,tonsill
+Oligohydramnios,"Embarazo, parto y ginecologia",Oligohydramnios
+Prolapse of female genital organs,"Embarazo, parto y ginecologia",female
+Delayed milestone,Salud mental,Delayed milestone
+Abnormal gait,Musculoesqueletico y dolor,gait
+Epidermoid cyst,Piel y tejidos blandos,cyst
+Respiratory arrest,Respiratorio,Respirat
+Shock,Cardiovascular,Shock
+Motor neuron disease,Neurologico,Motor neuron
+Paralytic ileus,Digestivo,ileus
+Disorder of artery,Cardiovascular,arter
+Stomatitis,"Ojo, oido, boca y dientes",Stomatitis
+Foreign body in ear,Trauma y lesiones,Foreign body
+Condyloma acuminatum of the anogenital region,Renal y urinario,genital
+Peritonsillar abscess,Respiratorio,tonsill
+"Sedative, hypnotic AND/OR anxiolytic-related disorder",Otros / sin clasificar,
+Alopecia areata,Piel y tejidos blandos,Alopecia
+Bronchitis,Respiratorio,Bronch
+Intellectual disability,Salud mental,Intellectual
+Peritonitis,Digestivo,Peritonitis
+Fracture of calcaneus,Trauma y lesiones,Fracture
+Sepsis caused by Salmonella,Infecciosas,Sepsis
+Thrombophlebitis of deep veins of lower extremity,Cardiovascular,Thrombo
+Dysphonia,"Ojo, oido, boca y dientes",Dysphonia
+Acute appendicitis with generalized peritonitis,Digestivo,appendic
+Benign neoplasm of skin of trunk,Cancer y tumores,neoplasm
+Open wound of abdomen,Trauma y lesiones,Open wound
+Cellulitis of trunk,Piel y tejidos blandos,Cellulitis
+"Bipolar I disorder, most recent episode hypomanic",Salud mental,Bipolar
+Purulent otitis media,"Ojo, oido, boca y dientes",otitis
+Lipoma of skin and subcutaneous tissue of limb,Piel y tejidos blandos,Lipoma
+Tongue tie,Recien nacido,Tongue tie
+Dissociative disorder,Salud mental,Dissociative
+Complicated migraine,Neurologico,migraine
+Burn of head AND/OR neck,Trauma y lesiones,Burn
+"Primary gonarthrosis, bilateral",Musculoesqueletico y dolor,arthr
+Syphilis,Infecciosas,Syphilis
+Acute maxillary sinusitis,Respiratorio,sinusitis
+Delirium co-occurrent with dementia,Salud mental,Delirium
+Inflammation of scrotum,Renal y urinario,scrot
+Foreign body in stomach,Trauma y lesiones,Foreign body
+Infection of obstetric surgical wound,"Embarazo, parto y ginecologia",obstetric
+Primary malignant neoplasm of breast,Cancer y tumores,malignant
+Sensorineural hearing loss of bilateral ears,"Ojo, oido, boca y dientes",hearing
+Renal failure syndrome,Renal y urinario,Renal failure
+Toxoplasmosis,Infecciosas,Toxoplasm
+Disorder of biliary tract,Digestivo,biliary
+Pain in eye,"Ojo, oido, boca y dientes",Pain in eye
+Acute non-infective otitis externa,Infecciosas,infect
+"Hydatidiform mole, benign",Piel y tejidos blandos,mole
+Supervision of high risk pregnancy for social problem,"Embarazo, parto y ginecologia",pregnan
+Disorder of gallbladder,Digestivo,gallbladder
+Hypertrophy of adenoids,"Ojo, oido, boca y dientes",adenoid
+Delusional disorder,Salud mental,Delusional
+Tetraplegic cerebral palsy,Neurologico,cerebr
+Nonorganic insomnia,Salud mental,insomnia
+Primary malignant neoplasm of prostate,Cancer y tumores,malignant
+Multiple sclerosis,Neurologico,Multiple sclerosis
+Spinal stenosis,Musculoesqueletico y dolor,Spinal
+Pulmonary arterial hypertension,Cardiovascular,arter
+Disorder of skin of neck,Piel y tejidos blandos,skin
+Hydrocephalus,Neurologico,Hydrocephalus
+Injury of lumbosacral plexus,Trauma y lesiones,Injury
+Enamel caries,"Ojo, oido, boca y dientes",caries
+Bacterial food poisoning,Digestivo,food poisoning
+Disorder of teeth AND/OR supporting structures,"Ojo, oido, boca y dientes",teeth
+Cutaneous myiasis,Piel y tejidos blandos,Cutaneous
+Pemphigus,Piel y tejidos blandos,Pemphigus
+Epidermal burn of head and/or neck,Trauma y lesiones,burn
+Fitting procedure,Dolor y sintomas generales,procedure
+Fracture of pubis,Trauma y lesiones,Fracture
+Disorder of female genital organs,"Embarazo, parto y ginecologia",female
+Scarlet fever,Infecciosas,fever
+Benign neoplasm of skin,Cancer y tumores,neoplasm
+Gastro-esophageal reflux disease with esophagitis,Digestivo,Gastro
+Transient global amnesia,Neurologico,amnesia
+Lipodystrophy,Piel y tejidos blandos,Lipodystrophy
+Vascular dementia,Salud mental,dementia
+Postherpetic neuralgia,Neurologico,neuralg
+Hemoglobin SS disease without crisis,Sangre e inmunologia,Hemoglobin
+Abscess of liver,Digestivo,liver
+Hydronephrosis,Renal y urinario,nephr
+Localized adiposity,Otros / sin clasificar,
+Superficial injury of chest,Trauma y lesiones,Superficial injur
+Acute appendicitis with peritoneal abscess,Digestivo,appendic
+Acute bronchiolitis caused by respiratory syncytial virus,Respiratorio,bronch
+Molluscum contagiosum infection,Infecciosas,infect
+Inflammation of sacroiliac joint,Musculoesqueletico y dolor,joint
+Hypertensive renal failure,Renal y urinario,renal failure
+Neurosyphilis,Infecciosas,syphilis
+Swelling,Piel y tejidos blandos,Swelling
+Fetal death,"Embarazo, parto y ginecologia",Fetal
+Calculus of kidney and ureter,Renal y urinario,Calculus of kidney
+Tinea pedis,Piel y tejidos blandos,Tinea
+Localized Salmonella infection,Infecciosas,infect
+Hypermetropia,Otros / sin clasificar,
+Male pattern alopecia,Piel y tejidos blandos,alopecia
+Fractured nasal bones,Trauma y lesiones,Fracture
+Arthritis of spine,Musculoesqueletico y dolor,Arthr
+Crushing injury of elbow,Trauma y lesiones,Crush
+Essential tremor,Neurologico,tremor
+Acne varioliformis,Piel y tejidos blandos,Acne
+Dissection of aorta,Cardiovascular,aort
+Scarring alopecia,Piel y tejidos blandos,alopecia
+Hemangioma,Otros / sin clasificar,
+Foreign body in nostril,Trauma y lesiones,Foreign body
+Balanoposthitis,Otros / sin clasificar,
+Priapism,Otros / sin clasificar,
+Lipoma of skin and subcutaneous tissue of trunk,Piel y tejidos blandos,Lipoma
+Lymphadenopathy,Sangre e inmunologia,Lymph
+"Acute lymphadenitis of face, head and neck",Sangre e inmunologia,lymph
+Moderate intellectual disability,Salud mental,intellectual
+Chronic osteomyelitis,Musculoesqueletico y dolor,osteo
+Contusion of genital organ,Trauma y lesiones,Contusion
+Blepharitis,"Ojo, oido, boca y dientes",Blephar
+Anal abscess,Digestivo,Anal
+Pityriasis versicolor,Otros / sin clasificar,
+Chronic periodontitis,"Ojo, oido, boca y dientes",periodont
+Spontaneous ecchymosis,Otros / sin clasificar,
+Pyoderma,Otros / sin clasificar,
+Non-neoplastic nevus,Cancer y tumores,neoplastic
+Third cranial nerve weakness,Neurologico,nerve
+Salmonella infection,Infecciosas,infect
+Child examination,Dolor y sintomas generales,examination
+Atypical autism,Salud mental,autis
+Fracture of phalanx of thumb,Trauma y lesiones,Fracture
+Menopausal syndrome,"Embarazo, parto y ginecologia",Menopaus
+Bronchiectasis,Respiratorio,Bronch
+Achilles tendinitis,Musculoesqueletico y dolor,tendin
+Respiratory condition caused by chemical fumes,Respiratorio,Respirat
+Neoplasm of uncertain behavior of pituitary gland,Cancer y tumores,Neoplasm
+Benign neoplasm of ovary,Cancer y tumores,neoplasm
+Harmful pattern of use of psychoactive substance,Salud mental,substance
+Injury of hip and thigh,Trauma y lesiones,Injury
+Single live birth from singleton pregnancy,"Embarazo, parto y ginecologia",pregnan
+Fracture of first metacarpal bone,Trauma y lesiones,Fracture
+Health examination of sub-group,Dolor y sintomas generales,examination
+Derangement of meniscus,Otros / sin clasificar,
+Premature labor,"Embarazo, parto y ginecologia",labor
+Functional disorder of intestine,Digestivo,intestin
+Iron deficiency anemia due to blood loss,Sangre e inmunologia,anemia
+Calculus of bile duct with cholangitis,Digestivo,bile
+Primary malignant neoplasm of head of pancreas,Cancer y tumores,malignant
+Infective otitis externa,Infecciosas,Infect
+Neoplasm of uncertain behavior of urinary bladder,Cancer y tumores,Neoplasm
+Crushing injury of upper limb,Trauma y lesiones,Crush
+Viral gastroenteritis caused by Norwalk-like agent,Digestivo,gastro
+Systemic lupus erythematosus with organ/system involvement,Sangre e inmunologia,lupus
+Multiple myeloma,Otros / sin clasificar,
+Disorder of urethral catheter,Renal y urinario,urethr
+Primary malignant neoplasm of endocervix,Cancer y tumores,malignant
+Guillain-Barré syndrome,Otros / sin clasificar,
+Non-thrombocytopenic purpura,Sangre e inmunologia,thrombocyt
+Dislocation of hip joint,Trauma y lesiones,Dislocation
+Leptospirosis,Infecciosas,Leptospir
+Abnormal urine,Renal y urinario,urin
+Ulcerative colitis,Digestivo,colitis
+Crushing injury of knee,Trauma y lesiones,Crush
+Disorder of muscle,Musculoesqueletico y dolor,muscle
+"Open wounds involving thorax with abdomen, lower back and pelvis",Trauma y lesiones,Open wound
+Radial styloid tenosynovitis,Musculoesqueletico y dolor,synovitis
+Primary malignant neoplasm of cerebrum,Cancer y tumores,malignant
+Open wound of elbow,Trauma y lesiones,Open wound
+Biliary cirrhosis,Digestivo,Biliary
+Localized swelling of head,Piel y tejidos blandos,swelling
+Ventricular tachycardia,Cardiovascular,Ventricular
+Second degree atrioventricular block,Cardiovascular,ventricular
+Contusion of eye,Trauma y lesiones,Contusion
+Superficial injury of scalp,Trauma y lesiones,Superficial injur
+Complicated internal hemorrhoid,Digestivo,hemorrhoid
+Injury caused by electrical exposure,Trauma y lesiones,Injury
+Sleep disorder,Salud mental,Sleep
+"Diabetes mellitus during pregnancy, childbirth and the puerperium","Embarazo, parto y ginecologia",pregnan
+Exposure to Human immunodeficiency virus,Infecciosas,immunodeficiency
+Inhalant intoxication,Trauma y lesiones,intoxication
+Dislocations/sprains/strains,Trauma y lesiones,Dislocation
+Multiple open wounds of forearm,Trauma y lesiones,Multiple open
+Fracture of malar and maxillary bones,Trauma y lesiones,Fracture
+Foreign body in genitourinary tract,Trauma y lesiones,Foreign body
+Abnormal weight gain,Endocrino y metabolico,weight
+Spontaneous vertex delivery,"Embarazo, parto y ginecologia",delivery
+Osteoporosis,Musculoesqueletico y dolor,Osteo
+Meningitis,Infecciosas,Meningitis
+Injury of trunk,Trauma y lesiones,Injury
+Idiopathic generalized epilepsy,Neurologico,epilep
+Candidiasis,Infecciosas,Candid
+Crushing injury of toe,Trauma y lesiones,Crush
+Cesarean wound disruption,"Embarazo, parto y ginecologia",Cesarean
+Fracture of foot,Trauma y lesiones,Fracture
+Follicular cyst of ovary,"Embarazo, parto y ginecologia",ovar
+Irregular periods,Otros / sin clasificar,
+"Bipolar affective disorder, current episode mixed",Salud mental,Bipolar
+"Pre-existing hypertension complicating pregnancy, childbirth and puerperium","Embarazo, parto y ginecologia",pregnan
+Primary malignant neoplasm of abdomen,Cancer y tumores,malignant
+Thyrotoxic crisis,Otros / sin clasificar,
+Disorder of respiratory system,Respiratorio,respirat
+Human papilloma virus infection,Infecciosas,virus
+"Disease of the digestive system complicating pregnancy, childbirth and/or the puerperium","Embarazo, parto y ginecologia",pregnan
+Chorea,Otros / sin clasificar,
+Benign intracranial hypertension,Cardiovascular,hypertension
+Complication of medical care,Otros / sin clasificar,
+Gastrostomy present,Digestivo,Gastro
+Calculus of lower urinary tract,Renal y urinario,urin
+Arterial embolus and thrombosis,Cardiovascular,Arter
+Restlessness and agitation,Salud mental,agitation
+Infection caused by Group A Shigella,Infecciosas,Infect
+Induced termination of pregnancy,"Embarazo, parto y ginecologia",pregnan
+Imbalance of constituents of food intake,Otros / sin clasificar,
+Cerebral infarction,Cardiovascular,infarct
+Demyelinating disease of central nervous system,Otros / sin clasificar,
+Primary malignant neoplasm of respiratory tract,Cancer y tumores,malignant
+Polyp of corpus uteri,Otros / sin clasificar,
+Open wound of lower limb,Trauma y lesiones,Open wound
+Myositis,Musculoesqueletico y dolor,Myositis
+Abrasion of tooth,"Ojo, oido, boca y dientes",tooth
+Pityriasis alba,Otros / sin clasificar,
+Lobar pneumonia,Respiratorio,pneumon
+Intramural leiomyoma of uterus,"Embarazo, parto y ginecologia",leiomyoma
+Vomiting in newborn,Digestivo,Vomiting
+Superficial injury of eyelid AND/OR periocular area,Trauma y lesiones,Superficial injur
+Primary malignant neoplasm of exocervix,Cancer y tumores,malignant
+Focal onset epileptic seizure,Neurologico,epilep
+Acute HIV infection,Infecciosas,HIV
+Burns of multiple sites,Trauma y lesiones,Burn
+Foreign body on external eye,Trauma y lesiones,Foreign body
+Posttraumatic stress disorder,Trauma y lesiones,traumatic
+Irritant contact dermatitis,Piel y tejidos blandos,dermat
+Floppy infant syndrome,Recien nacido,infant
+Mixed asthma,Respiratorio,asthma
+Low birth weight infant,Endocrino y metabolico,weight
+Family disruption due to divorce,Otros / sin clasificar,
+Harmful pattern of use of alcohol,Salud mental,alcohol
+Fracture of lower leg,Trauma y lesiones,Fracture
+Submucous leiomyoma of uterus,"Embarazo, parto y ginecologia",leiomyoma
+Superficial injury of posterior chest wall,Trauma y lesiones,Superficial injur
+Generalized osteoarthritis,Musculoesqueletico y dolor,osteo
+Localized scleroderma,Sangre e inmunologia,scleroderma
+Spontaneous hemorrhage of cortical intracerebral hemisphere,Neurologico,cerebr
+Sialoadenitis,Otros / sin clasificar,
+Acute frontal sinusitis,Respiratorio,sinusitis
+Inappropriate diet and eating habits,Otros / sin clasificar,
+Neoplasm of uncertain behavior of colon,Cancer y tumores,Neoplasm
+Benign lipomatous tumor,Cancer y tumores,tumor
+Myasthenia gravis,Otros / sin clasificar,
+Complication associated with dialysis catheter,Otros / sin clasificar,
+Salmonella gastroenteritis,Digestivo,gastro
+Disease of liver,Digestivo,liver
+Periapical abscess with sinus tract,"Ojo, oido, boca y dientes",Periapical
+Postmenopausal osteoporosis,Musculoesqueletico y dolor,osteo
+Medial epicondylitis,Musculoesqueletico y dolor,epicondylitis
+Aneurysm of cerebral artery,Cardiovascular,Aneurysm
+Deficient urine secretion,Renal y urinario,urin
+Acute stress disorder,Otros / sin clasificar,
+Disorder of penis,Renal y urinario,penis
+Pemphigoid,Otros / sin clasificar,
+Obstructive hydrocephalus,Neurologico,hydrocephalus
+Prolapse of vaginal vault after hysterectomy,"Embarazo, parto y ginecologia",vaginal
+Epidermal burn of trunk,Trauma y lesiones,burn
+Epidermal burn of upper limb,Trauma y lesiones,burn
+Chronic intractable pain,Dolor y sintomas generales,pain
+Traumatic amputation of thumb,Trauma y lesiones,Traumatic
+Non-toxic uninodular goiter,Otros / sin clasificar,
+Benign neoplasm of skin of head and neck,Cancer y tumores,neoplasm
+Allergic contact dermatitis caused by chemical,Piel y tejidos blandos,dermat
+Onychomycosis due to dermatophyte,Infecciosas,mycosis
+Cerebral arteriovenous malformation,Cardiovascular,arter
+Spermatocele,Otros / sin clasificar,
+Breech presentation,Otros / sin clasificar,
+Conjunctival hemorrhage,"Ojo, oido, boca y dientes",Conjunctiv
+Endometriosis of uterus,"Embarazo, parto y ginecologia",Endometri
+Neoplasm of uncertain behavior of skin,Cancer y tumores,Neoplasm
+Acute endocarditis,Otros / sin clasificar,
+Vascular disease of the skin,Cardiovascular,Vascular
+Postcoital bleeding,Sangre e inmunologia,bleeding
+Ataxia,Neurologico,Ataxia
+Irritable bowel syndrome characterized by constipation,Digestivo,bowel
+Neoplasm of uncertain behavior of renal pelvis,Cancer y tumores,Neoplasm
+Fracture of lumbar spine and/or pelvis,Trauma y lesiones,Fracture
+Malaria,Infecciosas,Malaria
+Acute nephritis,Renal y urinario,nephr
+Calculus in urethra,Renal y urinario,urethr
+Fetal disproportion due to large fetus,"Embarazo, parto y ginecologia",Fetal
+Immune thrombocytopenia,Sangre e inmunologia,thrombocyt
+Anorectal fistula,Digestivo,rectal
+"Multiple open wounds of abdomen, lower back and pelvis",Trauma y lesiones,Multiple open
+Disorder of urinary bladder,Renal y urinario,urin
+Lymphedema,Cardiovascular,edema
+Pneumonitis due to inhaled liquid,Respiratorio,Pneumon
+Cyst of jaw,Piel y tejidos blandos,Cyst
+Hemorrhoids in pregnancy,Digestivo,Hemorrhoid
+Acute ST segment elevation myocardial infarction of inferior wall,Cardiovascular,myocard
+Blepharochalasis,"Ojo, oido, boca y dientes",Blephar
+Swelling of lower limb,Musculoesqueletico y dolor,limb
+Behavior showing increased motor activity,Salud mental,Behavio
+Neoplasm of uncertain behavior of breast,Cancer y tumores,Neoplasm
+Incipient senile cataract,"Ojo, oido, boca y dientes",cataract
+Fracture at wrist and/or hand level,Trauma y lesiones,Fracture
+Primary dysmenorrhea,"Embarazo, parto y ginecologia",dysmenorrhea
+Spondylolisthesis,Musculoesqueletico y dolor,Spondyl
+Dysthymia,Otros / sin clasificar,
+Congenital anomaly of skeletal muscle,Renal y urinario,genital
+Bleeding,Sangre e inmunologia,Bleeding
+Lymphadenitis,Sangre e inmunologia,Lymph
+Diaper rash,Piel y tejidos blandos,rash
+Respiratory failure,Respiratorio,Respirat
+Acute polymorphic psychotic disorder without symptoms of schizophrenia,Salud mental,psychotic
+Mild to moderate birth asphyxia,Recien nacido,birth
+Erythema nodosum,Otros / sin clasificar,
+"Traumatic amputation, finger, multiple",Trauma y lesiones,Traumatic
+Myopia,"Ojo, oido, boca y dientes",Myopia
+Complete trisomy 21 syndrome,Otros / sin clasificar,
+Venous varices,Cardiovascular,Venous
+Chronic sinusitis,Respiratorio,sinusitis
+Epidermal burn of skin,Trauma y lesiones,burn
+Disorder of tongue,Dolor y sintomas generales,Disorder of
+Primary malignant neoplasm of thyroid gland,Cancer y tumores,malignant
+Psychosis and severe depression co-occurrent and due to bipolar affective disorder,Salud mental,Psychosis
+Accessory breast,"Embarazo, parto y ginecologia",breast
+Incisional hernia with obstruction,Digestivo,hernia
+Dermatophytosis,Piel y tejidos blandos,Dermat
+"History and physical examination, occupation",Dolor y sintomas generales,examination
+Lipoma of skin and subcutaneous tissue (excluding face),Piel y tejidos blandos,Lipoma
+Varicose vein of lower limb with phlebitis,Cardiovascular,Varicose
+Bursitis of knee,Musculoesqueletico y dolor,Bursitis
+Multiple open wounds of lower leg,Trauma y lesiones,Multiple open
+Rosacea,Otros / sin clasificar,
+Pain of breast,"Embarazo, parto y ginecologia",breast
+Hemiplegia,Otros / sin clasificar,
+Bleeding from ear,"Ojo, oido, boca y dientes",ear
+Congenital deformity of hip joint,Renal y urinario,genital
+Autism spectrum disorder,Salud mental,Autis
+Cervical disc disorder with radiculopathy,"Embarazo, parto y ginecologia",Cervic
+Cyanosis,Cardiovascular,Cyanosis
+Embryonic cyst of ovary,"Embarazo, parto y ginecologia",ovar
+"Overlapping malignant neoplasm of lip, oral cavity and pharynx",Cancer y tumores,malignant
+Open wound of ankle,Trauma y lesiones,Open wound
+Injury of urethra,Trauma y lesiones,Injury
+"Neoplasm of uncertain or unknown behavior of brain, infratentorial",Cancer y tumores,Neoplasm
+Acquired deformity of limb,Musculoesqueletico y dolor,limb
+Alveolitis of jaw,Otros / sin clasificar,
+Pneumothorax,Otros / sin clasificar,
+Psoas tendinitis,Musculoesqueletico y dolor,tendin
+Synovial cyst of knee,Piel y tejidos blandos,cyst
+Nonspecific mesenteric adenitis,Otros / sin clasificar,
+Non-infectious disorder of lymphatics,Infecciosas,infect
+Intestinal infectious disease,Digestivo,Intestin
+Malignant neoplasm of overlapping sites of breast,Cancer y tumores,Malignant
+Neoplasm of uncertain behavior of kidney,Cancer y tumores,Neoplasm
+Hair follicle disorder,Piel y tejidos blandos,Hair
+Tracheostomy complication,Dolor y sintomas generales,ache
+Heat syncope,Cardiovascular,syncope
+Cellulitis of pinna,Piel y tejidos blandos,Cellulitis
+Vasculitis of the skin,Piel y tejidos blandos,skin
+Disorder of hard tissues of teeth,"Ojo, oido, boca y dientes",teeth
+Acute type B viral hepatitis,Digestivo,hepat
+Polyhydramnios,"Embarazo, parto y ginecologia",Polyhydramnios
+Cannabis dependence,Otros / sin clasificar,
+Typhoid fever,Infecciosas,Typhoid
+Inguinal hernia with gangrene,Digestivo,hernia
+Difficulty passing urine,Renal y urinario,urin
+Infection caused by Group C Shigella,Infecciosas,Infect
+Primary malignant neoplasm of vertebral column,Cancer y tumores,malignant
+Post-inflammatory hyperpigmentation,Otros / sin clasificar,
+Exposure to organism,Dolor y sintomas generales,Exposure
+Human immunodeficiency virus infection with secondary clinical infectious disease,Infecciosas,immunodeficiency
+Chronic pain,Dolor y sintomas generales,pain
+Dislocation of elbow joint,Trauma y lesiones,Dislocation
+Peripheral vascular disorder due to diabetes mellitus,Cardiovascular,vascular
+Cysticercosis of central nervous system,Piel y tejidos blandos,Cyst
+Organic personality disorder,Salud mental,personality
+Subcortical hemorrhage,Otros / sin clasificar,
+Bleeding esophageal varices,Digestivo,esophag
+"Disorder of breast during pregnancy, childbirth and/or puerperium","Embarazo, parto y ginecologia",breast
+Obstructed bilateral inguinal hernia,Digestivo,hernia
+Acute schizophrenia-like psychotic disorder,Salud mental,schizophren
+Fracture of medial malleolus,Trauma y lesiones,Fracture
+Communicating hydrocephalus,Neurologico,hydrocephalus
+"Overlapping malignant neoplasm of rectum, anus and anal canal",Cancer y tumores,malignant
+Obstetric abscess of breast,"Embarazo, parto y ginecologia",Obstetric
+Optic neuritis,Otros / sin clasificar,
+Attention to tracheostomy,Dolor y sintomas generales,Attention to
+Multiple injuries of thorax,Trauma y lesiones,Multiple injur
+Mixed hyperlipidemia,Endocrino y metabolico,hyperlipid
+Dislocation of ankle joint,Trauma y lesiones,Dislocation
+Congenital toxoplasmosis,Renal y urinario,genital
+Superficial injuries involving multiple regions of upper limb(s) with lower limb(s),Trauma y lesiones,Superficial injur
+Harmful pattern of use of cocaine,Otros / sin clasificar,
+Multiple open wounds of thoracic wall,Trauma y lesiones,Multiple open
+Nongonococcal urethritis,Renal y urinario,urethr
+Secondary erectile dysfunction,Otros / sin clasificar,
+Carcinoma in situ of skin of face,Cancer y tumores,Carcinoma
+Disorder of nasal cavity,Respiratorio,nasal
+Chalazion,Otros / sin clasificar,
+Paratyphoid A fever,Infecciosas,typhoid
+Intestinal adhesions with obstruction,Digestivo,Intestin
+Fracture of scaphoid bone of wrist,Trauma y lesiones,Fracture
+Hemothorax,Otros / sin clasificar,
+Acquired valgus deformity of limb,Musculoesqueletico y dolor,limb
+Fracture of multiple ribs,Trauma y lesiones,Fracture
+Nutritional anemia,Sangre e inmunologia,anemia
+Hypertensive heart disease without congestive heart failure,Cardiovascular,heart
+Overlapping malignant neoplasm of eye and adnexa (primary),Cancer y tumores,malignant
+Cholera,Otros / sin clasificar,
+Hemolytic disease of fetus OR newborn due to ABO immunization,"Embarazo, parto y ginecologia",fetus
+Superficial injury of neck,Trauma y lesiones,Superficial injur
+Hiccoughs,Respiratorio,cough
+Acquired hydronephrosis due to ureteropelvic junction obstruction,Digestivo,obstruction
+Senile cataract,"Ojo, oido, boca y dientes",cataract
+Presbyopia,Otros / sin clasificar,
+Traumatic amputation of upper limb,Trauma y lesiones,Traumatic
+Paratyphoid B fever,Infecciosas,typhoid
+Malignant neoplasm of overlapping sites of urinary bladder,Cancer y tumores,Malignant
+Movement disorder,Otros / sin clasificar,
+Deviated nasal septum,Respiratorio,nasal
+Inflammatory disease of female genital structure,"Embarazo, parto y ginecologia",female
+Discoid lupus erythematosus,Sangre e inmunologia,lupus
+Fracture of thoracic spine,Trauma y lesiones,Fracture
+Acquired varus deformity of limb,Musculoesqueletico y dolor,limb
+Benign neoplasm of skin of upper limb,Cancer y tumores,neoplasm
+Extremely low birth weight infant,Endocrino y metabolico,weight
+Adverse reaction to benzodiazepine,Trauma y lesiones,Adverse reaction
+Abducens nerve palsy,Neurologico,nerve
+Psychoactive substance-induced psychosis,Salud mental,substance
+Burn any degree involving less than 10 percent of body surface,Trauma y lesiones,Burn
+Vascular headache,Cardiovascular,Vascular
+Lipomatosis,Piel y tejidos blandos,Lipoma
+Sunburn of first degree,Trauma y lesiones,burn
+Paraplegia,Otros / sin clasificar,
+Delayed AND/OR secondary postpartum hemorrhage,"Embarazo, parto y ginecologia",postpartum
+Infection of pelvis due to incomplete miscarriage,"Embarazo, parto y ginecologia",miscarriage
+Skin AND/OR mucosa finding,Piel y tejidos blandos,Skin
+Pruritic rash,Piel y tejidos blandos,rash
+Inflammation of cervix,"Embarazo, parto y ginecologia",cervix
+Postoperative intestinal obstruction,Digestivo,intestin
+Subserous leiomyoma of uterus,"Embarazo, parto y ginecologia",leiomyoma
+Medical accident to patient during surgical and medical care,Renal y urinario,urin
+Diabetic mononeuropathy,Neurologico,neuropath
+Contraception care management,"Embarazo, parto y ginecologia",Contracepti
+Hematuria syndrome,Renal y urinario,Hematuria
+Open wound of toe(s) with damage to nail,Trauma y lesiones,Open wound
+Epidural intracranial hemorrhage,Neurologico,intracranial
+Acute polymorphic psychotic disorder co-occurrent with symptoms of schizophrenia,Salud mental,psychotic
+Pyogenic granuloma,Otros / sin clasificar,
+Viral hepatitis without hepatic coma,Digestivo,hepat
+Multiple injuries of forearm,Trauma y lesiones,Multiple injur
+Hydronephrosis due to ureteral stricture,Renal y urinario,nephr
+Streptococcal sore throat,Otros / sin clasificar,
+Generalized pustular psoriasis,Piel y tejidos blandos,psoriasis
+Hematometra,Otros / sin clasificar,
+Effect of ionizing radiation,Otros / sin clasificar,
+Swelling of trunk,Piel y tejidos blandos,Swelling
+Tinea cruris,Piel y tejidos blandos,Tinea
+Megaloblastic anemia due to vitamin B-12 deficiency,Sangre e inmunologia,anemia
+Metabolic disease,Endocrino y metabolico,Metabolic
+Greater trochanteric pain syndrome,Dolor y sintomas generales,pain
+Polyneuritis,Otros / sin clasificar,
+Injury of Achilles tendon,Trauma y lesiones,Injury
+Diplopia,Otros / sin clasificar,
+Panniculitis affecting back,Musculoesqueletico y dolor,back
+Cerebrospinal fluid leak,Neurologico,Cerebr
+Talipes equinovarus,"Embarazo, parto y ginecologia",ovar
+Osteoarthritis of hip,Musculoesqueletico y dolor,Osteo
+Primary malignant neoplasm of skin,Cancer y tumores,malignant
+Bursitis of shoulder,Musculoesqueletico y dolor,Bursitis
+Routine antenatal care,Otros / sin clasificar,
+Subarachnoid hemorrhage from middle cerebral artery aneurysm,Cardiovascular,arter
+Infective endocarditis,Infecciosas,Infect
+Vertiginous syndrome,Otros / sin clasificar,
+Fracture of lateral malleolus,Trauma y lesiones,Fracture
+Polyp of colon,Digestivo,colon
+Primary malignant neoplasm of ovary,Cancer y tumores,malignant
+Acquired hallux valgus,Otros / sin clasificar,
+Infection caused by Group B Shigella,Infecciosas,Infect
+Anemia of chronic disease,Sangre e inmunologia,Anemia
+Primary tuberculosis,Respiratorio,tubercul
+Autoimmune hepatitis,Digestivo,hepat
+Perichondritis of external ear,"Ojo, oido, boca y dientes",ear
+Open wound of scrotum and testes,Trauma y lesiones,Open wound
+Medical examination for suspected condition,Dolor y sintomas generales,examination
+Bursitis of elbow,Musculoesqueletico y dolor,Bursitis
+Renal disorder due to type 1 diabetes mellitus,Renal y urinario,Renal
+Neoplasm of uncertain behavior of uterus,Cancer y tumores,Neoplasm
+Acute inflammation of orbit,Otros / sin clasificar,
+Primary malignant neoplasm of pancreas,Cancer y tumores,malignant
+Neoplastic disease of uncertain behavior,Cancer y tumores,Neoplastic
+Herpesviral infection of perianal skin and rectum,Infecciosas,Herpes
+Obstructed internal hernia,Digestivo,hernia
+Acute febrile mucocutaneous lymph node syndrome,Piel y tejidos blandos,cutaneous
+Traumatic amputation of ear,Trauma y lesiones,Traumatic
+Disorder of calcium metabolism,Dolor y sintomas generales,Disorder of
+Vomiting during third trimester of pregnancy,"Embarazo, parto y ginecologia",pregnan
+Chronic cholecystitis,Digestivo,cholecyst
+Diverticulosis of small intestine,Digestivo,Diverticul
+Polymyositis,Musculoesqueletico y dolor,myositis
+Normal pressure hydrocephalus,Neurologico,hydrocephalus
+Intracranial mass,Neurologico,Intracranial
+Dislocation of temporomandibular joint,Trauma y lesiones,Dislocation
+Maltreatment syndromes,Otros / sin clasificar,
+Induratio penis plastica,Renal y urinario,penis
+Necrosis of artery,Cardiovascular,arter
+Chronic laryngitis,Respiratorio,laryng
+Overlapping malignant neoplasm of tongue,Cancer y tumores,malignant
+Bipolar disorder in remission,Salud mental,Bipolar
+Upper respiratory tract hypersensitivity reaction,Respiratorio,respirat
+Undescended testicle,Renal y urinario,testic
+Adult osteochondrosis of spine,Musculoesqueletico y dolor,osteo
+Sequela of cerebrovascular accident,Cardiovascular,cerebrovascular
+Stuttering,Otros / sin clasificar,
+Infective myositis,Infecciosas,Infect
+Sprain of foot,Trauma y lesiones,Sprain
+Superficial injury of throat,Trauma y lesiones,Superficial injur
+Eclampsia in pregnancy,"Embarazo, parto y ginecologia",Eclampsia
+Swelling of upper limb,Musculoesqueletico y dolor,limb
+Cat scratch disease,Otros / sin clasificar,
+Parkinsonism,Neurologico,Parkinson
+Recurrent miscarriage,"Embarazo, parto y ginecologia",miscarriage
+Glaucoma suspect,"Ojo, oido, boca y dientes",Glaucoma
+Acute prostatitis,Renal y urinario,prostat
+Primary malignant neoplasm of endometrium,Cancer y tumores,malignant
+Paratyphoid C fever,Infecciosas,typhoid
+Disorder of upper respiratory system,Respiratorio,respirat
+Contact dermatitis,Piel y tejidos blandos,dermat
+Depressive conduct disorder,Salud mental,Depress
+Recurrent depression,Salud mental,depress
+Skin changes due to chronic exposure to non-ionizing radiation,Piel y tejidos blandos,Skin
+Spasmodic torticollis,Musculoesqueletico y dolor,torticollis
+Thrombosis of arteries of upper extremity,Cardiovascular,Thrombo
+Q fever,Infecciosas,fever
+Acute pericoronitis,Otros / sin clasificar,
+Genitourinary tract infection in pregnancy,"Embarazo, parto y ginecologia",pregnan
+"Anemia in mother complicating pregnancy, childbirth AND/OR puerperium",Sangre e inmunologia,Anemia
+Rhinophyma,Otros / sin clasificar,
+Osteoporotic fracture,Trauma y lesiones,fracture
+"Victim, motorcycle rider in vehicular AND/OR traffic accident",Otros / sin clasificar,
+Recurrent major depression,Salud mental,depress
+Fracture of base of skull,Trauma y lesiones,Fracture
+Congenital syphilis,Renal y urinario,genital
+Disorder of nail,Piel y tejidos blandos,nail
+Social phobia,Otros / sin clasificar,
+Injury of lumbar spinal cord,Trauma y lesiones,Injury
+Unattended death,Otros / sin clasificar,
+Follicular cysts of skin and subcutaneous tissue,Piel y tejidos blandos,cyst
+"Fetal death, affecting management of mother","Embarazo, parto y ginecologia",Fetal
+Staphylococcal infectious disease,Infecciosas,infect
+Disorder of prostate,Renal y urinario,prostat
+Intussusception of intestine,Digestivo,intestin
+Endometriosis in scar of skin,"Embarazo, parto y ginecologia",Endometri
+Driver in vehicular AND/OR traffic accident,Otros / sin clasificar,
+Family problems,Otros / sin clasificar,
+Precipitate labor,"Embarazo, parto y ginecologia",labor
+Ulceration of vulva,Otros / sin clasificar,
+Osteochondropathy,Musculoesqueletico y dolor,Osteo
+Candidiasis of mouth,Infecciosas,Candid
+Achalasia of esophagus,Digestivo,esophag
+Congenital single renal cyst,Renal y urinario,genital
+Foreign body in mouth,Trauma y lesiones,Foreign body
+Traumatic tympanic membrane perforation,Trauma y lesiones,Traumatic
+Muscular dystrophy,Otros / sin clasificar,
+Nutritional deficiency disorder,Otros / sin clasificar,
+Phonological disorder,Otros / sin clasificar,
+Toxic effect of caustic alkali,Otros / sin clasificar,
+Spondylosis,Musculoesqueletico y dolor,Spondyl
+Disorder of urethra,Renal y urinario,urethr
+Musculoskeletal and connective tissue disorder,Otros / sin clasificar,
+Benign neoplasm of breast,Cancer y tumores,neoplasm
+Chronic obstructive pyelonephritis,Respiratorio,Chronic obstructive
+Foreign body granuloma of soft tissue,Trauma y lesiones,Foreign body
+Erosion of teeth,"Ojo, oido, boca y dientes",teeth
+Infective arthritis,Infecciosas,Infect
+Crushing injury of foot,Trauma y lesiones,Crush
+Embolism and thrombosis of the vena cava,Cardiovascular,Embol
+Neoplasm of uncertain behavior of rectum,Cancer y tumores,Neoplasm
+First degree atrioventricular block,Cardiovascular,ventricular
+Benign neoplasm of cerebral meninges,Cancer y tumores,neoplasm
+Polydactyly,Otros / sin clasificar,
+Acute gastric ulcer with perforation,Otros / sin clasificar,
+Mononeuropathy,Neurologico,neuropath
+Headache caused by drug,Neurologico,Headache
+Aortic aneurysm,Cardiovascular,Aort
+Excessive and frequent menstruation,"Embarazo, parto y ginecologia",menstrua
+Opioid analgesic adverse reaction,Trauma y lesiones,adverse reaction
+Pre-existing type 1 diabetes mellitus in pregnancy,"Embarazo, parto y ginecologia",pregnan
+Chronic purulent otitis media,"Ojo, oido, boca y dientes",otitis
+Hand foot and mouth disease,Musculoesqueletico y dolor,Hand
+Primary malignant neoplasm of skin of eyelid,Cancer y tumores,malignant
+Secondary impetiginization,Otros / sin clasificar,
+Neurofibromatosis syndrome,Neurologico,Neuro
+Melanocytic nevus of trunk,Piel y tejidos blandos,nevus
+Disorder of carbohydrate metabolism,Dolor y sintomas generales,Disorder of
+Primary malignant melanoma of skin,Cancer y tumores,malignant
+Persistent delusional disorder,Salud mental,delusional
+Cervical disc disorder,"Embarazo, parto y ginecologia",Cervic
+Fibrosis of lung,Respiratorio,lung
+Voice production finding,Dolor y sintomas generales,finding
+Sterilization procedure,Dolor y sintomas generales,procedure
+Schizoaffective disorder,Otros / sin clasificar,
+Examination of ear,"Ojo, oido, boca y dientes",ear
+Inflammatory disorder of penis,Renal y urinario,penis
+Overlapping malignant neoplasm of retroperitoneum and peritoneum,Cancer y tumores,malignant
+Amebic liver abscess,Digestivo,liver
+Primary malignant neoplasm of skin of upper limb,Cancer y tumores,malignant
+Dislocation of acromioclavicular joint,Trauma y lesiones,Dislocation
+Pure hypercholesterolemia,Endocrino y metabolico,cholesterol
+Adhesive capsulitis of shoulder,Musculoesqueletico y dolor,shoulder
+Disseminated herpes zoster,Infecciosas,herpes
+Mania with psychotic features,Salud mental,psychotic
+Organophosphate poisoning,Trauma y lesiones,poisoning
+"Injury of muscle and tendon of abdomen, lower back and pelvis",Trauma y lesiones,Injury
+Piercing of external ear,"Ojo, oido, boca y dientes",ear
+Metastasis to lung,Cancer y tumores,Metasta
+Screening for malignant neoplasm of prostate,Cancer y tumores,malignant
+Acute parametritis,Otros / sin clasificar,
+Fever with chills,Infecciosas,Fever
+Undescended testes - bilateral,Otros / sin clasificar,
+Erosive osteoarthrosis,Musculoesqueletico y dolor,osteo
+Metastasis to cerebral meninges,Cancer y tumores,Metasta
+Disorder of appendix,Dolor y sintomas generales,Disorder of
+Complication associated with device,Otros / sin clasificar,
+Contusion of breast,Trauma y lesiones,Contusion
+Primary genital syphilis,Renal y urinario,genital
+Autoimmune hemolytic anemia,Sangre e inmunologia,anemia
+Twin pregnancy,"Embarazo, parto y ginecologia",pregnan
+Bursitis,Musculoesqueletico y dolor,Bursitis
+Hypertrophy of nasal turbinates,Respiratorio,nasal
+Foreign body in larynx,Trauma y lesiones,Foreign body
+"Schizoaffective disorder, depressive type",Salud mental,depress
+Iron deficiency,Otros / sin clasificar,
+Amnesia,Neurologico,Amnesia
+Intestinal obstruction co-occurrent and due to decreased peristalsis,Digestivo,Intestin
+Myoclonus,Neurologico,Myoclonus
+Toxic effect of substance with alcohol structure,Salud mental,substance
+Infectious mononucleosis,Infecciosas,Infect
+Abnormal findings diagnostic imaging heart+coronary circulat,Cardiovascular,heart
+Herpes zoster ophthalmicus,Infecciosas,Herpes
+Chronic post-traumatic headache,Trauma y lesiones,traumatic
+Amaurosis fugax,Otros / sin clasificar,
+Dislocation of joint of digit,Trauma y lesiones,Dislocation
+Complication associated with musculoskeletal implant,Otros / sin clasificar,
+Infection caused by Group D Shigella,Infecciosas,Infect
+Epidermal burn of lower limb,Trauma y lesiones,burn
+Acute pansinusitis,Respiratorio,sinusitis
+Carotid artery stenosis,Cardiovascular,arter
+Non-toxic multinodular goiter,Otros / sin clasificar,
+Viral encephalitis,Neurologico,encephal
+Acute respiratory distress syndrome,Respiratorio,respirat
+Ataxic gait,Musculoesqueletico y dolor,gait
+Benign neoplasm of mandible,Cancer y tumores,neoplasm
+Neonatal hypoglycemia,Endocrino y metabolico,glyc
+Inflammatory disease of the central nervous system,Otros / sin clasificar,
+Enteropathogenic Escherichia coli gastrointestinal tract infection,Digestivo,gastro
+"Primary degenerative dementia of the Alzheimer type, presenile onset",Salud mental,dementia
+Benign neoplasm of uterus,Cancer y tumores,neoplasm
+Anaphylactic shock,Sangre e inmunologia,Anaphyla
+Neoplasm of uncertain behavior of female genital organ,Cancer y tumores,Neoplasm
+Traumatic hemothorax,Trauma y lesiones,Traumatic
+Renal and perinephric abscess,Renal y urinario,Renal
+Acute mastoiditis,Otros / sin clasificar,
+Infestation by fly larvae,Infecciosas,Infestation
+Disorder of patella,Dolor y sintomas generales,Disorder of
+Heart murmur,Cardiovascular,Heart
+Hypertensive heart and renal disease with (congestive) heart failure,Cardiovascular,heart
+Colostomy and enterostomy malfunction,Otros / sin clasificar,
+Suspected fetal abnormality affecting management of mother,"Embarazo, parto y ginecologia",fetal
+Acute viral hepatitis,Digestivo,hepat
+Fracture of rib,Trauma y lesiones,Fracture
+Dilated cardiomyopathy,Cardiovascular,cardio
+Dislocation of patellofemoral joint,Trauma y lesiones,Dislocation
+Branchial cleft anomaly,Otros / sin clasificar,
+Pertussis,Otros / sin clasificar,
+Diaphragmatic hernia,Digestivo,hernia
+Neoplasm of uncertain behavior of mediastinum,Cancer y tumores,Neoplasm
+Old myocardial infarction,Cardiovascular,myocard
+Avoidant disorder of childhood,Salud mental,Avoidant
+Disorder of kidney and/or ureter,Renal y urinario,kidney
+Spinal cord compression,Musculoesqueletico y dolor,Spinal
+Infection and inflammatory reaction due to internal orthopedic fixation device,Infecciosas,Infect
+Peritoneal adhesion,Digestivo,Peritone
+Burn of trunk,Trauma y lesiones,Burn
+"Premature rupture of membranes, labor delayed by therapy","Embarazo, parto y ginecologia",membranes
+Dermatomyositis,Piel y tejidos blandos,Dermat
+Delivery procedure,"Embarazo, parto y ginecologia",Delivery
+Myoneural disorder,Otros / sin clasificar,
+Pericardial effusion - noninflammatory,Otros / sin clasificar,
+Alcoholic cirrhosis,Salud mental,Alcohol
+Mania,Otros / sin clasificar,
+Raynaud's phenomenon,Otros / sin clasificar,
+Miliary tuberculosis,Respiratorio,tubercul
+Acute lymphadenitis,Sangre e inmunologia,lymph
+Discitis,Musculoesqueletico y dolor,Disc
+Spontaneous cerebellar hemorrhage,Otros / sin clasificar,
+Acute gastric ulcer with hemorrhage,Otros / sin clasificar,
+Thyrotoxicosis,Otros / sin clasificar,
+Hyperosmolality and or hypernatremia,Endocrino y metabolico,hypernatr
+Pneumonia caused by respiratory syncytial virus,Respiratorio,Pneumon
+Pemphigus vulgaris,Piel y tejidos blandos,Pemphigus
+"Bipolar affective disorder, current episode manic",Salud mental,Bipolar
+Incomplete induced termination of pregnancy complicated by genital-pelvic infection,"Embarazo, parto y ginecologia",pregnan
+Primary malignant neoplasm of biliary tract,Cancer y tumores,malignant
+Pure hyperglyceridemia,Endocrino y metabolico,glyc
+Viral infection of central nervous system,Infecciosas,Viral
+Fracture of coccyx,Trauma y lesiones,Fracture
+Fracture of vault of skull,Trauma y lesiones,Fracture
+Prolapse of urethra,Renal y urinario,urethr
+Bodily distress disorder,Otros / sin clasificar,
+Tuberculosis of skin and subcutaneous tissue,Respiratorio,Tubercul
+Chronic cystitis,Renal y urinario,cystitis
+Harmful pattern of use of cannabis,Otros / sin clasificar,
+Perinatal cyanotic attacks,Otros / sin clasificar,
+Open wound of penis,Trauma y lesiones,Open wound
+Disorder of pancreas,Digestivo,pancrea
+Urethral discharge,Musculoesqueletico y dolor,disc
+Vesicovaginal fistula,"Embarazo, parto y ginecologia",vaginal
+Disturbance in speech,Otros / sin clasificar,
+Tonsil and/or adenoid hypertrophy,"Ojo, oido, boca y dientes",adenoid
+Eating / feeding / drinking finding,Dolor y sintomas generales,finding
+Polyuria,Otros / sin clasificar,
+Spontaneous hemorrhage of brain stem,Neurologico,brain
+Disorder due to and following spinal cord injury,Trauma y lesiones,injur
+Pediculosis capitis,Otros / sin clasificar,
+Generalized enlarged lymph nodes,Sangre e inmunologia,lymph
+Idiopathic scoliosis,Musculoesqueletico y dolor,scoliosis
+Overlapping malignant neoplasm of female genital organs,Cancer y tumores,malignant
+Disorder of lacrimal system,Dolor y sintomas generales,Disorder of
+Non-infective neonatal diarrhea,Digestivo,diarrhea
+Atrophic vulva,Otros / sin clasificar,
+Anal fistula,Digestivo,Anal
+Toxic effect of soap,Otros / sin clasificar,
+Glanders,Otros / sin clasificar,
+Somatization disorder,Otros / sin clasificar,
+Poisoning by venomous snake,Trauma y lesiones,Poisoning
+Placental abruption,"Embarazo, parto y ginecologia",Placent
+Medical care unavailable,Otros / sin clasificar,
+Spinal cord injury,Trauma y lesiones,injur
+Chronic nasopharyngitis,Respiratorio,pharyng
+Mood disorder,Salud mental,Mood
+Burn,Trauma y lesiones,Burn
+Diastasis of muscle,Musculoesqueletico y dolor,muscle
+Disorder of parathyroid gland,Endocrino y metabolico,thyroid
+Central perforation of tympanic membrane,Salud mental,panic
+Neurological mental status determination,Salud mental,mental
+Primary malignant neoplasm of larynx,Cancer y tumores,malignant
+Rectal polyp,Digestivo,Rectal
+Ulcer of penis,Renal y urinario,penis
+Thrombosed hemorrhoids,Digestivo,hemorrhoid
+Primary malignant neoplasm of extrahepatic bile duct,Cancer y tumores,malignant
+Mycosis fungoides (clinical),Infecciosas,Mycosis
+Excessive attrition of teeth,"Ojo, oido, boca y dientes",teeth
+Intervertebral disc disorder with myelopathy,Musculoesqueletico y dolor,disc
+Poisoning caused by gaseous substance,Trauma y lesiones,Poisoning
+Acute vulvitis,Otros / sin clasificar,
+Superficial injuries involving multiple body regions,Trauma y lesiones,Superficial injur
+Neoplasm of uncertain behavior of peritoneum,Cancer y tumores,Neoplasm
+Primary malignant neoplasm of pituitary gland,Cancer y tumores,malignant
+Carcinoma in situ of skin,Cancer y tumores,Carcinoma
+Carcinoma in situ of endocervix,Cancer y tumores,Carcinoma
+Chronic rhinitis,Respiratorio,rhinitis
+Chronic disease of tonsils AND/OR adenoids,"Ojo, oido, boca y dientes",adenoid
+Primary malignant neoplasm of uterus,Cancer y tumores,malignant
+Disorder of ear,"Ojo, oido, boca y dientes",ear
+Hepatic failure,Digestivo,Hepat
+Syndactyly,Otros / sin clasificar,
+Obstruction of neck of urinary bladder,Digestivo,Obstruction
+Ganglion cyst,Piel y tejidos blandos,cyst
+Neoplasm of uncertain behavior of carotid body,Cancer y tumores,Neoplasm
+Visceral larva migrans syndrome,Otros / sin clasificar,
+Inflammation of upper respiratory tract caused by fumes,Respiratorio,respirat
+White blood cell disorder,Otros / sin clasificar,
+Transitory tachypnea of newborn,Recien nacido,newborn
+Cutaneous leishmaniasis,Piel y tejidos blandos,Cutaneous
+Congenital laryngomalacia,Respiratorio,laryng
+"Benign tumor of soft tissue of head, face and neck",Cancer y tumores,tumor
+Carcinoma in situ,Cancer y tumores,Carcinoma
+Open wound of trunk,Trauma y lesiones,Open wound
+Exposure to Mycobacterium tuberculosis,Respiratorio,tubercul
+Upper respiratory tract infection caused by Influenza virus,Respiratorio,respirat
+Disorder of ligament,Musculoesqueletico y dolor,ligament
+Atrophic vaginitis,"Embarazo, parto y ginecologia",vaginitis
+Vaginal enterocele,"Embarazo, parto y ginecologia",Vaginal
+Orthostatic hypotension,Cardiovascular,hypotension
+Macrocephaly,Otros / sin clasificar,
+Neonatal erythroderma,Recien nacido,Neonat
+Hallucinogen intoxication,Trauma y lesiones,intoxication
+Multiple open wounds of shoulder and upper arm,Trauma y lesiones,Multiple open
+Oppositional defiant disorder,Otros / sin clasificar,
+Urethral diverticulum,Digestivo,diverticul
+Hyperkinetic conduct disorder,Salud mental,conduct
+Thrombosed internal hemorrhoids,Digestivo,hemorrhoid
+Superficial injury of ear region,Trauma y lesiones,Superficial injur
+Extracellular fluid volume depletion,Endocrino y metabolico,fluid
+Congenital chromosomal disease,Renal y urinario,genital
+Disorder of joint of spine,Musculoesqueletico y dolor,joint
+Periodic paralysis,Neurologico,paralysis
+"Infection AND/OR inflammatory reaction due to internal prosthetic device, implant AND/OR graft",Infecciosas,Infect
+Childhood or adolescent disorder of social functioning,Dolor y sintomas generales,disorder of
+Peroneal tendinitis,Musculoesqueletico y dolor,tendin
+Achondroplasia,Otros / sin clasificar,
+Viral conjunctivitis,Infecciosas,Viral
+Pain disorder with psychological factor,Dolor y sintomas generales,Pain
+Psychogenic vomiting,Digestivo,vomiting
+"Intracerebral hemorrhage, intraventricular",Cardiovascular,ventricular
+Chiari malformation,Otros / sin clasificar,
+Chronic pansinusitis,Respiratorio,sinusitis
+Hallucinations,Otros / sin clasificar,
+Burn confined to eye and adnexa,Trauma y lesiones,Burn
+Psychotic disorder caused by hallucinogen,Salud mental,Psychotic
+Lesion of skin of nose,Respiratorio,nose
+Pterygium,Otros / sin clasificar,
+Binocular vision disorder,"Ojo, oido, boca y dientes",vision
+Aortic thromboembolism,Cardiovascular,Aort
+"Intracerebral hemorrhage, multiple localized",Neurologico,cerebr
+Congenital microcephaly,Renal y urinario,genital
+Injury of knee,Trauma y lesiones,Injury
+Injury of pelvic organ,Trauma y lesiones,Injury
+Cystic fibrosis of the lung,Respiratorio,lung
+Crushing injury of external genitalia,Trauma y lesiones,Crush
+Organic solvents causing toxic effect,Otros / sin clasificar,
+Breast signs and symptoms,"Embarazo, parto y ginecologia",Breast
+Chronic tonsillitis,Respiratorio,tonsill
+Spastic paraplegia,Otros / sin clasificar,
+Perifolliculitis capitis abscedens,Otros / sin clasificar,
+Alcohol dependence,Salud mental,Alcohol
+Stenosis of larynx,Otros / sin clasificar,
+Renovascular hypertension,Cardiovascular,vascular
+Burn of lower limb,Trauma y lesiones,Burn
+Acquired short Achilles tendon,Otros / sin clasificar,
+Melanocytic nevus of region of face,Piel y tejidos blandos,nevus
+Tetraplegia,Otros / sin clasificar,
+Progressive systemic sclerosis,Sangre e inmunologia,systemic sclerosis
+Spasm,Neurologico,Spasm
+Rupture of artery,Cardiovascular,arter
+Fracture of mandible,Trauma y lesiones,Fracture
+Telogen effluvium,Otros / sin clasificar,
+Peptic ulcer without hemorrhage AND without perforation,Otros / sin clasificar,
+Lesion of median nerve,Neurologico,nerve
+Fracture of bone,Trauma y lesiones,Fracture
+Parapharyngeal abscess,Respiratorio,pharyng
+Eustachian tube disorder,Otros / sin clasificar,
+Hydantoin derivative poisoning,Trauma y lesiones,poisoning
+Complications specific to multiple gestation,"Embarazo, parto y ginecologia",gestation
+Postoperative hypothyroidism,Endocrino y metabolico,hypothyroid
+Thoracic aortic aneurysm without rupture,Cardiovascular,aort
+Ingrowing nail,Piel y tejidos blandos,nail
+Inflammation of eyelid,"Ojo, oido, boca y dientes",eye
+Hypertensive renal disease,Renal y urinario,renal
+Primary malignant neoplasm of mandible,Cancer y tumores,malignant
+Active rickets,Otros / sin clasificar,
+Congenital anomaly of lower limb,Renal y urinario,genital
+Hypertrophy of tonsils,Otros / sin clasificar,
+Mastoiditis,Otros / sin clasificar,
+Chronic bronchitis,Respiratorio,bronch
+Melanoma in situ of lower limb,Musculoesqueletico y dolor,limb
+Polymyalgia rheumatica,Musculoesqueletico y dolor,myalgia
+Seronegative rheumatoid arthritis,Musculoesqueletico y dolor,rheumat
+Transport accident,Otros / sin clasificar,
+"Aphasia, agnosia, dyslexia AND/OR apraxia",Otros / sin clasificar,
+Bacterial arthritis,Infecciosas,Bacterial
+Incomplete uterovaginal prolapse,"Embarazo, parto y ginecologia",vaginal
+Infections of urethra in pregnancy,"Embarazo, parto y ginecologia",pregnan
+Anorectal abscess,Digestivo,rectal
+Surgical follow-up,Dolor y sintomas generales,follow-up
+Convalescence after surgery,Otros / sin clasificar,
+Testicular hypofunction,Renal y urinario,Testic
+Disorder of urinary system,Renal y urinario,urin
+Non-traumatic tendon rupture,Trauma y lesiones,traumatic
+Pyonephrosis,Renal y urinario,nephr
+Conduct disorder - in family context,Salud mental,Conduct
+Joint stiffness,Musculoesqueletico y dolor,Joint
+Pyoderma gangrenosum,Otros / sin clasificar,
+Tubal pregnancy,"Embarazo, parto y ginecologia",pregnan
+Disorder due to and following injury of upper limb,Trauma y lesiones,injur
+Glaucoma,"Ojo, oido, boca y dientes",Glaucoma
+Congenital vesicoureterorenal reflux,Digestivo,reflux
+Chronic renal failure,Renal y urinario,renal failure
+Lymphangitis,Sangre e inmunologia,Lymph
+Meralgia paresthetica,Otros / sin clasificar,
+Idiopathic urticaria,Piel y tejidos blandos,urticaria
+End-stage renal disease,Renal y urinario,renal
+Specialized medical examination,Dolor y sintomas generales,examination
+Allergy to drug,Sangre e inmunologia,Allerg
+White piedra,Otros / sin clasificar,
+Scar conditions and fibrosis of skin,Piel y tejidos blandos,skin
+Congenital hypertrophic pyloric stenosis,Renal y urinario,genital
+Simple phobia,Otros / sin clasificar,
+Granuloma annulare,Otros / sin clasificar,
+Intertrigo,Otros / sin clasificar,
+Monoplegia of lower limb,Musculoesqueletico y dolor,limb
+Neoplasm of uncertain behavior of digestive organ,Cancer y tumores,Neoplasm
+Family history of harmful pattern of substance use,Salud mental,substance
+Fracture of vertebral column,Trauma y lesiones,Fracture
+Premature ejaculation,Recien nacido,Prematur
+Recurrent dislocation of joint,Trauma y lesiones,dislocation
+Sudden cardiac death,Cardiovascular,cardiac
+Generalized skin eruption caused by drug and medicament,Piel y tejidos blandos,skin
+Osteomyelitis of vertebra,Musculoesqueletico y dolor,Osteo
+Disorder of sacrum,Dolor y sintomas generales,Disorder of
+Steatotic liver disease,Digestivo,liver
+Follicular lymphoma,Cancer y tumores,lymphoma
+Megaloblastic anemia,Sangre e inmunologia,anemia
+Pruritus of vulva,Piel y tejidos blandos,Pruritus
+Complication associated with orthopedic device,Otros / sin clasificar,
+Chronic vaginitis,"Embarazo, parto y ginecologia",vaginitis
+Sick sinus syndrome,Otros / sin clasificar,
+Enterotoxigenic Escherichia coli gastrointestinal tract infection,Digestivo,gastro
+Acquired deformity of chest wall,Dolor y sintomas generales,chest
+Primary malignant neoplasm of skin of lower limb,Cancer y tumores,malignant
+Schilder's disease,Otros / sin clasificar,
+Linear scleroderma,"Ojo, oido, boca y dientes",ear
+Hypertensive heart and renal disease with renal failure,Renal y urinario,renal failure
+Disorder of tooth development,"Ojo, oido, boca y dientes",tooth
+Neurogenic urinary bladder,Renal y urinario,urin
+Superficial mycosis,Infecciosas,mycosis
+Leprosy,Otros / sin clasificar,
+Pilonidal abscess,Infecciosas,abscess
+Dental consultation and report,"Ojo, oido, boca y dientes",Dental
+Primary malignant neoplasm of colon,Cancer y tumores,malignant
+Acute atopic conjunctivitis,"Ojo, oido, boca y dientes",conjunctiv
+Accelerated atrioventricular conduction,Cardiovascular,ventricular
+Renal hypertension,Cardiovascular,hypertension
+Neuralgia,Neurologico,Neuralg
+Complication of procedure,Dolor y sintomas generales,procedure
+Thrombophlebitis of superficial veins of lower extremity,Cardiovascular,Thrombo
+Mittelschmerz,Otros / sin clasificar,
+Primary malignant neoplasm of accessory sinus,Cancer y tumores,malignant
+Disorder of jaw,Dolor y sintomas generales,Disorder of
+Congenital hiatus hernia,Digestivo,hernia
+Urethritis,Renal y urinario,Urethr
+Metastasis to skin,Cancer y tumores,Metasta
+Neonatal disorder due to maternal hypertension,"Embarazo, parto y ginecologia",maternal
+Leishmaniasis,Otros / sin clasificar,
+Benign neoplasm of parotid gland,Cancer y tumores,neoplasm
+Primary malignant neoplasm of renal pelvis,Cancer y tumores,malignant
+Paralytic syndrome,Otros / sin clasificar,
+Infestation by Pediculus,Infecciosas,Infestation
+Diffuse brain injury,Trauma y lesiones,injur
+Mucopurulent conjunctivitis,"Ojo, oido, boca y dientes",conjunctiv
+"Maternal syphilis during pregnancy, childbirth and the puerperium","Embarazo, parto y ginecologia",Maternal
+Examination for work accident,Dolor y sintomas generales,Examination
+Fracture of acetabulum,Trauma y lesiones,Fracture
+"Contusion, throat",Trauma y lesiones,Contusion
+Disorder of bilirubin metabolism,Dolor y sintomas generales,Disorder of
+Hypertrophic cardiomyopathy,Cardiovascular,cardio
+Apnea in newborn,Respiratorio,Apnea
+Acute uterine inflammatory disease,"Embarazo, parto y ginecologia",uterine
+Miscarriage complicated by genital-pelvic infection,"Embarazo, parto y ginecologia",Miscarriage
+Multiple open wounds of hip and/or thigh,Trauma y lesiones,Multiple open
+Disorder of hematopoietic structure,Dolor y sintomas generales,Disorder of
+Cleft lip,"Ojo, oido, boca y dientes",lip
+Myelodysplastic syndrome (clinical),Otros / sin clasificar,
+Examination for suspected tuberculosis,Respiratorio,tubercul
+Multiple injuries of lower leg,Trauma y lesiones,Multiple injur
+Late syphilis,Infecciosas,syphilis
+Motor vehicle accident off public road,Otros / sin clasificar,
+Psychoactive substance withdrawal,Salud mental,substance
+Multiple fractures involving skull and facial bones,Trauma y lesiones,fracture
+Pathological fracture,Trauma y lesiones,fracture
+Wound myiasis,Trauma y lesiones,Wound
+Carcinoma in situ of bronchus and lung,Cancer y tumores,Carcinoma
+Poisoning by anticholinesterase,Trauma y lesiones,Poisoning
+Optic disc edema,Cardiovascular,edema
+Pneumococcal pneumonia,Respiratorio,pneumon
+Rectal fistula,Digestivo,Rectal
+Disorder of kidney due to diabetes mellitus,Renal y urinario,kidney
+Pre-eclampsia added to pre-existing hypertension,"Embarazo, parto y ginecologia",eclampsia
+Cerebral cryptococcosis,Neurologico,Cerebr
+Anticoagulant adverse reaction,Sangre e inmunologia,coagul
+Fracture of multiple sites of metacarpus,Trauma y lesiones,Fracture
+Misshapen ear,"Ojo, oido, boca y dientes",ear
+Chronic hepatitis,Digestivo,hepat
+Benign neoplasm of heart,Cancer y tumores,neoplasm
+Neglect,Otros / sin clasificar,
+Sunburn of second degree,Trauma y lesiones,burn
+Hyperemesis gravidarum with metabolic disturbance,"Embarazo, parto y ginecologia",Hyperemesis
+Nontraumatic hemoperitoneum,Trauma y lesiones,traumatic
+Acute vascular insufficiency of intestine,Cardiovascular,vascular
+Disorder of pericardium,Dolor y sintomas generales,Disorder of
+"Tuberculosis of intestines, peritoneum and mesenteric glands",Respiratorio,Tubercul
+Cysticercosis,Piel y tejidos blandos,Cyst
+Neoplasm of uncertain behavior of retroperitoneum,Cancer y tumores,Neoplasm
+Psychotic disorder caused by cocaine,Salud mental,Psychotic
+Foreign body in vulva and vagina,Trauma y lesiones,Foreign body
+Primary thrombocytopenia,Sangre e inmunologia,thrombocyt
+Malignant tumor of head and neck,Cancer y tumores,Malignant
+Hypertensive heart and renal disease with both (congestive) heart failure and renal failure,Renal y urinario,renal failure
+Pneumonic plague,Respiratorio,Pneumon
+Cluster headache,Neurologico,headache
+Anorectal disorder,Digestivo,rectal
+Poisoning by benzodiazepine-based tranquilizer,Trauma y lesiones,Poisoning
+Antepartum hemorrhage,Otros / sin clasificar,
+Rectal prolapse,Digestivo,Rectal
+Disorder of product of conception,Dolor y sintomas generales,Disorder of
+Malignant otitis externa,Cancer y tumores,Malignant
+Candidiasis of urogenital site,Renal y urinario,genital
+Hypoesthesia,Otros / sin clasificar,
+Secondary thrombocytopenia,Sangre e inmunologia,thrombocyt
+Multiple fractures of lower leg,Trauma y lesiones,fracture
+Myeloid leukemia,Cancer y tumores,leukemia
+Placenta previa without hemorrhage,"Embarazo, parto y ginecologia",Placent
+Coma due to diabetes mellitus,Endocrino y metabolico,diabet
+Secondary syphilis,Infecciosas,syphilis
+Primary malignant neoplasm of uterine cervix,Cancer y tumores,malignant
+Internal injury of abdominal organ,Trauma y lesiones,injur
+Adverse reaction to tetanus vaccine,Trauma y lesiones,Adverse reaction
+Disorder of placenta,"Embarazo, parto y ginecologia",placent
+Acquired arteriovenous fistula,Cardiovascular,arter
+Overlapping malignant neoplasm of pancreas,Cancer y tumores,malignant
+Pilonidal cyst,Piel y tejidos blandos,cyst
+Drug-induced hypoglycemia without coma,Endocrino y metabolico,glyc
+Overlapping malignant neoplasm of bronchus and lung,Cancer y tumores,malignant
+Actinomycotic mycetoma,Otros / sin clasificar,
+Multiple fractures of femur,Trauma y lesiones,fracture
+Foreign body in respiratory tract,Trauma y lesiones,Foreign body
+"Recurrent major depressive episodes, severe, with psychosis",Salud mental,depress
+Carcinoma in situ of exocervix,Cancer y tumores,Carcinoma
+Congenital anomaly of rectum,Renal y urinario,genital
+Pesticide poisoning,Trauma y lesiones,poisoning
+Multiple open wounds of neck,Trauma y lesiones,Multiple open
+Ischiorectal abscess,Digestivo,rectal
+Disorder of eye,"Ojo, oido, boca y dientes",eye
+Acute sphenoidal sinusitis,Respiratorio,sinusitis
+Gastric ulcer without hemorrhage AND without perforation,Otros / sin clasificar,
+Fetal disorder caused by chemicals,"Embarazo, parto y ginecologia",Fetal
+Cleft uvula,Otros / sin clasificar,
+Excessive weight gain during pregnancy,"Embarazo, parto y ginecologia",pregnan
+Malabsorption syndrome due to intolerance to lactose,Otros / sin clasificar,
+Problem situation relating to social and personal history,Otros / sin clasificar,
+Emotional abuse of child,Salud mental,Emotional
+Pneumoconiosis,Otros / sin clasificar,
+Singers' nodes,Otros / sin clasificar,
+Juvenile osteochondritis,Musculoesqueletico y dolor,osteo
+Motor vehicle accident,Otros / sin clasificar,
+Complication of urinary catheter,Renal y urinario,urin
+Functional disorder of polymorphonuclear neutrophil,"Ojo, oido, boca y dientes",ear
+Pain in throat,Musculoesqueletico y dolor,Pain in
+"Congenital absence, atresia and stenosis of small intestine",Digestivo,intestin
+Actinomycotic infection,Infecciosas,infect
+Nonfatal submersion,Otros / sin clasificar,
+Disorder of carbohydrate absorption,Dolor y sintomas generales,Disorder of
+Synovial hypertrophy,Otros / sin clasificar,
+Primary malignant neoplasm of small intestine,Cancer y tumores,malignant
+Cocaine intoxication,Trauma y lesiones,intoxication
+Gastroduodenal fistula,Digestivo,Gastro
+Crushing injury of skull and intracranial contents,Trauma y lesiones,Crush
+Ptosis of eyelid,"Ojo, oido, boca y dientes",eye
+Osteonecrosis,Musculoesqueletico y dolor,Osteo
+Acquired deformity of finger,Musculoesqueletico y dolor,deformity
+"Pedal cycle accident involving collision between pedal cycle and pedestrian, pedestrian injured",Trauma y lesiones,injur
+Arrested development following protein-calorie malnutrition,Endocrino y metabolico,malnutrition
+Injury of urinary bladder,Trauma y lesiones,Injury
+Toxic effect of contact with fish,Otros / sin clasificar,
+Cor pulmonale,Otros / sin clasificar,
+Iridocyclitis,Otros / sin clasificar,
+Full thickness burn of upper limb,Trauma y lesiones,burn
+Biting of oral mucosa,"Ojo, oido, boca y dientes",oral
+Opioid intoxication,Trauma y lesiones,intoxication
+Idiopathic osteoporosis,Musculoesqueletico y dolor,osteo
+Trifascicular block,Otros / sin clasificar,
+Dermatographic urticaria,Piel y tejidos blandos,Dermat
+Crush injury of head and neck,Trauma y lesiones,Crush
+Injury of globe of eye,Trauma y lesiones,Injury
+Exposure to pollution,Dolor y sintomas generales,Exposure
+Acute laryngitis,Respiratorio,laryng
+Multiple superficial injuries of neck,Trauma y lesiones,Multiple superficial
+Contact urticaria,Piel y tejidos blandos,urticaria
+Neonatal dacryocystitis and conjunctivitis,Renal y urinario,cystitis
+Spread to lymph node,Sangre e inmunologia,lymph
+Penile hypospadias,Renal y urinario,Penile
+Retinal disorder,"Ojo, oido, boca y dientes",Retin
+Toxic effect of acid,Otros / sin clasificar,
+Antenatal care: primigravida,Otros / sin clasificar,
+Open wound of breast,Trauma y lesiones,Open wound
+Fetal disorder due to premature rupture of membranes,"Embarazo, parto y ginecologia",Fetal
+Chondromalacia of patella,Otros / sin clasificar,
+Poisoning by fumes,Trauma y lesiones,Poisoning
+Vasopressin-related polyuria,Otros / sin clasificar,
+Symptomatic periapical periodontitis,"Ojo, oido, boca y dientes",periapical
+Epidemic vertigo,Neurologico,vertigo
+Extravasation of urine,Renal y urinario,urin
+Secondary dysmenorrhea,"Embarazo, parto y ginecologia",dysmenorrhea
+Fitting of denture,Otros / sin clasificar,
+Focal brain injury,Trauma y lesiones,injur
+Organic mental disorder caused by ethanol,Salud mental,mental
+Viral pharyngoconjunctivitis,Respiratorio,pharyng
+Primary malignant neoplasm of lateral wall of urinary bladder,Cancer y tumores,malignant
+Chronic superficial gastritis,Digestivo,gastritis
+Enteroviral encephalitis,Neurologico,encephal
+Keratoconus,Otros / sin clasificar,
+Adverse reaction to food,Trauma y lesiones,Adverse reaction
+Opioid withdrawal,Otros / sin clasificar,
+Suspected COVID-19,Infecciosas,COVID
+Mixed developmental disorder,Salud mental,mental
+Crushing injury of hip,Trauma y lesiones,Crush
+Abnormal blue sclerae,Dolor y sintomas generales,Abnormal
+Hypospadias,Otros / sin clasificar,
+Lichen ruber moniliformis,Piel y tejidos blandos,Lichen
+Elective mutism,Otros / sin clasificar,
+Semimembranosus bursitis,Musculoesqueletico y dolor,bursitis
+Lumbar sprain,Trauma y lesiones,sprain
+Injury to blood vessels of lower limb,Trauma y lesiones,Injury
+Sprain of acromioclavicular ligament,Trauma y lesiones,Sprain
+Injury of flexor muscle and tendon of thumb at forearm level,Trauma y lesiones,Injury
+Congenital aganglionic megacolon,Digestivo,colon
+Deficiency of ligaments of knee joint,Musculoesqueletico y dolor,knee
+Toxic uninodular goiter,Otros / sin clasificar,
+Postpartum hemorrhage,"Embarazo, parto y ginecologia",Postpartum
+Olecranon bursitis,Musculoesqueletico y dolor,bursitis
+Finding of risk level,Dolor y sintomas generales,Finding
+Genetic counseling,Salud mental,counseling
+"Encephalitis, myelitis and encephalomyelitis",Neurologico,Encephal
+Granulomatous disorder of the skin and subcutaneous tissue,Piel y tejidos blandos,skin
+Asteatosis cutis,Otros / sin clasificar,
+Eosinophilic cellulitis,Piel y tejidos blandos,cellulitis
+Mitral valve regurgitation,Otros / sin clasificar,
+Hyperparathyroidism,Endocrino y metabolico,thyroid
+Motor vehicle accident victim,Otros / sin clasificar,
+Cerebral edema,Cardiovascular,edema
+Anomaly of tooth position,"Ojo, oido, boca y dientes",tooth
+Chronic viral hepatitis B without delta-agent,Digestivo,hepat
+Galactorrhea not associated with childbirth,Recien nacido,birth
+Urinary bladder stoma present,Renal y urinario,Urin
+Benign neoplasm of renal pelvis,Cancer y tumores,neoplasm
+Tendon contracture,Musculoesqueletico y dolor,contracture
+Eczema herpeticum,Piel y tejidos blandos,Eczema
+Hypersensitivity pneumonitis,Respiratorio,pneumon
+Neonatal seizure,Neurologico,seizure
+"Acute myeloid leukemia, disease",Cancer y tumores,leukemia
+Severe intellectual disability,Salud mental,intellectual
+Sudden infant death syndrome,Recien nacido,infant
+Bacterial enteritis of intestine,Digestivo,intestin
+Perimenopausal disorder,"Embarazo, parto y ginecologia",menopaus
+Disorder associated with menstruation AND/OR menopause,"Embarazo, parto y ginecologia",menstrua
+Open wound of external genital organs,Trauma y lesiones,Open wound
+Feeding difficulties and mismanagement,Otros / sin clasificar,
+Exposure to heat and light,Dolor y sintomas generales,Exposure
+Disorder of musculoskeletal system,Dolor y sintomas generales,Disorder of
+Thrombophlebitis of the femoral vein,Cardiovascular,Thrombo
+Benign neoplasm of skin of lip,Cancer y tumores,neoplasm
+Congenital abnormality of lower limb and pelvic girdle,Renal y urinario,genital
+Sequela of intracranial injury,Trauma y lesiones,injur
+Complication following amputation of limb,Trauma y lesiones,amputation
+Varicose veins of pelvis,Cardiovascular,Varicose
+Bronchitis and pneumonitis caused by chemical fumes,Respiratorio,Bronch
+Osteoporotic fracture due to postmenopausal osteoporosis,Trauma y lesiones,fracture
+Sequelae of open wound of lower limb,Trauma y lesiones,wound
+Facial nerve disorder,Neurologico,nerve
+Benign neoplasm of soft tissues of abdomen,Cancer y tumores,neoplasm
+Acute salpingo-oophoritis,Otros / sin clasificar,
+Overdose of anticonvulsant drug,Trauma y lesiones,Overdose
+Harmful pattern of use of hallucinogen,Otros / sin clasificar,
+Myelopathy due to another disorder,Otros / sin clasificar,
+Qualitative platelet disorder,Otros / sin clasificar,
+Congenital anomaly of digestive system,Digestivo,digestive
+Benign neoplasm of skin of ear,Cancer y tumores,neoplasm
+Neonatal difficulty in feeding at breast,"Embarazo, parto y ginecologia",breast
+Drug-induced dystonia,Neurologico,dystonia
+Postnatal infection,Infecciosas,infect
+Dependent personality disorder,Salud mental,personality
+Eclampsia in labor,"Embarazo, parto y ginecologia",Eclampsia
+Spastic tetraplegia,Otros / sin clasificar,
+Coronary artery spasm,Cardiovascular,arter
+Umbilical polyp of newborn,Recien nacido,newborn
+Anthrax,Otros / sin clasificar,
+Adolescent idiopathic scoliosis,Musculoesqueletico y dolor,scoliosis
+Ascariasis,Piel y tejidos blandos,scar
+Neonatal necrotizing enterocolitis,Recien nacido,Neonat
+Lumbosacral radiculopathy,Otros / sin clasificar,
+Postprocedural subglottic stenosis,Otros / sin clasificar,
+Diverticular disease of both small and large intestine without perforation or abscess,Digestivo,Diverticul
+Primary malignant neoplasm of cerebral meninges,Cancer y tumores,malignant
+Traumatic cataract,Trauma y lesiones,Traumatic
+Feeding disorder of infancy OR early childhood,"Ojo, oido, boca y dientes",ear
+Disorder of salivary gland,Dolor y sintomas generales,Disorder of
+Finger clubbing,Otros / sin clasificar,
+Chronic maxillary sinusitis,Respiratorio,sinusitis
+Impulse control disorder,Otros / sin clasificar,
+Hemorrhagic disorder due to circulating anticoagulants,Sangre e inmunologia,coagul
+"Dislocations, sprains and strains involving multiple regions of upper limb(s)",Trauma y lesiones,Dislocation
+Malnutrition-related diabetes mellitus with ketoacidosis,Endocrino y metabolico,Malnutrition
+Dystrophia unguium,Otros / sin clasificar,
+Atherosclerosis of aorta,Cardiovascular,aort
+Retinal detachment,"Ojo, oido, boca y dientes",Retin
+Acute laryngopharyngitis,Respiratorio,laryng
+Pre-existing diabetes mellitus in pregnancy,"Embarazo, parto y ginecologia",pregnan
+Mouth breathing,"Ojo, oido, boca y dientes",Mouth
+Mild binocular visual impairment,"Ojo, oido, boca y dientes",visual
+Total ophthalmoplegia,Otros / sin clasificar,
+Emotional stress,Salud mental,Emotional
+Secondary amenorrhea,"Embarazo, parto y ginecologia",amenorrhea
+Post cardiac operation functional disturbance,Cardiovascular,cardiac
+Cannabis withdrawal,Otros / sin clasificar,
+Tuberculosis of intrathoracic lymph nodes,Respiratorio,Tubercul
+Poisoning by coagulant,Sangre e inmunologia,coagul
+Acute osteomyelitis,Musculoesqueletico y dolor,osteo
+Physical abuse,Otros / sin clasificar,
+Calcific tendinitis,Musculoesqueletico y dolor,tendin
+Endometriosis of pelvic peritoneum,"Embarazo, parto y ginecologia",Endometri
+Spondylolysis,Musculoesqueletico y dolor,Spondyl
+Jadassohn-Pellizzari anetoderma,Otros / sin clasificar,
+Toxic encephalopathy,Neurologico,encephal
+Alopecia universalis,Piel y tejidos blandos,Alopecia
+Coxa plana,Otros / sin clasificar,
+Congenital ichthyosis of skin,Renal y urinario,genital
+Congenital anomaly of limb,Renal y urinario,genital
+Injury of spleen,Trauma y lesiones,Injury
+Fracture of first cervical vertebra,Trauma y lesiones,Fracture
+Cystic fibrosis,Piel y tejidos blandos,Cyst
+Instantaneous death,Otros / sin clasificar,
+Secondary osteoporosis,Musculoesqueletico y dolor,osteo
+Poisoning by nonopioid analgesic,Trauma y lesiones,Poisoning
+"Infection and inflammatory reaction due to prosthetic device, implant and graft in urinary system",Renal y urinario,urin
+Recurrent aphthous stomatitis,"Ojo, oido, boca y dientes",stomatitis
+Dysplasia of cervix,"Embarazo, parto y ginecologia",cervix
+Myotonic disorder,Otros / sin clasificar,
+Primary malignant neoplasm of axillary tail of breast,Cancer y tumores,malignant
+Hypomania,Otros / sin clasificar,
+Chondrocalcinosis,Otros / sin clasificar,
+Exposure to sexually transmissible disorder,Dolor y sintomas generales,Exposure
+Traumatic amputation of toe,Trauma y lesiones,Traumatic
+Chronic duodenal ulcer without hemorrhage AND without perforation,Otros / sin clasificar,
+Vulval intraepithelial neoplasia grade 1,Otros / sin clasificar,
+Sequelae of cerebral infarction,Cardiovascular,infarct
+Primary malignant neoplasm of oral cavity,Cancer y tumores,malignant
+Disorders of both mitral and tricuspid valves,Otros / sin clasificar,
+Cyst of kidney,Renal y urinario,kidney
+Influenza caused by seasonal influenza virus,Respiratorio,Influenza
+Sequelae of protein-energy malnutrition,Endocrino y metabolico,malnutrition
+Monoclonal gammopathy of uncertain significance,Otros / sin clasificar,
+Leukoplakia of cervix,"Embarazo, parto y ginecologia",cervix
+Idiopathic orofacial dystonia,Neurologico,dystonia
+Benign neoplasm of meninges,Cancer y tumores,neoplasm
+Cardiomyopathy,Cardiovascular,Cardio
+Burn of ankle and foot,Trauma y lesiones,Burn
+Coal workers' pneumoconiosis,Otros / sin clasificar,
+Atypical facial pain,Dolor y sintomas generales,pain
+Injury of radial artery,Trauma y lesiones,Injury
+Cauda equina syndrome,Otros / sin clasificar,
+Measles,Infecciosas,Measles
+Abnormal presence of alpha-fetoprotein,Dolor y sintomas generales,Abnormal
+Abnormal feces,Dolor y sintomas generales,Abnormal
+Odontoclasia,Otros / sin clasificar,
+Neoplasm of uncertain behavior of placenta,Cancer y tumores,Neoplasm
+Thyroiditis,Endocrino y metabolico,Thyroid
+Neurosis,Neurologico,Neuro
+Mycobacteriosis,Infecciosas,Mycobacter
+Hypermobility syndrome,Otros / sin clasificar,
+"Traumatic amputation, through thigh",Trauma y lesiones,Traumatic
+Dyskinetic cerebral palsy,Neurologico,cerebr
+Microtia,Otros / sin clasificar,
+Corpus luteum cyst,Piel y tejidos blandos,cyst
+Urethra and bladder neck atresia and stenosis,Renal y urinario,bladder
+Dislocation of wrist,Trauma y lesiones,Dislocation
+Diverticulitis of small intestine with perforation and abscess,Digestivo,Diverticul
+Polycythemia vera (clinical),Otros / sin clasificar,
+Otomycosis,Infecciosas,mycosis
+Disorder of lip,"Ojo, oido, boca y dientes",lip
+Congenital anomaly of skin,Renal y urinario,genital
+Immunodeficiency disorder,Infecciosas,Immunodeficiency
+Injury of upper arm,Trauma y lesiones,Injury
+Erythema annulare centrifugum,"Ojo, oido, boca y dientes",gum
+Newborn drug reaction and intoxication,Trauma y lesiones,intoxication
+Disorder of spleen,Dolor y sintomas generales,Disorder of
+Pulmonary emphysema,Respiratorio,Pulmonary
+Congenital occlusion of ureter,Renal y urinario,genital
+Irritability and anger,Otros / sin clasificar,
+Open wound,Trauma y lesiones,Open wound
+Genuine stress incontinence,Renal y urinario,incontinence
+Injury of rotator cuff,Trauma y lesiones,Injury
+Onycholysis,Otros / sin clasificar,
+Anogenital herpesviral infection,Renal y urinario,genital herpes
+Dislocation of tooth,"Ojo, oido, boca y dientes",tooth
+Benign neoplasm of skin of lower limb,Cancer y tumores,neoplasm
+Vitamin B deficiency,Endocrino y metabolico,Vitamin
+Stenosis of spinal canal due to connective tissue,Digestivo,anal
+Ankylosing spondylitis,Musculoesqueletico y dolor,spondyl
+Poisoning by drug AND/OR medicinal substance,Trauma y lesiones,Poisoning
+Disorder of integument,"Ojo, oido, boca y dientes",gum
+Crohn's disease of large bowel,Digestivo,bowel
+Renal impairment,Renal y urinario,Renal
+Small plaque parapsoriasis,Piel y tejidos blandos,psoriasis
+Acute toxic hepatitis,Digestivo,hepat
+Moderate monocular visual impairment,"Ojo, oido, boca y dientes",visual
+Foreign body in anus and rectum,Trauma y lesiones,Foreign body
+Megaloblastic anemia due to folate deficiency,Sangre e inmunologia,anemia
+Congenital valgus deformity of foot,Renal y urinario,genital
+Hypergammaglobulinemia,Otros / sin clasificar,
+Pityriasis rosea,Otros / sin clasificar,
+Neoplasm of uncertain behavior of pleura,Cancer y tumores,Neoplasm
+Disorder of portal venous system,Cardiovascular,venous
+"Nephrotic syndrome, diffuse mesangial proliferative glomerulonephritis",Renal y urinario,Nephr
+Stress,Otros / sin clasificar,
+Intervertebral disc prolapse,Musculoesqueletico y dolor,disc
+Obstructed labor due to disproportion between fetus and pelvis,"Embarazo, parto y ginecologia",labor
+Pyle metaphyseal dysplasia,Otros / sin clasificar,
+Crushing injury of trunk,Trauma y lesiones,Crush
+Fibrosclerosis of breast,"Embarazo, parto y ginecologia",breast
+Splenic cyst,Piel y tejidos blandos,cyst
+Chronic ischemic heart disease,Cardiovascular,ischemi
+Fistula of intestine,Digestivo,intestin
+Neuromyelitis optica,Neurologico,Neuro
+Primary malignant neoplasm of appendix,Cancer y tumores,malignant
+Disorder of eyelid,"Ojo, oido, boca y dientes",eye
+Chronic lichenoid pityriasis,Piel y tejidos blandos,lichen
+Prostatitis,Renal y urinario,Prostat
+Melanocytic nevus,Piel y tejidos blandos,nevus
+Acute myocarditis,Cardiovascular,myocard
+Congenital malformation syndrome,Renal y urinario,genital
+Diffuse non-Hodgkin's lymphoma,Cancer y tumores,lymphoma
+Subacute thyroiditis,Endocrino y metabolico,thyroid
+Vulval and/or perineal noninflammatory disorders,Otros / sin clasificar,
+Chronic myeloid leukemia,Cancer y tumores,leukemia
+Abscess of mediastinum,Infecciosas,Abscess
+Gluteal tendinitis,Musculoesqueletico y dolor,tendin
+Primary malignant neoplasm of major salivary gland,Cancer y tumores,malignant
+Fracture of multiple bones of upper limb,Trauma y lesiones,Fracture
+Polymorphous light eruption,Otros / sin clasificar,
+Xanthelasma,Otros / sin clasificar,
+Insecticide poisoning,Trauma y lesiones,poisoning
+Late effects of cerebrovascular disease,Cardiovascular,cerebrovascular
+Primary malignant neoplasm of ampulla of Vater,Cancer y tumores,malignant
+Congenital facial asymmetry,Renal y urinario,genital
+Overlapping malignant neoplasm of lip,Cancer y tumores,malignant
+Benign neoplasm of vertebral column,Cancer y tumores,neoplasm
+Stupor,Otros / sin clasificar,
+Thrombophlebitis migrans,Cardiovascular,Thrombo
+Arbovirus infection,Infecciosas,virus
+Acquired keratosis follicularis,Piel y tejidos blandos,keratosis
+Emotionally unstable personality disorder,Salud mental,Emotional
+Esophagitis,Digestivo,Esophag
+Carcinoma in situ of endometrium,Cancer y tumores,Carcinoma
+Adverse reaction to antidiabetic drug,Trauma y lesiones,Adverse reaction
+Osteonecrosis of capital femoral epiphysis,Musculoesqueletico y dolor,Osteo
+Acquired deformity of ankle AND/OR foot,Musculoesqueletico y dolor,ankle
+Disorder of cornea,Dolor y sintomas generales,Disorder of
+Carcinoma in situ of skin of upper limb,Cancer y tumores,Carcinoma
+Biceps tendinitis,Musculoesqueletico y dolor,tendin
+Separation anxiety disorder of childhood,Salud mental,anxiety
+Acute ethmoidal sinusitis,Respiratorio,sinusitis
+Fatigue fracture of vertebra,Trauma y lesiones,fracture
+Ophthalmic examination and evaluation,Dolor y sintomas generales,examination
+Disorder of nervous system due to type 2 diabetes mellitus,Endocrino y metabolico,diabet
+Injury of muscle and tendon at hip and thigh level,Trauma y lesiones,Injury
+Nerve root and plexus compressions in spondylosis,Neurologico,Nerve
+Eruption,Otros / sin clasificar,
+Drug-induced obesity,Endocrino y metabolico,obesity
+Current drinker,Otros / sin clasificar,
+Birth asphyxia,Recien nacido,Birth
+Poisoning by opium,Trauma y lesiones,Poisoning
+Osteoarthritis of hip due to dysplasia,Musculoesqueletico y dolor,Osteo
+Premenstrual tension syndrome,"Embarazo, parto y ginecologia",menstrua
+Overlapping malignant neoplasm of biliary tract,Cancer y tumores,malignant
+Celiac artery compression syndrome,Cardiovascular,arter
+Neoplasm of uncertain behavior of urinary system,Cancer y tumores,Neoplasm
+Congenital instability of hip joint,Renal y urinario,genital
+Glucose tolerance test outside reference range,Otros / sin clasificar,
+Disorder of the larynx,Dolor y sintomas generales,Disorder of
+Organic catatonic disorder,Otros / sin clasificar,
+Subcutaneous pheohyphomycotic abscess and cyst,Infecciosas,abscess
+Abnormal findings on microbiological examination of urine,Renal y urinario,urin
+Non-organic disorder of the sleep-wake schedule,Salud mental,sleep
+Toxic effect of ethyl alcohol,Salud mental,alcohol
+Monoplegia of upper limb,Musculoesqueletico y dolor,limb
+Metatarsalgia,Musculoesqueletico y dolor,Metatarsalgia
+Primary malignant neoplasm of duodenum,Cancer y tumores,malignant
+Hepatic coma due to acute hepatitis B,Digestivo,Hepat
+Lyell syndrome,Otros / sin clasificar,
+Dementia associated with Parkinson's Disease,Salud mental,Dementia
+Atrial septal defect,Cardiovascular,Atrial
+Infection caused by Cestoda and/or Trematoda and/or Phylum Nematoda,Infecciosas,Infect
+Nontraumatic rupture of muscle,Trauma y lesiones,traumatic
+Cutis laxa senilis,Otros / sin clasificar,
+Injury of multiple blood vessels of upper extremity,Trauma y lesiones,Injury
+Skin finding,Piel y tejidos blandos,Skin
+Lipid storage disease,"Ojo, oido, boca y dientes",Lip
+Central stimulant adverse reaction,Trauma y lesiones,adverse reaction
+Screening for mental disorders,Salud mental,mental
+Bursitis of hip,Musculoesqueletico y dolor,Bursitis
+Large liver,Digestivo,liver
+Vaginal ulcer,"Embarazo, parto y ginecologia",Vaginal
+Late effect of motor vehicle accident,Otros / sin clasificar,
+Polyp of cervix,"Embarazo, parto y ginecologia",cervix
+Urticaria caused by cold and heat,Piel y tejidos blandos,Urticaria
+Chronic ethmoidal sinusitis,Respiratorio,sinusitis
+Subarachnoid hemorrhage from posterior communicating artery aneurysm,Cardiovascular,arter
+Benign neoplasm of soft tissues of upper limb,Cancer y tumores,neoplasm
+Adjustment of implant,Salud mental,Adjustment
+Mixed cortical and subcortical vascular dementia,Salud mental,dementia
+Thalassemia,Otros / sin clasificar,
+Tinnitus,"Ojo, oido, boca y dientes",Tinnitus
+Visual disturbance,"Ojo, oido, boca y dientes",Visual
+Disorder following obstetric procedure,"Embarazo, parto y ginecologia",obstetric
+Chronic prostatitis,Renal y urinario,prostat
+Polyneuropathy due to diabetes mellitus,Neurologico,Polyneuro
+Localized skin eruption caused by drug and medicament,Piel y tejidos blandos,skin
+Multi-infarct dementia,Salud mental,dementia
+Lichen sclerosus,Piel y tejidos blandos,Lichen
+Renal disorder due to type 2 diabetes mellitus,Renal y urinario,Renal
+Monocytic leukemia,Cancer y tumores,leukemia
+Complication of surgical procedure,Dolor y sintomas generales,procedure
+Non-autoimmune hemolytic anemia,Sangre e inmunologia,anemia
+Coronary arteriosclerosis,Cardiovascular,arter
+"Malignant neoplasm of upper lobe, bronchus or lung",Cancer y tumores,Malignant
+Primary malignant neoplasm of gallbladder,Cancer y tumores,malignant
+Prem rupture of membranes onset of labor after 24 hours,"Embarazo, parto y ginecologia",membranes
+Drug-induced adrenocortical insufficiency,Otros / sin clasificar,
+Marasmic kwashiorkor,Otros / sin clasificar,
+Perforation of intestine,Digestivo,intestin
+Carcinoma in situ of skin of eyelid including canthus,Cancer y tumores,Carcinoma
+Contact dermatitis caused by detergent,Piel y tejidos blandos,dermat
+Injury of radial nerve at forearm level,Trauma y lesiones,Injury
+Subarachnoid hemorrhage due to traumatic injury,Trauma y lesiones,traumatic
+Lesion of ulnar nerve,Neurologico,nerve
+Dermatitis caused by ingested food,Piel y tejidos blandos,Dermat
+Early neonatal jaundice due to polycythemia,Digestivo,jaundice
+Cervical intraepithelial neoplasia grade 1,"Embarazo, parto y ginecologia",Cervic
+Post-schizophrenic depression,Salud mental,schizophren
+Brachial plexus disorder,Otros / sin clasificar,
+Retrograde amnesia,Neurologico,amnesia
+Acanthosis nigricans,Otros / sin clasificar,
+Extreme prematurity of infant,Recien nacido,prematur
+Silent myocardial ischemia,Cardiovascular,myocard
+Disorientated,Otros / sin clasificar,
+Disorder due to and following poisoning,Trauma y lesiones,poisoning
+Benign neoplasm of floor of mouth,Cancer y tumores,neoplasm
+Congenital abnormality of skull and face bones,Renal y urinario,genital
+Early congenital syphilis (less than 2 years),Renal y urinario,genital
+Psychotic disorder caused by cannabis,Salud mental,Psychotic
+Muscle and tendon injury,Trauma y lesiones,injur
+Gestational edema with proteinuria,"Embarazo, parto y ginecologia",Gestation
+Mycosis,Infecciosas,Mycosis
+Umbilical hemorrhage after birth,Recien nacido,birth
+Congenital anomaly of nervous system,Renal y urinario,genital
+Essential thrombocythemia,Sangre e inmunologia,thrombocyt
+Cutaneous infectious disease caused by Mycobacteria,Infecciosas,infect
+Generalized seborrheic dermatitis of infants,Piel y tejidos blandos,dermat
+Femoral hernia,Digestivo,hernia
+Melanocytic nevus of skin,Piel y tejidos blandos,skin
+Disorder of esophagus,Digestivo,esophag
+Foreign body in urethra,Trauma y lesiones,Foreign body
+Condition in fetus originating in the perinatal period,"Embarazo, parto y ginecologia",fetus
+Overlapping malignant neoplasm of penis,Cancer y tumores,malignant
+Enthesopathy,Otros / sin clasificar,
+Disorder of pigmentation,Dolor y sintomas generales,Disorder of
+Persistent hyperplasia of thymus,Otros / sin clasificar,
+Urinary calculus in schistosomiasis,Renal y urinario,Urin
+Primary hyperparathyroidism,Endocrino y metabolico,thyroid
+Speech therapy,Otros / sin clasificar,
+Carcinoma in situ of thyroid gland,Cancer y tumores,Carcinoma
+Anodontia,Otros / sin clasificar,
+Mental disorder,Salud mental,Mental
+Precocious puberty,"Embarazo, parto y ginecologia",puberty
+Complication of internal fixation device,Otros / sin clasificar,
+"Post-traumatic gonarthrosis, bilateral",Trauma y lesiones,traumatic
+Poisoning caused by acetaminophen,Trauma y lesiones,Poisoning
+Kaposi's sarcoma with AIDS (acquired immunodeficiency syndrome),Cancer y tumores,sarcoma
+Plicated tongue,Otros / sin clasificar,
+Benign neoplasm of major salivary gland,Cancer y tumores,neoplasm
+Carcinoma in situ of uterine cervix,Cancer y tumores,Carcinoma
+Secondary polycythemia,Otros / sin clasificar,
+Rhesus isoimmunization affecting pregnancy,"Embarazo, parto y ginecologia",pregnan
+Neuralgic amyotrophy,Neurologico,Neuralg
+Mallory-Weiss syndrome,Otros / sin clasificar,
+Acute bronchitis caused by rhinovirus,Respiratorio,bronch
+Acute lymphoid leukemia,Cancer y tumores,leukemia
+Hodgkin's disease (clinical),Otros / sin clasificar,
+Malnutrition related diabetes mellitus,Endocrino y metabolico,Malnutrition
+Primary malignant neoplasm of upper limb,Cancer y tumores,malignant
+Valvular endocarditis,Otros / sin clasificar,
+Noninflammatory disorder of the female genital organs,"Embarazo, parto y ginecologia",female
+Organic dissociative disorder,Salud mental,dissociative
+Blood chemistry outside reference range,Otros / sin clasificar,
+Transverse OR oblique presentation of fetus,"Embarazo, parto y ginecologia",fetus
+Patient meets COVID-19 laboratory diagnostic criteria,"Embarazo, parto y ginecologia",labor
+Annular erythema,Otros / sin clasificar,
+Wernicke's disease,Otros / sin clasificar,
+Placenta previa with hemorrhage,"Embarazo, parto y ginecologia",Placent
+Hyperuricemia without signs of inflammatory arthritis and tophaceous disease,Musculoesqueletico y dolor,arthr
+Neoplasm of uncertain behavior of testis,Cancer y tumores,Neoplasm
+Pneumococcal infectious disease,Infecciosas,infect
+"Victim, pedestrian in vehicular AND/OR traffic accident",Otros / sin clasificar,
+Infection of intervertebral disc - pyogenic,Infecciosas,Infect
+Primary malignant neoplasm of cerebellum,Cancer y tumores,malignant
+Synovitis AND/OR tenosynovitis associated with another disease,Musculoesqueletico y dolor,Synovitis
+Congenital hydronephrosis,Renal y urinario,genital
+Abscess of salivary gland,Infecciosas,Abscess
+Disorder of diaphragm,Dolor y sintomas generales,Disorder of
+Abscess of lung,Respiratorio,lung
+Pneumonitis,Respiratorio,Pneumon
+Tetracycline poisoning,Trauma y lesiones,poisoning
+Malignant neoplasm of middle lobe of right lung,Cancer y tumores,Malignant
+Sunburn of third degree,Trauma y lesiones,burn
+Pneumonia and influenza,Respiratorio,Pneumon
+Renal pelvis and ureter obstructive defects,Renal y urinario,Renal
+Acute poliomyelitis,Otros / sin clasificar,
+Fistula of vagina to large intestine,Digestivo,intestin
+Primary malignant neoplasm of anal canal,Cancer y tumores,malignant
+Food anaphylaxis,Sangre e inmunologia,anaphyla
+Cleft of hard palate,Otros / sin clasificar,
+Lymphangioma,Sangre e inmunologia,Lymph
+Primary malignant neoplasm of anus,Cancer y tumores,malignant
+Crushing injury of ankle,Trauma y lesiones,Crush
+Burn any degree involving 10-19 percent of body surface,Trauma y lesiones,Burn
+Overlapping malignant neoplasm of palate,Cancer y tumores,malignant
+Excessive hemorrhage due to and following miscarriage,"Embarazo, parto y ginecologia",miscarriage
+Acquired deformity of toe,Musculoesqueletico y dolor,deformity
+Obstetric perineal wound disruption,"Embarazo, parto y ginecologia",Obstetric
+Open wounds involving multiple regions of upper limb(s) with lower limb(s),Trauma y lesiones,Open wound
+Foreign body in bronchus,Trauma y lesiones,Foreign body
+Fistula of urinary bladder,Renal y urinario,urin
+Acute miliary tuberculosis,Respiratorio,tubercul
+Postcholecystectomy syndrome,Digestivo,cholecyst
+Primary malignant neoplasm of overlapping sites of cervix uteri,Cancer y tumores,malignant
+Persistent hematuria co-occurrent and due to diffuse mesangial proliferative glomerulonephritis,Renal y urinario,hematuria
+Psychosexual counseling,Salud mental,counseling
+Acute gastric ulcer without hemorrhage AND without perforation,Otros / sin clasificar,
+Failure of genital response,Renal y urinario,genital
+Portal hypertension,Cardiovascular,hypertension
+"Pre-existing secondary hypertension complicating pregnancy, childbirth and puerperium","Embarazo, parto y ginecologia",pregnan
+Chronic pharyngitis,Respiratorio,pharyng
+Latent syphilis,Infecciosas,syphilis
+Carcinoma in situ of urinary bladder,Cancer y tumores,Carcinoma
+Benign neoplasm of duodenum,Cancer y tumores,neoplasm
+Stenosis of precerebral artery,Cardiovascular,arter
+Recurrent dislocation of the patellofemoral joint,Trauma y lesiones,dislocation
+Obstructed femoral hernia,Digestivo,hernia
+Acute peptic ulcer with perforation,Otros / sin clasificar,
+Primary malignant neoplasm of lower outer quadrant of breast,Cancer y tumores,malignant
+Dislocation of knee joint,Trauma y lesiones,Dislocation
+Rheumatic disease of mitral valve,Musculoesqueletico y dolor,Rheumat
+Vascular disorder of intestine,Cardiovascular,Vascular
+Transient acantholytic dermatosis,Piel y tejidos blandos,dermat
+Respiratory syncytial virus infection,Respiratorio,Respirat
+Open wound of multiple sites of upper limb,Trauma y lesiones,Open wound
+Heart block,Cardiovascular,Heart
+Chronic serous otitis media,"Ojo, oido, boca y dientes",otitis
+Toxic effect of carbon tetrachloride,Otros / sin clasificar,
+Acute gastric ulcer with hemorrhage and perforation,Otros / sin clasificar,
+Fistula of bile duct,Digestivo,bile
+Primary carcinoma of liver,Cancer y tumores,carcinoma
+Sexually transmitted infectious disease,Infecciosas,infect
+Disorder of optic nerve,Neurologico,nerve
+Absence status epilepticus,Neurologico,epilep
+Mammary duct ectasia,Otros / sin clasificar,
+Disorder of carotid artery,Cardiovascular,arter
+Congenital dislocation of hip,Trauma y lesiones,dislocation
+Fracture malunion,Trauma y lesiones,Fracture
+Hypertensive heart AND renal disease,Cardiovascular,heart
+Primary malignant neoplasm of sigmoid colon,Cancer y tumores,malignant
+Atrophy of tongue papillae,Otros / sin clasificar,
+Accidental injury,"Ojo, oido, boca y dientes",dental
+Acute transverse myelitis,Otros / sin clasificar,
+Sepsis caused by Staphylococcus aureus,Infecciosas,Sepsis
+Nonspecific reactive hepatitis,Digestivo,hepat
+Vascular disorder of lower extremity,Cardiovascular,Vascular
+Paroxysmal tachycardia,Cardiovascular,tachycardia
+Acute tracheitis,Dolor y sintomas generales,ache
+Poisoning by heroin,Trauma y lesiones,Poisoning
+Cranial nerve disorder,Neurologico,nerve
+Iron adverse reaction,Trauma y lesiones,adverse reaction
+Primary malignant neoplasm of retina,Cancer y tumores,malignant
+Tuberculosis of pleura,Respiratorio,Tubercul
+Late effect of medical and surgical care complication,Otros / sin clasificar,
+Stimulant dependence,Salud mental,Stimulant
+Cryptococcosis,Otros / sin clasificar,
+Adrenal cortical hypofunction,Renal y urinario,renal
+Multiple fractures of cervical spine,"Embarazo, parto y ginecologia",cervic
+Benign neoplasm of long bones of lower limb,Cancer y tumores,neoplasm
+Staphylococcal scalded skin syndrome,Piel y tejidos blandos,skin
+Sequelae of open wound of head,Trauma y lesiones,wound
+Congenital cystic disease of liver,Digestivo,liver
+Poisoning by cocaine,Trauma y lesiones,Poisoning
+Choledochal cyst,Piel y tejidos blandos,cyst
+Infection of amniotic cavity,"Embarazo, parto y ginecologia",amniotic
+Fracture of bone after implantation of orthopedic device,Trauma y lesiones,Fracture
+First degree perineal laceration,Trauma y lesiones,laceration
+Primary malignant neoplasm of rectum,Cancer y tumores,malignant
+Lymphadenopathy co-occurrent with human immunodeficiency virus infection,Infecciosas,immunodeficiency
+Full thickness burn of wrist and hand,Trauma y lesiones,burn
+Myocarditis,Cardiovascular,Myocard
+Drug addiction counseling,Salud mental,counseling
+Drug-induced pemphigus,Piel y tejidos blandos,pemphigus
+Patient encounter procedure,Dolor y sintomas generales,encounter
+Nerve root and plexus compressions in intervertebral disc disorders,Neurologico,Nerve
+Acute mycoplasmal bronchitis,Respiratorio,bronch
+Disorder of the central nervous system,Dolor y sintomas generales,Disorder of
+Congenital atresia of pulmonary artery,Cardiovascular,arter
+Acute epiglottitis,Otros / sin clasificar,
+Splenic abscess,Infecciosas,abscess
+Urinary tract obstruction,Digestivo,obstruction
+"Complete tear, ankle and/or foot ligament",Musculoesqueletico y dolor,ankle
+Alcoholic fatty liver,Salud mental,Alcohol
+Sepsis caused by Staphylococcus,Infecciosas,Sepsis
+"Benign neoplasm of brain, supratentorial",Cancer y tumores,neoplasm
+Neuroleptic adverse reaction,Trauma y lesiones,adverse reaction
+Proctoptosis,"Ojo, oido, boca y dientes",ptosis
+Disorder of muscle tone of newborn,Musculoesqueletico y dolor,muscle
+Victim of effects of earthquake,"Ojo, oido, boca y dientes",ear
+Complete hydatidiform mole,Piel y tejidos blandos,mole
+Rupture of chordae tendineae,Musculoesqueletico y dolor,tendin
+Superficial injury of head and neck,Trauma y lesiones,Superficial injur
+Work environment deleterious,Otros / sin clasificar,
+Secondary syphilis of skin and mucous membrane,Infecciosas,syphilis
+Poisoning by antidepressant,Trauma y lesiones,Poisoning
+Primary angle-closure glaucoma,"Ojo, oido, boca y dientes",glaucoma
+"Tuberculosis of lung, bacteriologically and histologically negative",Respiratorio,Tubercul
+Simple goiter,Otros / sin clasificar,
+Dysthyroid exophthalmos,Endocrino y metabolico,thyroid
+Stricture of artery,Cardiovascular,arter
+Eyelid burn,Trauma y lesiones,burn
+Narcotic drug user,Otros / sin clasificar,
+Herpes zoster encephalitis,Infecciosas,Herpes
+Parkinsonism caused by drug,Neurologico,Parkinson
+Transient synovitis,Musculoesqueletico y dolor,synovitis
+Intraventricular conduction defect,Cardiovascular,ventricular
+Mature T-cell AND/OR NK cell neoplasm,Cancer y tumores,neoplasm
+Chronic viral hepatitis,Digestivo,hepat
+Congenital anomaly of palate,Renal y urinario,genital
+Hydrocele of tunica vaginalis,"Embarazo, parto y ginecologia",vaginal
+Epilepsy with generalized tonic-clonic seizures alone,Neurologico,Epilep
+Dislocation of joint,Trauma y lesiones,Dislocation
+Primary malignant neoplasm of liver,Cancer y tumores,malignant
+Poisoning by parasympathomimetic drug,Trauma y lesiones,Poisoning
+Infective conjunctivitis,Infecciosas,Infect
+Sequelae of nutritional disorders,Otros / sin clasificar,
+Epilepsia partialis continua,Neurologico,Epilep
+Immunoglobulin A vasculitis,Sangre e inmunologia,Immun
+Radiation proctitis,Otros / sin clasificar,
+Late latent syphilis,Infecciosas,syphilis
+Degenerative disease of the central nervous system,Otros / sin clasificar,
+Overlapping malignant neoplasm of vulva,Cancer y tumores,malignant
+Superficial injury of breast,Trauma y lesiones,Superficial injur
+Myelodysplastic syndrome with ring sideroblasts and single lineage dysplasia,Otros / sin clasificar,
+Ganglion-blocker poisoning,Trauma y lesiones,poisoning
+Acute peritonitis,Digestivo,peritonitis
+Spontaneous tension pneumothorax,Otros / sin clasificar,
+Neoplasm of uncertain behavior of peripheral nerves and peripheral autonomic nervous system,Cancer y tumores,Neoplasm
+Primary malignant neoplasm of soft tissues of lower limb,Cancer y tumores,malignant
+Overlapping malignant neoplasm of small intestine,Cancer y tumores,malignant
+Erysipeloid,Otros / sin clasificar,
+Carcinoma in situ of stomach,Cancer y tumores,Carcinoma
+Ankylosis of spine,Otros / sin clasificar,
+Disorder of pelvic size and disproportion,Dolor y sintomas generales,Disorder of
+Allergen immunotherapy,Sangre e inmunologia,Allerg
+Thoracoabdominal aortic aneurysm,Cardiovascular,aort
+Acute duodenal ulcer with hemorrhage,Otros / sin clasificar,
+Acute leukemia,Cancer y tumores,leukemia
+Recurrent subluxation of the patella,Otros / sin clasificar,
+Tubulointerstitial nephritis,Renal y urinario,nephr
+Atrioventricular block,Cardiovascular,ventricular
+Post-traumatic wound infection,Trauma y lesiones,traumatic
+Traumatic arthropathy,Trauma y lesiones,Traumatic
+Non-obstructive reflux-associated chronic pyelonephritis,Digestivo,reflux
+Antidepressant drug adverse reaction,Trauma y lesiones,adverse reaction
+Acidosis,Endocrino y metabolico,Acidosis
+Antibacterial drug adverse reaction,Trauma y lesiones,adverse reaction
+Schizotypal personality disorder,Salud mental,personality
+Finding of gravid uterus,Dolor y sintomas generales,Finding
+Foreign body in small intestine,Trauma y lesiones,Foreign body
+Varicose veins of bilateral lower limbs in pregnancy,"Embarazo, parto y ginecologia",pregnan
+Neoplasm of uncertain behavior of pineal gland,Cancer y tumores,Neoplasm
+Factitious disorder,Otros / sin clasificar,
+Fracture of second cervical vertebra,Trauma y lesiones,Fracture
+Bullous ichthyosiform erythroderma,Otros / sin clasificar,
+"Tuberculosis of lung, confirmed by culture only",Respiratorio,Tubercul
+Primary malignant neoplasm of intrathoracic organs,Cancer y tumores,malignant
+Acute duodenal ulcer without hemorrhage AND without perforation,Otros / sin clasificar,
+Hypertension secondary to endocrine disorder,Cardiovascular,Hypertension
+Malignant neoplasm of thorax,Cancer y tumores,Malignant
+Rodenticide poisoning,Trauma y lesiones,poisoning
+Disorder of magnesium metabolism,Dolor y sintomas generales,Disorder of
+Dietary calcium deficiency,Otros / sin clasificar,
+Pure motor lacunar infarction,Cardiovascular,infarct
+Infections of kidney in pregnancy,"Embarazo, parto y ginecologia",pregnan
+Thrombosis of arteries of the extremities,Cardiovascular,Thrombo
+Sprain of ligament of elbow,Trauma y lesiones,Sprain
+Blindness AND/OR vision impairment level,"Ojo, oido, boca y dientes",vision
+Subacute osteomyelitis,Musculoesqueletico y dolor,osteo
+Subacute cutaneous lupus erythematosus,Sangre e inmunologia,lupus
+Heat exhaustion,Otros / sin clasificar,
+Liver cell carcinoma,Cancer y tumores,carcinoma
+Serous retinal detachment,"Ojo, oido, boca y dientes",retin
+Antihypertensive adverse reaction,Trauma y lesiones,adverse reaction
+Benign neoplasm of mouth region,Cancer y tumores,neoplasm
+Psychosis caused by ethanol,Salud mental,Psychosis
+White blood cell abnormality,Dolor y sintomas generales,abnormal
+Primary malignant neoplasm of the peritoneum,Cancer y tumores,malignant
+Myelodysplastic syndrome with low blasts,Otros / sin clasificar,
+Miscarriage complicated by embolism,"Embarazo, parto y ginecologia",Miscarriage
+Neoplasm of uncertain behavior of brain,Cancer y tumores,Neoplasm
+"Nephrotic syndrome, focal and segmental glomerular lesions",Salud mental,mental
+Phenothiazine poisoning,Trauma y lesiones,poisoning
+Cervical incompetence,"Embarazo, parto y ginecologia",Cervic
+Dissociative anesthesia,Salud mental,Dissociative
+Stress fracture,Trauma y lesiones,fracture
+Cyst of pancreas,Digestivo,pancrea
+Leukemia,Cancer y tumores,Leukemia
+Multiple pregnancy,"Embarazo, parto y ginecologia",pregnan
+Late effects of poliomyelitis,Otros / sin clasificar,
+Prolonged first stage of labor,"Embarazo, parto y ginecologia",labor
+Perception AND/OR perception disturbance,Otros / sin clasificar,
+Fistula of salivary gland,Otros / sin clasificar,
+Eosinophil count above reference range,Otros / sin clasificar,
+Metastasis to kidney,Cancer y tumores,Metasta
+Pertrochanteric fracture,Trauma y lesiones,fracture
+Fracture of lower limb,Trauma y lesiones,Fracture
+Chronic ulcerative pancolitis,Digestivo,colitis
+Dislocation of toe joint,Trauma y lesiones,Dislocation
+Benign neoplasm of pancreas,Cancer y tumores,neoplasm
+Alcoholic liver damage,Salud mental,Alcohol
+Cleft hard and soft palate,Otros / sin clasificar,
+Acute hepatitis C,Digestivo,hepat
+Neoplasm of uncertain behavior of central nervous system,Cancer y tumores,Neoplasm
+Complication of the puerperium,"Embarazo, parto y ginecologia",puerper
+Infection caused by Staphylococcus aureus,Infecciosas,Infect
+Central giant cell reparative granuloma of jaw,Otros / sin clasificar,
+Cataract,"Ojo, oido, boca y dientes",Cataract
+Reactive arthritis triad,Musculoesqueletico y dolor,arthr
+Care regime,Otros / sin clasificar,
+Outlet contraction of pelvis,Otros / sin clasificar,
+Attention to colostomy,Dolor y sintomas generales,Attention to
+Primary malignant neoplasm of skin of trunk,Cancer y tumores,malignant
+Childhood type dermatomyositis,Piel y tejidos blandos,dermat
+Penetrating wound of eyeball without foreign body,Trauma y lesiones,wound
+Esophageal varices without bleeding,Digestivo,Esophag
+Primary malignant neoplasm of undescended testis,Cancer y tumores,malignant
+Simple schizophrenia,Salud mental,schizophren
+Catatonic schizophrenia,Salud mental,schizophren
+Benign neoplasm of lip,Cancer y tumores,neoplasm
+Abscess of intestine,Digestivo,intestin
+Duodenitis,Otros / sin clasificar,
+Hydrocephalus following traumatic injury,Trauma y lesiones,traumatic
+Primary malignant neoplasm of body of pancreas,Cancer y tumores,malignant
+Family history of clinical finding,Dolor y sintomas generales,finding
+Staphylococcal arthritis,Musculoesqueletico y dolor,arthr
+Intestinovesical fistula,Digestivo,Intestin
+Paratyphoid fever,Infecciosas,typhoid
+Disorder following induced termination of pregnancy,"Embarazo, parto y ginecologia",pregnan
+Exophthalmos,Otros / sin clasificar,
+Disorder of pituitary gland,Endocrino y metabolico,pituitary
+Primary malignant neoplasm of stomach,Cancer y tumores,malignant
+Acute hemorrhagic gastritis,Digestivo,gastritis
+Neoplasm of uncertain behavior of stomach,Cancer y tumores,Neoplasm
+Primary malignant neoplasm of body of uterus,Cancer y tumores,malignant
+Disorder of pregnancy,"Embarazo, parto y ginecologia",pregnan
+Full thickness burn of lower limb,Trauma y lesiones,burn
+Heart disease,Cardiovascular,Heart
+Benign neoplasm of thyroid gland,Cancer y tumores,neoplasm
+Overlapping malignant neoplasm of brain,Cancer y tumores,malignant
+Beta thalassemia,Otros / sin clasificar,
+Traumatic pneumohemothorax,Trauma y lesiones,Traumatic
+Primary malignant neoplasm of frontal lobe,Cancer y tumores,malignant
+Disorder of connective tissue,Dolor y sintomas generales,Disorder of
+Primary malignant neoplasm of ascending colon,Cancer y tumores,malignant
+Fracture of scapula,Trauma y lesiones,Fracture
+Superficial frostbite of upper limb,Trauma y lesiones,bite
+B-cell lymphoma (clinical),Cancer y tumores,lymphoma
+Rheumatoid vasculitis,Musculoesqueletico y dolor,Rheumat
+Fistula of gallbladder,Digestivo,gallbladder
+Toxic effect of phosphorus and/or phosphorus compound,Otros / sin clasificar,
+Antiprotozoal drug overdose,Trauma y lesiones,overdose
+Urethral abscess,Infecciosas,abscess
+Late onset cerebellar ataxia,Neurologico,ataxia
+Neoplasm of uncertain behavior of soft tissues,Cancer y tumores,Neoplasm
+Primary uterine inertia,"Embarazo, parto y ginecologia",uterine
+Second degree perineal laceration,Trauma y lesiones,laceration
+"Tuberculosis of larynx, trachea and bronchus, confirmed bacteriologically and histologically",Respiratorio,Tubercul

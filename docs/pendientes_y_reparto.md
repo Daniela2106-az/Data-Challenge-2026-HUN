@@ -74,6 +74,7 @@ demanda, alertas, días atípicos, borrador de recomendaciones y un repositorio 
 - **Entrega:** `datos/referencia/mapeo_dx.csv` (sí se sube a git: no tiene datos de pacientes). Claude deja el borrador a partir de `dx_frecuencias.csv`; hay que
   revisarlo con el navegador de SNOMED o con alguien del área de salud.
 - **Habilita:** A1, A2 y A4.
+- **Estado (26-oct): HECHA como borrador + análisis.** Mapeo por reglas (`src/generar_borrador_mapeo_dx.py`, 0,9 % sin clasificar) y análisis de tiempos por grupo (`src/diagnosticos_y_tiempos.py`, `docs/diagnosticos_y_tiempos.md`). Hallazgos: cardiovascular y neurológico reciben cama en ~4 h, musculoesquelético, renal, digestivo y cáncer esperan 22–32 h; y el diagnóstico se registra más cuando la cama llega rápido (sesgo; pregunta B9 al HUN). **Falta:** validación clínica del mapeo por alguien del área de salud.
 
 ### A4. Explicar mejor los retrasos (modelo explicativo de la espera) · **Anthony**
 - **Qué pide el instructivo:** "qué características están asociadas a retrasos". Hoy todos los factores juntos explican solo el **12 %** de la variación de la espera.

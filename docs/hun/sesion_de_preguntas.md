@@ -36,6 +36,7 @@ No compartir identificadores de pacientes ni de visitas en la sesión escrita; s
 | B6 | ¿El hospital está en Barranquilla y baja la afluencia durante el Carnaval? | Asumimos que sí; las visitas bajan ~17 % esos días. | | |
 | B7 | Unos 63 mil episodios tienen solo la etapa de llegada (9203) y nada clínico. ¿Son pacientes que se fueron sin atención o registros administrativos? | Define si cuentan como llegadas. | | |
 | B8 | ¿Hay alguna práctica o política de horario de altas (rondas, cierre de facturación, hora de entrega de camas)? | Explicaría por qué solo el 15 % de las altas es antes del mediodía. | | |
+| B9 | ¿Cuándo y dónde se registra el diagnóstico (urgencias, ingreso a piso, alta)? Entre los hospitalizados lo tiene el 60 % de quienes esperan cama 6 h o menos y el 27 % de quienes esperan más de 24 h | Si se registra al llegar a piso, los pacientes con espera larga no lo tienen aún y los análisis por diagnóstico están sesgados. | | |
 
 ## C. Si hay tiempo
 
