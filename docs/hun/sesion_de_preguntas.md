@@ -1,18 +1,47 @@
 # Sesión de preguntas con el HUN (documento vivo)
 
-**Estado (23-oct-2026):** el correo con las preguntas se envió y no hubo respuesta. El HUN abrirá una **sesión de preguntas**.
+**Estado (29-oct-2026):** el correo con las preguntas se envió y no hubo respuesta. El HUN abrirá una **sesión de preguntas**, con otros equipos presentes.
 Fecha y hora de la sesión: ______________________  Quién asiste por el equipo: ______________________
 
 **Cómo usar este documento**
-1. **Antes:** elegir qué preguntas hacer. Si el tiempo es corto, solo la sección A (cambian las conclusiones del proyecto).
-2. **Durante:** anotar la respuesta en la columna "Respuesta", con quién la dio y la fecha. Si no saben, escribir "No saben" (también sirve).
-3. **Después:** seguir la lista de la sección E para actualizar el proyecto con cada respuesta.
+1. **En la reunión:** usar solo la lista corta de abajo (8 preguntas). Están escritas en palabras simples, sin números ni nombres de la base, para que cualquiera en el hospital pueda
+   contestar aunque sea de forma aproximada. "No sé" o "le pregunto a X" también sirve: anotar quién sabría.
+2. **Antes de la reunión:** si el tiempo es corto, hacer solo las preguntas 1 a 4.
+3. **Después:** seguir la sección E para actualizar el proyecto con cada respuesta.
 
-**Nota para quien pregunte:** el HUN no conoce los nombres que usamos (ER, TU, HOSP). Hablar con los números de la base:
-**9203** (llegada/triage a urgencias), **3045729** (atención en urgencias, "Treatment urgency") y **9201** (hospitalización).
-No compartir identificadores de pacientes ni de visitas en la sesión escrita; si piden ejemplos, usar fechas.
+**Nota para quien pregunte:** el HUN no conoce los nombres que usamos (ER, TU, HOSP). Si piden precisión, hablar con los números de la base:
+**9203** (llegada a urgencias), **3045729** (atención en urgencias) y **9201** (hospitalización). No compartir identificadores de pacientes ni de visitas; si piden ejemplos, usar fechas.
 
 ---
+
+## Lista corta para la reunión (en orden de prioridad)
+
+| # | Pregunta (en palabras simples) | Para qué la necesitamos | Respuesta | Quién y fecha |
+|---|---|---|---|---|
+| 1 | **¿Cuántas camas de hospitalización tiene el hospital, y cuántas camillas o cubículos en urgencias?** (un número aproximado sirve) | Para decir cuántas camas están llenas, en porcentaje. Hoy solo sabemos que se ocupan unas 113 en promedio. | | |
+| 2 | **¿Desde abril de 2026 llegan menos pacientes?** Los datos muestran un 25 a 35 % menos. ¿Cambió algo en el hospital (un servicio cerró, otra sede, otro triage), o puede que a los datos les falten registros de los últimos meses? | Para saber si usamos o descartamos los últimos meses. | | |
+| 3 | **Vemos la misma hospitalización anotada en dos pacientes distintos** (pasa en 4 de cada 10 hospitalizaciones). ¿Saben por qué pasa? ¿Es un error al sacar o anonimizar los datos? | Contamos cada hospitalización una sola vez; queremos confirmar que está bien. | | |
+| 4 | **Cuando un paciente de urgencias queda hospitalizado, ¿se anota en algún sitio a qué hora se decide hospitalizarlo y a qué hora se le asigna la cama?** | Hoy medimos la espera desde que llega hasta que aparece la hospitalización, y no podemos separar atención de espera de cama. | | |
+| 5 | **En el registro de hospitalización, ¿la hora de inicio es cuando se asigna la cama o cuando el paciente llega al piso? ¿Y la hora final es la orden de alta o cuando el paciente sale?** | Más de 6 de cada 10 altas están entre las 2 y las 7 de la tarde y queremos saber qué hora es esa. | | |
+| 6 | **¿Hay horarios o costumbres para dar de alta** (rondas médicas, cierre de facturación, hora en que se entrega la cama)? | Explicaría por qué solo 15 de cada 100 altas son antes del mediodía. | | |
+| 7 | **¿En qué momento se escribe el diagnóstico** (en urgencias, al subir a piso, al dar de alta)? | Los pacientes que esperan más cama casi no tienen diagnóstico anotado; queremos saber si es porque se escribe más tarde. | | |
+| 8 | **¿Hay una meta de tiempo, por ejemplo "cama asignada en X horas"?** ¿Y qué pasó con la estancia, que subió de 4,7 a 5,5 días entre 2023 y 2025: cambió el tipo de pacientes o algún proceso? | La meta sería nuestra referencia de "cuando funciona bien"; lo segundo explica por qué suben las camas ocupadas. | | |
+
+**Preguntas que también pueden contestar los organizadores u otros equipos** (no son del hospital):
+
+| # | Pregunta | Respuesta | Quién y fecha |
+|---|---|---|---|
+| 9 | ¿Hay una rúbrica de evaluación? ¿Cuál es la fecha límite exacta de entrega? | | |
+| 10 | ¿El repositorio de GitHub debe ser público? ¿Podemos publicar gráficos y cifras resumidas (no datos de pacientes)? | | |
+| 11 | ¿El dashboard de Power BI puede usar tablas resumidas en vez de una fila por paciente? ¿Cómo se comparte el enlace? | | |
+| 12 | ¿Alguien sabe si hay una versión más completa de la base (con servicio o piso, signos vitales, fecha de los procedimientos)? | | |
+
+---
+
+# Referencia técnica del equipo (no se lee en la reunión)
+
+Las preguntas 1 a 8 de arriba resumen las siguientes del detalle: 1 = A1; 2 = A2; 3 = A3; 4 = A4 y B2; 5 = A5; 6 = B8; 7 = B9; 8 = B3 y B4.
+9 a 12 = D1, D2, D3 y C2/C5. Los códigos A1 a D3 se usan en otros documentos del repositorio (`powerbi/`, `docs/`).
 
 ## A. Imprescindibles (cambian las conclusiones)
 
@@ -64,12 +93,14 @@ No compartir identificadores de pacientes ni de visitas en la sesión escrita; s
 
 | Si responden... | Actualizar |
 |---|---|
-| A1 (camas) | `docs/HALLAZGOS.md` 4.6 y 5.2, `docs/recomendaciones.md` (quitar "capacidad desconocida"); calcular % de ocupación y días saturados en `src/simulacion_altas.py` y `src/alertas.py` |
-| A2 (caída de llegadas) | `CLAUDE.md` (aviso de la sección 2), si es de registro: excluir los meses afectados en `src/` y repetir pronóstico y alertas |
-| A3 (gemelas) | `CLAUDE.md` 4.6; si dicen cuál es la persona real, ajustar la regla de qué episodio se conserva en `src/analisis_etapas.py` |
-| A4, A5 (etapas) | Reescribir la definición de espera de cama en `docs/plan_de_accion.md` sección 0 y repetir `src/construir_segmentos.py` y `src/ranking_cuellos.py` |
-| B3 (meta) | Agregar la referencia (c) en `src/ranking_cuellos.py` |
-| B5 (días extremos) | Marcar esos días como fallas de datos en `docs/dias_atipicos.md` |
+| 1 / A1 (camas) | `docs/HALLAZGOS.md` 4.6 y 5.2, `docs/recomendaciones.md` (quitar "capacidad desconocida"); calcular % de ocupación y días saturados en `src/simulacion_altas.py` y `src/alertas.py` |
+| 2 / A2 (caída de llegadas) | `CLAUDE.md` (aviso de la sección 2), si es de registro: excluir los meses afectados en `src/` y repetir pronóstico y alertas |
+| 3 / A3 (gemelas) | `CLAUDE.md` 4.6; si dicen cuál es la persona real, ajustar la regla de qué episodio se conserva en `src/analisis_etapas.py` |
+| 4 y 5 / A4, A5 (etapas) | Reescribir la definición de espera de cama en `docs/plan_de_accion.md` sección 0 y repetir `src/construir_segmentos.py` y `src/ranking_cuellos.py` |
+| 8 / B3 (meta) | Agregar la referencia (c) en `src/ranking_cuellos.py` |
+| 7 / B9 (cuándo se registra el diagnóstico) | Ajustar `docs/diagnosticos_y_tiempos.md` y la advertencia de sesgo en `docs/HALLAZGOS.md` 4.5b |
+| 6 / B8 (horario de altas) | Matizar la explicación de altas tardías en `docs/recomendaciones.md` |
+| B5 (días extremos, solo si se pregunta) | Marcar esos días como fallas de datos en `docs/dias_atipicos.md` |
 | Cualquiera | Anotar la respuesta arriba, mover la pregunta en `CLAUDE.md` sección 8 a "respondida" y quitar el supuesto correspondiente de `docs/HALLAZGOS.md` sección 7 |
 
 ## Notas libres de la sesión
