@@ -1,4 +1,4 @@
-# Diagnósticos y tiempos de atención (tarea A3, 26-oct-2026)
+# Diagnósticos y tiempos de atención (tarea A3, 26-oct-2026; recalculado el 29-oct con la regla de estancia única nueva)
 
 **Qué pide el instructivo:** usar `CONDITION_OCCURRENCE` y `PROCEDURE_OCCURRENCE` para "analizar diagnósticos y procedimientos asociados a los tiempos de atención y la complejidad
 clínica de las visitas", y entender "qué características están asociadas a retrasos". Esta tarea lo hace por **grupo de diagnóstico**.
@@ -10,46 +10,60 @@ Código: `src/generar_borrador_mapeo_dx.py` (agrupación) y `src/diagnosticos_y_
 - Es un **borrador por reglas**, revisado a mano en los 300 más frecuentes (85 % de los episodios con diagnóstico). Falta que alguien del área de salud lo valide. Correcciones: `datos/referencia/mapeo_dx_correcciones.csv`.
 - Diagnóstico principal = primer diagnóstico traducido por fecha (no sabemos cuál es el principal real: `condition_type_concept_id` siempre vale 0).
 
-## 2. Primero la advertencia: el diagnóstico se registra más cuando la cama llega rápido
-Entre los hospitalizados (estancias únicas con espera medida), tiene diagnóstico traducido:
+## 2. Qué estancia en cama se conserva (cambio del 29-oct-2026) y el sesgo del diagnóstico
+La misma estancia en cama aparece en dos registros (estancias gemelas, `CLAUDE.md` 4.6). El HUN confirmó en la sesión del 29-oct que lo más probable es que sean **duplicados** y que hay que quedarse con
+el registro que trae la información clínica. Antes se conservaba el de menor `visit_occurrence_id`, que casi nunca era el que tenía diagnóstico (solo 163 de los 6.414 pares en que uno solo lo tenía).
+Ahora `preparar_variables.py` (v2.2, sección 4b) conserva el que tiene **más tipos de información** (diagnóstico, procedimiento, laboratorio), y si le falta algo lo **hereda del gemelo** (los dos se reparten la
+información: uno trae diagnósticos y laboratorios, el otro procedimientos). Edad, sexo y `person_id` son los del registro conservado. `FUSIONAR_INFO=0` desactiva la herencia.
+
+| Estancias únicas (27.956) | Regla anterior (id menor) | Regla nueva |
+|---|---|---|
+| Con diagnóstico | 38,3 % | **61,2 %** |
+| Con laboratorio | 44,6 % | **65,4 %** |
+| Con procedimiento | 86,7 % | 87,1 % |
+| Espera de cama mediana | 17,99 h | 18,10 h (la espera se mide en el registro conservado; difiere unos minutos del gemelo) |
+
+Los tiempos, ingresos y camas no cambian (la estancia es la misma). Cambia quién describe al paciente.
+
+**El sesgo de registro casi desapareció.** Porcentaje de hospitalizados con diagnóstico según su espera (`dx_registrado_segun_espera.csv`):
 
 | Espera de cama | 0–3 h | 3–6 h | 6–12 h | 12–24 h | 24–48 h | 48–72 h | más de 72 h |
 |---|---|---|---|---|---|---|---|
-| % con diagnóstico | 60,5 | 60,2 | 43,3 | 34,4 | 27,5 | 29,0 | 27,5 |
+| Regla anterior | 60,5 | 60,2 | 43,3 | 34,4 | 27,5 | 29,0 | 27,5 |
+| **Regla nueva** | 63,4 | 67,0 | 56,3 | 56,9 | 61,0 | 67,1 | 69,3 |
 
-(`dx_registrado_segun_espera.csv`.) La espera mediana con diagnóstico es 10,2 h y sin diagnóstico 24,5 h. Consecuencias:
-1. **Los grupos de diagnóstico no representan a todos los hospitalizados:** solo el 38,3 % de los hospitalizados y el 20,4 % de los demás tiene diagnóstico traducido, y quien lo tiene
-   tiende a haber esperado menos. Los niveles absolutos de espera por grupo están subestimados; solo son comparables **entre grupos, dentro de quienes tienen diagnóstico**.
-2. El "diagnóstico explica 3,9 puntos de R²" de `HALLAZGOS.md` 4.5 está en parte inflado por este efecto (tener diagnóstico ya se asocia a esperar menos). No es una causa.
-3. **Pregunta nueva al HUN (B9):** ¿cuándo y dónde se registra el diagnóstico (en urgencias, al ingresar a piso, al alta)? Si es al llegar a piso, quien espera más tiempo en urgencias
-   simplemente no lo tiene aún.
+La espera mediana con diagnóstico es 19,4 h y sin diagnóstico 16,4 h (antes 10,2 y 24,5): el sesgo hacia esperas cortas ya no está. Como los diagnósticos de los dos registros se unen, **el diagnóstico de
+una estancia puede ser de la otra persona** (prueba del 20-oct): se asume que son duplicados, como dijo el HUN. Falta aún el 39 % de los hospitalizados sin diagnóstico traducido y el 80 % de los no hospitalizados.
+**Pregunta B9 (cuándo se registra el diagnóstico)** sigue sin respuesta y no habrá más sesiones: se declara como limitación.
 
-## 3. Qué grupos esperan más cama (dentro de quienes tienen diagnóstico)
-Mediana de espera de cama (h) y estancia en cama (h), solo grupos con n ≥ 30 (todos cumplen). Referencia: hospitalizados con diagnóstico, espera 10,2 h y estancia 69,2 h.
+## 3. Qué grupos esperan más cama (entre quienes tienen diagnóstico)
+Mediana de espera de cama (h) y estancia en cama (h), solo grupos con n ≥ 30. Referencia: hospitalizados con diagnóstico, espera 19,4 h y estancia 70,9 h.
 
 | Grupo | Hospitalizados con espera medida | Espera mediana | Espera p90 | Estancia mediana | Estancia p90 |
 |---|---|---|---|---|---|
-| Musculoesquelético y dolor | 233 | **32,0** | 91,0 | 95,5 | 346 |
-| Cáncer y tumores | 150 | 23,7 | 90,5 | 113,1 | 503 |
-| Renal y urinario | 873 | 22,9 | 80,7 | 70,2 | 222 |
-| Digestivo | 1.235 | 22,2 | 63,8 | 71,2 | 259 |
-| Trauma y lesiones | 1.198 | 18,0 | 55,2 | 48,1 | 207 |
-| Embarazo, parto y ginecología | 768 | 12,9 | 37,0 | 48,2 | 165 |
-| Salud mental | 450 | 9,8 | 58,9 | 68,4 | 379 |
-| Infecciosas | 748 | 8,5 | 73,3 | 85,4 | 352 |
-| Respiratorio | 1.069 | 6,8 | 34,1 | 66,0 | 222 |
-| Neurológico | 560 | **3,8** | 47,4 | 87,1 | 395 |
-| Cardiovascular | 1.694 | **3,8** | 39,6 | 77,7 | 274 |
+| Musculoesquelético y dolor | 436 | **38,9** | 109,3 | 114,5 | 386 |
+| Renal y urinario | 1.610 | 34,9 | 95,5 | 70,6 | 230 |
+| Cáncer y tumores | 256 | 33,0 | 107,7 | 115,2 | 489 |
+| Digestivo | 2.404 | 29,1 | 77,6 | 87,8 | 261 |
+| Trauma y lesiones | 1.707 | 23,5 | 73,1 | 53,3 | 227 |
+| Infecciosas | 1.111 | 18,3 | 115,8 | 97,3 | 404 |
+| Embarazo, parto y ginecología | 2.220 | 15,8 | 38,1 | 46,6 | 125 |
+| Salud mental | 541 | 13,3 | 80,5 | 72,3 | 405 |
+| Respiratorio | 1.330 | 8,9 | 61,8 | 70,8 | 283 |
+| Neurológico | 756 | 9,4 | 60,6 | 91,7 | 389 |
+| Cardiovascular | 2.370 | **9,4** | 57,1 | 80,5 | 283 |
 
-- **El patrón es fuerte y se mantiene con controles.** Con tipo de visita, franja horaria de llegada, año y edad en el modelo (sobre log(espera + 1), `efecto_dx_espera.csv`),
-  frente a Digestivo: Cardiovascular −71 % (IC 95 %: −73 a −69), Neurológico −66 %, Respiratorio −42 %; Renal y urinario +14 % (+4 a +26) y Musculoesquelético +28 % (+10 a +49).
-  El grupo de diagnóstico sube el R² de 5,5 % a 18,0 % (solo entre quienes tienen diagnóstico). Es estable por año: urgentes (cardiovascular, neurológico, respiratorio) 4,7–5,6 h
-  todos los años; quirúrgicos y urológicos (musculoesquelético, renal, digestivo, cáncer) 21–27 h.
-- **Lectura posible (hipótesis, sin comprobar):** quien llega con infarto, ACV o dificultad respiratoria recibe cama en pocas horas (prioridad clínica), y la espera larga se concentra
-  en pacientes de **cirugía, urología y ortopedia** (cólico renal 35 h, apendicitis 22 h). Eso apunta a una cola por tipo de cama o servicio, no a una cola general. No tenemos servicio, piso ni cama
-  en la base (pregunta C3 al HUN), así que no se puede confirmar.
-- **Estancia:** las más largas son las de cáncer (113 h), recién nacido (137 h), endocrino (114 h) y musculoesquelético (95 h); las más cortas, trauma y embarazo (48 h). Sepsis (176 h, p90 de 555 h), ACV (101 h)
-  e insuficiencia cardiaca (98 h) están entre los diagnósticos frecuentes con estancias largas (`tiempos_por_dx_detalle.csv`).
+(Las tablas completas, con los 18 grupos, están en `tiempos_por_dx.csv`.)
+
+- **El patrón se mantiene con controles.** Con tipo de visita, franja horaria, año y edad en el modelo (sobre log(espera + 1), `efecto_dx_espera.csv`), frente a Digestivo: Cardiovascular −67 % (IC 95 %: −69 a −65),
+  Neurológico −61 %, Respiratorio −37 %; Renal y urinario +15 % (+7 a +23) y Musculoesquelético +23 % (+10 a +37). El grupo de diagnóstico sube el R² de 8,5 % a 18,7 % (solo entre quienes tienen diagnóstico).
+  Es estable por año: urgentes (cardiovascular, neurológico, respiratorio) 6,5–9,8 h; quirúrgicos y urológicos (musculoesquelético, renal, digestivo, cáncer) 29–36 h.
+- **Cambió con la regla nueva:** los grupos "urgentes" esperan unas 9 h (antes 4 h) y los demás 29–39 h (antes 22–32 h). Las cifras anteriores estaban sesgadas hacia quien recibía cama rápido. El orden de los grupos casi no cambió.
+- **Lectura posible (hipótesis, sin comprobar):** quien llega con infarto, ACV o dificultad respiratoria recibe cama más rápido (prioridad clínica), y la espera larga se concentra en pacientes de **cirugía, urología y
+  ortopedia** (cólico renal 40 h, colecistitis 38–42 h). Eso apunta a una cola por tipo de cama o servicio, no a una cola general. No tenemos servicio, piso ni cama en la base, y no habrá más sesiones
+  con el HUN para confirmarlo.
+- **Estancia:** las más largas son las de recién nacido (136 h, solo 42 casos), cáncer (115 h), endocrino (118 h) y musculoesquelético (115 h); las más cortas, embarazo (47 h), trauma (53 h) y dolor/síntomas (53 h). Sepsis (190 h, p90 de 597 h)
+  y colecistitis (137–142 h) están entre los diagnósticos frecuentes con estancias largas (`tiempos_por_dx_detalle.csv`).
 - **Embarazo/parto y recién nacido** tienen una estancia corta y espera baja: seguramente son otro flujo (obstetricia), no comparable con medicina interna.
 
 ## 4. Urgencias sin hospitalización y complejidad
@@ -64,4 +78,4 @@ Mediana de espera de cama (h) y estancia en cama (h), solo grupos con n ≥ 30 (
 - **Para A2b (estancias que se disparan):** la extracción de diagnósticos por visita con `person_id` igual al de la visita (`sql/estancias_perfil.sql`) también ayudará a ver si el registro tardío cambia el panorama.
 
 ## 6. Límites
-Asociación, no causa. Grupos por palabras clave (sin validación clínica). Cobertura de diagnóstico del 38 % en hospitalizados, con sesgo hacia esperas cortas. Diagnóstico principal elegido por fecha, no por el hospital.
+Asociación, no causa. Grupos por palabras clave (sin validación clínica). Cobertura de diagnóstico del 61 % en hospitalizados (se unió la información de los dos registros duplicados; el diagnóstico puede ser de la otra persona). Diagnóstico principal elegido por fecha, no por el hospital.

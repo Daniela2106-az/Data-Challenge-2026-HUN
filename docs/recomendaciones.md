@@ -4,8 +4,8 @@ Borrador de Daniela con Claude para que Persona 3 lo revise y lo amplíe (ficha 
 Cada recomendación dice qué cambiar, qué muestran **nuestros datos**, qué dice la **literatura**, cómo medirla y cuánto se puede
 esperar de ella. Detalle de métodos y limitaciones: `CLAUDE.md`, secciones 4.6 y 6b.
 
-**Cómo leerlo.** Todo lo que sigue son **asociaciones y escenarios con supuestos escritos**, no causas probadas. No tenemos el
-número de camas del hospital ni el motivo clínico de cada espera. Donde un efecto no se puede calcular, se dice.
+**Cómo leerlo.** Todo lo que sigue son **asociaciones y escenarios con supuestos escritos**, no causas probadas. El HUN dio
+su número de camas el 29-oct (106 y 58 camillas), pero nuestra ocupación lo supera; tampoco tenemos el motivo clínico de cada espera. Donde un efecto no se puede calcular, se dice.
 
 ## 1. Lo que encontramos (con estancias contadas una sola vez)
 
@@ -52,7 +52,7 @@ Valores de partida con nuestros datos:
 | % de pacientes con más de 48 h sin cama | 19 % |
 | % de altas antes del mediodía | 15 % |
 | Hora mediana de asignación de cama | 17–18 h |
-| Camas ocupadas a las 12 h (promedio mar-2023 a abr-2026) | ~115 (`escenario_camas_por_hora.csv`, `simulacion_altas.py`). Ocupación media de todo el día en 2025: 119 |
+| Camas ocupadas a las 12 h (promedio mar-2023 a abr-2026) | ~115 (`escenario_camas_por_hora.csv`, `simulacion_altas.py`). Ocupación media de todo el día en 2025: 119. **Ojo:** el HUN reporta 106 camas de hospitalización (29-oct): nuestra cifra supera la capacidad y se usa solo como medida relativa |
 | Estancia media | 5,46 días (2025) |
 
 ### R3. Reunión diaria de camas con alertas (prioridad 3)
@@ -83,7 +83,7 @@ Valores de partida con nuestros datos:
   ([The Hospitalist](https://www.the-hospitalist.org/hospitalist/article/38356/critical-care/implementing-and-evaluating-a-dbn-initiative-in-a-large-tertiary-care-urban-hospital/)).
   Una revisión describe la evidencia como mixta ([BMC Health Serv Res 2024](https://bmchealthservres.biomedcentral.com/counter/pdf/10.1186/s12913-024-10960-x.pdf)).
 - **Cómo medirla:** % de altas antes de las 12 h; hora mediana de asignación de cama; espera de quien llega de 12 a 18 h.
-- **Límite:** es una cota con supuestos (el alta de los demás pacientes no cambia; no sabemos cuántas camas tiene el hospital). Mejora
+- **Límite:** es una cota con supuestos (el alta de los demás pacientes no cambia; el HUN dijo el 29-oct que tiene 106 camas de hospitalización y 58 camillas de urgencias, y nuestra ocupación estimada, ~115 a las 12 h, las supera: se toma como medida relativa). Mejora
   la **hora** de la cama, no la capacidad.
 
 ### R5. Alerta por paciente a las 48 h sin cama (prioridad 5)
@@ -112,17 +112,17 @@ Valores de partida con nuestros datos:
 - **Límite:** no sabemos por qué subió la estancia (tipo de pacientes, procesos o demoras); requiere revisión clínica.
 
 ## 4. Lo que los datos NO respaldan
-- **"Hacen falta más camas":** no conocemos la capacidad. Además, la espera casi no sube con la ocupación (la carga explica 0,1 punto de
+- **"Hacen falta más camas":** el HUN dice que tiene 106 camas de hospitalización y 58 camillas, pero nuestra ocupación media (112) las supera, así que no se puede afirmar el porcentaje de ocupación. Además, la espera casi no sube con la ocupación (la carga explica 0,1 punto de
   la variación) y la ocupación subió por la estancia, no por la demanda.
 - **Más personal según el día de la semana:** el día de la semana y los festivos casi no cambian la espera.
 - **Priorizar a un paciente concreto por riesgo de esperar:** un modelo con lo que se sabe al llegar acierta apenas mejor que el azar
-  (AUC 0,60) y todos los factores juntos explican solo el 12 % de la variación.
+  (AUC 0,60) y todos los factores juntos explican solo el 14 % de la variación.
 - **Un centro de comando o tablero como solución en sí:** los resultados publicados son sobre todo autoinformados; el estudio con
   diseño controlado que encontramos no halló cambio significativo en la estancia
   (análisis retrospectivo de series de tiempo en [Bradford](https://eprints.whiterose.ac.uk/209410/1/mzad072.pdf)).
 
 ## 5. Qué necesitamos del HUN antes de cerrar
-1. Número de camas de hospitalización por año y meta de tiempo para asignar cama.
+1. ~~Número de camas~~ (contestado el 29-oct: 106 camas y 58 camillas; falta saber desde cuándo) y meta de tiempo para asignar cama (sin respuesta; no habrá más sesiones, se declara como limitación).
 2. Por qué las llegadas bajan desde abril de 2026 (¿cambio real o carga incompleta?).
 3. Dónde está el paciente durante el tiempo sin etapa antes de la cama (~1 de cada 4 hospitalizados) y qué significa esa espera en
    urgencias.

@@ -3,7 +3,7 @@
 Este archivo resume TODO lo que ya se averiguó de la base de datos en semanas de consultas.
 **Léelo completo antes de proponer consultas nuevas.** La base es lenta (consultas pesadas de 10–30 min
 que traban el computador), así que antes de pedir una consulta comprueba aquí si la respuesta ya existe.
-Última actualización: 22-oct-2026. (Cambio del 22-oct: las estancias en cama replicadas entre dos personas se cuentan
+Última actualización: 29-oct-2026 (sección 4.7: respuestas del HUN y regla de estancia única v3.8). (Cambio del 22-oct: las estancias en cama replicadas entre dos personas se cuentan
 una sola vez; ver sección 4.6. Las cifras de espera de cama, ingresos y ocupación anteriores a esa fecha están infladas.)
 
 ## Lee esto primero (si eres un Claude que abre este repositorio por primera vez)
@@ -26,7 +26,7 @@ tener los datos (ver `README.md`, "Cómo reproducirlo"). Nunca pidas ni escribas
 - Distingue **asociación** de **causa** y di siempre la limitación al lado del hallazgo (casi todo son asociaciones y escenarios).
 - **Cifras obsoletas:** las de espera de cama mediana 22,4 h, 27,7 ingresos por día y ~145 camas (secciones 5 y 6 y algunos textos viejos) estaban
   infladas por estancias duplicadas. **Vigentes (22-oct): espera mediana 18 h, ~22 ingresos por día, ~113 camas.**
-- El número de camas, la meta de tiempos y la causa de la caída de llegadas desde abril de 2026 **no se conocen**; el correo al HUN no tuvo respuesta, pero el HUN abrirá una **sesión de preguntas** (se anota en `docs/hun/sesion_de_preguntas.md`).
+- La meta de tiempos y la causa de la caída de llegadas desde abril de 2026 **no se conocen**. El HUN respondió en la sesión del 29-oct: **106 camas, 58 camillas**, la hospitalización se registra al asignar cama, las gemelas son duplicados y hay horarios de alta (sección 4.7). No habrá más sesiones.
 
 **Dónde está cada respuesta:** espera de cama y cuello de botella → `HALLAZGOS.md` 4; altas tardías y factores → 6b; pronóstico y alertas → 6b;
 calidad de datos y duplicados → 4.1 y 4.6; recomendaciones → `docs/recomendaciones.md`; qué falta → sección 9.
@@ -297,6 +297,22 @@ el 1 da contexto y el 4 sale de los dos anteriores.
 
 ---
 
+### 4.7 Sesión con el HUN del 29-oct-2026 y regla de estancia única v3.8 (lo que dijeron y qué cambió)
+Respuestas (tomadas en la reunión, sin documento escrito; no habrá más sesiones):
+- **Camas:** 106 camas de hospitalización (piso y UCI: Adultos 64, Pediátrica 8, TPR 4, Intermedia Adultos 6, Intensiva Adultos 14, incubadoras neonatales 6 + 3 + 1) y **58 camillas de urgencias**
+  (Observación Pediátrica 14, Adultos Hombres 18, Adultos Mujeres 26; primero dijeron 68 y corrigieron). No dijeron a qué fecha corresponde la lista.
+- **Cuándo se registra la hospitalización (9201):** cuando **se asigna la cama**; el traslado físico tarda solo un par de minutos. Nuestra "espera de cama" es, por tanto, llegada hasta asignación de cama
+  (sigue sin poder separarse la atención clínica de la espera de cama dentro de urgencias).
+- **Estancias gemelas:** "lo más probable es que sean duplicados"; elegir el registro que tenga la información clínica (condición, procedimiento, etc.).
+- **Altas:** sí hay horarios y costumbres para dar de alta (consistente con el 61,5 % de altas entre las 14:00 y las 18:59; no dieron más detalle).
+- **Choque con nuestros datos:** la ocupación estimada (media 112 en HOSP, 110 en TU) supera las 106 camas y las 58 camillas (HOSP > 106 en el 72 % de las horas; TU > 58 en el 97 %). Como la hospitalización se
+  registra al asignar la cama, no se explica por pacientes que siguen esperando en urgencias. Quedan: duplicados no detectados, más camas en el pasado o que HOSP/TU incluyan espacios que no son camas ni camillas.
+  Se declara como limitación: no presentar una ocupación mayor de 100 % como real. Los pacientes en TU incluyen sillas y consultorios, no solo camillas.
+- **Regla v3.8 (29-oct, `preparar_variables.py` v2.2, sección 4b):** de cada estancia gemela se conserva el registro con más tipos de información (diagnóstico, procedimiento, laboratorio) y recibe lo que le falte del gemelo
+  (`FUSIONAR_INFO=0` lo desactiva). Antes: el de menor `visit_occurrence_id`, que solo tenía diagnóstico en 163 de 6.414 pares en que uno solo lo tenía. Efecto: con diagnóstico 38,3 % → 61,2 % de las estancias, con laboratorio
+  44,6 % → 65,4 %, espera mediana 17,99 → 18,10 h; ingresos, camas y panel diario no cambian; R² de la espera 12 % → 13,8 %. Advertencia: el diagnóstico puede ser de la otra persona del par. `exportar_para_equipo.py` usa la marca
+  `estancia_unica` de `tabla_episodios`; `construir_segmentos.py` (cuellos de botella) sigue con el de id menor porque solo usa tiempos.
+
 ## 5. Decisiones de método (ya tomadas, no reabrir sin un motivo nuevo)
 
 1. Unidad de análisis: **episodio** = atención continua de un paciente dentro de una visita
@@ -406,10 +422,10 @@ el 1 da contexto y el 4 sale de los dos anteriores.
   72 %. Los ingresos a cama siguen a las altas en la misma hora (correlación cruzada 0,17 sin el patrón horario). La prueba a nivel
   diario del 21-oct fallaba porque el mecanismo es dentro del día. Asociación, no causa: el efecto de adelantar altas se
   estima en la simulación de camas (Fase 6).
-- **Factores de la espera** (modelo sobre log(espera+1), R² = 12 %: casi toda la variación no se explica con lo observado):
-  diagnóstico 3,9 puntos de R² (ojo: depende de si hay diagnóstico traducido, dato administrativo y registrado tarde), tipo de
-  visita 2,3 (quien entra por urgencias espera más: ambulatorio −39 %, treatment urgency −42 %), edad y sexo 1,2, hora 0,6,
-  laboratorios de 6 h 0,4, año 0,2, carga 0,1, calendario ~0.
+- **Factores de la espera** (modelo sobre log(espera+1), R² = 13,8 % tras la regla de estancia única del 29-oct: casi toda la variación no se explica con lo observado):
+  diagnóstico 6,4 puntos de R² (ojo: dato administrativo, registrado tarde y que puede venir del registro gemelo), edad y sexo 3,5, tipo de
+  visita 1,6 (quien entra por urgencias espera más: ambulatorio −31 %, treatment urgency −39 %), hora 0,7,
+  año, carga y laboratorios de 6 h 0,1 cada uno, calendario ~0.
 - **Ocupación y escenario de altas (Fase 6, `simulacion_altas.py`):**
   - La ocupación sube de 105 camas (2023) a 119 (2025) y 117 (ene–abr 2026); es **por la estancia** (media de 4,70 a 5,46
     días, +16 %), no por más ingresos (22,3 → 21,7 por día; 20,4 en ene–abr 2026). Con Little: volver a la estancia de 2023

@@ -249,6 +249,73 @@ if ep.n_lab_6h.isna().all():
     print("AVISO: laboratorios_por_visita.csv no trae n_lab_6h; corre la consulta 4 nueva de consultas_semana1.sql.")
 
 # ----------------------------------------------------------------------
+# 4b) v2.2: de cada estancia gemela se conserva el registro con MAS informacion clinica
+# ----------------------------------------------------------------------
+# El HUN (29-oct-2026) dijo que lo mas probable es que sean duplicados y que se elija el que trae la informacion del paciente
+# (diagnosticos, procedimientos, laboratorios). Antes se elegia el de menor visit_occurrence_id, que casi nunca era el que la
+# tenia (solo 163 de 6.414 pares en que uno solo tenia diagnostico). Criterio: 1) cuantos tipos de informacion tiene
+# (diagnostico, procedimiento, laboratorio), 2) cuanta cantidad distinta suma, 3) menor visit_occurrence_id.
+# Los tiempos, camas e ingresos no cambian (la estancia es la misma); cambia quien describe al paciente.
+# OJO: el registro con informacion puede traer diagnosticos de las dos personas (prueba del 20-oct); se asume que son duplicados.
+titulo("4b. ESTANCIA UNICA: SE CONSERVA EL REGISTRO CON MAS INFORMACION")
+ep["estancia_unica_id_menor"] = ep.estancia_unica          # regla anterior, para comparar
+_esp_antes = ep[ep.hospitalizado & ep.estancia_unica].espera_cama_h.median()
+_h = ep[ep.ini_hosp.notna()].copy()
+_h["_tipos"] = ((_h.n_dx_distintos.fillna(0) > 0).astype(int) + (_h.n_proc_distintos.fillna(0) > 0).astype(int)
+                + (_h.n_lab.fillna(0) > 0).astype(int))
+_h["_cant"] = _h.n_dx_distintos.fillna(0) + _h.n_proc_distintos.fillna(0) + _h.n_lab_distintos.fillna(0)
+_h = _h.sort_values(["ini_hosp", "fin_hosp", "_tipos", "_cant", "visit_occurrence_id"],
+                    ascending=[True, True, False, False, True])
+_nuevo = ~_h.duplicated(["ini_hosp", "fin_hosp"], keep="first")
+ep.loc[_nuevo.index, "estancia_unica"] = _nuevo
+cambia_a = ep.estancia_unica & ~ep.estancia_unica_id_menor      # pasan a ser el registro conservado
+cambia_de = ~ep.estancia_unica & ep.estancia_unica_id_menor     # dejan de serlo
+# la espera de cama solo se guarda en el registro conservado (misma definicion: inicio de la cama menos la llegada)
+# solo donde el registro anterior tenia la espera medida (asi los conteos y los controles no cambian)
+_vieja = ep[cambia_de & ep.espera_cama_h.notna()]
+_llaves = pd.MultiIndex.from_frame(_vieja[["ini_hosp", "fin_hosp"]])
+_ok = cambia_a & ep.con_tiempo & ~ep.error_probable & pd.MultiIndex.from_frame(ep[["ini_hosp", "fin_hosp"]]).isin(_llaves)
+ep.loc[_ok, "espera_cama_h"] = (ep.ini_hosp - ep.ini).dt.total_seconds()[_ok] / 3600
+_hueco = _vieja.set_index(["ini_hosp", "fin_hosp"]).hueco_antes_hosp_h
+_hueco = _hueco[~_hueco.index.duplicated()]
+_idx = pd.MultiIndex.from_frame(ep.loc[_ok, ["ini_hosp", "fin_hosp"]])
+ep.loc[_ok, "hueco_antes_hosp_h"] = _hueco.reindex(_idx).values
+ep.loc[cambia_de, ["espera_cama_h", "hueco_antes_hosp_h"]] = np.nan
+_col = f"espera_mas_{UMBRAL_ESPERA_H}h"
+ep[_col] = np.where(ep.espera_cama_h.notna(), (ep.espera_cama_h > UMBRAL_ESPERA_H).astype(float), np.nan)
+# Fusion: los dos registros suelen repartirse la informacion (uno trae diagnosticos y laboratorios, el otro procedimientos).
+# Como se asume que son la misma atencion duplicada, el registro conservado hereda lo que le falte del otro: el mayor conteo
+# de procedimientos y laboratorios y, si no tiene diagnostico, el del gemelo. Edad, sexo y person_id son los del conservado.
+# FUSIONAR_INFO = False deja solo lo propio del registro conservado.
+FUSIONAR_INFO = os.environ.get("FUSIONAR_INFO", "1") != "0"
+if FUSIONAR_INFO:
+    _ix = ep.index[ep.ini_hosp.notna()]
+    _g = ep.loc[_ix].groupby(["ini_hosp", "fin_hosp"])
+    for _c in ["n_proc_distintos", "n_lab", "n_lab_distintos", "n_lab_6h", "n_lab_antes_hosp"]:
+        _m = _g[_c].transform("max")
+        _quedan = ep.loc[_ix, "estancia_unica"]
+        ep.loc[_ix[_quedan.values], _c] = _m[_quedan.values]
+    _cols_dx = ["dx_concept_id", "dx_nombre", "dx_vocabulario", "categoria_dx", "n_dx_distintos"]
+    _don = (ep.loc[_ix][ep.loc[_ix, "n_dx_distintos"] > 0]
+            .sort_values(["ini_hosp", "fin_hosp", "n_dx_distintos", "visit_occurrence_id"], ascending=[True, True, False, True])
+            .drop_duplicates(["ini_hosp", "fin_hosp"]).set_index(["ini_hosp", "fin_hosp"])[_cols_dx])
+    _falta = ep.estancia_unica & ep.ini_hosp.notna() & (ep.n_dx_distintos == 0)
+    _k = pd.MultiIndex.from_frame(ep.loc[_falta, ["ini_hosp", "fin_hosp"]])
+    _rell = _don.reindex(_k)
+    for _c in _cols_dx:
+        ep.loc[_falta, _c] = _rell[_c].values
+    ep["categoria_dx"] = ep.categoria_dx.fillna("Sin diagnostico")
+    ep["n_dx_distintos"] = ep.n_dx_distintos.fillna(0)
+    print(f"fusion: el registro conservado hereda la informacion que le falta del gemelo (FUSIONAR_INFO={FUSIONAR_INFO})")
+_u = ep[ep.hospitalizado & ep.estancia_unica]
+_v = ep[ep.hospitalizado & ep.estancia_unica_id_menor]
+print(f"estancias unicas: {len(_u)} (iguales a antes en numero: {len(_v)}); el registro conservado cambio en {int(cambia_a.sum())}")
+print(f"  con diagnostico: {(_u.n_dx_distintos > 0).mean():.1%} (regla id menor: {(_v.n_dx_distintos > 0).mean():.1%})")
+print(f"  con procedimiento: {(_u.n_proc_distintos > 0).mean():.1%} (antes {(_v.n_proc_distintos > 0).mean():.1%}) | "
+      f"con laboratorio: {(_u.n_lab > 0).mean():.1%} (antes {(_v.n_lab > 0).mean():.1%})")
+print(f"  espera de cama mediana: {_u.espera_cama_h.median():.2f} h (antes {_esp_antes:.2f}); n = {int(_u.espera_cama_h.notna().sum())}")
+
+# ----------------------------------------------------------------------
 # 5) Ocupacion del hospital en el momento de la llegada
 # ----------------------------------------------------------------------
 bl = pd.read_csv(PROC / "bloques.csv", parse_dates=["ini", "fin"])

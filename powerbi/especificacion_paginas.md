@@ -27,7 +27,7 @@ título = conclusión; tema `tema.json`; azul = espera, naranja = referencia o e
 - Histograma: tramos de `bi_estancias[espera_h]` (0–6, 6–12, 12–24, 24–48, 48–72, >72) con `[Estancias]`.
 - Líneas/columnas: por `bi_estancias[hora_llegada]` `[Espera mediana h]` y `[Espera p90 h]`; segunda vista `asignacion_cama_por_hora_llegada[pct_cama_dia_siguiente_o_mas]` (tarde ≈ la mitad recibe cama al día siguiente).
 - Barras: por `grupo_edad` y `tipo_visita`. Apiladas: `[Horas urgencias]` vs `[Horas hueco]` (77 % / 23 %).
-- Barras horizontales: `importancia_factores[perdida_r2_si_se_quita]` por `factor`. **Nota fija obligatoria:** «Asociación, no causa. Los factores explican solo el 12 % de la variación».
+- Barras horizontales: `importancia_factores[perdida_r2_si_se_quita]` por `factor`. **Nota fija obligatoria:** «Asociación, no causa. Los factores explican solo el 14 % de la variación».
 - A4 (Anthony) puede reemplazar el modelo explicativo: ESPERA, no inventar.
 
 ## Página 5 — «Las altas tardías y la estancia sostienen el cuello de botella» — LISTO
@@ -50,7 +50,7 @@ título = conclusión; tema `tema.json`; azul = espera, naranja = referencia o e
 
 ## Página 8 — «Estimador de espera» (A6, Samuel) — ESPERA (diseño propio)
 - Elegir hora de llegada, grupo de edad y tipo de visita; mostrar p25, mediana, p75, p90 con `[Estancias]`. Si n < 30 mostrar «datos insuficientes».
-- Advertencia fija: «Rango típico de pacientes parecidos, no una predicción individual (el R² de los factores es 12 %)».
+- Advertencia fija: «Rango típico de pacientes parecidos, no una predicción individual (el R² de los factores es 14 %)».
 - Depende de la definición final de A6; construirla al final.
 
 ## Página 9 — «Qué se hace con esto» (recomendaciones) — ESPERA (B2)

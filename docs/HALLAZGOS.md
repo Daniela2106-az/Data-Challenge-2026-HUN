@@ -27,7 +27,7 @@ señala qué script o consulta la produciría. Distingue siempre *asociación* d
 8. **La ocupación sube por la estancia, no por la demanda:** camas ocupadas de 105 (2023) a 119 (2025); estancia media de 4,70 a
    5,46 días (+16 %); ingresos estables en ~22 por día.
 9. **La carga del momento explica poco:** cada decil más de llegadas sube la espera ~2,5 %; la ocupación y el día de la semana casi
-   no importan. Todos los factores observables juntos explican solo el 12 % de la variación de la espera.
+   no importan. Todos los factores observables juntos explican solo el 14 % de la variación de la espera.
 10. **Se puede pronosticar la demanda:** llegadas por día con error de **7,5 %** a 1 día (mejora a las referencias simples);
     los ingresos diarios no (es ruido de conteo), pero por semana el error baja a **9,5 %**.
 11. **Alertas probadas sobre días pasados:** la de "día congestionado" a las 12 h detecta 83 % de esos días (precisión 54 %); una alerta
@@ -147,14 +147,14 @@ En may–jul 2026 la mediana sube a 24 h mientras llegan 25 % menos pacientes (n
   relación no aparece: el mecanismo es dentro del día.
 - **El orden de llegada casi no predice el orden de cama** (53 % de pares consecutivos en orden; el azar sería 50 %).
 
-### 4.5 Qué explica la espera (modelo sobre log(espera + 1), R² = 12 %)
-Pérdida de R² al quitar cada factor: diagnóstico 3,9 puntos (ojo: es en parte un dato administrativo), tipo de visita 2,3 (por urgencias se
-espera más: ambulatorio −39 %, treatment urgency −42 %), edad y sexo 1,2, hora de llegada 0,6, laboratorios de 6 h 0,4, año 0,2, carga 0,1,
-calendario ~0. **El 88 % de la variación no se explica con lo que se observa.** Un modelo "al llegar" para predecir si un paciente esperará
+### 4.5 Qué explica la espera (modelo sobre log(espera + 1), R² = 13,8 %; recalculado el 29-oct con la regla de estancia única nueva)
+Pérdida de R² al quitar cada factor: diagnóstico 6,4 puntos (ojo: es en parte un dato administrativo; antes 3,9 con solo 38 % de cobertura), edad y sexo 3,5, tipo de visita 1,6 (por urgencias se
+espera más: ambulatorio −31 %, treatment urgency −39 %), hora de llegada 0,7, año 0,1, carga 0,1, laboratorios de 6 h 0,1,
+calendario ~0. **El 86 % de la variación no se explica con lo que se observa.** Un modelo "al llegar" para predecir si un paciente esperará
 más de 24 h tiene AUC de 0,60: no sirve para alertar a un paciente individual.
 
 ### 4.5b Espera y estancia por grupo de diagnóstico (`docs/diagnosticos_y_tiempos.md`)
-Dentro de los hospitalizados con diagnóstico traducido (38 %), esperan cama ~4 h cardiovascular y neurológico y 22–32 h musculoesquelético, renal, digestivo y cáncer; el patrón sigue tras controlar tipo de visita, hora, año y edad (cardiovascular −71 %, IC 95 % −73 a −69, frente a digestivo) y es estable por año. **Advertencia:** el diagnóstico se registra más cuando la cama llega rápido (60 % con diagnóstico si espera ≤ 6 h; 27 % si espera > 24 h), así que los grupos no representan a todos y no es causa. Hipótesis sin comprobar: la espera larga se concentra en cirugía, urología y ortopedia (sin dato de servicio).
+Dentro de los hospitalizados con diagnóstico traducido (61 %, después de quedarse con el registro más completo de cada estancia gemela, 29-oct), esperan cama ~9 h cardiovascular, neurológico y respiratorio y 29–39 h musculoesquelético, renal, cáncer y digestivo; el patrón sigue tras controlar tipo de visita, hora, año y edad (cardiovascular −67 %, IC 95 % −69 a −65, frente a digestivo) y es estable por año. **Advertencia:** el diagnóstico puede ser de la otra persona del par duplicado y falta en el 39 % de los hospitalizados; antes del cambio el sesgo era fuerte (60 % con diagnóstico si esperaba ≤ 6 h y 27 % si esperaba > 24 h), ahora es de 56–69 % en todos los tramos. No es causa. Hipótesis sin comprobar: la espera larga se concentra en cirugía, urología y ortopedia (sin dato de servicio).
 
 ### 4.6 Ocupación, estancia y escenario de altas
 *Aclaración: lo que aquí se llama "simulación" (`src/simulacion_altas.py`) es un **análisis de escenarios sobre datos históricos** con cotas, no una simulación

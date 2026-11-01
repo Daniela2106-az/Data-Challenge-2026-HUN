@@ -74,7 +74,7 @@ CATALOGO = []
 # 1) Tablas nuevas
 # ----------------------------------------------------------------------
 est = pd.read_csv(PROC / "para_equipo" / "estancias_hospitalizacion.csv", parse_dates=["ingreso_cama", "alta", "llegada"])
-esp = pd.read_csv(PROC / "espera_cama.csv")[K + ["hueco_antes_hosp_h"]]
+esp = pd.read_parquet(PROC / "tabla_episodios.parquet", columns=K + ["hueco_antes_hosp_h"])   # del registro conservado (preparar_variables.py v2.2)
 est = est.merge(esp, on=K, how="left")
 
 b = pd.DataFrame({
@@ -231,7 +231,7 @@ cifras = [
     ("pct_espera_mas_24h", round(100 * (e > 24).mean(), 1), 42.8, 0.3),
     ("pct_espera_mas_48h", round(100 * (e > 48).mean(), 1), 19.4, 0.5),
     ("espera_mediana_h_sin_periodo_caida", round(e_est.median(), 1), 17.8, 0.15),
-    ("espera_p90_h_sin_periodo_caida", round(e_est.quantile(.9), 1), 70.6, 0.3),
+    ("espera_p90_h_sin_periodo_caida", round(e_est.quantile(.9), 1), 70.6, 0.5),
     ("pct_urgencias_de_las_horas_de_espera", round(100 * b.dropna(subset=["espera_h"]).urgencias_antes_h.sum() / e.sum(), 1), 76.6, 0.5),   # pipeline; el calculo con Q3 da 77,2
     ("ingresos_por_dia_panel", round(panel.ingresos_a_cama.mean(), 1), 21.8, 0.2),
     ("ocupacion_media_panel", round(panel.ocup_hosp_media.mean(), 1), 112.5, 0.5),

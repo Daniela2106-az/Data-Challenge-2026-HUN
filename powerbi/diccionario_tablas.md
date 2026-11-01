@@ -22,7 +22,7 @@ Las columnas `*_pct` están en escala 0 a 100. Las duraciones están en **horas*
 - `estancia_h` y `hora_alta` solo existen si el alta es posterior a la extracción de datos (`alta_completa`).
 - `urgencias_antes_h` + `hueco_h` = `espera_h`. Urgencias mezcla atención y espera de cama: no se pueden separar con los datos.
 - `periodo_caida_de_datos = 1` marca llegadas desde el 1-may-2026 (las llegadas bajan 25 a 35 %, posible carga incompleta). Las cifras de control incluyen esas filas; sin ellas la
-  espera mediana es 17,8 h y el percentil 90 es 70,6 h.
+  espera mediana es 17,8–17,9 h y el percentil 90 es 70,6–70,9 h (la diferencia viene de qué registro de cada estancia gemela se conserva; los documentos citan 18,0 y 71,5 de `construir_segmentos.py`, el paquete da 18,1 y 71,6).
 - Filas mezcladas al azar para que no sigan el orden de llegada. Es información sensible: ver `../docs/hun/sesion_de_preguntas.md` (D2 y D3) antes de publicarla.
 - `grupo_edad = "sin dato"` solo aparece en `bi_llegadas` (21 episodios con edad imposible).
 
@@ -44,7 +44,7 @@ Las columnas `*_pct` están en escala 0 a 100. Las duraciones están en **horas*
 | `asignacion_cama_por_hora_llegada.csv` | por hora de llegada: `pct_cama_el_mismo_dia`, `pct_cama_dia_siguiente_o_mas`, `espera_p50_h`, `hora_asignacion_mediana` | 24 |
 | `altas_ingresos_llegadas_por_hora.csv` | `altas_pct`, `ingresos_cama_pct`, `llegadas_pct` por hora | 24 |
 | `acople_altas_ingresos.csv` | ingresos a cama que siguen a una alta extra, por retraso en horas | 7 |
-| `importancia_factores.csv`, `coeficientes_espera_cama.csv` | qué explica la espera (R²) y el efecto de cada nivel (%); **explican solo el 12 %** | 8, 29 |
+| `importancia_factores.csv`, `coeficientes_espera_cama.csv` | qué explica la espera (R²) y el efecto de cada nivel (%); **explican solo el 14 %** | 8, 29 |
 | `sesgo_medicion_urgencias.csv` | quién tiene duración medida en urgencias sin hospitalizar | 22 |
 | `ocupacion_por_anio.csv` | `ingresos_por_dia`, `estancia_media_dias`, `ocupacion_media` e índices (2023 = 100) | 4 |
 | `escenarios_little.csv`, `escenario_altas_antes.csv` | escenarios de camas (ley de Little) y de altas adelantadas (5 puntos) | 5, 5 |

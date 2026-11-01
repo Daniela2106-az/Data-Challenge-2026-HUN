@@ -42,14 +42,14 @@ est = hosp.groupby(K).agg(ingreso_cama=("ini", "min"), alta=("fin", "max"),
 est["alta_completa"] = est.alta < pd.Timestamp(OCUP_HASTA)   # las altas posteriores quedan cortadas por la extraccion
 cols = ["ini", "hora", "dia_semana_num", "mes", "festivo", "edad", "grupo_edad", "sexo", "tipo_visita",
         "categoria_dx", "n_lab_6h", "espera_cama_h", "espera_mas_24h", "ocup_hosp", "llegadas_6h_previas",
-        "ocupacion_confiable"]
+        "ocupacion_confiable", "estancia_unica"]
 est = est.merge(ep[K + cols].rename(columns={"ini": "llegada", "hora": "hora_llegada"}), on=K, how="left")
 
 # estancias gemelas: mismo inicio y fin de cama en otro episodio -> se cuenta una vez
 est = est.sort_values(K).reset_index(drop=True)
 est["n_registros"] = est.groupby(LLAVE_ESTANCIA).visit_occurrence_id.transform("size")
 n_antes = len(est)
-est = est[~est.duplicated(LLAVE_ESTANCIA, keep="first")].reset_index(drop=True)
+est = est[est.estancia_unica].reset_index(drop=True)   # v2.1: el registro conservado por preparar_variables.py (el de mas informacion)
 est.to_csv(SALIDA / "estancias_hospitalizacion.csv", index=False)
 
 # ---- panel diario ------------------------------------------------------------------------------

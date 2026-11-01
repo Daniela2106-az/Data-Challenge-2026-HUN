@@ -36,6 +36,7 @@ demanda, alertas, días atípicos, borrador de recomendaciones y un repositorio 
   esperan más y por qué podría ser".
 - **Insumos:** `tabla_episodios.parquet` (filtrar `estancia_unica == True` para espera y estancia), `segmentos.csv`.
 - **Depende de:** A3 para el diagnóstico (se puede empezar sin él).
+- **Cambio del 29-oct:** `tabla_episodios.parquet` ya trae la estancia única con el registro de más información (diagnóstico en 61 % de las estancias, laboratorio en 65 %). Usar el grupo de diagnóstico solo entre quienes lo tienen y reportar la cobertura. Edad y sexo son los del registro conservado (pueden diferir en el gemelo).
 - **Nota de la sugerencia de Anthony (23-oct):** los perfiles también deben servir para A2b y A7: dejar la tabla de perfiles con el mismo identificador de estancia que usará A2b, para poder cruzar "perfil" con "estancia disparada".
 
 ### A2. Factores de la estancia hospitalaria · **Daniela**
@@ -66,20 +67,20 @@ demanda, alertas, días atípicos, borrador de recomendaciones y un repositorio 
   preparar el alta con anticipación en los perfiles de estancia larga), no excluir tipos de pacientes. Los laboratorios sirven como "qué exámenes se pidieron": casi no
   tienen valores numéricos. Todo es asociación, no causa.
 - **Entrega:** se suma a `src/factores_estancia.py` y `docs/factores_estancia.md`, más `sql/estancias_perfil.sql`.
-- **Estado:** anotada, sin empezar. Cuándo hacerla se decide después de A3 y A1.
+- **Estado:** anotada, sin empezar. Cuándo hacerla se decide después de A3 y A1. **Cambio del 29-oct:** el HUN dijo que los gemelos son duplicados y que se conserve el que tiene información; ya se conserva ese. La extracción filtrada por persona (paso 2) sigue sirviendo para saber qué información es propia de cada persona; si no hay tiempo, se asume que los dos registros son la misma atención.
 
 ### A3. Agrupar diagnósticos (`datos/referencia/mapeo_dx.csv`) · **Daniela**
-- **Qué:** los diagnósticos vienen en SNOMED sin jerarquía; agrupar los ~300 más frecuentes (`dx_nombre`, `categoria_dx`). El 62 % de las estancias no tiene
-  diagnóstico traducido y el 88 % se registra tarde: sirve para explicar, no para predecir al llegar.
+- **Qué:** los diagnósticos vienen en SNOMED sin jerarquía; agrupar los ~300 más frecuentes (`dx_nombre`, `categoria_dx`). Con la regla de estancia única del 29-oct (se conserva el registro con más información) el 39 % de las estancias no tiene
+  diagnóstico traducido (antes 62 %) y el 88 % se registra tarde: sirve para explicar, no para predecir al llegar.
 - **Entrega:** `datos/referencia/mapeo_dx.csv` (sí se sube a git: no tiene datos de pacientes). Claude deja el borrador a partir de `dx_frecuencias.csv`; hay que
   revisarlo con el navegador de SNOMED o con alguien del área de salud.
 - **Habilita:** A1, A2 y A4.
 - **Estado (26-oct): HECHA como borrador + análisis.** Mapeo por reglas (`src/generar_borrador_mapeo_dx.py`, 0,9 % sin clasificar) y análisis de tiempos por grupo (`src/diagnosticos_y_tiempos.py`, `docs/diagnosticos_y_tiempos.md`). Hallazgos: cardiovascular y neurológico reciben cama en ~4 h, musculoesquelético, renal, digestivo y cáncer esperan 22–32 h; y el diagnóstico se registra más cuando la cama llega rápido (sesgo; pregunta B9 al HUN). **Falta:** validación clínica del mapeo por alguien del área de salud.
 
 ### A4. Explicar mejor los retrasos (modelo explicativo de la espera) · **Anthony**
-- **Qué pide el instructivo:** "qué características están asociadas a retrasos". Hoy todos los factores juntos explican solo el **12 %** de la variación de la espera.
+- **Qué pide el instructivo:** "qué características están asociadas a retrasos". Hoy todos los factores juntos explican solo el **14 %** de la variación de la espera.
 - **Qué hacer:** ficha 3.3 de `docs/fichas_de_tareas.md` (regresión logística de `espera_mas_24h` con variables que se conocen al llegar, validación temporal,
-  razones de probabilidades con intervalo, AUC y Brier sin esconderlos). Intentar mejorar sobre el 12 %: perfiles (A1), diagnóstico agrupado (A3), reingreso,
+  razones de probabilidades con intervalo, AUC y Brier sin esconderlos). Intentar mejorar sobre el 14 %: perfiles (A1), diagnóstico agrupado (A3), reingreso,
   interacciones (por ejemplo hora × edad). Reportar **qué suma cada variable nueva**. Si no sube, decirlo: es un hallazgo (el resto depende de procesos que la
   base no registra).
 - **Entrega:** `notebooks/modelos/modelo_espera_explicativo.ipynb` (sin salidas) y `docs/modelo_espera.md`.
@@ -147,9 +148,12 @@ Estructura sugerida (la del instructivo): contexto, datos y calidad, componentes
 
 | # | Tarea | Responsable | Notas |
 |---|---|---|---|
-| C1 | **Sesión de preguntas con el HUN**: ir con `docs/hun/sesion_de_preguntas.md`, anotar respuestas y actualizar el proyecto con su sección E | Samuel (contacto con el HUN) y Daniela | Las preguntas A1 a A5 de ese documento son las que más cambian los resultados. Por confirmar quién asiste |
+| C1 | **Sesión de preguntas con el HUN (HECHA el 29-oct; no habrá más)**: respuestas anotadas en `docs/hun/sesion_de_preguntas.md` y `CLAUDE.md` 4.7. Sin respuesta: caída de llegadas, cuándo se escribe el diagnóstico, meta de tiempo. Originalmente: ir con `docs/hun/sesion_de_preguntas.md`, anotar respuestas y actualizar el proyecto con su sección E | Samuel (contacto con el HUN) y Daniela | Las preguntas A1 a A5 de ese documento son las que más cambian los resultados. Por confirmar quién asiste |
 | C2 | Correr en DBeaver `sql/exportaciones_base.sql` y verificar que `dx_por_visita` da 566.004 filas y `proc_por_visita` 662.783 (están reconstruidas y sin probar contra la base) | Daniela | |
 | C3 | Subir al drive las tablas actualizadas después de cada cambio (`src/exportar_para_equipo.py` y tablas de `resultados/tablas/`) | Daniela | Avisar a Samuel y Anthony cuando haya versión nueva |
+| C5 | **Ocupación contra la capacidad del HUN** (106 camas, 58 camillas): nuestra ocupación media es 112 (HOSP) y 110 (TU). Revisar por qué supera la capacidad (duplicados no detectados, camas del pasado, qué cuenta HOSP/TU), expresar la ocupación en % solo como medida relativa y declarar la limitación en el documento final | Daniela | Ver `CLAUDE.md` 4.7. Sale de lo que ya tenemos |
+| C6 | Validación clínica de `mapeo_dx.csv` por alguien del área de salud | Daniela | Falta |
+| C7 | Revisar que Samuel (B2) actualice las recomendaciones con las cifras nuevas (R², 106 camas, hospitalización = asignación de cama) | Daniela y Samuel | `docs/recomendaciones.md` ya tiene los cambios |
 | C4 | Opcionales: reingresos depurados (existen sin validar en `tabla_episodios`), huecos TU a TU, decidir si se deduplican las llegadas, Carnaval con efecto distinto en sábado y lunes | Daniela | Solo si sobra tiempo |
 
 ---
