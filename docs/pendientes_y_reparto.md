@@ -134,6 +134,7 @@ demanda, alertas, días atípicos, borrador de recomendaciones y un repositorio 
 - **Qué:** `docs/recomendaciones.md` es un borrador con 7 recomendaciones, sus números y sus límites. Falta **verificar las fuentes** (solo se leyeron resúmenes de búsqueda),
   ampliar si hace falta y comprobar que cada cifra coincide con `docs/HALLAZGOS.md`.
 - **Terminado cuando:** cada recomendación tiene fuente verificada y una cifra o una razón clara de por qué no se puede calcular. Puede empezar antes de que termine A.
+- **Estado (1-nov): HECHA.** 12 fuentes verificadas en su texto original (una mal descrita corregida: BMC 2024 no es una revisión; las cifras de minutos de los estudios son *boarding*). Cifras de R2 y R6 con script. Tabla para Power BI actualizada con columnas de evidencia externa y fuente de datos. Puede cambiar si el HUN responde o si A4 y A5 mueven las cifras de R4 o R7.
 
 ### B3. Documento final · **Por decidir (más adelante)**
 Estructura sugerida (la del instructivo): contexto, datos y calidad, componentes 1 a 4, modelos y alertas, recomendaciones, limitaciones. Casi todo el contenido ya está en

@@ -219,7 +219,7 @@ de las llegadas pronosticadas; factores externos (clima, dengue, eventos).
 7. Revisión semanal de estancias largas (−5 % de estancia ≈ 6 camas).
 **Los datos no respaldan:** "hacen falta más camas" (se desconoce la capacidad), más personal según el día de la semana, ni priorizar pacientes
 concretos por riesgo de esperar. La literatura externa sobre altas antes del mediodía es **mixta** (un programa reportó 0,30 días menos de estancia;
-otro hospital no halló efecto); las fuentes se leyeron solo en resumen y hay que verificarlas.
+otro hospital no halló efecto). Las fuentes se verificaron en su texto original el 1-nov (B2 cerrada; tabla de fuentes en `docs/recomendaciones.md`, sección 6).
 
 ---
 
