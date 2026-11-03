@@ -39,7 +39,7 @@ demanda, alertas, días atípicos, borrador de recomendaciones y un repositorio 
 - **Cambio del 29-oct:** `tabla_episodios.parquet` ya trae la estancia única con el registro de más información (diagnóstico en 61 % de las estancias, laboratorio en 65 %). Usar el grupo de diagnóstico solo entre quienes lo tienen y reportar la cobertura. Edad y sexo son los del registro conservado (pueden diferir en el gemelo).
 - **Nota de la sugerencia de Anthony (23-oct):** los perfiles también deben servir para A2b y A7: dejar la tabla de perfiles con el mismo identificador de estancia que usará A2b, para poder cruzar "perfil" con "estancia disparada".
 
-### A2. Factores de la estancia hospitalaria · **Daniela**
+### A2. Factores de la estancia hospitalaria · **Daniela** — **HECHA el 3-nov-2026** (`docs/factores_estancia.md`, `src/factores_estancia.py`)
 - **Qué pide el instructivo:** componente 2: "factores asociados a incrementos en [...] la duración de las estancias hospitalarias". Hoy solo describimos la estancia.
 - **Qué hacer:** explicar la estancia en cama (mediana 71 h, percentil 90 de 280 h) con edad, sexo, diagnóstico, ruta, tipo de visita y laboratorios de las primeras 6 h.
   Responder además una pregunta concreta: la estancia media subió de 4,57 a 5,31 días (2023 a 2025), **¿por un cambio en el tipo de pacientes o dentro de cada tipo?**

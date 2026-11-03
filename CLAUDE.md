@@ -650,7 +650,7 @@ escenarios y supuestos escritos y se declara como limitación en el documento fi
 | Componente 4: recomendaciones | **Borrador hecho**; Persona 3 debe revisar las fuentes originales | `docs/recomendaciones.md` |
 | **Reparto completo de lo que falta** | Ver **`docs/pendientes_y_reparto.md`** (Daniela: perfiles, factores de la estancia, `mapeo_dx.csv`; Anthony: explicar retrasos y Monte Carlo de camas; Samuel: Power BI y recomendaciones) | `docs/pendientes_y_reparto.md` |
 | Perfiles de pacientes (A1) | **Hecha** (`docs/perfiles_pacientes.md`) | A1 |
-| Factores de la estancia | Pendiente (Daniela) | A2 |
+| Factores de la estancia | **Hecha** (`docs/factores_estancia.md`) | A2 |
 | Explicar mejor los retrasos; simulación Monte Carlo de camas | Pendiente (Anthony) | A4 y A5 |
 | Qué comparten las estancias que se disparan (idea de Anthony) y sistema repetible de diagnóstico | Pendiente (Daniela; A7 por decidir) | A2b y A7 |
 | Dashboard de Power BI (**va de último**, datos parciales; guía para su Claude en `powerbi/CLAUDE.md`) y verificar fuentes de las recomendaciones | Pendiente (Samuel) | B1 y B2 |
