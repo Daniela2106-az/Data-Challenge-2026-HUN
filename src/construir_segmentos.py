@@ -102,6 +102,17 @@ print("episodios:", len(ep), "| visitas:", ep.visit_occurrence_id.nunique())
 if abs(len(ep) - N_ESPERADO) / N_ESPERADO > 0.02:
     print(f"  AVISO: se esperaban ~{N_ESPERADO} episodios (diferencia mayor al 2 %)")
 
+# v1.2: llegada y cama a nivel de ESTANCIA (el minimo entre los registros gemelos del pipeline), asi la espera no depende de cual registro se conserve
+_pip = PROC / "episodios.csv"
+if _pip.exists() and "ini_est" in pd.read_csv(_pip, nrows=1).columns:
+    _p = pd.read_csv(_pip, usecols=K + ["estancia_unica", "estancia_gemela", "ini_est", "ini_hosp_est"], parse_dates=["ini_est", "ini_hosp_est"])
+    _p = _p.rename(columns={"estancia_unica": "_u", "estancia_gemela": "_g", "ini_est": "_ie", "ini_hosp_est": "_ihe"})
+    ep = ep.merge(_p, on=K, how="left")
+    _m = ep._ie.notna() & ep._ihe.notna() & ep.ini_hosp.notna()
+    ep.loc[_m, "ini"] = ep.loc[_m, "_ie"]
+    ep.loc[_m, "ini_hosp"] = ep.loc[_m, "_ihe"]
+    ep = ep.drop(columns=["_ie", "_ihe"])
+
 dup = ep.duplicated(["visit_occurrence_id", "episodio"]).sum()
 print("episodios repetidos (visita, episodio):", dup, "(debe ser 0)")
 assert dup == 0, "hay episodios repetidos: revisar Q3"
@@ -132,6 +143,15 @@ print(f"estancias gemelas: {int(ep.estancia_gemela.sum())} episodios hospitaliza
       f"comparten inicio y fin de cama con otro | estancias unicas: {int((_hh & ep.estancia_unica).sum())} de {int(_hh.sum())}")
 print(f"DEDUP_ESTANCIAS = {DEDUP_ESTANCIAS}: " + ("los segmentos de hospitalizacion cuentan cada estancia una vez"
                                                   if DEDUP_ESTANCIAS else "NO se deduplica (solo para comparar)"))
+# v1.2 (1-nov-2026): la estancia unica y las gemelas salen del pipeline (analisis_etapas.py v3.8, CLAUDE.md 4.8) cuando esta episodios.csv: ademas de
+# "mismo inicio y fin de cama" detecta las gemelas que comparten algun intervalo HOSP identico. Los episodios que no estan en el pipeline conservan la regla propia.
+if "_u" in ep.columns:
+    _n_cambia = int((ep._u.notna() & (ep._u != ep.estancia_unica)).sum())
+    ep["estancia_unica"] = ep._u.fillna(ep.estancia_unica).astype(bool)
+    ep["estancia_gemela"] = ep._g.fillna(ep.estancia_gemela).astype(bool)
+    ep = ep.drop(columns=["_u", "_g"])
+    print(f"estancia unica tomada del pipeline (v3.8): {_n_cambia} episodios cambian frente a la regla propia | "
+          f"estancias unicas hospitalizadas: {int((_hh & ep.estancia_unica).sum())}")
 USO = ep.estancia_unica if DEDUP_ESTANCIAS else pd.Series(True, index=ep.index)
 
 # contexto de cada episodio

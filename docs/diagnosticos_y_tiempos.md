@@ -1,4 +1,4 @@
-# Diagnósticos y tiempos de atención (tarea A3, 26-oct-2026; recalculado el 29-oct con la regla de estancia única nueva)
+# Diagnósticos y tiempos de atención (tarea A3, 26-oct-2026; recalculado el 29-oct y el 1-nov con la regla de estancia única v3.8)
 
 **Qué pide el instructivo:** usar `CONDITION_OCCURRENCE` y `PROCEDURE_OCCURRENCE` para "analizar diagnósticos y procedimientos asociados a los tiempos de atención y la complejidad
 clínica de las visitas", y entender "qué características están asociadas a retrasos". Esta tarea lo hace por **grupo de diagnóstico**.
@@ -16,12 +16,12 @@ el registro que trae la información clínica. Antes se conservaba el de menor `
 Ahora `preparar_variables.py` (v2.2, sección 4b) conserva el que tiene **más tipos de información** (diagnóstico, procedimiento, laboratorio), y si le falta algo lo **hereda del gemelo** (los dos se reparten la
 información: uno trae diagnósticos y laboratorios, el otro procedimientos). Edad, sexo y `person_id` son los del registro conservado. `FUSIONAR_INFO=0` desactiva la herencia.
 
-| Estancias únicas (27.956) | Regla anterior (id menor) | Regla nueva |
+| Estancias únicas (25.777) | Regla anterior (id menor) | Regla nueva |
 |---|---|---|
-| Con diagnóstico | 38,3 % | **61,2 %** |
-| Con laboratorio | 44,6 % | **65,4 %** |
-| Con procedimiento | 86,7 % | 87,1 % |
-| Espera de cama mediana | 17,99 h | 18,10 h (la espera se mide en el registro conservado; difiere unos minutos del gemelo) |
+| Con diagnóstico | 35,8 % | **65,2 %** |
+| Con laboratorio | 40,6 % | **69,3 %** |
+| Con procedimiento | 90,4 % | 90,8 % |
+| Espera de cama mediana | 20,4 h | 18,8 h (con la regla v3.8 la espera es la de la estancia y no depende del registro conservado) |
 
 Los tiempos, ingresos y camas no cambian (la estancia es la misma). Cambia quién describe al paciente.
 
@@ -30,33 +30,33 @@ Los tiempos, ingresos y camas no cambian (la estancia es la misma). Cambia quié
 | Espera de cama | 0–3 h | 3–6 h | 6–12 h | 12–24 h | 24–48 h | 48–72 h | más de 72 h |
 |---|---|---|---|---|---|---|---|
 | Regla anterior | 60,5 | 60,2 | 43,3 | 34,4 | 27,5 | 29,0 | 27,5 |
-| **Regla nueva** | 63,4 | 67,0 | 56,3 | 56,9 | 61,0 | 67,1 | 69,3 |
+| **Regla nueva (v3.8)** | 63,8 | 74,5 | 62,7 | 61,3 | 64,2 | 69,9 | 70,6 |
 
-La espera mediana con diagnóstico es 19,4 h y sin diagnóstico 16,4 h (antes 10,2 y 24,5): el sesgo hacia esperas cortas ya no está. Como los diagnósticos de los dos registros se unen, **el diagnóstico de
-una estancia puede ser de la otra persona** (prueba del 20-oct): se asume que son duplicados, como dijo el HUN. Falta aún el 39 % de los hospitalizados sin diagnóstico traducido y el 80 % de los no hospitalizados.
+La espera mediana con diagnóstico es 19,6 h y sin diagnóstico 17,6 h (antes 10,2 y 24,5): el sesgo hacia esperas cortas ya no está. Como los diagnósticos de los dos registros se unen, **el diagnóstico de
+una estancia puede ser de la otra persona** (prueba del 20-oct): se asume que son duplicados, como dijo el HUN. Falta aún el 35 % de los hospitalizados sin diagnóstico traducido y el 80 % de los no hospitalizados.
 **Pregunta B9 (cuándo se registra el diagnóstico)** sigue sin respuesta y no habrá más sesiones: se declara como limitación.
 
 ## 3. Qué grupos esperan más cama (entre quienes tienen diagnóstico)
-Mediana de espera de cama (h) y estancia en cama (h), solo grupos con n ≥ 30. Referencia: hospitalizados con diagnóstico, espera 19,4 h y estancia 70,9 h.
+Mediana de espera de cama (h) y estancia en cama (h), solo grupos con n ≥ 30. Referencia: hospitalizados con diagnóstico, espera 19,6 h y estancia 70,5 h.
 
 | Grupo | Hospitalizados con espera medida | Espera mediana | Espera p90 | Estancia mediana | Estancia p90 |
 |---|---|---|---|---|---|
-| Musculoesquelético y dolor | 436 | **38,9** | 109,3 | 114,5 | 386 |
-| Renal y urinario | 1.610 | 34,9 | 95,5 | 70,6 | 230 |
-| Cáncer y tumores | 256 | 33,0 | 107,7 | 115,2 | 489 |
-| Digestivo | 2.404 | 29,1 | 77,6 | 87,8 | 261 |
-| Trauma y lesiones | 1.707 | 23,5 | 73,1 | 53,3 | 227 |
-| Infecciosas | 1.111 | 18,3 | 115,8 | 97,3 | 404 |
-| Embarazo, parto y ginecología | 2.220 | 15,8 | 38,1 | 46,6 | 125 |
-| Salud mental | 541 | 13,3 | 80,5 | 72,3 | 405 |
-| Respiratorio | 1.330 | 8,9 | 61,8 | 70,8 | 283 |
-| Neurológico | 756 | 9,4 | 60,6 | 91,7 | 389 |
-| Cardiovascular | 2.370 | **9,4** | 57,1 | 80,5 | 283 |
+| Musculoesquelético y dolor | 422 | 39,0 | 108,1 | 114,3 | 369 |
+| Renal y urinario | 1.577 | 35,0 | 93,1 | 70,4 | 223 |
+| Cáncer y tumores | 251 | 32,7 | 107,1 | 114,6 | 489 |
+| Digestivo | 2.348 | 29,1 | 76,8 | 87,2 | 259 |
+| Trauma y lesiones | 1.662 | 23,8 | 73,4 | 52,4 | 218 |
+| Infecciosas | 1.072 | 17,7 | 105,4 | 95,4 | 400 |
+| Embarazo, parto y ginecología | 2.009 | 16,8 | 39,1 | 46,5 | 124 |
+| Salud mental | 526 | 12,1 | 77,0 | 72,3 | 399 |
+| Cardiovascular | 2.302 | 9,5 | 56,7 | 76,8 | 277 |
+| Neurológico | 732 | 9,3 | 59,4 | 90,9 | 386 |
+| Respiratorio | 1.300 | 8,9 | 61,1 | 70,2 | 280 |
 
 (Las tablas completas, con los 18 grupos, están en `tiempos_por_dx.csv`.)
 
-- **El patrón se mantiene con controles.** Con tipo de visita, franja horaria, año y edad en el modelo (sobre log(espera + 1), `efecto_dx_espera.csv`), frente a Digestivo: Cardiovascular −67 % (IC 95 %: −69 a −65),
-  Neurológico −61 %, Respiratorio −37 %; Renal y urinario +15 % (+7 a +23) y Musculoesquelético +23 % (+10 a +37). El grupo de diagnóstico sube el R² de 8,5 % a 18,7 % (solo entre quienes tienen diagnóstico).
+- **El patrón se mantiene con controles.** Con tipo de visita, franja horaria, año y edad en el modelo (sobre log(espera + 1), `efecto_dx_espera.csv`), frente a Digestivo: Cardiovascular −66 % (IC 95 %: −68 a −64),
+  Neurológico −61 %, Respiratorio −37 %; Renal y urinario +15 % (+8 a +23) y Musculoesquelético +17 % (+5 a +31). El grupo de diagnóstico sube el R² de 8,7 % a 18,8 % (solo entre quienes tienen diagnóstico).
   Es estable por año: urgentes (cardiovascular, neurológico, respiratorio) 6,5–9,8 h; quirúrgicos y urológicos (musculoesquelético, renal, digestivo, cáncer) 29–36 h.
 - **Cambió con la regla nueva:** los grupos "urgentes" esperan unas 9 h (antes 4 h) y los demás 29–39 h (antes 22–32 h). Las cifras anteriores estaban sesgadas hacia quien recibía cama rápido. El orden de los grupos casi no cambió.
 - **Lectura posible (hipótesis, sin comprobar):** quien llega con infarto, ACV o dificultad respiratoria recibe cama más rápido (prioridad clínica), y la espera larga se concentra en pacientes de **cirugía, urología y
@@ -78,4 +78,4 @@ Mediana de espera de cama (h) y estancia en cama (h), solo grupos con n ≥ 30. 
 - **Para A2b (estancias que se disparan):** la extracción de diagnósticos por visita con `person_id` igual al de la visita (`sql/estancias_perfil.sql`) también ayudará a ver si el registro tardío cambia el panorama.
 
 ## 6. Límites
-Asociación, no causa. Grupos por palabras clave (sin validación clínica). Cobertura de diagnóstico del 61 % en hospitalizados (se unió la información de los dos registros duplicados; el diagnóstico puede ser de la otra persona). Diagnóstico principal elegido por fecha, no por el hospital.
+Asociación, no causa. Grupos por palabras clave (sin validación clínica). Cobertura de diagnóstico del 65 % en hospitalizados (se unió la información de los dos registros duplicados; el diagnóstico puede ser de la otra persona). Diagnóstico principal elegido por fecha, no por el hospital.

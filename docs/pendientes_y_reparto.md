@@ -42,7 +42,7 @@ demanda, alertas, días atípicos, borrador de recomendaciones y un repositorio 
 ### A2. Factores de la estancia hospitalaria · **Daniela**
 - **Qué pide el instructivo:** componente 2: "factores asociados a incrementos en [...] la duración de las estancias hospitalarias". Hoy solo describimos la estancia.
 - **Qué hacer:** explicar la estancia en cama (mediana 71 h, percentil 90 de 280 h) con edad, sexo, diagnóstico, ruta, tipo de visita y laboratorios de las primeras 6 h.
-  Responder además una pregunta concreta: la estancia media subió de 4,70 a 5,46 días (2023 a 2025), **¿por un cambio en el tipo de pacientes o dentro de cada tipo?**
+  Responder además una pregunta concreta: la estancia media subió de 4,57 a 5,31 días (2023 a 2025), **¿por un cambio en el tipo de pacientes o dentro de cada tipo?**
   (descomposición por composición).
 - **Entrega:** `src/factores_estancia.py` y `docs/factores_estancia.md`.
 - **Terminado cuando:** se dice qué se asocia a estancias largas y qué parte del +16 % se explica por el tipo de pacientes. Se reporta el R² sin esconderlo
@@ -52,7 +52,7 @@ demanda, alertas, días atípicos, borrador de recomendaciones y un repositorio 
 - **Nota de la sugerencia de Anthony (23-oct):** al terminar A2, seguir con A2b (qué comparten las estancias que se disparan); es la misma pregunta con más variables (procedimientos y laboratorios). Reutilizar la definición de "estancia disparada" entre ambas.
 
 ### A2b. Qué tienen en común las estancias que se "disparan" · **Daniela** (ampliación de A2, idea de Anthony del 23-oct)
-- **La idea:** ya sabemos que el problema está en las camas y que la estancia sube (4,70 a 5,46 días). Falta preguntar: **¿cuándo se disparan las estancias y qué
+- **La idea:** ya sabemos que el problema está en las camas y que la estancia sube (4,57 a 5,31 días). Falta preguntar: **¿cuándo se disparan las estancias y qué
   comparten las que se disparan?** (edad, sexo, diagnóstico, procedimientos, laboratorios, ruta). La respuesta convierte "hay un cuello de botella" en "este tipo
   de estancias lo causa".
 - **Qué hacer:**
@@ -99,7 +99,7 @@ demanda, alertas, días atípicos, borrador de recomendaciones y un repositorio 
 - **Terminado cuando:** el backtest tiene error reportado frente a la persistencia, entre 70 % y 90 % de los días caen dentro de la banda del 80 %, y cada escenario
   tiene supuestos, resultado y una frase para un gerente. Limitación: se desconoce el número de camas.
 - **Insumos:** `estancias_hospitalizacion.csv`, `panel_diario.csv`; referencias: `src/simulacion_altas.py`, `src/pronostico_demanda.py`, `docs/HALLAZGOS.md` 4.6 y 5.1.
-- **Ojo:** la ocupación observada debe salir de estancias únicas (~113 camas), no de `serie_horaria.csv` viejo.
+- **Ojo:** la ocupación observada debe salir de estancias únicas (~100 camas), no de `serie_horaria.csv` viejo.
 
 ### A6. Estimar tiempos de atención (componente 3) · **Samuel** (asignado por Daniela el 23-oct; queda para después de los análisis A)
 - **Qué pide el instructivo:** "modelos analíticos o predictivos que permitan estimar tiempos de atención". Es decir: cuando llega un paciente, ¿cuántas horas va a estar
@@ -151,7 +151,7 @@ Estructura sugerida (la del instructivo): contexto, datos y calidad, componentes
 | C1 | **Sesión de preguntas con el HUN (HECHA el 29-oct; no habrá más)**: respuestas anotadas en `docs/hun/sesion_de_preguntas.md` y `CLAUDE.md` 4.7. Sin respuesta: caída de llegadas, cuándo se escribe el diagnóstico, meta de tiempo. Originalmente: ir con `docs/hun/sesion_de_preguntas.md`, anotar respuestas y actualizar el proyecto con su sección E | Samuel (contacto con el HUN) y Daniela | Las preguntas A1 a A5 de ese documento son las que más cambian los resultados. Por confirmar quién asiste |
 | C2 | Correr en DBeaver `sql/exportaciones_base.sql` y verificar que `dx_por_visita` da 566.004 filas y `proc_por_visita` 662.783 (están reconstruidas y sin probar contra la base) | Daniela | |
 | C3 | Subir al drive las tablas actualizadas después de cada cambio (`src/exportar_para_equipo.py` y tablas de `resultados/tablas/`) | Daniela | Avisar a Samuel y Anthony cuando haya versión nueva |
-| C5 | **Ocupación contra la capacidad del HUN** (106 camas, 58 camillas): nuestra ocupación media es 112 (HOSP) y 110 (TU). Revisar por qué supera la capacidad (duplicados no detectados, camas del pasado, qué cuenta HOSP/TU), expresar la ocupación en % solo como medida relativa y declarar la limitación en el documento final | Daniela | Ver `CLAUDE.md` 4.7. Sale de lo que ya tenemos |
+| C5 | **Ocupación contra la capacidad del HUN** (106 camas, 58 camillas) | Daniela | **RESUELTO el 1-nov** (`CLAUDE.md` 4.8): la ocupación superaba las 106 camas por duplicados que la regla v3.7 no detectaba; con la v3.8 es 94 / 101 / 105 (2023 / 2024 / 2025). Queda como limitación la ocupación de urgencias (TU) y que la media de 2025 roza la capacidad |
 | C6 | Validación clínica de `mapeo_dx.csv` por alguien del área de salud | Daniela | Falta |
 | C7 | Revisar que Samuel (B2) actualice las recomendaciones con las cifras nuevas (R², 106 camas, hospitalización = asignación de cama) | Daniela y Samuel | `docs/recomendaciones.md` ya tiene los cambios |
 | C4 | Opcionales: reingresos depurados (existen sin validar en `tabla_episodios`), huecos TU a TU, decidir si se deduplican las llegadas, Carnaval con efecto distinto en sábado y lunes | Daniela | Solo si sobra tiempo |

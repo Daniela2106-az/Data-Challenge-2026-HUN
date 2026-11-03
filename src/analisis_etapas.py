@@ -383,6 +383,64 @@ ep["estancia_gemela"] = False
 ep.loc[_hh.index, "estancia_gemela"] = _hh.duplicated(["ini_hosp", "fin_hosp"], keep=False).values
 ep["estancia_unica"] = True
 ep.loc[_hh.index[_hh.duplicated(["ini_hosp", "fin_hosp"], keep="first").values], "estancia_unica"] = False
+# v3.8 (1-nov-2026): la regla anterior (mismo inicio Y mismo fin de cama) no detectaba las gemelas en que uno de los dos registros trae una etapa HOSP
+# adicional al comienzo: el inicio total difiere pero comparten al menos un intervalo HOSP identico al segundo (dos pacientes distintos no
+# comparten un intervalo identico por casualidad). Ahora una ESTANCIA es el conjunto de episodios conectados por compartir el (inicio, fin) de
+# la cama o algun intervalo HOSP (union-find). Con la regla vieja la ocupacion media de 2025 salia 118,6 camas; el conteo directo de intervalos
+# distintos sobre la base daba 104,8 y el HUN dice que tiene 106 camas (CLAUDE.md 4.7 y 4.8).
+#   estancia_id          identificador de la estancia (el mismo para todos los registros gemelos)
+#   n_registros_estancia cuantos episodios tiene la estancia
+#   ini_hosp_est / fin_hosp_est   inicio y fin de cama de la estancia (el minimo y el maximo entre sus registros)
+#   ini_est              llegada de la estancia (el minimo entre sus registros). La espera de cama = ini_hosp_est - ini_est, asi no depende de cual registro se conserve
+_iv = vd[(vd.etapa == "HOSP") & (vd.visit_detail_end_datetime > vd.visit_detail_start_datetime)][K + ["visit_detail_start_datetime", "visit_detail_end_datetime"]].drop_duplicates()
+_hi = ep.index[ep.ini_hosp.notna()]
+_pos = pd.Series(np.arange(len(_hi)), index=pd.MultiIndex.from_frame(ep.loc[_hi, K]))
+_padre = np.arange(len(_hi))
+
+
+def _raiz(x):
+    while _padre[x] != x:
+        _padre[x] = _padre[_padre[x]]
+        x = _padre[x]
+    return x
+
+
+def _unir(nodos):
+    nodos = list(nodos)
+    for o in nodos[1:]:
+        ra, rb = _raiz(nodos[0]), _raiz(o)
+        if ra != rb:
+            _padre[rb] = ra
+
+
+_iv["nodo"] = _pos.reindex(pd.MultiIndex.from_frame(_iv[K])).values
+for _, g in _iv.dropna(subset=["nodo"]).groupby(["visit_detail_start_datetime", "visit_detail_end_datetime"]).nodo:      # intervalo HOSP compartido
+    if g.nunique() > 1:
+        _unir(g.astype(int).unique())
+_ex = ep.loc[_hi].assign(nodo=np.arange(len(_hi)))
+for _, g in _ex.groupby(["ini_hosp", "fin_hosp"]).nodo:                                                             # mismo inicio y fin de cama (regla v3.7)
+    if len(g) > 1:
+        _unir(g.values)
+_ep_h = ep.loc[_hi].copy()
+_ep_h["estancia_id"] = [_raiz(i) for i in range(len(_hi))]
+ep["estancia_id"] = -1
+ep.loc[_hi, "estancia_id"] = _ep_h.estancia_id.values
+_g = _ep_h.groupby("estancia_id")
+ep["n_registros_estancia"] = 1
+ep.loc[_hi, "n_registros_estancia"] = _g.visit_occurrence_id.transform("size").values
+ep["ini_hosp_est"] = ep.ini_hosp
+ep["fin_hosp_est"] = ep.fin_hosp
+ep["ini_est"] = ep.ini                                  # llegada de la estancia: el primer registro entre sus gemelos
+ep.loc[_hi, "ini_est"] = _g.ini.transform("min").values
+ep.loc[_hi, "ini_hosp_est"] = _g.ini_hosp.transform("min").values
+ep.loc[_hi, "fin_hosp_est"] = _g.fin_hosp.transform("max").values
+_n_exacta = int(ep.loc[_hi].groupby(["ini_hosp", "fin_hosp"]).ngroups)
+ep["estancia_gemela"] = ep.n_registros_estancia > 1
+ep["estancia_unica"] = True
+_orden = ep.loc[_hi].sort_values(K)
+ep.loc[_orden.index[_orden.duplicated("estancia_id", keep="first").values], "estancia_unica"] = False
+print(f"v3.8 estancias: {len(_hi)} episodios hospitalizados -> {ep.loc[_hi, 'estancia_id'].nunique()} estancias distintas "
+      f"(la regla v3.7, solo inicio y fin iguales, daba {_n_exacta}; {_n_exacta - ep.loc[_hi, 'estancia_id'].nunique()} duplicados mas)")
 ep["n_ep_visita"] = ep.groupby("visit_occurrence_id").episodio.transform("size")
 ep = ep.merge(vo[["visit_occurrence_id", "person_id", "tipo_visita"]], on="visit_occurrence_id", how="left")
 
@@ -511,7 +569,10 @@ fin_previo = antes.groupby(K).fin.max().rename("fin_previo")
 esp = (bh.groupby(K).agg(ini_ep=("ini_ep", "first"), ini_hosp=("ini_hosp", "first"),
                          ruta_simple=("ruta_simple", "first"), tipo_visita=("tipo_visita", "first"))
          .join(fin_previo, how="inner"))
-esp["espera_cama_h"] = (esp.ini_hosp - esp.ini_ep).dt.total_seconds() / 3600
+esp = esp.join(ep.set_index(K)[["ini_est", "ini_hosp_est"]])               # v3.8: espera a nivel de estancia, no de registro
+esp["ini_ep"] = esp.ini_est.fillna(esp.ini_ep)
+esp["ini_hosp"] = esp.ini_hosp_est.fillna(esp.ini_hosp)
+esp["espera_cama_h"] = ((esp.ini_hosp - esp.ini_ep).dt.total_seconds() / 3600).clip(lower=0)
 esp["hueco_antes_hosp_h"] = ((esp.ini_hosp - esp.fin_previo).dt.total_seconds() / 3600).clip(lower=0)
 
 def resumen_espera(df):

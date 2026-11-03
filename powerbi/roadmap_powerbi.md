@@ -28,8 +28,8 @@ especificación: Daniela con Claude. Hallazgos y cifras: `docs/HALLAZGOS.md`. Re
 ## 1. Qué mostramos: mensaje central y páginas
 
 **Tres mensajes que el dashboard debe dejar claros:**
-1. **La espera de cama es el cuello de botella y es crónica:** mediana de 18 h, percentil 90 de 71,5 h, y los peores casos empeoran (61 h a 80 h).
-2. **La causa operativa visible son las altas tardías y la estancia:** el 61,5 % de las altas es de 14 a 19 h, y la ocupación sube por la estancia (+16 %), no por los ingresos.
+1. **La espera de cama es el cuello de botella y es crónica:** mediana de 18,6 h, percentil 90 de 73,9 h, y los peores casos empeoran (61 h a 80 h).
+2. **La causa operativa visible son las altas tardías y la estancia:** el 62,5 % de las altas es de 14 a 19 h, y la ocupación sube por la estancia (+16 %), no por los ingresos.
 3. **Se puede anticipar y avisar:** pronóstico de llegadas (7,5 % de error), alertas a media jornada y un simulador para probar escenarios.
 
 | Pág. | Título (mensaje) | Pregunta que responde | Visuales interactivos | Fuente |
@@ -71,7 +71,7 @@ Máximo 8 a 10 páginas visibles. Si el tiempo aprieta, el orden de prioridad es
 |---|---|---|---|---|
 | `panel_diario.csv` | Un día por fila: llegadas, ingresos a cama, altas, ocupación, espera, festivo | 1.216 | `src/exportar_para_equipo.py` | **Existe** |
 | `serie_horaria.csv` | Una hora por fila: llegadas, ocupación | ~29 mil | `src/preparar_variables.py` | **Existe** (volver a descargar: antes del 23-oct tenía estancias duplicadas) |
-| `bi_estancias.csv` | Una estancia por fila **sin ids**: año, mes, día de la semana, hora de llegada, grupo de edad, sexo, tipo de visita, espera, urgencias antes de la cama, hueco, estancia | 27.956 | `src/exportar_para_powerbi.py` | **Listo** (paquete parcial `powerbi.zip`) |
+| `bi_estancias.csv` | Una estancia por fila **sin ids**: año, mes, día de la semana, hora de llegada, grupo de edad, sexo, tipo de visita, espera, urgencias antes de la cama, hueco, estancia | 25.777 | `src/exportar_para_powerbi.py` | **Listo** (paquete parcial `powerbi.zip`) |
 | `bi_llegadas.csv` | Llegadas agregadas: año, mes, día de la semana, hora, tipo de visita, grupo de edad → n | ~100 a 200 mil | `src/exportar_para_powerbi.py` | **Listo** |
 | Tablas de resultados de `resultados/tablas/` | Ranking, espera por hora, altas por hora, ocupación por año, escenarios, pronóstico, alertas, días atípicos, cobertura y tiempos por ruta, importancia de factores | 5 a 1.200 cada una | Scripts de `src/` | **Existen** (~25 archivos, menos de 1 MB en total) |
 | Calendario | Fechas, año, mes, día, festivo | — | Se crea dentro de Power BI con DAX (`CALENDAR`) | Samuel |
@@ -148,14 +148,14 @@ Dependencias: las páginas 11 (perfiles y estancias) y las bandas Monte Carlo de
 
 | Qué | Valor esperado |
 |---|---|
-| Estancias con espera de cama | 27.167 (Q3) o 27.162 (pipeline) |
-| Espera de cama: mediana / p75 / p90 | 18,0 / 37,2 / 71,5 h |
-| % con más de 24 h / más de 48 h | 42,7 % / 19 % |
-| Urgencias antes de la cama / hueco, % de las horas | 77 % / 23 % |
-| Ingresos a cama por día / camas ocupadas | ~22 / ~113 |
-| Estancia media y camas por año | 2023: 4,70 d y 105; 2024: 5,05 d y 113; 2025: 5,46 d y 119 |
-| Altas entre 14:00 y 18:59 / antes del mediodía | 61,5 % / 15 % |
-| Escenario 30 % de altas adelantadas | 5,5 camas libres a las 12 h; espera evitada: máximo 8,3 %, estimación 2,9 % |
+| Estancias con espera de cama | 25.373 (Q3) o 27.162 (pipeline) |
+| Espera de cama: mediana / p75 / p90 | 18,6 / 37,9 / 73,9 h |
+| % con más de 24 h / más de 48 h | 43,9 % / 20 % |
+| Urgencias antes de la cama / hueco, % de las horas | 79 % / 21 % |
+| Ingresos a cama por día / camas ocupadas | ~20 / ~100 |
+| Estancia media y camas por año | 2023: 4,57 d y 94; 2024: 4,90 d y 101; 2025: 5,31 d y 105 |
+| Altas entre 14:00 y 18:59 / antes del mediodía | 62,5 % / 14 % |
+| Escenario 30 % de altas adelantadas | 5,1 camas libres a las 12 h; espera evitada: máximo 8,3 %, estimación 2,9 % |
 | Llegadas: error del pronóstico a 1 día / 7 días | 7,5 % / 8,8 % |
 | Alerta de día congestionado a las 12 h | 28 alertas, 15 aciertos (precisión 54 %, detección 83 %) |
 | Días atípicos (llegadas / ingresos / espera) | 14 / 9 / 7 |

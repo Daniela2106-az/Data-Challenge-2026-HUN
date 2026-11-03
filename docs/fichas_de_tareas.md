@@ -13,7 +13,7 @@ Se probó el plan anterior con los datos y se ajustó:
 | Lo mismo, usando diagnóstico y laboratorios | AUC 0,64 | Ni haciendo trampa mejora mucho |
 | ¿Cuántas altas hubo en el día explica la espera de ese día? | Correlación cercana a −0,06 | No se confirma a nivel diario. **(22-oct) Sí se sostiene dentro del día:** el 61 % de las altas es de 14 a 18:59 y la cama se asigna a las 17–18 h (ver `CLAUDE.md`, sección 6b) |
 | Predecir cuánto se queda hospitalizado cada paciente | R² cercano a 0 | No se predice por paciente; se usa la **distribución real** |
-| Ley de Little: ingresos por día × estancia media = camas ocupadas | 27,7 × 5,2 días = 144 camas; observado 145. **(22-oct) Esas cifras contaban dos veces las estancias replicadas entre dos personas.** Con estancias únicas: ~22 × 5,2 ≈ 113 camas; observado 113 | **El modelo de camas es coherente con los datos** (con los números corregidos) |
+| Ley de Little: ingresos por día × estancia media = camas ocupadas | 27,7 × 5,2 días = 144 camas; observado 145. **(22-oct) Esas cifras contaban dos veces las estancias replicadas entre dos personas.** Con estancias únicas: ~22 × 5,2 ≈ 100 camas; observado 113 | **El modelo de camas es coherente con los datos** (con los números corregidos) |
 
 Lo que sí es predecible son las llegadas y los ingresos (patrón por hora, día y festivo) y la ocupación como
 resultado de ingresos y estancias. Por eso los modelos pasan a ser de **demanda y capacidad**.
@@ -30,13 +30,13 @@ resultado de ingresos y estancias. Por eso los modelos pasan a ser de **demanda 
 - `panel_diario.csv`: una fila por día (2023-02 a 2026-05): `llegadas, hospitalizados, ingresos_a_cama, altas,
   altas_antes_mediodia, ocup_hosp_media, ocup_hosp_max, espera_cama_mediana_h, n_espera, dia_semana_num, mes, festivo,
   dia_no_habil`.
-- `estancias_hospitalizacion.csv`: una fila por **estancia en cama** (27.956, v2 del 22-oct): `ingreso_cama, alta, horas_hosp,
+- `estancias_hospitalizacion.csv`: una fila por **estancia en cama** (25.777, v2 del 22-oct): `ingreso_cama, alta, horas_hosp,
   alta_completa, n_registros, llegada, hora_llegada, edad, grupo_edad, sexo, tipo_visita, categoria_dx, espera_cama_h, ...`.
   La misma estancia replicada entre dos personas (41 % de los episodios hospitalizados) se cuenta **una vez**
   (`n_registros` dice cuántos registros tenía). Usar solo `alta_completa == True` para estancias.
   **Descargar de nuevo: la versión anterior (35.343 filas) tenía las estancias duplicadas.**
 - `serie_horaria.csv`: una fila por hora: `hora_inicio, llegadas, llegadas_que_se_hospitalizan, ocup_hosp, ocup_tu`.
-  **(23-oct)** `llegadas_que_se_hospitalizan` y `ocup_hosp` ya cuentan cada estancia una vez (~113 camas, ~22 por día). `ocup_tu` y
+  **(23-oct)** `llegadas_que_se_hospitalizan` y `ocup_hosp` ya cuentan cada estancia una vez (~100 camas, ~20 por día). `ocup_tu` y
   `llegadas` siguen contando todos los episodios. Si descargaron esta tabla antes del 23-oct, **descargarla de nuevo**.
 - `tabla_episodios.parquet`: una fila por episodio (337.194), 63 columnas. Incluye los episodios gemelos con la marca
   `estancia_unica`: para espera de cama, camas e ingresos usar `estancia_unica == True` (`espera_cama_h` ya viene vacía en los gemelos).
@@ -80,9 +80,9 @@ del 80 %; la alerta indica su acierto y sus falsas alarmas.
 **Cuidado:** hoy **no** se demuestra que adelantar las altas reduzca la espera; solo se mostrará cuántas camas
 quedarían libres antes. Si se quiere traducir eso en horas de espera, hay que decir claramente que es un supuesto.
 **Ya hecho por Daniela (22-oct, `src/simulacion_altas.py`):** el escenario A con la hora del día y una cota de la espera
-evitada. Con el 30 % de las altas de la tarde antes del mediodía salen ~37 horas-cama liberadas por día (hasta 5,5 camas
+evitada. Con el 30 % de las altas de la tarde antes del mediodía salen ~37 horas-cama liberadas por día (hasta 5,1 camas
 libres adicionales a las 12 h), lo que evitaría **como máximo ~8 % del exceso de espera** (estimación ~3 %). La ocupación de
-2025 es 13 % mayor que la de 2023 por la **estancia** (+16 %), no por más ingresos. Las tablas `escenario_altas_antes.csv`,
+2025 es 12 % mayor que la de 2023 por la **estancia** (+16 %), no por más ingresos. Las tablas `escenario_altas_antes.csv`,
 `escenario_camas_por_hora.csv` y `escenarios_little.csv` (Daniela las sube al drive). **No repetir el escenario A: construir B y C y
 la tabla de escenarios sobre eso.**
 **Entrega:** `notebooks/simulacion/escenarios.ipynb` y `docs/simulacion.md` con una tabla de escenarios.
@@ -163,8 +163,8 @@ Carpetas: `src/`, `sql/`, `docs/`, `datos/referencia/`, `notebooks/modelos/`.
 (error 7,5 % a 1 día) y la alerta de un día antes tiene AUC 0,79 (la de media jornada, mucho mejor, está en `src/alertas.py`). Los **ingresos a cama diarios** NO se pueden
 pronosticar mejor que "día de la semana × nivel reciente" (error ~23 %, es ruido de conteo), pero **por semana el error baja a 9,5 %**:
 **para el modelo de camas (ficha 3.1) usar el pronóstico semanal de ingresos, repartido por día con el patrón del día de la semana**.
-Ojo: desde abril de 2026 llegadas e ingresos bajan 20–35 % (posible carga incompleta, pregunta 14 al HUN); para el escenario base de
-camas conviene usar el nivel de 2025 (~22 ingresos por día) y el nivel reciente (~19 en ene–abr 2026) como escenario bajo.
+Ojo: desde el 10 de abril de 2026 el registro de las etapas se degrada (no es menos demanda; `CLAUDE.md` 4.9); para el escenario base de
+camas conviene usar el nivel de 2025 (~20 ingresos por día) y el nivel reciente (~19 en ene–abr 2026) como escenario bajo.
 Los pronósticos de ingresos alimentan el modelo de camas de Persona 3.
 
 ### Ficha D.2 — Detección de días atípicos (lo pide el instructivo)
@@ -188,7 +188,7 @@ y describirlos en palabras simples.
 
 ### Ficha D.4 — Perfiles de pacientes y factores de la estancia (A1 y A2; detalle en `docs/pendientes_y_reparto.md`)
 Comparar perfiles (edad × sexo × tipo de visita, y diagnóstico agrupado cuando exista `mapeo_dx.csv`) en llegadas, ruta, % hospitalizado, espera, estancia y reingreso;
-y explicar la estancia en cama, incluida la pregunta de si el +16 % (4,70 a 5,46 días) viene de un cambio en el tipo de pacientes o de dentro de cada tipo.
+y explicar la estancia en cama, incluida la pregunta de si el +16 % (4,57 a 5,31 días) viene de un cambio en el tipo de pacientes o de dentro de cada tipo.
 **Nota de la sugerencia de Anthony (23-oct):** dejar la tabla de perfiles con el mismo identificador de estancia que usará D.5 y reutilizar allí la definición de "estancia disparada".
 Entrega: `src/perfiles_pacientes.py`, `src/factores_estancia.py` y sus documentos.
 

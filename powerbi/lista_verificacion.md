@@ -8,17 +8,17 @@
 
 ## Calidad de los números
 - [ ] Todas las filas de `cifras_de_control.csv` reproducidas en el dashboard (y la sección 8 de `roadmap_powerbi.md`).
-- [ ] Espera: mediana 18,0 / p75 37,2 / p90 71,5; >24 h 42,7 %; >48 h 19 %; estancias 27.956.
-- [ ] Simulador en base: 118,6 camas; estancia −5 % → −5,9; ingresos +10 % → +11,9; 30 % altas → 5,5 camas libres y 8,3 % / 2,9 %.
+- [ ] Espera: mediana 18,8 / p75 37,9 / p90 73,3; >24 h 43,9 %; >48 h 20 %; estancias 25.777.
+- [ ] Simulador en base: 105,0 camas; estancia −5 % → −5,9; ingresos +10 % → +11,9; 30 % altas → 5,1 camas libres y 8,3 % / 2,9 %.
 - [ ] Todo percentil lleva su n; grupos con n < 30 ocultos.
 - [ ] Segmentadores sincronizados y «Restablecer» funciona; ninguna página queda vacía con algún filtro.
-- [ ] Filtrar `periodo_caida_de_datos = 0` da mediana 17,8 y p90 70,6 (comprobar que se entiende la diferencia).
+- [ ] Filtrar `periodo_caida_de_datos = 0` da mediana 18,6 y p90 72,7 (comprobar que se entiende la diferencia).
 
 ## Honestidad del mensaje
 - [ ] «Asociación, no causa» en páginas 4, 5 y 11; R² del 14 % visible.
 - [ ] Pronóstico de ingresos diario NO presentado como bueno; usar el semanal.
 - [ ] Simulador rotulado «escenario»; cota y estimación distinguidas.
-- [ ] Nota de caída de datos desde mayo 2026 y de duración medida en ~38 % de urgencias.
+- [ ] Nota de registro degradado desde el 10-abr-2026 y de duración medida en ~38 % de urgencias.
 - [ ] Ninguna cifra provisional en páginas pendientes.
 
 ## Visual

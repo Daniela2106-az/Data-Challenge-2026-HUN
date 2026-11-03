@@ -3,7 +3,7 @@
 Este archivo resume TODO lo que ya se averiguó de la base de datos en semanas de consultas.
 **Léelo completo antes de proponer consultas nuevas.** La base es lenta (consultas pesadas de 10–30 min
 que traban el computador), así que antes de pedir una consulta comprueba aquí si la respuesta ya existe.
-Última actualización: 29-oct-2026 (sección 4.7: respuestas del HUN y regla de estancia única v3.8). (Cambio del 22-oct: las estancias en cama replicadas entre dos personas se cuentan
+Última actualización: 1-nov-2026 (sección 4.7: respuestas del HUN; sección 4.8: la ocupación no cuadraba con las 106 camas porque faltaban duplicados por detectar; regla de estancia única v3.8 y todas las cifras recalculadas). (Cambio del 22-oct: las estancias en cama replicadas entre dos personas se cuentan
 una sola vez; ver sección 4.6. Las cifras de espera de cama, ingresos y ocupación anteriores a esa fecha están infladas.)
 
 ## Lee esto primero (si eres un Claude que abre este repositorio por primera vez)
@@ -25,8 +25,8 @@ tener los datos (ver `README.md`, "Cómo reproducirlo"). Nunca pidas ni escribas
 - Cita el archivo o la sección de donde sale cada cifra. No inventes números ni causas.
 - Distingue **asociación** de **causa** y di siempre la limitación al lado del hallazgo (casi todo son asociaciones y escenarios).
 - **Cifras obsoletas:** las de espera de cama mediana 22,4 h, 27,7 ingresos por día y ~145 camas (secciones 5 y 6 y algunos textos viejos) estaban
-  infladas por estancias duplicadas. **Vigentes (22-oct): espera mediana 18 h, ~22 ingresos por día, ~113 camas.**
-- La meta de tiempos y la causa de la caída de llegadas desde abril de 2026 **no se conocen**. El HUN respondió en la sesión del 29-oct: **106 camas, 58 camillas**, la hospitalización se registra al asignar cama, las gemelas son duplicados y hay horarios de alta (sección 4.7). No habrá más sesiones.
+  infladas por estancias duplicadas. **Vigentes (1-nov, regla v3.8, sección 4.8): espera mediana 18,6 h, ~20 ingresos por día, ~100 camas ocupadas en promedio (94 en 2023 a 105 en 2025).** Las cifras de 22-oct (18 h, ~22 ingresos, ~113 camas) también quedaron infladas por duplicados que faltaban.
+- La meta de tiempos y la causa del cambio de registro desde el 10 de abril de 2026 **no se conocen** (la auditoría de 4.9 descarta que sea menos demanda). El HUN respondió en la sesión del 29-oct: **106 camas, 58 camillas**, la hospitalización se registra al asignar cama, las gemelas son duplicados y hay horarios de alta (sección 4.7). No habrá más sesiones.
 
 **Dónde está cada respuesta:** espera de cama y cuello de botella → `HALLAZGOS.md` 4; altas tardías y factores → 6b; pronóstico y alertas → 6b;
 calidad de datos y duplicados → 4.1 y 4.6; recomendaciones → `docs/recomendaciones.md`; qué falta → sección 9.
@@ -82,12 +82,8 @@ el 1 da contexto y el 4 sale de los dos anteriores.
 - Antes de consultas pesadas: `SET statement_timeout = 0;` (o `'30min'`).
 - DBeaver muestra por defecto 200 filas: subir el límite o exportar con "Exportar datos > CSV"
   (que vuelve a correr la consulta completa). Ojo: copiar desde la grilla exporta solo lo cargado.
-- Periodo de datos: **enero 2023 a junio 2026 completos**; julio 2026 parcial (último día con datos:
-  2026-07-17); agosto casi vacío. Tendencias y pronósticos se cortan en junio 2026.
-  **Aviso (22-oct): las llegadas bajan de forma sostenida desde abril de 2026** (por día: 244 en ene–abr, 186 en mayo, 171 en
-  junio, 158 en 1–16 de julio) y los ingresos a cama también (~19–22 en ene–abr, 15,6 en mayo). Coincide con la caída de laboratorios
-  de may–jun. Puede ser carga de datos incompleta o menos demanda real: no se sabe (pregunta 14). Mayo–julio 2026 se tratan
-  con cautela y no se usan para evaluar modelos.
+- Periodo de datos: **enero 2023 a julio 2026 (último día con etapas: 2026-07-17)**; la tabla de visitas llega hasta el 13-ago-2026. Para modelos y comparaciones el periodo confiable termina el 9-abr-2026.
+  **Aviso (actualizado 2-nov, auditoría en la base, ver 4.9): el registro de las etapas (`visit_detail`) se degrada desde el 10 de abril de 2026** (más visitas sin etapas, menos visitas con etapa ER; desde el 29-abr empeora). Las visitas de urgencias de cabecera no bajaron en mayo (+2 % frente a mayo de 2025). El periodo confiable es feb-2023 a 9-abr-2026; después no se usa para estimar nivel, calendario ni error. (Contexto del 22-oct: las llegadas por día bajaban de 244 en ene–abr a 186 en mayo y 171 en junio; eso era el efecto del registro, no de la demanda.)
 
 ### Tamaños
 
@@ -305,13 +301,78 @@ Respuestas (tomadas en la reunión, sin documento escrito; no habrá más sesion
   (sigue sin poder separarse la atención clínica de la espera de cama dentro de urgencias).
 - **Estancias gemelas:** "lo más probable es que sean duplicados"; elegir el registro que tenga la información clínica (condición, procedimiento, etc.).
 - **Altas:** sí hay horarios y costumbres para dar de alta (consistente con el 61,5 % de altas entre las 14:00 y las 18:59; no dieron más detalle).
-- **Choque con nuestros datos:** la ocupación estimada (media 112 en HOSP, 110 en TU) supera las 106 camas y las 58 camillas (HOSP > 106 en el 72 % de las horas; TU > 58 en el 97 %). Como la hospitalización se
-  registra al asignar la cama, no se explica por pacientes que siguen esperando en urgencias. Quedan: duplicados no detectados, más camas en el pasado o que HOSP/TU incluyan espacios que no son camas ni camillas.
-  Se declara como limitación: no presentar una ocupación mayor de 100 % como real. Los pacientes en TU incluyen sillas y consultorios, no solo camillas.
-- **Regla v3.8 (29-oct, `preparar_variables.py` v2.2, sección 4b):** de cada estancia gemela se conserva el registro con más tipos de información (diagnóstico, procedimiento, laboratorio) y recibe lo que le falte del gemelo
+- **Choque con nuestros datos (RESUELTO el 1-nov, ver 4.8):** la ocupación estimada con la regla v3.7 (media 112 en HOSP) superaba las 106 camas. Era un error nuestro: quedaban estancias duplicadas sin detectar. Con la regla v3.8 la ocupación media es 94 (2023), 101 (2024) y 105 (2025), coherente con las 106 camas. La ocupación de urgencias (TU, 110 contra 58 camillas) sigue sin cuadrar y se trata solo como medida relativa.
+- **Regla de selección por información (29-oct, `preparar_variables.py` sección 4b):** de cada estancia gemela se conserva el registro con más tipos de información (diagnóstico, procedimiento, laboratorio) y recibe lo que le falte del gemelo
   (`FUSIONAR_INFO=0` lo desactiva). Antes: el de menor `visit_occurrence_id`, que solo tenía diagnóstico en 163 de 6.414 pares en que uno solo lo tenía. Efecto: con diagnóstico 38,3 % → 61,2 % de las estancias, con laboratorio
   44,6 % → 65,4 %, espera mediana 17,99 → 18,10 h; ingresos, camas y panel diario no cambian; R² de la espera 12 % → 13,8 %. Advertencia: el diagnóstico puede ser de la otra persona del par. `exportar_para_equipo.py` usa la marca
   `estancia_unica` de `tabla_episodios`; `construir_segmentos.py` (cuellos de botella) sigue con el de id menor porque solo usa tiempos.
+
+### 4.8 Regla de estancia única v3.8 (1-nov-2026): la ocupación superaba las 106 camas por duplicados que faltaban
+**Problema:** con la regla v3.7 la ocupación media de 2025 era 118,6 camas, y el HUN dice que tiene 106. Si hay un total de camas, la ocupación media no puede superarlo, así que
+había que decidir si fallaba el dato del HUN o nuestro conteo. Pruebas hechas (todas con los datos que ya teníamos):
+- Descartadas como causa: estancias casi idénticas (solo ~216 pares, 1 cama), estancias largas que seguirían "en cama" sin estarlo (los laboratorios llegan hasta ~1,6 días antes del alta; recortarlas baja 0,1 camas),
+  huecos entre etapas (bloques reales de HOSP dan lo mismo), pacientes esperando en urgencias (el HUN dice que la hospitalización se registra al asignar la cama).
+- **Medida independiente:** contar directo sobre `visit_detail` los intervalos HOSP distintos (inicio, fin) (consulta Q4, `sql/consultas_cuellos_botella.sql`) daba 94 / 101 / 105 camas en 2023 / 2024 / 2025, frente a 105 / 113 / 119 del pipeline.
+- **Causa:** la regla v3.7 llamaba gemelas solo a los registros con el mismo inicio Y el mismo fin de cama. Pero en 3.845 estancias uno de los dos registros trae una etapa HOSP adicional al comienzo: el inicio total difiere,
+  pero comparten al menos un intervalo HOSP idéntico al segundo (dos pacientes distintos no comparten un intervalo idéntico por casualidad; en el 96 % de esos pares también coincide el fin y en el 97 % los `person_id` son vecinos, nunca la misma persona).
+**Regla v3.8** (`src/analisis_etapas.py`): una estancia es el conjunto de episodios conectados por compartir el (inicio, fin) de cama **o** algún intervalo HOSP idéntico (union-find). Columnas nuevas en `episodios.csv` y `tabla_episodios`:
+`estancia_id`, `n_registros_estancia`, `ini_hosp_est`, `fin_hosp_est` (mínimo y máximo entre los registros) e `ini_est` (llegada más temprana). **La espera de cama es la de la estancia** (`ini_hosp_est - ini_est`), así no depende de cuál registro se conserve
+(antes sí: la mediana cambiaba hasta 1,4 h según el registro). Se sigue conservando el registro con más información clínica (4.7); la ocupación, los ingresos y las series usan el inicio y fin de toda la estancia.
+Resultado: 35.343 episodios hospitalizados → **25.777 estancias** (antes 27.956; 2.179 duplicados más).
+
+| | Antes (v3.7, 29-oct) | **Ahora (v3.8, 1-nov)** |
+|---|---|---|
+| Estancias únicas | 27.956 | **25.777** |
+| Ingresos a cama por día | 21,8 (2023-24: 22,3 / 22,6) | **20,1** (20,6 / 20,8 / 19,8 en 2023 / 2024 / 2025) |
+| Camas ocupadas, media 2023 / 2024 / 2025 | 105 / 113 / 119 | **94 / 101 / 105** (máximo 143 → 123) |
+| Estancia media 2023 → 2025 | 4,70 → 5,46 días (+16 %) | **4,57 → 5,31 días (+16 %)** |
+| Espera de cama mediana / p75 / p90 | 18,0 / 37,2 / 71,5 h | **18,6 / 37,9 / 73,9 h** |
+| Espera de cama > 24 h | 42,7 % | **43,7 %** |
+| Exceso medio de espera por episodio, 2023 → 2026 | 16,4 → 22,9 h (+40 %) | **17,3 → 23,8 h (+38 %)** |
+| Reparto de las horas de espera: urgencias / hueco sin etapa | 77 % / 23 % | **80 % / 21 %** |
+| Altas entre 14:00 y 18:59 / antes del mediodía | 61,5 % / 15 % | **62,5 % / 14 %** |
+| Escenario de altas (30 % de la tarde pasa a la mañana) | 5,5 camas libres a las 12 h | **5,1** (con ~103 camas ocupadas a esa hora) |
+| Ley de Little: ingresos × estancia | 21,7 × 5,46 ≈ 119 | **19,8 × 5,31 ≈ 105** |
+| R² de los factores de la espera | 13,8 % | **14,7 %** |
+
+Lo que **no cambia** (no depende de las estancias): llegadas por día, calendario, pronóstico de llegadas, días atípicos de llegadas, perfiles por hora de llegada, tiempos por diagnóstico en lo cualitativo.
+Pendiente de revisar por quien lea esto: las cifras de las secciones 4.1 a 6b de este archivo y de los documentos de `docs/` que no aparecen en la tabla (por ejemplo, detalles de las alertas de camas y de R6) son de la regla v3.7; las que
+aparecen en `docs/HALLAZGOS.md`, `docs/recomendaciones.md`, `README.md` y `powerbi/` ya se actualizaron. Respaldo completo de lo anterior en `datos/procesados/respaldo_dedup_v37/` y `resultados/respaldo_dedup_v37/` (no se suben a git).
+**Revisión directa en la base (2-nov-2026, `src/explorar_bd.py` + `src/conexion_bd.py`, solo lectura; los resultados están en `datos/crudos/exploracion_bd/`, fuera de git):**
+- **El esquema real tiene 8 tablas** (`person`, `visit_occurrence`, `visit_detail`, `condition_occurrence`, `procedure_occurrence`, `measurement`, `concept` y `cups`). `visit_detail` solo trae id, visita, tipo de etapa, inicio, fin y `provider_id`:
+  **no hay servicio, sede, piso ni cama**, así que no se puede separar camas de camillas con los datos. `concept` solo trae `concept_id`, `concept_name`, `domain_id` y `vocabulary_id` (sin `concept_code`).
+- `cups` es el catálogo nacional de procedimientos (94.086 filas, columnas `codigo`, `descripcion`, `periodo`). **No se puede enlazar** con `procedure_occurrence`: sus códigos son SNOMED, LOINC o ICD9Proc, y ninguno de los 158 más frecuentes coincide con un código CUPS.
+- **Duplicados que pudieran quedar:** entre las 15.946 estancias únicas con 3 o más diagnósticos, solo 1 par (de la misma persona, con 916 h de diferencia) comparte la misma huella de diagnósticos (cantidad y primera/última hora). Quitarla no cambia la ocupación (105,0). Con esto, **los duplicados residuales son despreciables**.
+- **Diagnósticos con código por semana** (`condition_occurrence`, directo de la base): ~160 mil filas con código por semana hasta el 20-abr, 110 mil la semana del 27-abr, 36 mil la del 4-may y **cero desde el 11-may**. Las filas sin código (concepto 0) se mantienen en ~70–85 mil por semana. Confirma en la base lo que se veía en los CSV: el código estándar se pierde a inicios de mayo de 2026.
+**Sobre la ocupación de camas (conclusión):** la media de 2025 (105) es casi la capacidad (106), pero no es un error: un hospital con 18 h de espera mediana por una cama está saturado, y eso es justo lo que se espera de un hospital con las camas casi siempre llenas. Los picos hasta 123 serían camas
+de apoyo o camillas; no se puede comprobar. **Sobre urgencias:** la ocupación de TU no es comparable con las 58 camillas, porque TU incluye a todo paciente en atención en urgencias (consultorios, sillas, observación), no solo camillas. Con intervalos distintos (cuenta directa de la base, Q4) la media de TU de 2025 es 103;
+con el pipeline (que aún cuenta los episodios de cada gemelo) sale 126; con estancias únicas, 118. Pendiente menor: aplicar la misma deduplicación de intervalos a `ocup_tu`. 
+Hay 1.762 estancias cuyas etapas HOSP vienen de copias y no de su propia visita (aportan ~4 camas en 2025 con la regla v3.7; no se pudo comprobar si son reales).
+
+### 4.9 Auditoría directa en la base (2-nov-2026): el quiebre de mayo está en el DETALLE, no en las visitas (`src/auditoria_bd.py`, resultados en `datos/crudos/auditoria_bd/`, fuera de git)
+Lote 1 (23 consultas de solo lectura, 4,7 min). Lo que confirma y lo que cambia:
+- **El quiebre de abril–mayo de 2026 está en `visit_detail` (las etapas), no en `visit_occurrence` (las visitas).** Visitas de urgencias (cabecera, `visit_concept_id` 9203) por mes: 12.8 mil (ene), 11.8 mil (feb), 13.5 mil (mar), 16.8 mil (abr), 14.1 mil (may), 12.7 mil (jun);
+  frente a 2025: ene −2 %, feb +4 %, mar +4 %, abr +35 %, **may +2 %**. En cambio las etapas ER caen 64 % en mayo frente a mayo de 2025, las TU 46 % y las HOSP 45 %. La razón etapas ER / visitas ER pasa de ~0,80–0,84 (hasta marzo) a 0,59 (abril), 0,28 (mayo) y 0,30 (junio).
+  Los laboratorios también bajan (filas −46 %, visitas con laboratorio −51 %) y los diagnósticos con código llegan a 0 desde el 11-may. **Todo apunta a detalle incompleto desde el 29-abr, no a menos pacientes.**
+- **La baja ya venía antes en las etapas TU:** −15 % en enero, −14 % febrero, −13 % marzo y −17 % abril frente al mismo mes de 2025, con las visitas y las etapas ER planas. Eso explica la caída de "llegadas con atención" (que depende de TU) desde enero de 2026; puede ser un artefacto de registro.
+- **Validan nuestros números (independiente del pipeline):** altas por hora: 61,3 % entre 14:00 y 18:59 y 15,3 % antes del mediodía (pipeline: 62,5 % y 14 %); ingresos a cama por hora, mismo perfil; copias de la misma persona por desfase de id ~250 mil (concuerda con 4.1);
+  horas redondas en inicio y fin de HOSP: 36 de 104.600 (no hay marcas administrativas); años de nacimiento imposibles: 87 personas de 912 mil (despreciable).
+- **Camas:** (a) en 2025 hay 438 intervalos HOSP de una misma persona que se solapan con otro suyo (19.375 horas, ~2,2 camas de doble conteo; 2023: 1,7; 2024: 1,8); no corregido, menor. (b) La repetición de intervalos TU en la base es 2,6 veces (708.832 filas cerradas, 271.087 intervalos distintos), y de HOSP 2,6 veces (104.600 por visita, 40.064 distintos), coherente con las gemelas.
+  (c) Los laboratorios de la visita conservada llegan hasta una mediana de 23 h antes del alta (34 h en estancias de 48 h o más): puede indicar altas registradas tarde, pero esa consulta solo vio los laboratorios de UNA de las visitas gemelas (17,9 % de las estancias tenían alguno); el lote 2 la repite con todas.
+- Diagnóstico: hay 2 filas por trimestre con fecha futura (de 2026 a 2033) en una sola visita (error de dato, despreciable). Las comparaciones de espera "a nivel de visita" sin cortar episodios dan resultados distintos (mediana 29 h) y no sirven de contraste; el lote 2 incluye el corte de 168 h.
+**Lote 2 (6 consultas, 2,3 min) — el registro se degrada desde el 10-abr-2026, no desde mayo:**
+- **Fechas del quiebre (visitas de urgencias de cabecera, por día):** hasta el 9-abr, el 65 % de las visitas tiene etapa ER, ~75 % tiene etapa TU y ~10 % ninguna etapa (estable desde 2025). **Desde el 10-abr** la proporción con etapa ER baja a ~52 % y las visitas diarias suben ~40 % (de ~490 a ~700 en días de semana; semanas de 4,6 mil visitas contra 3,2 mil), con más visitas sin ninguna etapa (14–17 %). **Desde el 29-abr** la etapa ER cae a ~30 % y las visitas sin etapa a ~22 %.
+  Mensual (visitas de urgencias): % con etapa ER 65,7 (ene) / 64,7 (feb) / 64,6 (mar) / 54,0 (abr) / 28,4 (may) / 29,6 (jun); % sin ninguna etapa 9,7 / 10,5 / 10,3 / 13,5 / 22,2 / 23,4.
+- **El 28 y 29 de marzo son una caída de TODO el registro (no solo de nuestras etapas):** solo 14 visitas el 28-mar y 118 el 29-mar (lo normal son 400–600). Es un corte del sistema o de la extracción; excluir esos días es correcto.
+- **Las personas se reducen a la mitad y repiten más:** visitas por persona y mes ~2,0 hasta marzo; 2,70 en abril; 2,99 en mayo; 3,05 en junio. Personas distintas con visita: 19.069 (mar) → 11.806 (may), −48 % frente a mayo de 2025. Las personas nuevas por mes se mantienen (4–6 mil).
+- **Validación independiente de la espera de cama** (con corte de episodios de 168 h, sin pipeline): mediana 17,2 h, p75 36,6, p90 71,0, 42 % con más de 24 h (2023: 17,9 h; 2024: 15,9; 2025: 17,0; 2026: 18,7; p90 60 → 63 → 79 → 80). Coincide con el pipeline (18,6 / 37,9 / 73,9) y confirma que los peores casos empeoran.
+- **Altas y laboratorios:** el último diagnóstico de cada estancia cae una mediana de 1 h antes del alta registrada (p90: 4 h), así que la hora de alta coincide con el cierre clínico; el último laboratorio, ~27 h antes (34 h en estancias de 72 h o más), compatible con laboratorios de la mañana y altas de la tarde del día siguiente. **No hay evidencia de que las altas se registren tarde**; no se corrige la ocupación.
+- Repetición: cada intervalo de cama distinto aparece en 2,4 visitas (el 76 % de las estancias está en 2 o más visitas), coherente con las gemelas ya tratadas. Cobertura de laboratorios por estancia (con todas las gemelas): 69 % (pipeline 69,3 %).
+**Cambios hechos el 2-nov por esta conclusión:** `src/modelo_pronostico.py` (`FIN_CONFIABLE = "2026-04-09"`, `INICIO_QUIEBRE = "2026-04-10"`) entrena el calendario y el nivel solo hasta el 9-abr y no cuenta los destinos desde el 10-abr en el error ni en la banda; `cargar_panel(limpiar=True)` deja vacíos esos días.
+`pronostico_con_banda(..., desde=)` permite pronosticar desde cualquier fecha con el nivel del último dato confiable (los `dias_adelante` cuentan desde el 9-abr, así que la banda es la de ~7 meses). El dashboard (`dashboard/app.py` v4) **parte de mañana**, dibuja el real SIN limpiar con la zona 10-abr a 31-may marcada como "registro incompleto" y ya no compara con el supuesto "reciente".
+Resultados con el corte nuevo (antes del 10-abr): error de llegadas con atención 7,9 % a 1–7 días y 11,5 % a un año; ingresos a cama 17,8 % a 1–7 días y 19,3 % a un año. Tablas rehechas: `evaluacion_modelo.csv`, `pronostico_futuro.csv` (365 días desde mañana), `pruebas_pronostico_resumen.csv`, `prueba_2026.csv`, `prueba_mes_conocido.csv`.
+Sin rehacer (exploratorios con el corte anterior): `comparacion_banda_caida.py` y `grafico_comparacion_banda.py`, y la v1.3 `pronostico_demanda.py` (prueba de ene–abr 2026, que incluye 20 días degradados).
+**Conclusión de la auditoría:** el periodo confiable de las etapas va de feb-2023 al **9-abr-2026**. Del 10-abr en adelante (visitas inflada +40 %, etapas ER y personas en caída) y, sobre todo, del 29-abr, los datos son estructuralmente distintos y no deben usarse para estimar nivel ni evaluar modelos; marzo-2026 conserva el corte del 28–29-mar (excluido).
 
 ## 5. Decisiones de método (ya tomadas, no reabrir sin un motivo nuevo)
 
@@ -401,7 +462,7 @@ Respuestas (tomadas en la reunión, sin documento escrito; no habrá más sesion
 
 ---
 
-## 6b. Cuellos de botella: resultados (22-oct, estancias únicas; fases 2 a 5 de `docs/plan_de_accion.md`)
+## 6b. Cuellos de botella: resultados (22-oct, estancias únicas v3.7; **las cifras vigentes de espera, ingresos, camas y ocupación están en la sección 4.8**; fases 2 a 5 de `docs/plan_de_accion.md`)
 
 - **Segmentos candidatos** (27.167 estancias): espera de cama (mediana 18,0 h, p90 71,5 h), urgencias antes de la cama
   (77 % de las horas de espera) y hueco sin etapa antes de la cama (lo tiene ~24 % de los hospitalizados, mediana 19,7 h
@@ -559,7 +620,7 @@ escenarios y supuestos escritos y se declara como limitación en el documento fi
 12. Hay episodios de varios días en urgencias (TU) sin hospitalización registrada (ej. una visita de enero de 2023 con 177 h): ¿esperan
     cama sin que se registre, observación prolongada o error?
 13. Estancias gemelas (4.6): ¿cuál es la persona real cuando la misma estancia aparece en dos pacientes? (ampliación de la 1)
-14. Desde abril de 2026 las llegadas bajan ~25–35 % (y los ingresos ~20–30 %) y los laboratorios caen a la mitad en may–jun:
+14. (Respondida por la auditoría del 2-nov: es el registro de etapas, no la demanda; ver 4.9.) Desde abril de 2026 las llegadas bajan ~25–35 % (y los ingresos ~20–30 %) y los laboratorios caen a la mitad en may–jun:
     ¿cambió el volumen real (cierre de servicio, cambio de triage) o el registro, o la extracción está incompleta en los
     últimos meses?
 
@@ -593,7 +654,7 @@ Reglas para los modelos:
 - Validación temporal (entrenar con pasado, probar con futuro), nunca aleatoria.
 
 Limitaciones a declarar en el documento: copias (30 %) y estancias gemelas (41 % de los hospitalizados), etapas TU sin hora de fin
-(36–42 %), diagnósticos tardíos y sin jerarquía, número de camas desconocido, procedimientos sin fecha, sin signos vitales, caída de llegadas
-desde abril de 2026 sin explicar, y que casi todo son asociaciones.
+(36–42 %), diagnósticos tardíos y sin jerarquía, número de camas desconocido, procedimientos sin fecha, sin signos vitales, registro de etapas degradado
+desde el 10 de abril de 2026 (causa sin explicar), y que casi todo son asociaciones.
 
 Documento del equipo (Claude Docs): "Exploración BD — Data Challenge HUN 2026".

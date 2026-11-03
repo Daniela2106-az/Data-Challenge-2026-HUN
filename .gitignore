@@ -19,3 +19,14 @@ archivo/muestra_ids_values.txt
 # Power BI y notebooks: archivos con datos incrustados
 *.pbix
 *.ipynb_checkpoints/
+
+# Credenciales: nunca al repositorio
+.pgpass
+.hun_db.json
+.env
+*.env
+credenciales*
+contrasenas*
+
+# Respaldos de resultados (tablas derivadas de la base)
+resultados/respaldo_*/

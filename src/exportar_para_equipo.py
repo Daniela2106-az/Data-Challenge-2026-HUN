@@ -39,6 +39,11 @@ hosp = bl[bl.etapa == "HOSP"]
 # ---- estancias en cama -------------------------------------------------------------------------
 est = hosp.groupby(K).agg(ingreso_cama=("ini", "min"), alta=("fin", "max"),
                           horas_hosp=("horas", "sum"), n_bloques_hosp=("etapa", "size")).reset_index()
+# v2.3: el inicio y el fin de cama de cada estancia son los de TODA la estancia (minimo y maximo entre sus registros gemelos, analisis_etapas.py v3.8)
+est = est.merge(ep[K + ["ini_hosp_est", "fin_hosp_est", "n_registros_estancia"]], on=K, how="left")
+est["ingreso_cama"] = est.ini_hosp_est.fillna(est.ingreso_cama)
+est["alta"] = est.fin_hosp_est.fillna(est.alta)
+est = est.drop(columns=["ini_hosp_est", "fin_hosp_est"])
 est["alta_completa"] = est.alta < pd.Timestamp(OCUP_HASTA)   # las altas posteriores quedan cortadas por la extraccion
 cols = ["ini", "hora", "dia_semana_num", "mes", "festivo", "edad", "grupo_edad", "sexo", "tipo_visita",
         "categoria_dx", "n_lab_6h", "espera_cama_h", "espera_mas_24h", "ocup_hosp", "llegadas_6h_previas",
@@ -47,7 +52,8 @@ est = est.merge(ep[K + cols].rename(columns={"ini": "llegada", "hora": "hora_lle
 
 # estancias gemelas: mismo inicio y fin de cama en otro episodio -> se cuenta una vez
 est = est.sort_values(K).reset_index(drop=True)
-est["n_registros"] = est.groupby(LLAVE_ESTANCIA).visit_occurrence_id.transform("size")
+est["n_registros"] = est.n_registros_estancia
+est = est.drop(columns="n_registros_estancia")
 n_antes = len(est)
 est = est[est.estancia_unica].reset_index(drop=True)   # v2.1: el registro conservado por preparar_variables.py (el de mas informacion)
 est.to_csv(SALIDA / "estancias_hospitalizacion.csv", index=False)
@@ -69,6 +75,10 @@ ocup_d = ocup_h.groupby(ocup_h.index.normalize()).agg(["mean", "max"])
 d = pd.DataFrame(index=dias)
 d.index.name = "fecha"
 d["llegadas"] = sd.llegadas
+# llegadas con atencion: episodios que tienen TU u hospitalizacion (todos menos los que solo tienen la etapa ER de admision). El 29-abr-2026
+# cambia el registro de la etapa ER y esta serie depende menos de ella (CLAUDE.md 4.7)
+_con_at = ep[ep.ruta != "ER"].ini.dt.normalize().value_counts()
+d["llegadas_con_atencion"] = _con_at.reindex(dias, fill_value=0)
 d["hospitalizados"] = est.llegada.dt.normalize().value_counts().reindex(dias, fill_value=0)
 d["ingresos_a_cama"] = est.ingreso_cama.dt.normalize().value_counts().reindex(dias, fill_value=0)
 d["altas"] = completas.alta.dt.normalize().value_counts().reindex(dias, fill_value=0)

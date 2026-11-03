@@ -47,7 +47,7 @@ la base.
 | 3 | Referencias, exceso, impacto y ranking (con las tres referencias) | Q3 | ¿El orden se mantiene entre referencias? |
 | 4 | Dependencia de la carga y controles por edad y diagnóstico | Q3, Q4 | Clasificar cada segmento (capacidad, turnos, proceso) |
 | 5 | Altas tardías por hora; factores del exceso | Q3 (+ dx y laboratorios ya exportados) | ¿Se sostiene la hipótesis de altas tardías? |
-| 6 | Demanda, estancias, simulación de camas, escenarios | Q3, Q4 | La diferencia ocupación por horas (~100) frente a Little (~144) ya tiene explicación (21-oct): el 41 % de los episodios hospitalizados tiene una estancia "gemela" replicada entre dos personas. **Decidido el 22-oct: se cuenta cada estancia una vez** (~113 camas, ~22 ingresos/día; CLAUDE.md 4.6). Falta medir si las llegadas también están infladas |
+| 6 | Demanda, estancias, simulación de camas, escenarios | Q3, Q4 | La diferencia ocupación por horas (~100) frente a Little (~144) ya tiene explicación (21-oct): el 41 % de los episodios hospitalizados tiene una estancia "gemela" replicada entre dos personas. **Decidido el 22-oct: se cuenta cada estancia una vez** (~100 camas, ~20 ingresos/día; CLAUDE.md 4.6). Falta medir si las llegadas también están infladas |
 | 7 | Alertas de sistema y de paciente, probadas sobre días pasados | Q3, Q4 | Pocas alertas por día y con anticipación |
 | 8 | Power BI, documento, README | — | — |
 
@@ -62,7 +62,7 @@ la base.
 | 5 | **El tipo de visita no es confiable** | Visitas "ambulatorias" incluyen urgencias y hospitalización. | Usamos las etapas, no el tipo de visita. |
 | 6 | **Ocupación incompleta** | Solo vemos a los pacientes de esta base; no sabemos cuántas camas tiene el hospital. La ocupación casi no cambia la espera, pero puede ser por esto. | Se pide al HUN el número de camas. |
 
-Resultado actual (23-oct, con estancias en cama contadas una sola vez): 337.194 episodios; **espera de cama: mediana 18 h, percentil 90 de 71,5 h, 43 % espera más de 24 h**;
+Resultado actual (23-oct, con estancias en cama contadas una sola vez): 337.194 episodios; **espera de cama: mediana 18,6 h, percentil 90 de 73,9 h, 44 % espera más de 24 h**;
 la espera es más larga si se llega a media tarde (mediana ~25 h entre las 13 y las 16 h) que de madrugada (12–15 h). Todos los hallazgos con cifras y fuentes: `docs/HALLAZGOS.md`.
 
 ## 2. Qué más podemos revisar (en orden de utilidad)

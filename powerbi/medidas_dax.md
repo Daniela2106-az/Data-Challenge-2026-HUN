@@ -26,7 +26,7 @@ Estancia mediana h = MEDIAN ( bi_estancias[estancia_h] )
 Espera mediana h (n>=30) = IF ( [Estancias con espera medida] >= 30, [Espera mediana h], BLANK () )
 Espera p90 h (n>=30) = IF ( [Estancias con espera medida] >= 30, [Espera p90 h], BLANK () )
 ```
-Controles (todo el periodo, sin filtros): estancias 27.956; mediana 18,0; p75 37,2; p90 71,5; >24 h 42,7 %; >48 h 19 %; urgencias 77 %. (Valores ligeramente distintos entre Q3 y pipeline: ver `cifras_de_control.csv`.)
+Controles (todo el periodo, sin filtros): estancias 25.777; mediana 18,8; p75 37,9; p90 73,3; >24 h 43,9 %; >48 h 20 %; urgencias 79 %. (Valores ligeramente distintos entre Q3 y pipeline: ver `cifras_de_control.csv`.)
 
 ## Demanda y camas
 ```DAX
@@ -44,7 +44,7 @@ Crear tres parámetros con *Modelado → Nuevo parámetro → Rango numérico* (
 ```DAX
 Ingresos base = 21.7        -- escenarios_little, fila "hoy (2025)"
 Estancia base = 5.46
-Camas base = [Ingresos base] * [Estancia base]   -- 118,5 (la tabla dice 118,6 por redondeo)
+Camas base = [Ingresos base] * [Estancia base]   -- 118,5 (la tabla dice 105,0 por redondeo)
 Camas ocupadas escenario = [Camas base] * ( 1 + [Delta ingresos Valor] ) * ( 1 + [Delta estancia Valor] )
 Diferencia de camas = [Camas ocupadas escenario] - [Camas base]
 Camas libres a las 12 h =
@@ -55,7 +55,7 @@ Espera evitada cota % =
 Espera evitada estimación % =
     LOOKUPVALUE ( bi_escenario_altas[estimacion_pct_del_exceso], bi_escenario_altas[proporcion_pct], [Proporcion altas Valor] )
 ```
-Los nombres `[Delta ingresos Valor]` dependen de cómo Power BI nombre la medida generada: ajustar. Cuidado: con `Proporcion altas` = 30 deben salir 5,5 camas libres y 8,3 % / 2,9 %. Hay que decir en pantalla: «escenario, no predicción; la estimación supone que el efecto en la espera es una fracción de la cota».
+Los nombres `[Delta ingresos Valor]` dependen de cómo Power BI nombre la medida generada: ajustar. Cuidado: con `Proporcion altas` = 30 deben salir 5,1 camas libres y 8,3 % / 2,9 %. Hay que decir en pantalla: «escenario, no predicción; la estimación supone que el efecto en la espera es una fracción de la cota».
 Más adelante, A5 (Anthony) aportará bandas Monte Carlo: **Pendiente**.
 
 ## Pronóstico

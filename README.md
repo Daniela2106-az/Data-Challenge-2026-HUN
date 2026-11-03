@@ -32,20 +32,20 @@ preguntas que puedes hacerle:
 
 ## Los hallazgos principales (resumen)
 
-1. **El cuello de botella es la espera de cama:** mediana de **18 h** y percentil 90 de **71,5 h** desde que llega el paciente hasta que
-   entra a cama. El 77 % de ese tiempo es en urgencias y el 23 % es tiempo sin ninguna etapa registrada.
+1. **El cuello de botella es la espera de cama:** mediana de **18,6 h** y percentil 90 de **73,9 h** desde que llega el paciente hasta que
+   entra a cama. El 80 % de ese tiempo es en urgencias y el 21 % es tiempo sin ninguna etapa registrada.
 2. **Los peores casos empeoran:** el percentil 90 de la espera sube de 61 h (2023) a 80 h (2026); la mediana casi no cambia.
-3. **Las altas son tardías:** 61,5 % entre las 14:00 y las 18:59 y solo 15 % antes del mediodía; las camas se asignan a las 17–18 h.
+3. **Las altas son tardías:** 62,5 % entre las 14:00 y las 18:59 y solo 14 % antes del mediodía; las camas se asignan a las 17–18 h.
    Quien llega a media tarde espera más.
-4. **Adelantar altas ayuda poco:** pasar el 30 % de las altas de la tarde a la mañana libera hasta 5,5 camas, pero evita como máximo ~8 % del
+4. **Adelantar altas ayuda poco:** pasar el 30 % de las altas de la tarde a la mañana libera hasta 5,1 camas, pero evita como máximo ~8 % del
    exceso de espera (estimación central ~3 %).
-5. **La ocupación sube por la estancia, no por más pacientes:** de 105 a 119 camas ocupadas (2023 a 2025) con estancia de 4,7 a 5,5 días e
-   ingresos estables (~22 por día).
+5. **La ocupación sube por la estancia, no por más pacientes:** de 94 a 105 camas ocupadas (2023 a 2025) con estancia de 4,6 a 5,3 días e
+   ingresos estables (~20 por día).
 6. **Se puede pronosticar la demanda:** llegadas por día con error de 7,5 %; los ingresos solo por semana (9,5 %). El Carnaval de
    Barranquilla baja las visitas ~17 %.
 7. **Alertas probadas:** "día congestionado" a las 12 h detecta 83 % de esos días; ~5 alertas por día en total con el diseño recomendado.
 8. **Problemas de datos clave:** ~30 % de visitas copiadas, **41 % de las estancias en cama duplicadas entre dos personas**, y desde
-   abril de 2026 las llegadas caen 25–35 % (posible carga incompleta).
+   el 10 de abril de 2026 el registro de las etapas se degrada (las visitas de urgencias no bajan; baja el detalle registrado): esos días no se usan.
 9. **Qué no se sabe:** el número de camas del hospital, la meta de tiempos y la causa de la caída de 2026. Todo son asociaciones y escenarios,
    no causas probadas.
 
@@ -133,4 +133,4 @@ dejarlas en esas mismas rutas.
 ## Limitaciones (resumen)
 
 Copias y réplicas de registros, etapas de urgencias sin hora de salida (36–42 %), diagnósticos tardíos y sin jerarquía, número de camas
-desconocido, procedimientos sin fecha, sin signos vitales y la caída de llegadas desde abril de 2026. Detalle en `docs/HALLAZGOS.md`, sección 7.
+desconocido, procedimientos sin fecha, sin signos vitales y el registro de etapas degradado desde el 10 de abril de 2026. Detalle en `docs/HALLAZGOS.md`, sección 7.

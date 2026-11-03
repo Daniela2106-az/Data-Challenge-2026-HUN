@@ -9,7 +9,7 @@ Las columnas `*_pct` están en escala 0 a 100. Las duraciones están en **horas*
 
 | Archivo | Grano (una fila es...) | Filas | Columnas clave |
 |---|---|---|---|
-| `bi_estancias.csv` | una **estancia en cama**, sin ids ni fecha exacta | 27.956 | `anio`, `mes`, `anio_mes`, `dia_semana_num`, `dia_semana`, `hora_llegada`, `franja`, `grupo_edad`, `sexo`, `tipo_visita`, `espera_h`, `hueco_h`, `urgencias_antes_h`, `estancia_h`, `hora_ingreso_cama`, `hora_alta`, `espera_mas_24h`, `espera_mas_48h`, `sin_espera_medida`, `periodo_caida_de_datos` |
+| `bi_estancias.csv` | una **estancia en cama**, sin ids ni fecha exacta | 25.777 | `anio`, `mes`, `anio_mes`, `dia_semana_num`, `dia_semana`, `hora_llegada`, `franja`, `grupo_edad`, `sexo`, `tipo_visita`, `espera_h`, `hueco_h`, `urgencias_antes_h`, `estancia_h`, `hora_ingreso_cama`, `hora_alta`, `espera_mas_24h`, `espera_mas_48h`, `sin_espera_medida`, `periodo_caida_de_datos` |
 | `bi_llegadas.csv` | una combinación de año, día, hora, tipo de visita y edad | ~19 mil | `anio`, `dia_semana_num`, `dia_semana`, `hora`, `tipo_visita`, `grupo_edad`, `llegadas`, `llegadas_con_atencion`, `hospitalizados_unicos` |
 | `bi_calendario.csv` | una fecha (2023-01-01 a 2026-07-31) | 1.308 | `fecha`, `anio`, `mes`, `nombre_mes`, `anio_mes`, `dia_semana_num`, `dia_semana`, `es_fin_de_semana`, `festivo`, `semana_santa`, `carnaval`, `fin_anio_24_31_dic`, `fin_anio_25_dic_1_ene`, `periodo_caida_de_datos` |
 | `bi_escenario_altas.csv` | un % de altas adelantadas (0 a 100, de 5 en 5) | 21 | `proporcion_pct`, `altas_movidas_por_dia`, `horas_cama_liberadas_por_dia`, `cota_pct_del_exceso`, `estimacion_pct_del_exceso`, `estimacion_pct_de_la_espera` |
@@ -21,8 +21,8 @@ Las columnas `*_pct` están en escala 0 a 100. Las duraciones están en **horas*
 - `espera_h` está vacía en 794 estancias (779 con hospitalización directa: la primera etapa ya era cama). Los percentiles de Power BI ignoran los vacíos.
 - `estancia_h` y `hora_alta` solo existen si el alta es posterior a la extracción de datos (`alta_completa`).
 - `urgencias_antes_h` + `hueco_h` = `espera_h`. Urgencias mezcla atención y espera de cama: no se pueden separar con los datos.
-- `periodo_caida_de_datos = 1` marca llegadas desde el 1-may-2026 (las llegadas bajan 25 a 35 %, posible carga incompleta). Las cifras de control incluyen esas filas; sin ellas la
-  espera mediana es 17,8–17,9 h y el percentil 90 es 70,6–70,9 h (la diferencia viene de qué registro de cada estancia gemela se conserva; los documentos citan 18,0 y 71,5 de `construir_segmentos.py`, el paquete da 18,1 y 71,6).
+- `periodo_caida_de_datos = 1` marca llegadas desde el 1-may-2026 (el registro de etapas está degradado desde el 10-abr-2026, no es menos demanda; la marca no se movió para no cambiar el paquete). Las cifras de control incluyen esas filas; sin ellas la
+  espera mediana es 18,6 h y el percentil 90 es 72,7 h. Los documentos del proyecto citan 18,6 y 73,9 (`construir_segmentos.py`, con los episodios de Q3); este paquete da 18,8 y 73,3 (pipeline), una diferencia de décimas.
 - Filas mezcladas al azar para que no sigan el orden de llegada. Es información sensible: ver `../docs/hun/sesion_de_preguntas.md` (D2 y D3) antes de publicarla.
 - `grupo_edad = "sin dato"` solo aparece en `bi_llegadas` (21 episodios con edad imposible).
 
