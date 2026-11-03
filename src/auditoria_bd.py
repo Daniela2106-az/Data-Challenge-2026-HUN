@@ -19,6 +19,7 @@ QUE COMPRUEBA (cada bloque responde una duda concreta)
   F. Diagnosticos: filas con y sin codigo por mes (2023 a 2026), fechas futuras y hora del diagnostico frente a la visita (muestra).
   G. Personas: anios de nacimiento imposibles y sexo.
 
+          python3 src/auditoria_bd.py --esperar 120 --lote 3 (lote 3: actividad por estancia: dias con laboratorio, UCI y nutricion hospitalaria)
 USO       python3 src/auditoria_bd.py --esperar 120          (lote 1, ya corrido el 2-nov: 23 consultas, 4,7 min)
           python3 src/auditoria_bd.py --esperar 120 --lote 2 (lote 2: visitas con y sin etapas, personas, espera con episodios, laboratorios y diagnosticos por estancia)
           python3 src/auditoria_bd.py --probar-local         (prueba la sintaxis de las consultas con DuckDB y tablas vacias; no usa la base)
@@ -238,6 +239,29 @@ CONSULTAS_2 = [
         FROM vv LEFT JOIN {S}.condition_occurrence c ON c.visit_occurrence_id = vv.visit_occurrence_id AND c.condition_start_datetime BETWEEN vv.ini AND vv.fin
         GROUP BY vv.sid"""),
 ]
+
+# ---------------------------------------------------------------------------------------------------------------------------------------------
+# LOTE 3 (2-nov-2026): ¿las estancias largas y las de visitas "Treatment urgency" son pacientes con actividad de hospitalizacion cada dia?
+# (la ocupacion supera las 106 camas desde 2024 y el exceso viene de estancias de mas de 14 dias y de las visitas Treatment urgency, que pasaron de 269 a 958
+#  estancias por anio entre 2023 y 2025). Por estancia: dias con laboratorio, procedimientos de UCI y de nutricion hospitalaria, tipo de visita y persona.
+# ---------------------------------------------------------------------------------------------------------------------------------------------
+CONSULTAS_3 = [
+    ("S01_actividad_por_estancia", f"""
+        WITH v AS (SELECT visit_occurrence_id, min(visit_detail_start_datetime) AS ini, max(visit_detail_end_datetime) AS fin
+                   FROM {S}.visit_detail vd WHERE {HOSP_CERRADA} GROUP BY 1),
+             vv AS (SELECT v.visit_occurrence_id, v.ini, v.fin, vo.visit_concept_id, vo.person_id, dense_rank() OVER (ORDER BY v.ini, v.fin) AS sid
+                    FROM v JOIN {S}.visit_occurrence vo ON vo.visit_occurrence_id = v.visit_occurrence_id
+                    WHERE v.fin < '2026-04-10' AND v.ini >= '2023-02-01'),
+             lab AS (SELECT vv.sid, count(*) AS n_lab, count(DISTINCT m.measurement_datetime::date) AS dias_con_lab
+                     FROM vv JOIN {S}.measurement m ON m.visit_occurrence_id = vv.visit_occurrence_id AND m.measurement_datetime BETWEEN vv.ini AND vv.fin
+                     GROUP BY 1),
+             pr AS (SELECT vv.sid, count(*) FILTER (WHERE p.procedure_concept_id = 4137917) AS n_uci, count(*) FILTER (WHERE p.procedure_concept_id = 4138350) AS n_nutricion
+                    FROM vv JOIN {S}.procedure_occurrence p ON p.visit_occurrence_id = vv.visit_occurrence_id WHERE p.procedure_concept_id IN (4137917, 4138350) GROUP BY 1)
+        SELECT vv.sid, min(vv.ini) AS ini, min(vv.fin) AS fin, count(*) AS visitas_gemelas, min(vv.visit_concept_id) AS tipo_visita_min, max(vv.visit_concept_id) AS tipo_visita_max,
+               min(vv.person_id) AS persona, coalesce(max(lab.n_lab), 0) AS n_lab, coalesce(max(lab.dias_con_lab), 0) AS dias_con_lab,
+               coalesce(max(pr.n_uci), 0) AS n_uci, coalesce(max(pr.n_nutricion), 0) AS n_nutricion
+        FROM vv LEFT JOIN lab ON lab.sid = vv.sid LEFT JOIN pr ON pr.sid = vv.sid GROUP BY vv.sid"""),
+]
 CONSULTAS = CONSULTAS_1
 
 
@@ -264,6 +288,7 @@ def probar_local():
                     CREATE TABLE {S}.visit_detail (visit_detail_id BIGINT, visit_occurrence_id BIGINT, visit_detail_concept_id INT, visit_detail_start_datetime TIMESTAMP, visit_detail_end_datetime TIMESTAMP, provider_id INT);
                     CREATE TABLE {S}.condition_occurrence (condition_occurrence_id BIGINT, person_id BIGINT, visit_occurrence_id BIGINT, condition_concept_id INT, condition_start_datetime TIMESTAMP, condition_type_concept_id INT);
                     CREATE TABLE {S}.measurement (measurement_id BIGINT, person_id BIGINT, visit_occurrence_id BIGINT, measurement_concept_id INT, measurement_datetime TIMESTAMP, value_as_number DOUBLE, measurement_source_value_extended VARCHAR);
+                    CREATE TABLE {S}.procedure_occurrence (procedure_occurrence_id BIGINT, person_id BIGINT, visit_occurrence_id BIGINT, procedure_concept_id INT, procedure_date DATE);
                     CREATE TABLE {S}.person (person_id BIGINT, gender_concept_id INT, year_of_birth INT, race_concept_id INT, ethnicity_concept_id INT);
                     CREATE TABLE {S}.concept (concept_id INT, concept_name VARCHAR, domain_id VARCHAR, vocabulary_id VARCHAR);""")
     # con una fila de cada cosa para que las consultas no pasen vacias por casualidad
@@ -290,7 +315,7 @@ if __name__ == "__main__":
     ap.add_argument("--probar-local", action="store_true")
     ap.add_argument("--lote", type=int, default=1)
     a = ap.parse_args()
-    CONSULTAS = CONSULTAS_2 if a.lote == 2 else CONSULTAS_1
+    CONSULTAS = {1: CONSULTAS_1, 2: CONSULTAS_2, 3: CONSULTAS_3}[a.lote]
     if a.probar_local:
         probar_local()
         raise SystemExit(0)
