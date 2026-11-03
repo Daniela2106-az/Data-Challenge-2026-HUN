@@ -27,7 +27,7 @@ señala qué script o consulta la produciría. Distingue siempre *asociación* d
    se asignan a las 17–18 h. Quien llega a media tarde espera más (mediana de ~25 h frente a 12–15 h de madrugada).
 7. **Adelantar altas ayuda poco:** pasar el 30 % de las altas de la tarde a la mañana libera hasta 5,1 camas a las 12 h, pero evita
    como máximo ~8 % del exceso de espera (estimación central ~3 %). El 83 % de las horas de espera viene de esperas de más de 24 h.
-8. **La ocupación sube por la estancia, no por la demanda:** camas ocupadas de 94 (2023) a 105 (2025); estancia media de 4,57 a
+8. **La ocupación sube por la estancia (sobre todo las de más de 30 días: 6 a 13 camas entre 2023 y 2025), no por la demanda:** camas ocupadas de 94 (2023) a 105 (2025); estancia media de 4,57 a
    5,31 días (+16 %); ingresos estables en ~20 por día.
 9. **La carga del momento explica poco:** cada decil más de llegadas sube la espera ~2,5 %; la ocupación y el día de la semana casi
    no importan. Todos los factores observables juntos explican solo el 14 % de la variación de la espera.

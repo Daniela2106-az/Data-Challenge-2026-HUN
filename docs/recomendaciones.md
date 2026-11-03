@@ -29,7 +29,7 @@ su número de camas el 29-oct (106 y 58 camillas), pero nuestra ocupación lo su
 | 4 | Meta de altas antes del mediodía (empezar con 25–30 %) | Hasta 5,1 camas libres a las 12 h; evita como máximo 8 % del exceso de espera (estimación central ~3 %) | Media-baja |
 | 5 | Alerta por paciente a las 48 h sin cama, con responsable | ~4 alertas por día; 51 % termina esperando más de 72 h; 24 h de margen | Media |
 | 6 | Protocolo para quien llega entre las 13 y las 18 h y se hospitaliza | Entre ~11 y ~49 horas-paciente por día (2–11 % del exceso de 455) si igualaran a quien llega por la mañana | Baja (el rango depende de usar promedios o medianas) |
-| 7 | Revisar sistemáticamente las estancias largas | −5 % de estancia ≈ 5 camas; volver a la de 2023 ≈ 15 camas | Media (la causa del aumento no se conoce) |
+| 7 | Revisar sistemáticamente las estancias largas | −5 % de estancia ≈ 5 camas; volver a la de 2023 ≈ 15 camas. **Las estancias de más de 14 días (3 % de las estancias) ocupan unas 36 camas, y las de más de 30 días pasaron de 6 a 13 camas entre 2023 y 2025** | Media (la causa del aumento no se conoce) |
 
 ## 3. Detalle
 
