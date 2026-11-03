@@ -267,11 +267,34 @@ ep["estancia_unica_id_menor"] = ep.estancia_unica          # regla anterior (id 
 _esp_antes = ep[ep.hospitalizado & ep.estancia_unica].espera_cama_h.median()
 for _c in ["ini_hosp_est", "fin_hosp_est", "ini_est"]:
     ep[_c] = pd.to_datetime(ep[_c])
+# v2.4 (3-nov-2026): los dos registros de una estancia gemela son dos PERSONAS SIN RELACION (coinciden en el sexo el 51,7 % de las veces, el azar da 51 %, y en la edad
+# dentro de 2 anios el 6,3 %): una es la real y la otra un duplicado con datos de otra persona. El person_id de las filas de diagnosticos y laboratorios delata a la real
+# (en el 93 % de las estancias coinciden diagnosticos y laboratorios; los procedimientos NO sirven: el 88 % cuelga del otro registro). Con la regla de "mas informacion" el
+# registro conservado era el de la persona real solo en ~81 % de los casos. Ahora se conserva primero el registro de la persona real. Se necesitan los CSV del lote 4 de
+# src/auditoria_bd.py (datos/crudos/auditoria_bd/P02_*.csv y P03_*.csv); si faltan, se usa solo la informacion clinica como antes.
+_dir_aud = CRUDOS / "auditoria_bd"
+ep["persona_real"] = np.nan
+if (_dir_aud / "P02_persona_de_los_diagnosticos.csv").exists() and (_dir_aud / "P03_persona_de_los_laboratorios.csv").exists():
+    _mp = ep.loc[ep.estancia_id >= 0, ["visit_occurrence_id", "estancia_id"]].drop_duplicates("visit_occurrence_id")
+
+    def _dominante(ruta):
+        x = pd.read_csv(ruta).merge(_mp, on="visit_occurrence_id")
+        g = x.groupby(["estancia_id", "person_id"]).filas.sum().reset_index().sort_values(["estancia_id", "filas"], ascending=[True, False])
+        return g.groupby("estancia_id").person_id.first()
+
+    _real = _dominante(_dir_aud / "P02_persona_de_los_diagnosticos.csv")
+    _real = _real.combine_first(_dominante(_dir_aud / "P03_persona_de_los_laboratorios.csv"))
+    ep["persona_real"] = ep.estancia_id.map(_real)
+    print(f"persona real identificada (diagnosticos o laboratorios) en {int(ep.loc[ep.estancia_id >= 0].drop_duplicates('estancia_id').persona_real.notna().sum())} de "
+          f"{ep.loc[ep.estancia_id >= 0].estancia_id.nunique()} estancias")
+else:
+    print("AVISO: faltan los CSV del lote 4 de auditoria_bd.py; se conserva el registro con mas informacion sin mirar la persona real.")
 _h = ep[ep.ini_hosp.notna()].copy()
+_h["_real"] = (_h.person_id == _h.persona_real).astype(int)
 _h["_tipos"] = ((_h.n_dx_distintos.fillna(0) > 0).astype(int) + (_h.n_proc_distintos.fillna(0) > 0).astype(int)
                 + (_h.n_lab.fillna(0) > 0).astype(int))
 _h["_cant"] = _h.n_dx_distintos.fillna(0) + _h.n_proc_distintos.fillna(0) + _h.n_lab_distintos.fillna(0)
-_h = _h.sort_values(["estancia_id", "_tipos", "_cant", "visit_occurrence_id"], ascending=[True, False, False, True])
+_h = _h.sort_values(["estancia_id", "_real", "_tipos", "_cant", "visit_occurrence_id"], ascending=[True, False, False, False, True])
 _nuevo = ~_h.duplicated("estancia_id", keep="first")
 ep.loc[_nuevo.index, "estancia_unica"] = _nuevo
 cambia_a = ep.estancia_unica & ~ep.estancia_unica_id_menor      # pasan a ser el registro conservado
@@ -315,6 +338,8 @@ print(f"  con diagnostico: {(_u.n_dx_distintos > 0).mean():.1%} (regla id menor:
 print(f"  con procedimiento: {(_u.n_proc_distintos > 0).mean():.1%} (antes {(_v.n_proc_distintos > 0).mean():.1%}) | "
       f"con laboratorio: {(_u.n_lab > 0).mean():.1%} (antes {(_v.n_lab > 0).mean():.1%})")
 print(f"  espera de cama mediana: {_u.espera_cama_h.median():.2f} h (antes {_esp_antes:.2f}); n = {int(_u.espera_cama_h.notna().sum())}")
+_ident = _u[_u.persona_real.notna()]
+print(f"  el registro conservado es el de la persona real en {(_ident.person_id == _ident.persona_real).mean():.1%} de las {len(_ident)} estancias con persona identificada")
 
 # ----------------------------------------------------------------------
 # 5) Ocupacion del hospital en el momento de la llegada

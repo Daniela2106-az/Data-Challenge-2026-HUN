@@ -116,7 +116,7 @@ Valores de partida con nuestros datos:
   la variación) y la ocupación subió por la estancia, no por la demanda.
 - **Más personal según el día de la semana:** el día de la semana y los festivos casi no cambian la espera.
 - **Priorizar a un paciente concreto por riesgo de esperar:** un modelo con lo que se sabe al llegar acierta apenas mejor que el azar
-  (AUC 0,60) y todos los factores juntos explican solo el 14 % de la variación.
+  (AUC 0,60) y todos los factores juntos explican solo el 16 % de la variación.
 - **Un centro de comando o tablero como solución en sí:** los resultados publicados son sobre todo autoinformados; el estudio con
   diseño controlado que encontramos no halló cambio significativo en la estancia
   (análisis retrospectivo de series de tiempo en [Bradford](https://eprints.whiterose.ac.uk/209410/1/mzad072.pdf)).

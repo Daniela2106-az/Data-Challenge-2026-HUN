@@ -44,7 +44,7 @@ Las columnas `*_pct` están en escala 0 a 100. Las duraciones están en **horas*
 | `asignacion_cama_por_hora_llegada.csv` | por hora de llegada: `pct_cama_el_mismo_dia`, `pct_cama_dia_siguiente_o_mas`, `espera_p50_h`, `hora_asignacion_mediana` | 24 |
 | `altas_ingresos_llegadas_por_hora.csv` | `altas_pct`, `ingresos_cama_pct`, `llegadas_pct` por hora | 24 |
 | `acople_altas_ingresos.csv` | ingresos a cama que siguen a una alta extra, por retraso en horas | 7 |
-| `importancia_factores.csv`, `coeficientes_espera_cama.csv` | qué explica la espera (R²) y el efecto de cada nivel (%); **explican solo el 14 %** | 8, 29 |
+| `importancia_factores.csv`, `coeficientes_espera_cama.csv` | qué explica la espera (R²) y el efecto de cada nivel (%); **explican solo el 16 %** | 8, 29 |
 | `sesgo_medicion_urgencias.csv` | quién tiene duración medida en urgencias sin hospitalizar | 22 |
 | `ocupacion_por_anio.csv` | `ingresos_por_dia`, `estancia_media_dias`, `ocupacion_media` e índices (2023 = 100) | 4 |
 | `escenarios_little.csv`, `escenario_altas_antes.csv` | escenarios de camas (ley de Little) y de altas adelantadas (5 puntos) | 5, 5 |

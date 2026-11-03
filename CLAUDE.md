@@ -335,7 +335,7 @@ Resultado: 35.343 episodios hospitalizados → **25.777 estancias** (antes 27.95
 | Altas entre 14:00 y 18:59 / antes del mediodía | 61,5 % / 15 % | **62,7 % / 14 %** |
 | Escenario de altas (30 % de la tarde pasa a la mañana) | 5,5 camas libres a las 12 h | **5,1** (con ~103 camas ocupadas a esa hora) |
 | Ley de Little: ingresos × estancia | 21,7 × 5,46 ≈ 119 | **19,8 × 5,31 ≈ 105** |
-| R² de los factores de la espera | 13,8 % | **14,8 %** |
+| R² de los factores de la espera | 13,8 % | **15,8 %** (tras la regla v4.0 de la persona real, 4.10) |
 
 Lo que **no cambia** (no depende de las estancias): llegadas por día, calendario, pronóstico de llegadas, días atípicos de llegadas, perfiles por hora de llegada, tiempos por diagnóstico en lo cualitativo.
 Pendiente de revisar por quien lea esto: las cifras de las secciones 4.1 a 6b de este archivo y de los documentos de `docs/` que no aparecen en la tabla (por ejemplo, detalles de las alertas de camas y de R6) son de la regla v3.7; las que
@@ -375,6 +375,17 @@ Lote 1 (23 consultas de solo lectura, 4,7 min). Lo que confirma y lo que cambia:
 Resultados con el corte nuevo (antes del 10-abr): error de llegadas con atención 7,9 % a 1–7 días y 11,5 % a un año; ingresos a cama 17,8 % a 1–7 días y 19,3 % a un año. Tablas rehechas: `evaluacion_modelo.csv`, `pronostico_futuro.csv` (365 días desde mañana), `pruebas_pronostico_resumen.csv`, `prueba_2026.csv`, `prueba_mes_conocido.csv`.
 Sin rehacer (exploratorios con el corte anterior): `comparacion_banda_caida.py` y `grafico_comparacion_banda.py`, y la v1.3 `pronostico_demanda.py` (prueba de ene–abr 2026, que incluye 20 días degradados).
 **Conclusión de la auditoría:** el periodo confiable de las etapas va de feb-2023 al **9-abr-2026**. Del 10-abr en adelante (visitas inflada +40 %, etapas ER y personas en caída) y, sobre todo, del 29-abr, los datos son estructuralmente distintos y no deben usarse para estimar nivel ni evaluar modelos; marzo-2026 conserva el corte del 28–29-mar (excluido).
+
+### 4.10 Las gemelas son dos personas sin relación; se conserva la persona real (regla v4.0, 3-nov-2026)
+**Hallazgo (al armar A1):** los dos registros de una estancia gemela coinciden en el sexo el 51,7 % de las veces (el azar da 51 %) y en la edad, dentro de 2 años, el 6,3 % (diferencia mediana: 25 años); nunca son la misma persona. Una es la real y la otra es un duplicado con los datos de otra persona.
+Como la edad y el sexo de cada episodio salen del `person_id` de ese registro, **en las estancias gemelas (36 % de las estancias) la edad y el sexo eran de la persona equivocada** cuando se conservaba el registro equivocado.
+**Cómo se identifica la persona real** (`src/auditoria_bd.py --lote 4`, consulta de solo lectura que devuelve el `person_id` de las filas de diagnósticos, laboratorios y procedimientos de las visitas con hospitalización; resultados en `datos/crudos/auditoria_bd/P01..P04`):
+- Las filas de diagnósticos son de la persona propia de la visita en el 91 %; las de laboratorios, en el 56 %; las de procedimientos, en el 52 % (los procedimientos cuelgan sobre todo del OTRO registro: el 88 % de las veces no es el conservado).
+- En 93 % de las estancias gemelas la persona dominante de los diagnósticos y la de los laboratorios coinciden, y siempre es una de las dos personas de las visitas. **La persona real = la dominante en diagnósticos (o, si no hay, en laboratorios).** Se identifica en el 97,6 % de las estancias gemelas.
+- Con la regla de "más información" el registro conservado era el de la persona real en ~81 % (diagnósticos) o ~85 % (laboratorios) de los casos.
+**Regla v4.0 (`preparar_variables.py` v2.4, sección 4b):** entre los registros de una estancia se conserva primero el de la persona real; si no se pudo identificar, el de más información clínica (4.7). La información clínica sigue fusionándose entre gemelos (los diagnósticos y laboratorios son casi todos de la persona real). Resultado: el registro conservado es el de la persona real en el 99,7 % de las gemelas identificadas.
+**Efectos:** edad y sexo de las estancias corregidos; el R² de los factores de la espera sube de 14,8 % a 15,8 % ("edad y sexo": 4,1 puntos); los perfiles de A1 (`docs/perfiles_pacientes.md`) y el análisis A3 se rehicieron. **Sin cambios:** tiempos, ocupación, ingresos y camas (la estancia es la misma). Pendiente: A2 y A2b deben partir de esta tabla.
+**Hallazgo abierto de A1:** las mujeres esperan cama +27 % más (IC 23 a 31 %) controlando edad, tipo de visita, franja y año, y +36 % dentro de cada grupo de diagnóstico; no es error de asignación (se mantiene tras la corrección). Hipótesis sin comprobar: camas agrupadas por sexo.
 
 ## 5. Decisiones de método (ya tomadas, no reabrir sin un motivo nuevo)
 
@@ -486,7 +497,7 @@ Sin rehacer (exploratorios con el corte anterior): `comparacion_banda_caida.py` 
   diario del 21-oct fallaba porque el mecanismo es dentro del día. Asociación, no causa: el efecto de adelantar altas se
   estima en la simulación de camas (Fase 6).
 - **Factores de la espera** (modelo sobre log(espera+1), R² = 13,8 % tras la regla de estancia única del 29-oct: casi toda la variación no se explica con lo observado):
-  diagnóstico 6,4 puntos de R² (ojo: dato administrativo, registrado tarde y que puede venir del registro gemelo), edad y sexo 3,5, tipo de
+  diagnóstico 7,0 puntos de R² (ojo: dato administrativo, registrado tarde y que puede venir del registro gemelo), edad y sexo 4,1, tipo de
   visita 1,6 (quien entra por urgencias espera más: ambulatorio −31 %, treatment urgency −39 %), hora 0,7,
   año, carga y laboratorios de 6 h 0,1 cada uno, calendario ~0.
 - **Ocupación y escenario de altas (Fase 6, `simulacion_altas.py`):**
@@ -638,7 +649,8 @@ escenarios y supuestos escritos y se declara como limitación en el documento fi
 | Componente 3: pronóstico, alertas, simulación de camas, días atípicos | **Hecho** | 6b, `docs/dias_atipicos.md` |
 | Componente 4: recomendaciones | **Borrador hecho**; Persona 3 debe revisar las fuentes originales | `docs/recomendaciones.md` |
 | **Reparto completo de lo que falta** | Ver **`docs/pendientes_y_reparto.md`** (Daniela: perfiles, factores de la estancia, `mapeo_dx.csv`; Anthony: explicar retrasos y Monte Carlo de camas; Samuel: Power BI y recomendaciones) | `docs/pendientes_y_reparto.md` |
-| Perfiles de pacientes y factores de la estancia | Pendiente (Daniela) | A1 y A2 |
+| Perfiles de pacientes (A1) | **Hecha** (`docs/perfiles_pacientes.md`) | A1 |
+| Factores de la estancia | Pendiente (Daniela) | A2 |
 | Explicar mejor los retrasos; simulación Monte Carlo de camas | Pendiente (Anthony) | A4 y A5 |
 | Qué comparten las estancias que se disparan (idea de Anthony) y sistema repetible de diagnóstico | Pendiente (Daniela; A7 por decidir) | A2b y A7 |
 | Dashboard de Power BI (**va de último**, datos parciales; guía para su Claude en `powerbi/CLAUDE.md`) y verificar fuentes de las recomendaciones | Pendiente (Samuel) | B1 y B2 |

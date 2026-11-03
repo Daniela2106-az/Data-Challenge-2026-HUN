@@ -15,7 +15,7 @@
 - [ ] Filtrar `periodo_caida_de_datos = 0` da mediana 18,5 y p90 72,6 (comprobar que se entiende la diferencia).
 
 ## Honestidad del mensaje
-- [ ] «Asociación, no causa» en páginas 4, 5 y 11; R² del 14 % visible.
+- [ ] «Asociación, no causa» en páginas 4, 5 y 11; R² del 16 % visible.
 - [ ] Pronóstico de ingresos diario NO presentado como bueno; usar el semanal.
 - [ ] Simulador rotulado «escenario»; cota y estimación distinguidas.
 - [ ] Nota de registro degradado desde el 10-abr-2026 y de duración medida en ~38 % de urgencias.

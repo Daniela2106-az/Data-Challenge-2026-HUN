@@ -30,7 +30,7 @@ señala qué script o consulta la produciría. Distingue siempre *asociación* d
 8. **La ocupación sube por la estancia (sobre todo las de más de 30 días: 6 a 13 camas entre 2023 y 2025), no por la demanda:** camas ocupadas de 94 (2023) a 105 (2025); estancia media de 4,57 a
    5,31 días (+16 %); ingresos estables en ~20 por día.
 9. **La carga del momento explica poco:** cada decil más de llegadas sube la espera ~2,5 %; la ocupación y el día de la semana casi
-   no importan. Todos los factores observables juntos explican solo el 14 % de la variación de la espera.
+   no importan. Todos los factores observables juntos explican solo el 16 % de la variación de la espera.
 10. **Se puede pronosticar la demanda:** llegadas por día con error de **7,5 %** a 1 día (mejora a las referencias simples);
     los ingresos diarios no (es ruido de conteo), pero por semana el error baja a **9,5 %**.
 11. **Alertas probadas sobre días pasados:** la de "día congestionado" a las 12 h detecta 83 % de esos días (precisión 54 %); una alerta
@@ -150,7 +150,7 @@ Desde el 10-abr-2026 el registro está degradado (ver 4.9 de `CLAUDE.md`): lo qu
 - **El orden de llegada casi no predice el orden de cama** (53 % de pares consecutivos en orden; el azar sería 50 %).
 
 ### 4.5 Qué explica la espera (modelo sobre log(espera + 1), R² = 13,8 %; recalculado el 29-oct con la regla de estancia única nueva)
-Pérdida de R² al quitar cada factor: diagnóstico 6,4 puntos (ojo: es en parte un dato administrativo; antes 3,9 con solo 38 % de cobertura), edad y sexo 3,5, tipo de visita 1,6 (por urgencias se
+Pérdida de R² al quitar cada factor: diagnóstico 7,0 puntos (ojo: es en parte un dato administrativo; antes 3,9 con solo 38 % de cobertura), edad y sexo 4,1, tipo de visita 1,6 (por urgencias se
 espera más: ambulatorio −31 %, treatment urgency −39 %), hora de llegada 0,7, año 0,1, carga 0,1, laboratorios de 6 h 0,1,
 calendario ~0. **El 86 % de la variación no se explica con lo que se observa.** Un modelo "al llegar" para predecir si un paciente esperará
 más de 24 h tiene AUC de 0,60: no sirve para alertar a un paciente individual.

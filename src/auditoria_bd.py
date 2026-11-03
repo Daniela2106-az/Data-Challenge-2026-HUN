@@ -20,6 +20,7 @@ QUE COMPRUEBA (cada bloque responde una duda concreta)
   G. Personas: anios de nacimiento imposibles y sexo.
 
           python3 src/auditoria_bd.py --esperar 120 --lote 3 (lote 3: actividad por estancia: dias con laboratorio, UCI y nutricion hospitalaria)
+          python3 src/auditoria_bd.py --esperar 120 --lote 4 (lote 4: persona real de cada visita con hospitalizacion segun diagnosticos, laboratorios y procedimientos)
 USO       python3 src/auditoria_bd.py --esperar 120          (lote 1, ya corrido el 2-nov: 23 consultas, 4,7 min)
           python3 src/auditoria_bd.py --esperar 120 --lote 2 (lote 2: visitas con y sin etapas, personas, espera con episodios, laboratorios y diagnosticos por estancia)
           python3 src/auditoria_bd.py --probar-local         (prueba la sintaxis de las consultas con DuckDB y tablas vacias; no usa la base)
@@ -262,6 +263,19 @@ CONSULTAS_3 = [
                coalesce(max(pr.n_uci), 0) AS n_uci, coalesce(max(pr.n_nutricion), 0) AS n_nutricion
         FROM vv LEFT JOIN lab ON lab.sid = vv.sid LEFT JOIN pr ON pr.sid = vv.sid GROUP BY vv.sid"""),
 ]
+
+# ---------------------------------------------------------------------------------------------------------------------------------------------
+# LOTE 4 (2-nov-2026): ¿cual de las dos personas de una estancia gemela es la real? En A1 se vio que los dos registros de una estancia gemela coinciden en el sexo solo
+# el 51,7 % de las veces (el azar daria 51 %) y en la edad (dentro de 2 anios) el 6,3 %: son dos personas sin relacion. El person_id de las filas de diagnosticos,
+# laboratorios y procedimientos de cada visita puede delatar a la persona real. Por visita con hospitalizacion: las personas que aparecen en esas filas.
+# ---------------------------------------------------------------------------------------------------------------------------------------------
+_V_HOSP = f"SELECT DISTINCT visit_occurrence_id FROM {S}.visit_detail WHERE visit_detail_concept_id = 9201"
+CONSULTAS_4 = [
+    ("P01_persona_de_la_visita", f"SELECT visit_occurrence_id, person_id FROM {S}.visit_occurrence WHERE visit_occurrence_id IN ({_V_HOSP})"),
+    ("P02_persona_de_los_diagnosticos", f"SELECT visit_occurrence_id, person_id, count(*) AS filas FROM {S}.condition_occurrence WHERE visit_occurrence_id IN ({_V_HOSP}) GROUP BY 1, 2"),
+    ("P03_persona_de_los_laboratorios", f"SELECT visit_occurrence_id, person_id, count(*) AS filas FROM {S}.measurement WHERE visit_occurrence_id IN ({_V_HOSP}) GROUP BY 1, 2"),
+    ("P04_persona_de_los_procedimientos", f"SELECT visit_occurrence_id, person_id, count(*) AS filas FROM {S}.procedure_occurrence WHERE visit_occurrence_id IN ({_V_HOSP}) GROUP BY 1, 2"),
+]
 CONSULTAS = CONSULTAS_1
 
 
@@ -315,7 +329,7 @@ if __name__ == "__main__":
     ap.add_argument("--probar-local", action="store_true")
     ap.add_argument("--lote", type=int, default=1)
     a = ap.parse_args()
-    CONSULTAS = {1: CONSULTAS_1, 2: CONSULTAS_2, 3: CONSULTAS_3}[a.lote]
+    CONSULTAS = {1: CONSULTAS_1, 2: CONSULTAS_2, 3: CONSULTAS_3, 4: CONSULTAS_4}[a.lote]
     if a.probar_local:
         probar_local()
         raise SystemExit(0)

@@ -25,7 +25,7 @@ demanda, alertas, días atípicos, borrador de recomendaciones y un repositorio 
 
 ## A. Análisis, modelos y predicciones (ahora)
 
-### A1. Perfiles de pacientes · **Daniela**
+### A1. Perfiles de pacientes · **Daniela** — **HECHA el 3-nov-2026** (`docs/perfiles_pacientes.md`, `src/perfiles_pacientes.py`)
 - **Qué pide el instructivo:** "cómo se comportan distintos perfiles de pacientes". Hoy solo hay cortes sueltos por edad, tipo de visita y diagnóstico.
 - **Qué hacer:** definir perfiles (edad × sexo × tipo de visita, y grupo de diagnóstico cuando exista A3) y comparar por perfil: cuántos llegan, ruta que siguen,
   % que se hospitaliza, espera de cama, estancia y reingreso. Opcional: agrupar trayectorias parecidas.
@@ -78,9 +78,9 @@ demanda, alertas, días atípicos, borrador de recomendaciones y un repositorio 
 - **Estado (26-oct): HECHA como borrador + análisis.** Mapeo por reglas (`src/generar_borrador_mapeo_dx.py`, 0,9 % sin clasificar) y análisis de tiempos por grupo (`src/diagnosticos_y_tiempos.py`, `docs/diagnosticos_y_tiempos.md`). Hallazgos: cardiovascular y neurológico reciben cama en ~4 h, musculoesquelético, renal, digestivo y cáncer esperan 22–32 h; y el diagnóstico se registra más cuando la cama llega rápido (sesgo; pregunta B9 al HUN). **Falta:** validación clínica del mapeo por alguien del área de salud.
 
 ### A4. Explicar mejor los retrasos (modelo explicativo de la espera) · **Anthony**
-- **Qué pide el instructivo:** "qué características están asociadas a retrasos". Hoy todos los factores juntos explican solo el **14 %** de la variación de la espera.
+- **Qué pide el instructivo:** "qué características están asociadas a retrasos". Hoy todos los factores juntos explican solo el **16 %** de la variación de la espera.
 - **Qué hacer:** ficha 3.3 de `docs/fichas_de_tareas.md` (regresión logística de `espera_mas_24h` con variables que se conocen al llegar, validación temporal,
-  razones de probabilidades con intervalo, AUC y Brier sin esconderlos). Intentar mejorar sobre el 14 %: perfiles (A1), diagnóstico agrupado (A3), reingreso,
+  razones de probabilidades con intervalo, AUC y Brier sin esconderlos). Intentar mejorar sobre el 16 %: perfiles (A1), diagnóstico agrupado (A3), reingreso,
   interacciones (por ejemplo hora × edad). Reportar **qué suma cada variable nueva**. Si no sube, decirlo: es un hallazgo (el resto depende de procesos que la
   base no registra).
 - **Entrega:** `notebooks/modelos/modelo_espera_explicativo.ipynb` (sin salidas) y `docs/modelo_espera.md`.
