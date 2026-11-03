@@ -46,7 +46,7 @@ DIAS = ["lunes", "martes", "miercoles", "jueves", "viernes", "sabado", "domingo"
 MESES = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"]
 EDADES = ["0-4", "5-14", "15-29", "30-44", "45-59", "60-74", "75+", "sin dato"]   # "sin dato": 21 episodios con edad imposible
 TIPOS = ["Urgencias", "Treatment urgency", "Ambulatorio", "Inpatient"]
-CAIDA_DESDE = pd.Timestamp("2026-05-01")
+CAIDA_DESDE = pd.Timestamp("2026-04-10")
 FECHA_INI, FECHA_FIN = "2023-01-01", "2026-07-31"
 
 
@@ -241,7 +241,7 @@ cifras = [
     ("camas_ocupadas_2025", oa.loc[2025, "ocupacion_media"], 105.0, 0.2),
     ("estancia_media_dias_2023", oa.loc[2023, "estancia_media_dias"], 4.57, 0.02),
     ("estancia_media_dias_2025", oa.loc[2025, "estancia_media_dias"], 5.31, 0.02),
-    ("llegadas_por_dia_panel", round(panel.llegadas.mean(), 1), 263.6, 0.5),
+    ("llegadas_por_dia_panel", round(panel.llegadas.mean(), 1), 266.1, 0.5),
     ("llegadas_total_bi_llegadas", int(ll.llegadas.sum()), 337194, 0),
 ]
 cc = pd.DataFrame(cifras, columns=["cifra", "valor", "esperado", "tolerancia"])

@@ -220,7 +220,7 @@ print(f"guardado: datos/procesados/segmentos{SUFIJO}.csv")
 # ----------------------------------------------------------------------
 titulo("2b. EFECTO DE CONTAR CADA ESTANCIA UNA VEZ (antes y despues)")
 DIAS = (pd.Timestamp("2026-07-01") - pd.Timestamp("2023-01-01")).days   # enero 2023 a junio 2026
-V0, V1 = pd.Timestamp("2023-03-01"), pd.Timestamp("2026-05-01")          # ventana confiable para camas
+V0, V1 = pd.Timestamp("2023-03-01"), pd.Timestamp("2026-04-10")          # ventana confiable para camas
 
 
 def camas_little(g):

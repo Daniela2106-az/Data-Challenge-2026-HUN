@@ -13,7 +13,7 @@ su número de camas el 29-oct (106 y 58 camillas), pero nuestra ocupación lo su
 |---|---|---|
 | 1 | Esperar cama es largo y los peores casos empeoran | Espera mediana 18,6 h, percentil 90 de 73,9 h; el exceso medio sube de 17,3 h (2023) a 23,8 h (ene–abr 2026), +38 % |
 | 2 | Casi todo el tiempo está dentro de urgencias, no en huecos entre etapas | 80 % de las horas de espera es tiempo en urgencias antes de la cama; 21 % es tiempo sin ninguna etapa registrada |
-| 3 | Las altas son tardías y la cama se asigna por la tarde | 62,5 % de las altas entre las 14:00 y las 18:59, solo 14 % antes del mediodía; la cama se asigna a las 17–18 h sin importar cuándo llegó el paciente |
+| 3 | Las altas son tardías y la cama se asigna por la tarde | 62,7 % de las altas entre las 14:00 y las 18:59, solo 14 % antes del mediodía; la cama se asigna a las 17–18 h sin importar cuándo llegó el paciente |
 | 4 | Quien llega a media tarde espera más | Mediana de 25 h al llegar entre las 13 y las 16 h contra 12–15 h de madrugada; a las 16 h, 72 % recibe cama al día siguiente o después |
 | 5 | La ocupación sube por la estancia, no por más pacientes | Camas ocupadas 94 (2023) a 105 (2025); estancia media 4,57 a 5,31 días (+16 %); ingresos ~20 por día sin crecer |
 | 6 | La carga del momento explica poco | Cada decil más de llegadas en 6 h sube la espera ~2,5 %; la ocupación y el día de la semana casi no importan |
@@ -28,7 +28,7 @@ su número de camas el 29-oct (106 y 58 camillas), pero nuestra ocupación lo su
 | 3 | Reunión diaria de camas a media mañana, con alertas | No cuantificable; la alerta de las 12 h detecta 83 % de los días congestionados | Media |
 | 4 | Meta de altas antes del mediodía (empezar con 25–30 %) | Hasta 5,1 camas libres a las 12 h; evita como máximo 8 % del exceso de espera (estimación central ~3 %) | Media-baja |
 | 5 | Alerta por paciente a las 48 h sin cama, con responsable | ~4 alertas por día; 51 % termina esperando más de 72 h; 24 h de margen | Media |
-| 6 | Protocolo para quien llega entre las 13 y las 18 h y se hospitaliza | Entre ~11 y ~49 horas-paciente por día (2–11 % del exceso de 447) si igualaran a quien llega por la mañana | Baja (el rango depende de usar promedios o medianas) |
+| 6 | Protocolo para quien llega entre las 13 y las 18 h y se hospitaliza | Entre ~11 y ~49 horas-paciente por día (2–11 % del exceso de 455) si igualaran a quien llega por la mañana | Baja (el rango depende de usar promedios o medianas) |
 | 7 | Revisar sistemáticamente las estancias largas | −5 % de estancia ≈ 5 camas; volver a la de 2023 ≈ 15 camas | Media (la causa del aumento no se conoce) |
 
 ## 3. Detalle
@@ -97,7 +97,7 @@ Valores de partida con nuestros datos:
 - **Qué hacer:** anticipar la decisión de ingreso y la solicitud de cama durante la tarde, para no esperar al ciclo de altas del día
   siguiente.
 - **Por qué:** mediana de 23,6 h al llegar de 13:00 a 18:59 contra 15,7 h al llegar de 6:00 a 11:59. Llegan unos 6,4 pacientes por día en esa franja.
-  Si su espera bajara a la de la mañana, se evitarían **~49 horas-paciente por día midiendo con medianas (11 % del exceso de 447
+  Si su espera bajara a la de la mañana, se evitarían **~49 horas-paciente por día midiendo con medianas (11 % del exceso de 455
   horas por día) pero solo ~9 midiendo con promedios (2 %)**, porque los promedios de la mañana y de la tarde son parecidos
   (~31–32 h) y los dominan las esperas largas. Por eso es una recomendación de confianza baja: ayuda a la espera típica, no a la cola.
 - **Límite:** la espera mezcla atención clínica con espera de cama y no se pueden separar con los datos (preguntas 4 y 5 al HUN).

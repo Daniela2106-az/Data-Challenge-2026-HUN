@@ -95,8 +95,9 @@ def actualizar(dias, objetivo):
     fig.add_trace(go.Scatter(x=f.fecha, y=f.pronostico, mode="lines", line=dict(color=AZUL, width=2.4), name="Lo que se espera",
                              customdata=np.c_[f.banda_baja, f.banda_alta],
                              hovertemplate="%{x|%d-%m-%Y}<br>Se espera: %{y:.0f}<br>Rango probable: %{customdata[0]:.0f} a %{customdata[1]:.0f}<extra></extra>"))
-    fig.update_layout(title=f"{nombre.capitalize()}: día por día", hovermode="x unified", legend=dict(orientation="h", y=-0.15),
+    fig.update_layout(title=f"{nombre.capitalize()} esperados, día por día", hovermode="x unified", legend=dict(orientation="h", y=-0.15),
                       margin=dict(l=40, r=20, t=60, b=40), yaxis_title=nombre, template="simple_white")
+    fig.update_xaxes(tickformat="%d-%m" if dias <= 30 else "%m-%Y")      # fechas en numeros (plotly escribe los meses en ingles)
 
     e = ERR[objetivo]
     lead0 = int(f.dias_adelante.iloc[0])

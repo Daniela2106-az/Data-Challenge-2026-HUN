@@ -50,7 +50,7 @@ for _d in (TABLAS, GRAFICOS):
     _d.mkdir(parents=True, exist_ok=True)
 
 ENTRENA_HASTA, VALIDA_ENTRENA_HASTA, VALIDA_DESDE = "2025-12-31", "2025-06-30", "2025-07-01"
-PRUEBA_DESDE, PRUEBA_HASTA = "2026-01-01", "2026-04-30"
+PRUEBA_DESDE, PRUEBA_HASTA = "2026-01-01", "2026-04-09"
 HORAS_CORTE = [9, 12, 15]
 SEMANAS_UMBRAL = 12
 PERCENTIL_OCUP = 0.80       # "ocupacion alta" = percentil 80 de la ocupacion de las 12 h en el entrenamiento
@@ -249,8 +249,8 @@ pt.round(1).to_csv(TABLAS / "alertas_camas_dias.csv")
 # ----------------------------------------------------------------------
 titulo("C. ALERTA POR PACIENTE: LLEVA T HORAS DESDE QUE LLEGO Y AUN NO TIENE CAMA")
 seg = pd.read_csv(PROC / "segmentos.csv", usecols=["segmento", "horas", "ini", "franja", "en_estadisticas"], parse_dates=["ini"])
-e = seg[(seg.segmento == "espera_cama") & seg.en_estadisticas & (seg.ini >= "2023-02-01") & (seg.ini < "2026-05-01")].copy()
-dias_e = (pd.Timestamp("2026-05-01") - pd.Timestamp("2023-02-01")).days
+e = seg[(seg.segmento == "espera_cama") & seg.en_estadisticas & (seg.ini >= "2023-02-01") & (seg.ini < "2026-04-10")].copy()
+dias_e = (pd.Timestamp("2026-04-10") - pd.Timestamp("2023-02-01")).days
 print(f"estancias con espera de cama medida: {len(e)} en {dias_e} dias ({len(e) / dias_e:.1f} por dia)")
 filas = []
 for T in HORAS_T:

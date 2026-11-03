@@ -57,7 +57,7 @@ for _d in (PROC, TABLAS, GRAFICOS, EXCEL):
 # y al final (las etapas abiertas a la fecha de extraccion se quitaron). Fuera de este
 # rango la ocupacion se marca como poco confiable.
 OCUP_DESDE = "2023-02-01"
-OCUP_HASTA = "2026-06-01"
+OCUP_HASTA = "2026-04-10"     # periodo confiable hasta el 9-abr-2026 (CLAUDE.md 4.9)
 UMBRAL_ESPERA_H = 24
 DIAS = ["lunes", "martes", "miercoles", "jueves", "viernes", "sabado", "domingo"]
 

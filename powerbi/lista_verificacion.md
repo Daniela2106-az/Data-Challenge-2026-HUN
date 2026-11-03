@@ -12,7 +12,7 @@
 - [ ] Simulador en base: 105,0 camas; estancia −5 % → −5,9; ingresos +10 % → +11,9; 30 % altas → 5,1 camas libres y 8,3 % / 2,9 %.
 - [ ] Todo percentil lleva su n; grupos con n < 30 ocultos.
 - [ ] Segmentadores sincronizados y «Restablecer» funciona; ninguna página queda vacía con algún filtro.
-- [ ] Filtrar `periodo_caida_de_datos = 0` da mediana 18,6 y p90 72,7 (comprobar que se entiende la diferencia).
+- [ ] Filtrar `periodo_caida_de_datos = 0` da mediana 18,5 y p90 72,6 (comprobar que se entiende la diferencia).
 
 ## Honestidad del mensaje
 - [ ] «Asociación, no causa» en páginas 4, 5 y 11; R² del 14 % visible.

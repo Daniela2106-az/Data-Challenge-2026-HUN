@@ -39,7 +39,7 @@ for _d in (TABLAS, GRAFICOS):
     _d.mkdir(parents=True, exist_ok=True)
 
 ENTRENA_HASTA = "2025-12-31"
-CAIDA_DESDE = "2026-05-01"
+CAIDA_DESDE = "2026-04-10"
 UMBRAL_Z = 3.0
 VENTANA_ESPERA = 56
 MIN_PACIENTES_ESPERA = 8

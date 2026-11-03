@@ -28,7 +28,7 @@ RAIZ = Path(__file__).resolve().parent.parent
 PROC = RAIZ / "datos" / "procesados"
 SALIDA = PROC / "para_equipo"
 SALIDA.mkdir(parents=True, exist_ok=True)
-OCUP_DESDE, OCUP_HASTA = "2023-02-01", "2026-06-01"   # mismo rango confiable de preparar_variables.py
+OCUP_DESDE, OCUP_HASTA = "2023-02-01", "2026-04-10"   # mismo rango confiable de preparar_variables.py
 K = ["visit_occurrence_id", "episodio"]
 LLAVE_ESTANCIA = ["ingreso_cama", "alta"]
 

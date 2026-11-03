@@ -31,7 +31,7 @@ título = conclusión; tema `tema.json`; azul = espera, naranja = referencia o e
 - A4 (Anthony) puede reemplazar el modelo explicativo: ESPERA, no inventar.
 
 ## Página 5 — «Las altas tardías y la estancia sostienen el cuello de botella» — LISTO
-- Líneas por hora: `altas_ingresos_llegadas_por_hora[altas_pct]`, `[ingresos_cama_pct]`, `[llegadas_pct]` (62,5 % de las altas entre 14 y 19 h; 14 % antes de las 12).
+- Líneas por hora: `altas_ingresos_llegadas_por_hora[altas_pct]`, `[ingresos_cama_pct]`, `[llegadas_pct]` (62,7 % de las altas entre 14 y 19 h; 14 % antes de las 12).
 - Línea: `bi_escenario_camas_hora[ocupacion_base]` por hora.
 - Barras por año: `ocupacion_por_anio` (`ingresos_por_dia` plano, `estancia_media_dias` 4,57→5,31, `ocupacion_media` 105→119). Mensaje: la ocupación sube por la estancia (+16 %), no por los ingresos.
 - Nota: el orden de llegada no se respeta (solo 53 % se atiende en orden).

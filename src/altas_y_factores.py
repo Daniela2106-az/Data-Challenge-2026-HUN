@@ -39,7 +39,7 @@ GRAFICOS = RAIZ / "resultados" / "graficos"
 for _d in (TABLAS, GRAFICOS):
     _d.mkdir(parents=True, exist_ok=True)
 
-DESDE, HASTA = "2023-02-01", "2026-06-01"
+DESDE, HASTA = "2023-02-01", "2026-04-10"
 MAX_H = 2160
 MIN_DX = 150          # un diagnostico entra al modelo si tiene al menos estos casos; el resto va a "otros"
 # criterios de la Puerta 3 (de criterio, se pueden discutir)

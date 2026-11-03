@@ -323,17 +323,17 @@ Resultado: 35.343 episodios hospitalizados → **25.777 estancias** (antes 27.95
 | | Antes (v3.7, 29-oct) | **Ahora (v3.8, 1-nov)** |
 |---|---|---|
 | Estancias únicas | 27.956 | **25.777** |
-| Ingresos a cama por día | 21,8 (2023-24: 22,3 / 22,6) | **20,1** (20,6 / 20,8 / 19,8 en 2023 / 2024 / 2025) |
+| Ingresos a cama por día | 21,8 (2023-24: 22,3 / 22,6) | **20,2** (20,6 / 20,8 / 19,8 en 2023 / 2024 / 2025; promedio hasta el 9-abr-2026) |
 | Camas ocupadas, media 2023 / 2024 / 2025 | 105 / 113 / 119 | **94 / 101 / 105** (máximo 143 → 123) |
 | Estancia media 2023 → 2025 | 4,70 → 5,46 días (+16 %) | **4,57 → 5,31 días (+16 %)** |
 | Espera de cama mediana / p75 / p90 | 18,0 / 37,2 / 71,5 h | **18,6 / 37,9 / 73,9 h** |
 | Espera de cama > 24 h | 42,7 % | **43,7 %** |
 | Exceso medio de espera por episodio, 2023 → 2026 | 16,4 → 22,9 h (+40 %) | **17,3 → 23,8 h (+38 %)** |
 | Reparto de las horas de espera: urgencias / hueco sin etapa | 77 % / 23 % | **80 % / 21 %** |
-| Altas entre 14:00 y 18:59 / antes del mediodía | 61,5 % / 15 % | **62,5 % / 14 %** |
+| Altas entre 14:00 y 18:59 / antes del mediodía | 61,5 % / 15 % | **62,7 % / 14 %** |
 | Escenario de altas (30 % de la tarde pasa a la mañana) | 5,5 camas libres a las 12 h | **5,1** (con ~103 camas ocupadas a esa hora) |
 | Ley de Little: ingresos × estancia | 21,7 × 5,46 ≈ 119 | **19,8 × 5,31 ≈ 105** |
-| R² de los factores de la espera | 13,8 % | **14,7 %** |
+| R² de los factores de la espera | 13,8 % | **14,8 %** |
 
 Lo que **no cambia** (no depende de las estancias): llegadas por día, calendario, pronóstico de llegadas, días atípicos de llegadas, perfiles por hora de llegada, tiempos por diagnóstico en lo cualitativo.
 Pendiente de revisar por quien lea esto: las cifras de las secciones 4.1 a 6b de este archivo y de los documentos de `docs/` que no aparecen en la tabla (por ejemplo, detalles de las alertas de camas y de R6) son de la regla v3.7; las que
@@ -657,4 +657,11 @@ Limitaciones a declarar en el documento: copias (30 %) y estancias gemelas (41 %
 (36–42 %), diagnósticos tardíos y sin jerarquía, número de camas desconocido, procedimientos sin fecha, sin signos vitales, registro de etapas degradado
 desde el 10 de abril de 2026 (causa sin explicar), y que casi todo son asociaciones.
 
-Documento del equipo (Claude Docs): "Exploración BD — Data Challenge HUN 2026".
+Documento del equipo (Claude Docs): "Exploración BD — Data Challenge HUN 2026".**Revisión final de la ocupación (2-nov-2026, tarde):**
+- **El doble conteo de una misma persona es 0,2 camas, no 2,2** (corrijo lo dicho antes: las 19.375 horas del lote 1 de la auditoría incluían intervalos solapados *dentro* de una misma estancia). Entre las 25.777 estancias únicas solo 96 se solapan con otra de la misma persona (4.556 horas en total); fusionarlas baja la ocupación de 2025 de 105,0 a 104,8. No se corrigió en el pipeline por ser despreciable.
+- **Ocupación por tipo de paciente, 2025 (media / p95 / máximo):** adultos de 15 años o más 88,3 / 97 / 106 frente a 88 camas de adultos que dio el HUN (64 de piso, 6 intermedio, 14 UCI, 4 TPR); niños de 1 a 14 años 14,5 / 22 / 27 y menores de 1 año 2,2 / 6 / 8, que juntos (16,7) frente a las 18 camas pediátricas y neonatales (8 + 10).
+  Los adultos operan, en promedio, al 100 % de su capacidad, y el máximo llega a 106 (+18 sobre las 88). Es coherente con un hospital que hace esperar una mediana de 18,6 h por una cama.
+- **Los picos no son artefactos:** en 2025 solo 96 horas (1,1 %) superan 118 camas, repartidas en 13 días de julio a octubre, y casi todas entre martes y viernes; ningún inicio ni fin de cama se repite en el mismo segundo más de 2 veces (no hay cargas en lote). Censo a medianoche: media de 105,1; al mediodía: 106,9; máximo 121.
+- **Ventana:** desde la regla v3.9 del 2-nov, las series de ocupación, ingresos, altas y escenarios terminan el 9-abr-2026 (`OCUP_HASTA = 2026-04-10`); la ocupación de 2026 (103,2) es de enero al 9 de abril.
+**Pendiente real:** no hay dato interno que contraste los 106 camas; el pico de 106 a 123 en adultos sería sobreocupación con camas adicionales o camillas (no comprobable). La ocupación de urgencias (TU) sigue sin compararse con las 58 camillas.
+

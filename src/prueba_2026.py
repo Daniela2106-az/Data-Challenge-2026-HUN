@@ -1,6 +1,6 @@
 """
 prueba_2026.py  -  version 1 (1-nov-2026)
-Pronostica TODO 2026 (1 de enero a 31 de mayo) desde el 31 de diciembre de 2025, usando solo lo que se sabia ese dia, y pone encima lo que
+Pronostica 2026 hasta el 9 de abril (fin del periodo confiable) desde el 31 de diciembre de 2025, usando solo lo que se sabia ese dia, y pone encima lo que
 paso de verdad. Sirve para ver donde el dato real sale de la banda, y que el modelo no puede anticipar la degradacion del registro desde el 10-abr-2026.
 
   - Linea azul: pronostico con el nivel "historico" (12 meses hasta diciembre de 2025).
@@ -26,7 +26,7 @@ RAIZ = Path(__file__).resolve().parent.parent
 TABLAS = RAIZ / "resultados" / "tablas"
 GRAFICOS = RAIZ / "resultados" / "graficos"
 CORTE = pd.Timestamp("2025-12-31")
-FIN = pd.Timestamp("2026-05-31")
+FIN = pd.Timestamp(mp.FIN_CONFIABLE)
 DIAS = (FIN - CORTE).days
 
 real = mp.cargar_panel(limpiar=False)
@@ -51,7 +51,7 @@ for obj, nombre, archivo in [("llegadas_con_atencion", "Llegadas con atención p
     DIARIO.append(pd.DataFrame({"fecha": ph.index.strftime("%Y-%m-%d"), "serie": obj, "real": y.values, "pronostico_historico": ph.values.round(1),
                                 "pronostico_reciente": pr.values.round(1), "banda_baja": lo.values.round(1), "banda_alta": hi.values.round(1),
                                 "real_dentro_de_la_banda": dentro.values.astype(int), "dias_adelante": lead}))
-    for nombre_p, mask in [("1 ene - 9 abr", ph.index < mp.INICIO_QUIEBRE), ("10 abr - 31 may (registro degradado)", ph.index >= mp.INICIO_QUIEBRE)]:
+    for nombre_p, mask in [("1 ene - 9 abr", ph.index <= FIN)]:
         yy, pp = y[mask], ph[mask]
         filas.append(dict(serie=obj, periodo=nombre_p, dias=int(mask.sum()), dentro_banda_pct=round(100 * dentro[mask].mean()),
                           real_promedio=round(yy.mean(), 1), pronostico_historico=round(pp.mean(), 1),
@@ -66,12 +66,9 @@ for obj, nombre, archivo in [("llegadas_con_atencion", "Llegadas con atención p
     ax.scatter(y.index[dentro.values], y.values[dentro.values], color="#222", s=16, zorder=3, label="real dentro de la banda")
     ax.scatter(y.index[~dentro.values], y.values[~dentro.values], color="#c0392b", s=26, zorder=3, label="real fuera de la banda")
     for a_ in (ax, ax2):
-        a_.axvline(pd.Timestamp(mp.INICIO_QUIEBRE), color="#c0392b", ls="--", lw=0.9)
         a_.grid(alpha=0.25)
-    ax.text(pd.Timestamp("2026-04-11"), ax.get_ylim()[1] * 0.97, "registro degradado", color="#c0392b", fontsize=9, va="top")
-    d_ant, d_may = dentro[ph.index < mp.INICIO_QUIEBRE].mean(), dentro[ph.index >= mp.INICIO_QUIEBRE].mean()
-    ax.set_title(f"{nombre} en 2026, pronosticado desde el 31-dic-2025: {100 * d_ant:.0f} % de los días reales dentro de la banda hasta el 9-abr, "
-                 f"{100 * d_may:.0f} % desde el 10-abr (registro degradado)", fontsize=11)
+    d_ant = dentro.mean()
+    ax.set_title(f"{nombre} en 2026 hasta el 9-abr, pronosticado desde el 31-dic-2025: {100 * d_ant:.0f} % de los días reales dentro de la banda", fontsize=11)
     ax.set_ylabel(nombre)
     ax.legend(fontsize=8, ncol=2, loc="lower left")
     y7, ph7, pr7 = y.rolling(7).mean(), ph.rolling(7).mean(), pr.rolling(7).mean()

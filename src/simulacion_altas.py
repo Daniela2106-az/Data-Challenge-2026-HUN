@@ -47,7 +47,7 @@ GRAFICOS = RAIZ / "resultados" / "graficos"
 for _d in (TABLAS, GRAFICOS):
     _d.mkdir(parents=True, exist_ok=True)
 
-DESDE, HASTA = pd.Timestamp("2023-03-01"), pd.Timestamp("2026-05-01")   # ventana estable de ocupacion
+DESDE, HASTA = pd.Timestamp("2023-03-01"), pd.Timestamp("2026-04-10")   # ventana estable de ocupacion (periodo confiable hasta el 9-abr-2026)
 HORA_TOPE_MANANA, HORA_MIN_MANANA = 12, 9
 PROPORCIONES = [0.10, 0.20, 0.30, 0.50, 1.00]
 REPETICIONES = 200

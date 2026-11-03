@@ -12,7 +12,7 @@ ENTRADAS  datos/procesados/segmentos.csv
 SALIDAS   resultados/tablas/impacto_llegada_tarde.csv
 
 OJO AL LEER
-  - Dias = del 2023-02-01 al 2026-05-01 (misma ventana que simulacion_altas.py; mayo 2026 en adelante tiene caida de datos).
+  - Dias = del 2023-02-01 al 2026-04-10 (misma ventana que simulacion_altas.py; mayo 2026 en adelante tiene caida de datos).
   - Con medianas el ahorro es grande; con promedios es chico porque la cola larga domina. Por eso R6 es de confianza baja.
   - Es una asociacion por hora de llegada, no una causa.
 """
@@ -24,7 +24,7 @@ RAIZ = Path(__file__).resolve().parent.parent
 TABLAS = RAIZ / "resultados" / "tablas"
 TABLAS.mkdir(parents=True, exist_ok=True)
 
-DESDE, HASTA = pd.Timestamp("2023-02-01"), pd.Timestamp("2026-05-01")
+DESDE, HASTA = pd.Timestamp("2023-02-01"), pd.Timestamp("2026-04-10")
 TARDE, MANANA = (13, 18), (6, 11)
 
 s = pd.read_csv(RAIZ / "datos" / "procesados" / "segmentos.csv", parse_dates=["ini"])

@@ -23,7 +23,7 @@ señala qué script o consulta la produciría. Distingue siempre *asociación* d
 4. **El principal cuello de botella es la espera de cama:** mediana de **18,6 h** y percentil 90 de **73,9 h** desde que llega el
    paciente hasta que entra a cama. El 80 % de esas horas es tiempo en urgencias y el 21 % es tiempo sin ninguna etapa registrada.
 5. **Los peores casos empeoran:** la espera mediana casi no cambia (17–19 h) pero el percentil 90 sube de 61 h (2023) a 80 h (2026).
-6. **Las altas son tardías:** el 62,5 % de las altas ocurre entre las 14:00 y las 18:59 y solo el 14 % antes del mediodía; las camas
+6. **Las altas son tardías:** el 62,7 % de las altas ocurre entre las 14:00 y las 18:59 y solo el 14 % antes del mediodía; las camas
    se asignan a las 17–18 h. Quien llega a media tarde espera más (mediana de ~25 h frente a 12–15 h de madrugada).
 7. **Adelantar altas ayuda poco:** pasar el 30 % de las altas de la tarde a la mañana libera hasta 5,1 camas a las 12 h, pero evita
    como máximo ~8 % del exceso de espera (estimación central ~3 %). El 83 % de las horas de espera viene de esperas de más de 24 h.
@@ -143,7 +143,7 @@ Desde el 10-abr-2026 el registro está degradado (ver 4.9 de `CLAUDE.md`): lo qu
   ocupación pesa poco (+1,1 % por decil) y las llegadas de 24 h casi nada.
 - **Hora de llegada:** mediana de 12–15 h de madrugada y ~25 h al llegar entre las 13 y las 16 h (hay un salto a las 13:00). La carga
   explica unos dos quintos del efecto de la tarde; el resto no.
-- **Altas tardías (se sostiene, 4 de 4 criterios):** el 62,5 % de las altas es de 14:00 a 18:59 y solo el 14 % antes del mediodía (13–16 %
+- **Altas tardías (se sostiene, 4 de 4 criterios):** el 62,7 % de las altas es de 14:00 a 18:59 y solo el 14 % antes del mediodía (13–16 %
   cada año); la cama se asigna con mediana a las 17–18 h sin importar la hora de llegada. Quien llega a las 8 h recibe cama al día siguiente en
   el 50 %; a las 16 h, en el 72 %. Los ingresos a cama siguen a las altas en la misma hora (correlación cruzada 0,17). A nivel *diario* la
   relación no aparece: el mecanismo es dentro del día.
@@ -169,7 +169,7 @@ estocástica de pacientes llegando. La simulación Monte Carlo de camas (ficha 3
 - Con la ley de Little (camas = ingresos × estancia): volver a la estancia de 2023 liberaría ~15 camas; bajarla 5 %, ~5; subir los ingresos 10 %
   añadiría ~10.
 - **Escenario "30 % de las altas de la tarde antes del mediodía"** (`src/simulacion_altas.py`): hasta 5,1 camas libres adicionales a las 12 h
-  (~34 horas-cama por día). Traducido a espera: **como máximo ~8 % del exceso** (447 horas-paciente por día), estimación ~3 %. Con el 100 %:
+  (~34 horas-cama por día). Traducido a espera: **como máximo ~8 % del exceso** (455 horas-paciente por día), estimación ~3 %. Con el 100 %:
   máximo 27 %. Supuestos: el alta de los demás no cambia y la capacidad total se desconoce; es una cota, no una predicción.
 - El **83 % de las horas de espera** viene de esperas de más de 24 h y el 57 % de esperas de más de 48 h (el 19 % de los pacientes).
 

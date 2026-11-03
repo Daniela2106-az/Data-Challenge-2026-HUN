@@ -22,7 +22,7 @@ Las columnas `*_pct` están en escala 0 a 100. Las duraciones están en **horas*
 - `estancia_h` y `hora_alta` solo existen si el alta es posterior a la extracción de datos (`alta_completa`).
 - `urgencias_antes_h` + `hueco_h` = `espera_h`. Urgencias mezcla atención y espera de cama: no se pueden separar con los datos.
 - `periodo_caida_de_datos = 1` marca llegadas desde el 1-may-2026 (el registro de etapas está degradado desde el 10-abr-2026, no es menos demanda; la marca no se movió para no cambiar el paquete). Las cifras de control incluyen esas filas; sin ellas la
-  espera mediana es 18,6 h y el percentil 90 es 72,7 h. Los documentos del proyecto citan 18,6 y 73,9 (`construir_segmentos.py`, con los episodios de Q3); este paquete da 18,8 y 73,3 (pipeline), una diferencia de décimas.
+  espera mediana es 18,5 h y el percentil 90 es 72,6 h. Los documentos del proyecto citan 18,6 y 73,9 (`construir_segmentos.py`, con los episodios de Q3); este paquete da 18,8 y 73,3 (pipeline), una diferencia de décimas.
 - Filas mezcladas al azar para que no sigan el orden de llegada. Es información sensible: ver `../docs/hun/sesion_de_preguntas.md` (D2 y D3) antes de publicarla.
 - `grupo_edad = "sin dato"` solo aparece en `bi_llegadas` (21 episodios con edad imposible).
 

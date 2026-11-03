@@ -43,7 +43,7 @@ for _d in (TABLAS, GRAFICOS):
 CANDIDATOS = ["espera_cama", "urgencias_antes_cama", "hueco_antes_cama"]
 CARGAS = {"llegadas_6h_previas": "llegadas 6 h previas", "llegadas_24h_previas": "llegadas 24 h previas",
           "ocup_hosp": "pacientes en cama", "ocup_tu": "pacientes en TU"}
-OCUP_DESDE, OCUP_HASTA = "2023-02-01", "2026-06-01"
+OCUP_DESDE, OCUP_HASTA = "2023-02-01", "2026-04-10"
 # criterio orientativo (se pueden discutir): una carga "importa" si subir un decil aumenta el tiempo al menos
 # UMBRAL_CARGA % con controles, y la razon entre el decil alto y el bajo es de al menos RAZON_ALTA
 UMBRAL_CARGA, RAZON_ALTA, UMBRAL_HORA = 1.0, 1.25, 15.0

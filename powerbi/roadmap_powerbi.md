@@ -29,7 +29,7 @@ especificación: Daniela con Claude. Hallazgos y cifras: `docs/HALLAZGOS.md`. Re
 
 **Tres mensajes que el dashboard debe dejar claros:**
 1. **La espera de cama es el cuello de botella y es crónica:** mediana de 18,6 h, percentil 90 de 73,9 h, y los peores casos empeoran (61 h a 80 h).
-2. **La causa operativa visible son las altas tardías y la estancia:** el 62,5 % de las altas es de 14 a 19 h, y la ocupación sube por la estancia (+16 %), no por los ingresos.
+2. **La causa operativa visible son las altas tardías y la estancia:** el 62,7 % de las altas es de 14 a 19 h, y la ocupación sube por la estancia (+16 %), no por los ingresos.
 3. **Se puede anticipar y avisar:** pronóstico de llegadas (7,5 % de error), alertas a media jornada y un simulador para probar escenarios.
 
 | Pág. | Título (mensaje) | Pregunta que responde | Visuales interactivos | Fuente |
@@ -154,7 +154,7 @@ Dependencias: las páginas 11 (perfiles y estancias) y las bandas Monte Carlo de
 | Urgencias antes de la cama / hueco, % de las horas | 79 % / 21 % |
 | Ingresos a cama por día / camas ocupadas | ~20 / ~100 |
 | Estancia media y camas por año | 2023: 4,57 d y 94; 2024: 4,90 d y 101; 2025: 5,31 d y 105 |
-| Altas entre 14:00 y 18:59 / antes del mediodía | 62,5 % / 14 % |
+| Altas entre 14:00 y 18:59 / antes del mediodía | 62,7 % / 14 % |
 | Escenario 30 % de altas adelantadas | 5,1 camas libres a las 12 h; espera evitada: máximo 8,3 %, estimación 2,9 % |
 | Llegadas: error del pronóstico a 1 día / 7 días | 7,5 % / 8,8 % |
 | Alerta de día congestionado a las 12 h | 28 alertas, 15 aciertos (precisión 54 %, detección 83 %) |

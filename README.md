@@ -35,7 +35,7 @@ preguntas que puedes hacerle:
 1. **El cuello de botella es la espera de cama:** mediana de **18,6 h** y percentil 90 de **73,9 h** desde que llega el paciente hasta que
    entra a cama. El 80 % de ese tiempo es en urgencias y el 21 % es tiempo sin ninguna etapa registrada.
 2. **Los peores casos empeoran:** el percentil 90 de la espera sube de 61 h (2023) a 80 h (2026); la mediana casi no cambia.
-3. **Las altas son tardías:** 62,5 % entre las 14:00 y las 18:59 y solo 14 % antes del mediodía; las camas se asignan a las 17–18 h.
+3. **Las altas son tardías:** 62,7 % entre las 14:00 y las 18:59 y solo 14 % antes del mediodía; las camas se asignan a las 17–18 h.
    Quien llega a media tarde espera más.
 4. **Adelantar altas ayuda poco:** pasar el 30 % de las altas de la tarde a la mañana libera hasta 5,1 camas, pero evita como máximo ~8 % del
    exceso de espera (estimación central ~3 %).
