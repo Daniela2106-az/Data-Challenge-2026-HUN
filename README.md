@@ -87,6 +87,10 @@ preguntas que puedes hacerle:
 | `notebooks/` | Carpeta del equipo (pendiente) |
 | `datos/`, `resultados/tablas/`, `resultados/excel/` | **No están en git** (datos clínicos) |
 
+## Consultar la base de datos
+
+Si tienes acceso a la VPN de Uninorte y a las credenciales de la base, **`docs/conexion_bd.md`** explica paso a paso cómo conectarte (solo lectura, con SQLAlchemy), cómo correr consultas en segundo plano para que la VPN no te deje sin internet, qué hay en la base y qué trampas tiene. Las credenciales nunca van en el repositorio.
+
 ## Cómo reproducirlo (requiere acceso a los datos)
 
 **Solo hay 8 archivos que no se pueden regenerar con los scripts:** los CSV que se exportan de la base (PostgreSQL, esquema `uninorte_omop`,

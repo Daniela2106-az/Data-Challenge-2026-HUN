@@ -75,6 +75,8 @@ el 1 da contexto y el 4 sale de los dos anteriores.
 
 ## 2. Acceso a la base
 
+> **Cómo consultar la base desde Claude Code (conexión de solo lectura con SQLAlchemy, la VPN que apaga el internet y el flujo para correr consultas en segundo plano): ver `docs/conexion_bd.md`.** Las credenciales viven fuera del proyecto (`~/.pgpass` y `~/.hun_db.json`); nunca las pidas ni las escribas.
+
 - PostgreSQL detrás de VPN, esquema **`uninorte_omop`** (el esquema `public` está vacío).
 - Conexión **de solo lectura**: `CREATE TEMP TABLE` falla ("read-only transaction"). Usar `WITH` (CTE).
 - Solo existen índices de llave primaria. `concept` no tiene ningún índice. Las tablas grandes no tienen

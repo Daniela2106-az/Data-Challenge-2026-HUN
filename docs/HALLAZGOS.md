@@ -170,7 +170,7 @@ estocástica de pacientes llegando. La simulación Monte Carlo de camas (ficha 3
   añadiría ~10.
 - **Escenario "30 % de las altas de la tarde antes del mediodía"** (`src/simulacion_altas.py`): hasta 5,1 camas libres adicionales a las 12 h
   (~34 horas-cama por día). Traducido a espera: **como máximo ~8 % del exceso** (455 horas-paciente por día), estimación ~3 %. Con el 100 %:
-  máximo 27 %. Supuestos: el alta de los demás no cambia y la capacidad total se desconoce; es una cota, no una predicción.
+  máximo 27 %. Supuestos: el alta de los demás no cambia; es una cota, no una predicción. **Nota sobre la capacidad:** el HUN reportó 106 camas de hospitalización; la ocupación media fue 94 (2023), 101 (2024) y 105 (2025), y en 2025 superó las 106 camas el 42 % de las horas (en 2023, el 2 %). El exceso viene de estancias largas con actividad diaria de hospitalización (las de más de 30 días pasaron de 6 a 13 camas). Puede ser sobreocupación con camas adicionales o una capacidad real mayor; los datos no lo distinguen (`CLAUDE.md` 4.8).
 - El **83 % de las horas de espera** viene de esperas de más de 24 h y el 57 % de esperas de más de 48 h (el 19 % de los pacientes).
 
 ### 4.7 Días atípicos (`docs/dias_atipicos.md`)
@@ -218,7 +218,7 @@ de las llegadas pronosticadas; factores externos (clima, dengue, eventos).
 5. Alerta por paciente a las 48 h sin cama, con un responsable (~4 por día).
 6. Protocolo para quien llega entre las 13 y las 18 h y se hospitaliza (entre ~11 y ~49 horas-paciente por día, ver `src/impacto_llegada_tarde.py`; confianza baja).
 7. Revisión semanal de estancias largas (−5 % de estancia ≈ 5 camas).
-**Los datos no respaldan:** "hacen falta más camas" (se desconoce la capacidad), más personal según el día de la semana, ni priorizar pacientes
+**Los datos no respaldan:** "hacen falta más camas" (la ocupación ya supera las 106 camas reportadas el 42 % de las horas de 2025, pero no se sabe si es sobreocupación o mayor capacidad real), más personal según el día de la semana, ni priorizar pacientes
 concretos por riesgo de esperar. La literatura externa sobre altas antes del mediodía es **mixta** (un programa reportó 0,30 días menos de estancia;
 otro hospital no halló efecto); las fuentes se leyeron solo en resumen y hay que verificarlas.
 
@@ -243,7 +243,7 @@ otro hospital no halló efecto); las fuentes se leyeron solo en resumen y hay qu
 | ¿Cuánto espera un paciente por cama? | Mediana 18,6 h, percentil 90 73,9 h; el 44 % más de 24 h | 4.2; `src/construir_segmentos.py` |
 | ¿Dónde está el cuello de botella? | En la espera de cama, sobre todo en urgencias antes de la cama (77 % de las horas) | 4.1–4.2 |
 | ¿Está empeorando? | Sí, los peores casos: percentil 90 de 61 h (2023) a 80 h (2026); la mediana no | 4.3 |
-| ¿Faltan camas? | No se sabe (capacidad desconocida); la ocupación subió por la estancia (+16 %), no por la demanda | 4.6 |
+| ¿Faltan camas? | No se puede afirmar: la ocupación (99 % de las 106 camas reportadas en 2025, 42 % de las horas por encima) subió por las estancias largas (+16 % de estancia media), no por la demanda; sobreocupación o capacidad mayor, sin dato para distinguirlo | 4.6; `CLAUDE.md` 4.8 |
 | ¿Adelantar altas resuelve? | Ayuda poco: como máximo ~8 % del exceso | 4.6; `src/simulacion_altas.py` |
 | ¿Se puede predecir la demanda? | Llegadas sí (7,5 % de error); ingresos diarios no, por semana 9,5 % | 5.1 |
 | ¿Qué alertas se proponen? | Día congestionado a las 12 h; ocupación alta; paciente a las 48 h sin cama | 5.2 |
