@@ -13,7 +13,7 @@ Idea de Anthony: mirar las estancias muy largas y ver qué tienen en común. Scr
 - **Edad:** el % de largas es 3,5–4 % hasta los 29 años y llega a 11,6 % desde los 75. Frente a 15–29 años, la probabilidad de ser larga se multiplica por 2,0 (45–59), 2,5 (60–74) y 3,0 (75+).
 - **Tipo de visita:** la de tipo "Treatment urgency" tiene 12,7 % de largas (9 % de las estancias, 18 % de las largas); razón de probabilidades 2,4 (3,6 para muy largas). Las ambulatorias casi nunca (0,9 %).
 - **Sexo:** casi sin efecto (hombres 6,9 %, mujeres 6,2 %; razón 1,17).
-- **Diagnóstico** (solo estancias con diagnóstico traducido): recién nacido 4,2, cáncer 3,1, salud mental 2,9, infecciosas 2,9, neurológico 2,7; menos largas: embarazo/parto 0,5 y renal/urinario 0,6. Ojo: el diagnóstico se registra tarde y puede venir del registro gemelo.
+- **Diagnóstico** (solo estancias con diagnóstico traducido; mapeo revisado el 3-nov): cáncer 2,8 veces, infecciosas 2,7, salud mental 2,6, musculoesquelético 2,3, neurológico 2,1; menos largas: embarazo/parto 0,4 y renal/urinario 0,5. Ojo: el diagnóstico se registra tarde y puede venir del registro gemelo.
 - **Franja de llegada:** tarde y madrugada ~1,2 veces. La espera de cama previa también se asocia (1,21).
 - Modelo con lo que se sabe al llegar: AUC 0,69 (0,72 para muy largas). Sirve para describir, no para predecir una estancia individual.
 

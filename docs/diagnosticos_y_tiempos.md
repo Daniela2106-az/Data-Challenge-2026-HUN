@@ -1,3 +1,5 @@
+> **3-nov-2026: el mapeo `mapeo_dx.csv` se revisó a mano (562 correcciones; ver `docs/revision_mapeo_dx.md`). Las tablas de la sección 3 se recalcularon; los grupos de la sección 2 y el texto por año pueden diferir un poco.**
+
 # Diagnósticos y tiempos de atención (tarea A3, 26-oct-2026; recalculado el 29-oct y el 1-nov con la regla de estancia única v3.8)
 
 **Qué pide el instructivo:** usar `CONDITION_OCCURRENCE` y `PROCEDURE_OCCURRENCE` para "analizar diagnósticos y procedimientos asociados a los tiempos de atención y la complejidad
@@ -41,23 +43,23 @@ Mediana de espera de cama (h) y estancia en cama (h), solo grupos con n ≥ 30. 
 
 | Grupo | Hospitalizados con espera medida | Espera mediana | Espera p90 | Estancia mediana | Estancia p90 |
 |---|---|---|---|---|---|
-| Musculoesquelético y dolor | 422 | 39,0 | 108,1 | 114,3 | 369 |
-| Renal y urinario | 1.577 | 35,0 | 93,1 | 70,4 | 223 |
-| Cáncer y tumores | 251 | 32,7 | 107,1 | 114,6 | 489 |
-| Digestivo | 2.348 | 29,1 | 76,8 | 87,2 | 259 |
-| Trauma y lesiones | 1.662 | 23,8 | 73,4 | 52,4 | 218 |
-| Infecciosas | 1.072 | 17,7 | 105,4 | 95,4 | 400 |
-| Embarazo, parto y ginecología | 2.009 | 16,8 | 39,1 | 46,5 | 124 |
-| Salud mental | 526 | 12,1 | 77,0 | 72,3 | 399 |
-| Cardiovascular | 2.302 | 9,5 | 56,7 | 76,8 | 277 |
-| Neurológico | 732 | 9,3 | 59,4 | 90,9 | 386 |
-| Respiratorio | 1.300 | 8,9 | 61,1 | 70,2 | 280 |
+| Musculoesquelético y dolor | 423 | 38,9 | 108,0 | 116,3 | 375 |
+| Renal y urinario | 1.622 | 34,8 | 94,5 | 69,4 | 213 |
+| Cáncer y tumores | 263 | 31,6 | 107,1 | 114,4 | 494 |
+| Digestivo | 2.391 | 29,1 | 77,2 | 88,9 | 262 |
+| Trauma y lesiones | 1.643 | 23,8 | 72,1 | 51,0 | 211 |
+| Infecciosas | 1.080 | 18,2 | 106,8 | 98,2 | 407 |
+| Embarazo, parto y ginecología | 1.952 | 16,9 | 38,2 | 46,2 | 115 |
+| Neurológico | 689 | 12,6 | 61,6 | 90,0 | 357 |
+| Salud mental | 478 | 10,3 | 76,4 | 71,0 | 391 |
+| Respiratorio | 1.312 | 8,8 | 60,5 | 70,0 | 284 |
+| Cardiovascular | 2.454 | 8,6 | 56,8 | 84,0 | 300 |
 
 (Las tablas completas, con los 18 grupos, están en `tiempos_por_dx.csv`.)
 
-- **El patrón se mantiene con controles.** Con tipo de visita, franja horaria, año y edad en el modelo (sobre log(espera + 1), `efecto_dx_espera.csv`), frente a Digestivo: Cardiovascular −66 % (IC 95 %: −68 a −64),
-  Neurológico −61 %, Respiratorio −37 %; Renal y urinario +15 % (+8 a +23) y Musculoesquelético +17 % (+5 a +31). El grupo de diagnóstico sube el R² de 8,7 % a 18,8 % (solo entre quienes tienen diagnóstico).
-  Es estable por año: urgentes (cardiovascular, neurológico, respiratorio) 6,5–9,8 h; quirúrgicos y urológicos (musculoesquelético, renal, digestivo, cáncer) 29–36 h.
+- **El patrón se mantiene con controles.** Con tipo de visita, franja horaria, año y edad en el modelo (sobre log(espera + 1), `efecto_dx_espera.csv`), frente a Digestivo: Cardiovascular −68 % (IC 95 %: −70 a −66),
+  Neurológico −54 %, Respiratorio −38 %; Renal y urinario +17 % (+10 a +25) y Musculoesquelético +24 % (+11 a +38). El grupo de diagnóstico sube el R² de 9,3 % a 20,5 % (solo entre quienes tienen diagnóstico).
+  El orden de los grupos ya no se recalculó año por año tras la revisión del mapeo (3-nov): el patrón por año de arriba es de la versión anterior.
 - **Cambió con la regla nueva:** los grupos "urgentes" esperan unas 9 h (antes 4 h) y los demás 29–39 h (antes 22–32 h). Las cifras anteriores estaban sesgadas hacia quien recibía cama rápido. El orden de los grupos casi no cambió.
 - **Lectura posible (hipótesis, sin comprobar):** quien llega con infarto, ACV o dificultad respiratoria recibe cama más rápido (prioridad clínica), y la espera larga se concentra en pacientes de **cirugía, urología y
   ortopedia** (cólico renal 40 h, colecistitis 38–42 h). Eso apunta a una cola por tipo de cama o servicio, no a una cola general. No tenemos servicio, piso ni cama en la base, y no habrá más sesiones
