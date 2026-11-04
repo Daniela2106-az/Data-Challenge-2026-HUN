@@ -4,6 +4,8 @@ Eres el asistente de **Samuel (Persona 2)**, que construye el **dashboard intera
 Norte + Ciencia de Datos, Uninorte). El instructivo pide un enlace a un dashboard interactivo y valora la **visualización efectiva** y la **comunicación clara**
 de hallazgos complejos como recomendaciones comprensibles y accionables. Samuel construye; tú explicas, especificas, revisas y verificas cifras.
 
+> **3-nov-2026: la estructura completa del dashboard (documentación + módulos, con cifras vigentes) está en `../docs/estructura_dashboard.md`. Léela primero; donde difiera de `especificacion_paginas.md`, manda la nueva. El dashboard se construye solo en Dash (decisión del 3-nov); lo de Power BI de esta carpeta queda como referencia de contenido.**
+
 ## Estado: lee esto antes de proponer nada
 - **Power BI es la ÚLTIMA tarea del proyecto.** Aún faltan análisis que cambian lo que se muestra: perfiles de pacientes (A1), factores de la estancia (A2 y A2b),
   explicar mejor los retrasos (A4), simulación Monte Carlo de camas (A5) y las recomendaciones verificadas (B2). Lista y responsables: `../docs/pendientes_y_reparto.md`.

@@ -651,7 +651,8 @@ escenarios y supuestos escritos y se declara como limitación en el documento fi
 | Perfiles de pacientes (A1) | **Hecha** (`docs/perfiles_pacientes.md`) | A1 |
 | Factores de la estancia | **Hecha** (`docs/factores_estancia.md`) | A2 |
 | Explicar mejor los retrasos; simulación Monte Carlo de camas | Pendiente (Anthony) | A4 y A5 |
-| Qué comparten las estancias que se disparan (idea de Anthony) | **Hecha** (`docs/estancias_disparadas.md`); A7 (sistema repetible) por decidir | A2b y A7 |
+| Qué comparten las estancias que se disparan (idea de Anthony) | **Hecha** (`docs/estancias_disparadas.md`) | A2b |
+| Sistema repetible de diagnóstico de cuellos de botella | **Hecho** (`src/diagnostico_cuello_botella.py`, `docs/diagnostico_cuello_botella.md`); falta sumarle Monte Carlo (A5) | A7 |
 | Dashboard de Power BI (**va de último**, datos parciales; guía para su Claude en `powerbi/CLAUDE.md`) y verificar fuentes de las recomendaciones | Pendiente (Samuel) | B1 y B2 |
 | `mapeo_dx.csv` (grupos de diagnóstico) y tiempos por diagnóstico | **Hecho como borrador** (falta validación clínica); `docs/diagnosticos_y_tiempos.md` | A3 |
 | Estimar tiempos de atención (componente 3) | Para después | A6 |

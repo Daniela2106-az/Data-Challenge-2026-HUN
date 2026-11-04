@@ -111,7 +111,7 @@ demanda, alertas, días atípicos, borrador de recomendaciones y un repositorio 
   actualice durante la visita con diagnóstico y laboratorios de las primeras horas; (3) estimar la probabilidad de hospitalización al llegar. Cualquiera debe declarar que
   la duración de urgencias está sesgada.
 
-### A7. Sistema repetible de diagnóstico de cuellos de botella · **Por decidir** (idea de Anthony del 23-oct)
+### A7. Sistema repetible de diagnóstico de cuellos de botella · **HECHA el 3-nov-2026** (`src/diagnostico_cuello_botella.py`, `docs/diagnostico_cuello_botella.md`; falta agregarle la simulación Monte Carlo cuando exista A5) (idea de Anthony del 23-oct)
 - **La idea:** que la lógica con la que encontramos que el cuello de botella eran las camas se pueda **repetir sobre datos nuevos** y diga si el cuello de botella
   sigue siendo ese u otro: (1) detectar cuál segmento tiene más exceso, (2) con la simulación ver qué se dispara, (3) sacar los registros que se disparan,
   (4) caracterizarlos (A2b y A1) y (5) explicar qué hacer. No hay datos en tiempo real: se haría **repitiendo el análisis en una ventana nueva** (reproducir un periodo).
@@ -137,10 +137,12 @@ demanda, alertas, días atípicos, borrador de recomendaciones y un repositorio 
 - **Terminado cuando:** cada recomendación tiene fuente verificada y una cifra o una razón clara de por qué no se puede calcular. Puede empezar antes de que termine A.
 
 ### B3. Documento final · **Por decidir (más adelante)**
-Estructura sugerida (la del instructivo): contexto, datos y calidad, componentes 1 a 4, modelos y alertas, recomendaciones, limitaciones. Casi todo el contenido ya está en
-`docs/HALLAZGOS.md`.
+**Qué exige el HUN (instructivo): casi nada de formato.** Lista tres entregables: **documentación del proyecto**, **repositorio en GitHub** y **enlace al dashboard interactivo**. No pide un documento con una estructura fija, un número de páginas ni una presentación. La rúbrica, el plazo exacto y si el repositorio debe ser público no se preguntaron a tiempo (preguntas D1 a D3 de `docs/hun/sesion_de_preguntas.md`) y ya no hay más sesiones: **se declara como supuesto**.
+**Qué dice el instructivo que se valora** (y por eso el documento debe mostrarlo): hallazgos estratégicos relevantes para el hospital; interpretabilidad; visualización efectiva; comunicación clara que traduzca hallazgos complejos en **recomendaciones comprensibles y accionables**; y abordar uno o varios de los cuatro componentes (flujo, factores y cuellos de botella, modelos, propuestas).
+**Estructura propuesta** (mismo orden que el dashboard, `docs/estructura_dashboard.md`): 1) resumen ejecutivo de una página; 2) el reto y qué componentes se abordaron; 3) los datos y su calidad (base, limpieza, variables, periodo confiable); 4) resultados por componente (flujo, cuellos de botella, factores, perfiles, estancias, diagnósticos); 5) modelos y predicciones (pronóstico, alertas, simulador, diagnóstico repetible A7) con cómo se eligieron; 6) recomendaciones; 7) limitaciones y trabajo futuro; 8) anexos (glosario, reproducibilidad, enlace al repositorio y al dashboard). Casi todo el contenido ya está en `docs/HALLAZGOS.md`.
 
 ### B4. Presentación · **Por decidir (más adelante)**
+**El instructivo no pide una presentación ni dice su formato o duración**; el único documento del HUN que menciona entregables es el instructivo. No se sabe si habrá una sustentación; hay que confirmarlo con los organizadores o con el profesor antes de invertir tiempo (`docs/hun/sesion_de_preguntas.md`, pregunta D1). **Si hay sustentación, la estructura sugerida** (la misma que se valora): 1) el problema y la pregunta; 2) los datos y qué tan confiables son (un solo mensaje: por qué las cifras no coinciden con un conteo directo); 3) el hallazgo principal (cuello de botella y causa asociada); 4) tres o cuatro resultados con una gráfica cada uno; 5) lo que se puede anticipar (pronóstico, alertas); 6) las recomendaciones; 7) limitaciones honestas; 8) demostración del dashboard. Una idea por diapositiva, el título es la conclusión, y cada hallazgo con su advertencia.
 
 ---
 
