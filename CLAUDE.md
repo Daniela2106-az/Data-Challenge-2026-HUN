@@ -387,6 +387,15 @@ Como la edad y el sexo de cada episodio salen del `person_id` de ese registro, *
 **Efectos:** edad y sexo de las estancias corregidos; el R² de los factores de la espera sube de 14,8 % a 15,8 % ("edad y sexo": 4,1 puntos); los perfiles de A1 (`docs/perfiles_pacientes.md`) y el análisis A3 se rehicieron. **Sin cambios:** tiempos, ocupación, ingresos y camas (la estancia es la misma). Pendiente: A2 y A2b deben partir de esta tabla.
 **Hallazgo abierto de A1:** las mujeres esperan cama +27 % más (IC 23 a 31 %) controlando edad, tipo de visita, franja y año, y +36 % dentro de cada grupo de diagnóstico; no es error de asignación (se mantiene tras la corrección). Hipótesis sin comprobar: camas agrupadas por sexo.
 
+
+### 4.11 Exploraciones adicionales (4-nov-2026): ocupación por zona, capacidad efectiva, camas de baja actividad, fin de semana, supervivencia en urgencias
+Documentos: `docs/ocupacion_por_zona.md`, `docs/capacidad_efectiva.md`, `docs/dias_cama_baja_actividad.md`, `docs/efecto_fin_de_semana.md` (scripts `src/ocupacion_por_zona.py`, `capacidad_efectiva.py`, `dias_cama_baja_actividad.py`, `efecto_fin_de_semana.py`).
+- **Zona:** el exceso sobre las camas está en los adultos (88 % de las 88 camas de adultos en 2023, 101 % en 2025; 57,5 % de las horas de 2025 sobre 88); los niños (<15) se mantienen en 83–99 % de las 18 camas. El desglose pediátrica 8 / neonatal 10 no se puede comprobar con la edad. En urgencias hay siempre más pacientes que camillas (cota inferior). **La brecha de espera por sexo no se explica por la saturación del momento ni por obstetricia** (a igual saturación las mujeres esperan 2–8 h más; sin embarazo ni ginecología, 27,9 h frente a 16,0 h de los hombres): sigue como hallazgo abierto.
+- **Capacidad efectiva:** la cola de pacientes esperando cama nunca es cero (media de 26) y no depende de la ocupación (correlación −0,16 a 0,01): no se puede estimar un techo. La mediana de la espera no cambió (19,5 → 17,4 h) mientras la ocupación subió ~11 camas; solo el p90 empeora.
+- **Camas de baja actividad:** ~6 camas (6–8 % de los días-cama), sin crecer; el aumento de ocupación es de pacientes con actividad clínica. Una recomendación de «días evitables» no tiene respaldo fuerte.
+- **Supervivencia en urgencias (`docs/supervivencia_urgencias.md`):** quedarse con los episodios con hora de salida subestima la duración: mediana 9,6 h y p90 45 h frente a 11,2 h y 81 h con Kaplan-Meier (71 h ponderado). El 50 % de los episodios no tiene ningún tiempo en urgencias y no hay método que lo recupere (cotas de 0 a 24 h de mediana). Tener información depende de laboratorios, tipo de visita y edad (AUC 0,70).
+- **Fin de semana:** altas por 100 camas −27 % el domingo y −34 % en festivos; la estancia de quien entra a cama en sábado es +12 %; efecto estimado de ~1–2 camas equivalentes (cota alta); las esperas largas no mejoran en fin de semana.
+
 ## 5. Decisiones de método (ya tomadas, no reabrir sin un motivo nuevo)
 
 1. Unidad de análisis: **episodio** = atención continua de un paciente dentro de una visita

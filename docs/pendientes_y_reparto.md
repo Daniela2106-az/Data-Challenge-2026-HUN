@@ -119,6 +119,12 @@ demanda, alertas, días atípicos, borrador de recomendaciones y un repositorio 
 - **Entrega futura:** `src/diagnostico_cuello_botella.py` que reciba un periodo y devuelva un reporte (cuello de botella, qué se dispara, qué tienen en común).
 - **Encaja con el instructivo:** "sistemas de alerta temprana" y "herramientas de apoyo a decisiones". **Depende de** A2b, A1 y A5. Se decide después de ellas.
 
+
+### A8. Exploraciones adicionales (Daniela, 4-nov-2026) · **1 a 5 HECHAS**
+1) ocupación por zona frente a las camas del HUN (`docs/ocupacion_por_zona.md`); 2) capacidad efectiva desde los datos (`docs/capacidad_efectiva.md`); 3) días-cama de baja actividad (`docs/dias_cama_baja_actividad.md`); 4) efecto de fin de semana y festivos (`docs/efecto_fin_de_semana.md`). Resumen en `CLAUDE.md` 4.11.
+5) supervivencia para las urgencias sin hora de fin (`docs/supervivencia_urgencias.md`; corrige el sesgo del grupo con información pero no recupera a los que no tienen tiempo).
+**Siguen por decidir:** 6) qué pasa durante la espera (laboratorios por hora; requiere consulta con VPN); 7) simulación de eventos discretos de camas (A5, Anthony); 8) datos externos para el pronóstico (dengue, lluvia, quincenas); 9) minería de procesos; 10) severidad desde el texto de los laboratorios.
+
 ---
 
 ## B. Entregables (al final)
