@@ -47,7 +47,7 @@ Flujo de trabajo:
    ```
    (`caffeinate -i` evita que el Mac se duerma; `--esperar 120` = espera hasta 120 minutos a que conectes la VPN.)
 3. **Conectas la VPN.** El script arranca solo.
-4. Esperas la **notificación con sonido** («Consultas terminadas. Ya puedes desconectar la VPN»). Tarda de segundos a unos minutos. Puedes ver el avance en `datos/crudos/consultas/consultas.log`.
+4. **Dónde ver el progreso:** `datos/crudos/consultas/consultas.log` (o `datos/crudos/auditoria_bd/auditoria.log` si usas `auditoria_bd.py`). Si dice `esperando a que responda...`, todavía no conectó la VPN; cuando dice `servidor alcanzable`, ya está corriendo y va anotando cada consulta con sus filas y segundos. **No apagues la VPN hasta que el log diga `TERMINADO` y oigas la notificación con sonido.** Si la apagas a medias, la consulta que estaba corriendo queda colgada (mata el proceso con `pkill -f ejecutar_consultas.py`) y hay que repetir esa consulta. Mientras tanto, esperas la **notificación con sonido** («Consultas terminadas. Ya puedes desconectar la VPN»). Tarda de segundos a unos minutos. Puedes ver el avance en `datos/crudos/consultas/consultas.log`.
 5. **Desconectas la VPN.** Vuelve el internet y Claude Code puede leer los CSV de `datos/crudos/consultas/` y analizarlos.
 
 Formato del `.sql`: cada consulta empieza con una línea `-- nombre: algo` y termina con `;`. Para ver qué detectó sin tocar la base: `python3 src/ejecutar_consultas.py sql/mis_consultas.sql --solo-listar`.

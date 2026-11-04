@@ -347,7 +347,8 @@ print(f"  el registro conservado es el de la persona real en {(_ident.person_id 
 bl = pd.read_csv(PROC / "bloques.csv", parse_dates=["ini", "fin"])
 # v2.3: una fila por ESTANCIA UNICA con el inicio y fin de cama de toda la estancia (minimo y maximo entre sus registros gemelos)
 hosp = ep.loc[ep.estancia_unica & ep.ini_hosp.notna(), K + ["ini_hosp_est", "fin_hosp_est"]].rename(columns={"ini_hosp_est": "ini", "fin_hosp_est": "fin"})
-tu = bl[(bl.etapa == "TU") & (bl.fin > bl.ini)]
+# v2.5: cada intervalo TU distinto se cuenta una vez (los gemelos repiten el mismo intervalo; media 2025: 125,7 -> 111,0)
+tu = bl[(bl.etapa == "TU") & (bl.fin > bl.ini)].drop_duplicates(["ini", "fin"])
 
 
 def abiertos(ini, fin, momentos):

@@ -51,7 +51,7 @@ demanda, alertas, días atípicos, borrador de recomendaciones y un repositorio 
 - **Depende de:** A3 para el diagnóstico.
 - **Nota de la sugerencia de Anthony (23-oct):** al terminar A2, seguir con A2b (qué comparten las estancias que se disparan); es la misma pregunta con más variables (procedimientos y laboratorios). Reutilizar la definición de "estancia disparada" entre ambas.
 
-### A2b. Qué tienen en común las estancias que se "disparan" · **Daniela** (ampliación de A2, idea de Anthony del 23-oct)
+### A2b. Qué tienen en común las estancias que se "disparan" · **Daniela** · **HECHA (3-nov, `docs/estancias_disparadas.md`)** (ampliación de A2, idea de Anthony del 23-oct)
 - **La idea:** ya sabemos que el problema está en las camas y que la estancia sube (4,57 a 5,31 días). Falta preguntar: **¿cuándo se disparan las estancias y qué
   comparten las que se disparan?** (edad, sexo, diagnóstico, procedimientos, laboratorios, ruta). La respuesta convierte "hay un cuello de botella" en "este tipo
   de estancias lo causa".

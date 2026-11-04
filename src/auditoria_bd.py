@@ -21,6 +21,7 @@ QUE COMPRUEBA (cada bloque responde una duda concreta)
 
           python3 src/auditoria_bd.py --esperar 120 --lote 3 (lote 3: actividad por estancia: dias con laboratorio, UCI y nutricion hospitalaria)
           python3 src/auditoria_bd.py --esperar 120 --lote 4 (lote 4: persona real de cada visita con hospitalizacion segun diagnosticos, laboratorios y procedimientos)
+          python3 src/auditoria_bd.py --esperar 120 --lote 5 (lote 5: procedimientos y laboratorios de las primeras 48 h por estancia, para A2b)
 USO       python3 src/auditoria_bd.py --esperar 120          (lote 1, ya corrido el 2-nov: 23 consultas, 4,7 min)
           python3 src/auditoria_bd.py --esperar 120 --lote 2 (lote 2: visitas con y sin etapas, personas, espera con episodios, laboratorios y diagnosticos por estancia)
           python3 src/auditoria_bd.py --probar-local         (prueba la sintaxis de las consultas con DuckDB y tablas vacias; no usa la base)
@@ -276,6 +277,26 @@ CONSULTAS_4 = [
     ("P03_persona_de_los_laboratorios", f"SELECT visit_occurrence_id, person_id, count(*) AS filas FROM {S}.measurement WHERE visit_occurrence_id IN ({_V_HOSP}) GROUP BY 1, 2"),
     ("P04_persona_de_los_procedimientos", f"SELECT visit_occurrence_id, person_id, count(*) AS filas FROM {S}.procedure_occurrence WHERE visit_occurrence_id IN ({_V_HOSP}) GROUP BY 1, 2"),
 ]
+
+# ---------------------------------------------------------------------------------------------------------------------------------------------
+# LOTE 5 (3-nov-2026), tarea A2b: ¿que procedimientos y laboratorios tienen las estancias largas (mas de 14 dias) frente a las demas? Por visita con hospitalizacion,
+# los conceptos de procedimientos (sin fecha: "durante la estancia") y de laboratorios de las PRIMERAS 48 HORAS de la estancia (con fecha), con el person_id de cada fila
+# para quedarse con las filas de la persona real (CLAUDE.md 4.10). Mas los nombres de esos conceptos.
+# ---------------------------------------------------------------------------------------------------------------------------------------------
+CONSULTAS_5 = [
+    ("Q01_procedimientos_por_estancia", f"""
+        SELECT p.visit_occurrence_id, p.person_id, p.procedure_concept_id AS concepto, count(*) AS filas
+        FROM {S}.procedure_occurrence p WHERE p.visit_occurrence_id IN ({_V_HOSP}) GROUP BY 1, 2, 3"""),
+    ("Q02_laboratorios_primeras_48h_por_estancia", f"""
+        WITH v AS (SELECT visit_occurrence_id, min(visit_detail_start_datetime) AS ini FROM {S}.visit_detail WHERE visit_detail_concept_id = 9201 GROUP BY 1)
+        SELECT m.visit_occurrence_id, m.person_id, m.measurement_concept_id AS concepto, count(*) AS filas
+        FROM {S}.measurement m JOIN v ON v.visit_occurrence_id = m.visit_occurrence_id
+        WHERE m.measurement_datetime >= v.ini AND m.measurement_datetime < v.ini + interval '48 hours' GROUP BY 1, 2, 3"""),
+    ("Q03_nombres_de_conceptos", f"""
+        WITH ids AS (SELECT DISTINCT procedure_concept_id AS id FROM {S}.procedure_occurrence WHERE visit_occurrence_id IN ({_V_HOSP})
+                     UNION SELECT DISTINCT measurement_concept_id FROM {S}.measurement WHERE visit_occurrence_id IN ({_V_HOSP}))
+        SELECT c.concept_id, c.concept_name, c.vocabulary_id FROM {S}.concept c JOIN ids ON ids.id = c.concept_id"""),
+]
 CONSULTAS = CONSULTAS_1
 
 
@@ -329,7 +350,7 @@ if __name__ == "__main__":
     ap.add_argument("--probar-local", action="store_true")
     ap.add_argument("--lote", type=int, default=1)
     a = ap.parse_args()
-    CONSULTAS = {1: CONSULTAS_1, 2: CONSULTAS_2, 3: CONSULTAS_3, 4: CONSULTAS_4}[a.lote]
+    CONSULTAS = {1: CONSULTAS_1, 2: CONSULTAS_2, 3: CONSULTAS_3, 4: CONSULTAS_4, 5: CONSULTAS_5}[a.lote]
     if a.probar_local:
         probar_local()
         raise SystemExit(0)
