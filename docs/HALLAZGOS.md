@@ -218,9 +218,9 @@ de las llegadas pronosticadas; factores externos (clima, dengue, eventos).
 5. Alerta por paciente a las 48 h sin cama, con un responsable (~4 por día).
 6. Protocolo para quien llega entre las 13 y las 18 h y se hospitaliza (entre ~11 y ~49 horas-paciente por día, ver `src/impacto_llegada_tarde.py`; confianza baja).
 7. Revisión semanal de estancias largas (−5 % de estancia ≈ 5 camas).
-**Los datos no respaldan:** "hacen falta más camas" (la ocupación ya supera las 106 camas reportadas el 42 % de las horas de 2025, pero no se sabe si es sobreocupación o mayor capacidad real), más personal según el día de la semana, ni priorizar pacientes
-concretos por riesgo de esperar. La literatura externa sobre altas antes del mediodía es **mixta** (un programa reportó 0,30 días menos de estancia;
-otro hospital no halló efecto). Las fuentes se revisaron el 1-nov, 3 de ellas solo con un resumen (nivel de verificación de cada una en `docs/recomendaciones.md`, sección 6).
+**Los datos no respaldan:** más personal según el día de la semana, ni priorizar pacientes
+concretos por riesgo de esperar. Tampoco permiten calcular cuántas camas harían falta: la ocupación supera las 106 camas reportadas el 42 % de las horas de 2025, pero no se sabe si es sobreocupación o mayor capacidad real. La literatura externa sobre altas antes del mediodía es **mixta** (un programa reportó 0,30 días menos de estancia;
+otro hospital no halló efecto). Las 12 fuentes se comprobaron el 6-nov, 4 de ellas con un resumen (nivel de verificación de cada una en `docs/recomendaciones.md`, sección 6).
 
 ---
 
