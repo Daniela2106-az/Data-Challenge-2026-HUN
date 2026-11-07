@@ -59,7 +59,7 @@ preguntas que puedes hacerle:
 | Modelos: pronóstico, alertas, simulación, días atípicos (componente 3) | Hecho |
 | Perfiles de pacientes y factores de la estancia (instructivo: perfiles y duración de estancias) | **Pendiente (Daniela)** |
 | Explicar mejor los retrasos y simulación Monte Carlo de camas | **Pendiente (Anthony)** |
-| Recomendaciones (componente 4) | Borrador; Samuel verifica las fuentes |
+| Recomendaciones (componente 4) | Fuentes revisadas y cifras al día; en revisión de Daniela |
 | Dashboard de Power BI | Pendiente (Samuel; va de último, guía en `powerbi/`) |
 | `mapeo_dx.csv` (grupos de diagnóstico) | Pendiente (Daniela) |
 | Estimar tiempos de atención (componente 3) | Para después |

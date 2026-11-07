@@ -209,9 +209,9 @@ de las llegadas pronosticadas; factores externos (clima, dengue, eventos).
 
 ---
 
-## 6. Componente 4: recomendaciones (`docs/recomendaciones.md`, borrador)
+## 6. Componente 4: recomendaciones (`docs/recomendaciones.md`, en revisión)
 1. Registrar mejor: hora de salida de urgencias, asignación de cama y sin duplicados (habilita medir todo lo demás).
-2. Seguimiento mensual de 6 indicadores (espera p50/p90 de 18/73,9 h, % con más de 48 h sin cama 19 %, % de altas antes del mediodía 15 %, hora de
+2. Seguimiento mensual de 6 indicadores (espera p50/p90 de 18,6/73,9 h, % con más de 48 h sin cama 19 %, % de altas antes del mediodía 14 %, hora de
    asignación de cama 17–18 h, camas ocupadas a las 12 h ~103, estancia media 5,31 días).
 3. Reunión diaria de camas a media mañana apoyada en las alertas.
 4. Meta de altas antes del mediodía (empezar con 25–30 %): hasta 5,1 camas libres, como máximo 8 % del exceso de espera.
@@ -220,7 +220,7 @@ de las llegadas pronosticadas; factores externos (clima, dengue, eventos).
 7. Revisión semanal de estancias largas (−5 % de estancia ≈ 5 camas).
 **Los datos no respaldan:** "hacen falta más camas" (la ocupación ya supera las 106 camas reportadas el 42 % de las horas de 2025, pero no se sabe si es sobreocupación o mayor capacidad real), más personal según el día de la semana, ni priorizar pacientes
 concretos por riesgo de esperar. La literatura externa sobre altas antes del mediodía es **mixta** (un programa reportó 0,30 días menos de estancia;
-otro hospital no halló efecto); las fuentes se leyeron solo en resumen y hay que verificarlas.
+otro hospital no halló efecto). Las fuentes se revisaron el 1-nov, 3 de ellas solo con un resumen (nivel de verificación de cada una en `docs/recomendaciones.md`, sección 6).
 
 ---
 
