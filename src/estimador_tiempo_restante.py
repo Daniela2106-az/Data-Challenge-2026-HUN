@@ -12,7 +12,8 @@ QUE USA (todo se conoce en el momento de la consulta)
     y las admisiones. Si no se da, se asume lo mas comun: una etapa de atencion abierta desde la llegada y una admision al llegar.
   Modelo: comparar_estimadores.py (M1, version 2): con menos de 12 h de espera, un modelo por momento (LANDMARKS: el mas cercano por debajo) con historial y recorrido; desde las 12 h, un
   modelo con solo el historial (el recorrido ya no suma). Validado con jul-2025 a 9-abr-2026 (docs/estimador_tiempos.md); el modelo que se consulta se entrena
-  con TODO el periodo confiable (feb-2023 a 9-abr-2026).
+  con TODO el periodo confiable (feb-2023 a 9-abr-2026), con MAS PESO A LO RECIENTE (un dato de hace 6 meses pesa la mitad): el hospital cambio y asi
+  estima mejor los meses nuevos (src/ventana_entrenamiento.py). Lo ideal es volver a entrenarlo cada mes con los datos nuevos (borrar el .joblib).
 
 DONDE SE GUARDA EL MODELO
   HUN_PROCESADOS/modelos/m1_tiempo_restante.joblib, fuera del proyecto (sale de datos clinicos). Si no existe, se entrena al primer uso (~2 min); para eso
@@ -42,18 +43,19 @@ import comparar_estimadores as ce  # noqa: E402
 import estimador_tiempos as et  # noqa: E402
 
 LANDMARKS = [0, 2, 4, 6, 9]                    # con 12 h o mas de espera se usa el modelo con solo el historial
+VIDA_MEDIA_DIAS = 182                          # peso a lo reciente: la mitad cada 6 meses hacia atras
 MODELO = Path(os.environ.get("HUN_PROCESADOS", ce.PROC)) / "modelos" / "m1_tiempo_restante.joblib"
 _CACHE = {}
 
 
 def _entrenar_y_guardar():
     d, h, rejilla, estado = ce.preparar()
-    modelos = {L: ce.entrenar_landmark(d, rejilla, estado, L) for L in LANDMARKS}   # todo el periodo confiable
-    modelos["desde_12h"] = ce.entrenar_m1(d, rejilla, estado, ce.COLS_M1_BASE + ce.HIST)
+    modelos = {L: ce.entrenar_landmark(d, rejilla, estado, L, vida_media_dias=VIDA_MEDIA_DIAS) for L in LANDMARKS}   # todo el periodo confiable
+    modelos["desde_12h"] = ce.entrenar_m1(d, rejilla, estado, ce.COLS_M1_BASE + ce.HIST, vida_media_dias=VIDA_MEDIA_DIAS)
     fin = rejilla[(rejilla >= np.datetime64(ce.HASTA) - np.timedelta64(90, "D")) & (rejilla < np.datetime64(ce.HASTA))]
     k = np.searchsorted(rejilla, fin)
     paquete = {"modelos": modelos, "ocup_tipica": {z: float(np.median(estado[z]["ocup"][k])) for z in estado}, "grupos_dx": ce.GRUPOS_DX,
-               "entrenado_hasta": str(ce.HASTA.date()), "version": 4}
+               "entrenado_hasta": str(ce.HASTA.date()), "vida_media_dias": VIDA_MEDIA_DIAS, "version": 5}
     MODELO.parent.mkdir(parents=True, exist_ok=True)
     joblib.dump(paquete, MODELO)
     return paquete
@@ -62,7 +64,7 @@ def _entrenar_y_guardar():
 def _cargar():
     if "m" not in _CACHE:
         paq = joblib.load(MODELO) if MODELO.exists() else None
-        _CACHE["m"] = paq if paq is not None and paq.get("version") == 4 else _entrenar_y_guardar()
+        _CACHE["m"] = paq if paq is not None and paq.get("version") == 5 else _entrenar_y_guardar()
     return _CACHE["m"]
 
 

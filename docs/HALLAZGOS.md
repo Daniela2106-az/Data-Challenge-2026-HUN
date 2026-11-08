@@ -215,6 +215,7 @@ de las llegadas pronosticadas; factores externos (clima, dengue, eventos).
 - **Prueba** (entrenamiento feb-2023 a jun-2025, prueba jul-2025 a 9-abr-2026, 5.430 estancias): mejora 7,6 % al llegar (IC 95 % 6,7 a 8,5) y 9,2–9,5 % a las 3–6 h frente a dar el mismo rango a todos; los percentiles aciertan (26,3 / 51,4 / 73,8 / 87,7 % debajo de p25 / p50 / p75 / p90). Le gana con margen comprobado a la tabla de perfiles, a un modelo de cuantiles y a dos modelos de cola. Agosto y septiembre de 2025 (sobredemanda, dato del equipo) dan el mismo resultado.
 - **Gravedad y servicio (procedimientos de cada estancia, sin fecha):** el hospital da cama rápido a los graves (UCI: mediana 2,7 h) y hace esperar más a urología (37,7 h), ortopedia (32,8 h) y cirugía general (29,6 h). Si al llegar se supieran la gravedad y el servicio, la mejora pasaría de 7,6 % a 15,8 % (18,6 % sumando el diagnóstico; escenario optimista). **Registrar el triage y el servicio** es la mejora de datos que más ayudaría.
 - **La hora del reloj manda:** el 24 % de las camas se asigna entre las 15 y las 17 h y el 37 % entre las 20 y las 23 h; entre las 6 y las 12 h casi nadie recibe cama.
+- **El hospital cambió** (p90 de la espera de 61 a 81 h entre 2023 y 2026): reentrenar cada mes con más peso en lo reciente mejora la estimación en todos los momentos (8,1 % al llegar, 10,3 % a las 3 h; la diferencia con el modelo fijo es real hasta las 6 h). El estimador final se entrena así (`src/ventana_entrenamiento.py`).
 
 ---
 

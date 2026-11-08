@@ -325,21 +325,30 @@ def filas_persona_hora(d, rejilla, estado, desde=0, fijar_estado=False, cols=COL
     return X, idx, kk
 
 
-def entrenar_m1(tr, rejilla, estado, cols=COLS_M1):
+def pesos_recientes(d, idx, vida_media_dias):
+    """Peso de cada fila segun lo reciente de la llegada: la mitad cada 'vida_media_dias' hacia atras (None = todos pesan igual)."""
+    if vida_media_dias is None:
+        return None
+    edad = (d.ini_est.max() - d.ini_est).dt.total_seconds().to_numpy()[idx] / 86400
+    return 0.5 ** (edad / vida_media_dias)
+
+
+def entrenar_m1(tr, rejilla, estado, cols=COLS_M1, vida_media_dias=None):
     X, idx, kk = filas_persona_hora(tr, rejilla, estado, cols=cols)
     e = tr.espera_cama_h.to_numpy()[idx]
     vivo = kk <= np.floor(e)                                # en riesgo en la hora kk
     y = (kk == np.floor(e)).astype(int)
+    w = pesos_recientes(tr, idx, vida_media_dias)
     X, y = X[vivo], y[vivo]
     print(f"M1: {len(X):,} filas paciente-hora para entrenar, {y.mean():.3f} de probabilidad media por hora")
     m = HistGradientBoostingClassifier(max_iter=300, learning_rate=0.08, max_leaf_nodes=63, min_samples_leaf=200,
                                        categorical_features=[cols.index(c) for c in CATEGORICAS if c in cols], random_state=SEMILLA)
-    m.fit(X[cols], y)
+    m.fit(X[cols], y, sample_weight=None if w is None else w[vivo])
     m.cols_ = cols
     return m
 
 
-def entrenar_landmark(tr, rejilla, estado, desde, cols=None):
+def entrenar_landmark(tr, rejilla, estado, desde, cols=None, vida_media_dias=None):
     """Modelo para estimar desde 'desde' horas de espera: quienes seguian esperando, con lo que se sabia en ese momento."""
     cols = COLS_M1_FINAL if cols is None else cols
     sub = tr[tr.espera_cama_h > desde].reset_index(drop=True)
@@ -347,11 +356,12 @@ def entrenar_landmark(tr, rejilla, estado, desde, cols=None):
     e = sub.espera_cama_h.to_numpy()[idx]
     vivo = kk <= np.floor(e)
     y = (kk == np.floor(e)).astype(int)
+    w = pesos_recientes(sub, idx, vida_media_dias)
     X = X[vivo]
     cols = [c for c in cols if X[c].nunique(dropna=True) > 1]           # al llegar, el recorrido aun no tiene informacion (todo cero): se deja fuera
     m = HistGradientBoostingClassifier(max_iter=300, learning_rate=0.08, max_leaf_nodes=63, min_samples_leaf=200,
                                        categorical_features=[cols.index(c) for c in CATEGORICAS if c in cols], random_state=SEMILLA)
-    m.fit(X[cols], y[vivo])
+    m.fit(X[cols], y[vivo], sample_weight=None if w is None else w[vivo])
     m.cols_, m.desde_ = cols, desde
     return m
 

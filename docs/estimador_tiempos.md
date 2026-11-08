@@ -5,9 +5,9 @@
 ## Resumen
 1. **La espera es individual.** Pacientes que llegan el mismo día o a la misma hora no esperan parecido. Por eso la ocupación del hospital o la cola casi no ayudan a estimarla, y lo que sirve es información de cada paciente.
 2. **El estimador es un modelo de tiempo restante.** Para un paciente que espera cama, da el rango de lo que le falta (percentiles 25, 50, 75 y 90) y la probabilidad de recibir cama en 6, 12 y 24 horas, y se recalcula a medida que pasa la espera. Usa el paciente, la hora del reloj, la ocupación, su historial de hospitalizaciones y su recorrido en urgencias, todo conocido en el momento. Se consulta con `estimar_tiempo_restante()`.
-3. **Funciona mejor que todo lo demás que probamos, pero el techo es bajo.** Mejora el rango 7,6 % al llegar y 9,2–9,5 % entre las 3 y las 6 horas de espera, frente a darle a todos el mismo rango. Sus percentiles aciertan en datos nuevos, y le gana con margen comprobado a las otras cinco alternativas.
+3. **Funciona mejor que todo lo demás que probamos, pero el techo es bajo.** Reentrenado cada mes con más peso en lo reciente, que es como se debe usar porque el hospital cambió, mejora el rango 8,1 % al llegar y 9,8–10,3 % entre las 3 y las 6 horas de espera, frente a darle a todos el mismo rango. Sus percentiles aciertan en datos nuevos, y le gana con margen comprobado a las otras cinco alternativas.
 4. **Lo que más decide cuándo llega la cama es la hora del reloj:** entre las 6 y las 12 h casi nadie recibe cama; las camas se asignan entre las 15 y las 17 h y entre las 20 y las 23 h.
-5. **Lo que de verdad lo mejoraría es saber, al llegar, la gravedad y el servicio.** Los procedimientos de cada estancia muestran que el hospital da cama rápido a los graves (UCI: mediana 2,7 h) y hace esperar más a cirugía, urología y ortopedia (30–38 h). Si esa información se conociera al llegar, la mejora pasaría de 7,6 % a 15,8 %, y a 18,6 % sumando el diagnóstico. Es más que cualquier cambio de modelo, y es el argumento para registrar el triage y el servicio en la base.
+5. **Lo que de verdad lo mejoraría es saber, al llegar, la gravedad y el servicio.** Los procedimientos de cada estancia muestran que el hospital da cama rápido a los graves (UCI: mediana 2,7 h) y hace esperar más a cirugía, urología y ortopedia (30–38 h). Si esa información se conociera al llegar, la mejora pasaría de 7,6 % a 15,8 %, y a 18,6 % sumando el diagnóstico (comparando modelos entrenados una sola vez). Es más que cualquier cambio de modelo, y es el argumento para registrar el triage y el servicio en la base.
 
 ---
 
@@ -76,24 +76,25 @@ estimar_tiempo_restante(edad=67, sexo="Mujer", tipo_visita="Urgencias", horas_es
 ```
 - El historial, el recorrido y la ocupación son opcionales. Sin historial, el paciente se trata como nuevo. Sin recorrido, se asume lo más común: una etapa de atención abierta desde la llegada.
 - Devuelve los percentiles de lo que falta, la hora en que la mitad de los pacientes parecidos ya tendría cama y la probabilidad de recibirla en 6, 12 y 24 h.
-- Los modelos se entrenan con todo el periodo confiable y se guardan fuera del proyecto, en `HUN_PROCESADOS/modelos/` (salen de datos clínicos). Si no existen, se entrenan al primer uso (~1 min).
+- Los modelos se entrenan con todo el periodo confiable, **con más peso en lo reciente** (un dato de hace 6 meses pesa la mitad), y se guardan fuera del proyecto, en `HUN_PROCESADOS/modelos/` (salen de datos clínicos). Si no existen, se entrenan al primer uso (~1 min).
+- **Hay que reentrenarlos cada mes** con los datos nuevos (basta con borrar el archivo `.joblib`). La sección 3.1 muestra por qué.
 
 **Ejemplos** (miércoles 4-mar-2026, ocupación típica):
 
 | Paciente | Faltan: p25 / mediana / p75 / p90 | Prob. de cama en 6 / 12 / 24 h |
 |---|---|---|
-| Mujer de 67 años, urgencias, recién llegada a las 9:00, sin historial | 12,1 / 32,2 / 56,7 / 84,4 h | 15 / 25 / 41 % |
-| La misma, con 2 hospitalizaciones previas (la última: 60 h de espera, 200 h de estancia) | 15,8 / 37,8 / 63,6 / 108,2 h | 6 / 13 / 28 % |
-| La misma sin historial, 6 h después: una etapa cerrada y una abierta | 10,6 / 30,4 / 54,9 / 96,1 h | 12 / 26 / 33 % |
-| La misma sin historial, 6 h después: tres etapas abiertas | 5,5 / 7,8 / 24,4 / 31,6 h | 31 / 65 / 74 % |
-| Niña de 8 años, urgencias, recién llegada a las 22:00 | 4,6 / 14,8 / 23,7 / 46,2 h | 31 / 45 / 76 % |
+| Mujer de 67 años, urgencias, recién llegada a las 9:00, sin historial | 11,5 / 32,5 / 60,2 / 91,8 h | 15 / 26 / 41 % |
+| La misma, con 2 hospitalizaciones previas (la última: 60 h de espera, 200 h de estancia) | 13,7 / 36,9 / 60,7 / 84,7 h | 7 / 18 / 32 % |
+| La misma sin historial, 6 h después: una etapa cerrada y una abierta | 14,4 / 31,7 / 59,7 / 102,9 h | 12 / 24 / 30 % |
+| La misma sin historial, 6 h después: tres etapas abiertas | 3,9 / 6,8 / 24,3 / 48,5 h | 41 / 70 / 74 % |
+| Niña de 8 años, urgencias, recién llegada a las 22:00 | 3,9 / 12,2 / 23,4 / 47,3 h | 34 / 50 / 77 % |
 
 ---
 
 ## 3. Qué tan bien funciona
 **La prueba.** Todo se entrenó con llegadas de feb-2023 a jun-2025 y se probó con las 5.430 estancias de jul-2025 a 9-abr-2026, que ningún modelo había visto. Se mide la **mejora frente al rango general** (darle a todos los mismos percentiles), con la pérdida de cuantiles, que es el error estándar para percentiles. Los intervalos del 95 % salen de un bootstrap por semanas (1.000 repeticiones), porque los pacientes de una misma semana se parecen entre sí.
 
-**Cómo mejora al sumar información** (lo que le falta a quien sigue esperando):
+**Cómo mejora al sumar información** (lo que le falta a quien sigue esperando). Todos los modelos de esta tabla se entrenaron una sola vez, para compararlos en igualdad de condiciones. Reentrenado cada mes con más peso en lo reciente, el estimador final gana entre 0,5 y 0,8 puntos más (sección 3.1).
 
 | Horas esperando | Tabla de perfiles | Modelo sin historial ni recorrido | + historial | **Estimador final** (IC 95 %) |
 |---|---|---|---|---|
@@ -113,6 +114,34 @@ estimar_tiempo_restante(edad=67, sexo="Mujer", tipo_visita="Urgencias", horas_es
 - **El techo es bajo:** el error de la mediana sigue siendo de unas 24 h al llegar.
 
 **Agosto y septiembre de 2025.** Según el equipo, el HUN tuvo sobredemanda porque los hospitales cercanos fueron intervenidos por el Estado y quedó como la única opción de la zona. En los datos se ve poco: un 6–7 % más de llegadas que en los mismos meses de 2024, con ingresos a cama y espera mediana normales. Evaluado aparte, el estimador mejora 7,2 % en esos meses y 7,7 % en el resto. El resultado se sostiene.
+
+### 3.1 ¿Sirve estimar el presente con datos de 2023 a 2025?
+Código: `src/ventana_entrenamiento.py`. El hospital cambió en el periodo: la mediana de la espera se mantuvo, pero los peores casos empeoraron.
+
+| Semestre de llegada | Mediana | p75 | p90 |
+|---|---|---|---|
+| 2023 (1.er semestre) | 19,8 h | 35,5 h | 61,2 h |
+| 2024 (1.er semestre) | 18,4 h | 35,9 h | 69,1 h |
+| 2025 (1.er semestre) | 20,6 h | 43,4 h | 78,8 h |
+| 2026 (ene–9 abr) | 17,5 h | 46,6 h | 80,9 h |
+
+Un modelo entrenado sobre todo con 2023 y 2024 aprende un hospital que ya no existe. Se probaron siete formas de entrenar, con la misma prueba (mejora frente al rango general):
+
+| Forma de entrenar | Al llegar | 3 h | 6 h | 12 h | 24 h |
+|---|---|---|---|---|---|
+| Todo feb-2023 a jun-2025 (modelo fijo) | 7,6 % | 9,5 % | 9,2 % | 6,5 % | 5,2 % |
+| Solo los últimos 12 meses | 7,7 % | 9,6 % | 9,5 % | 5,9 % | 4,7 % |
+| Solo los últimos 6 meses | 7,0 % | 9,1 % | 8,4 % | 6,6 % | 5,5 % |
+| Todo, con más peso en lo reciente (vida media de 6 meses) | 7,6 % | 9,6 % | 9,6 % | 6,6 % | 5,1 % |
+| Reentrenado cada mes con todo lo anterior | 8,0 % | 10,0 % | 9,5 % | 6,9 % | 5,8 % |
+| **Reentrenado cada mes, con más peso en lo reciente** | **8,1 %** | **10,3 %** | **9,8 %** | **7,0 %** | **5,9 %** |
+
+En el reentrenamiento mensual, cada mes de la prueba se estimó con un modelo entrenado solo con lo que se sabía antes de empezar ese mes. Es decir, con las estancias que ya tenían cama y que llegaron al menos 14 días antes.
+
+**Lectura:**
+1. **Sí, entrenar con lo viejo era un problema, pero pequeño.** Reentrenar cada mes con más peso en lo reciente es lo mejor en todos los momentos: mejora entre 0,5 y 0,8 puntos frente al modelo fijo. La diferencia es real al llegar, a las 3 h y a las 6 h (el intervalo de la diferencia no incluye el 0: +0,1 a +1,0 % al llegar, +0,4 a +1,5 % a las 3 h). Además, el p90 acierta mejor: 88,9 % en vez de 87,8 % al llegar.
+2. **Lo que más ayuda es incluir los meses nuevos.** Darle más peso a lo reciente sin reentrenar casi no cambia nada. Usar solo los últimos meses empeora, porque se pierden demasiados datos.
+3. **Por eso el estimador final se entrena con todo el historial y más peso en lo reciente,** y debe reentrenarse cada mes.
 
 **Edad y sexo corregidos.** Las cifras de esta sección ya usan la edad y el sexo de la persona real en las 14.126 estancias que trae `procedimientos_por_estancia.csv` (difieren de los nuestros en el 4 % de esas estancias en la edad y en el 2 % en el sexo). Con la corrección, los resultados prácticamente no cambian.
 
@@ -163,6 +192,7 @@ En todos los casos los percentiles siguen bien calibrados (al llegar, con todo: 
 | Cola en orden aleatorio (M3a) | −0,3 % | La cola casi no cambia la espera |
 | Espera en dos series: con la zona llena («sin cama») y con camas libres («demora del servicio») (`src/espera_dos_series.py`) | No mejora el pronóstico frente a una sola serie (~4,5 h de error semanal) | Es frágil: con las camas del HUN, la parte sin cama pasa del 8 % (2023) al 56 % (2025), pero con un 10 % más de camas queda en 5–10 %. Queda como lectura descriptiva |
 | Laboratorios de las primeras 6 h como aproximación a la gravedad | −0,1 a +0,7 puntos | Casi no ayudan |
+| Entrenar solo con los últimos 6 o 12 meses | 7,0 % y 7,7 % al llegar | Se pierden datos; es mejor usar todo el historial con más peso en lo reciente y reentrenar cada mes (sección 3.1) |
 | Efecto del día o de la hora de llegada | 0,1 % a 2,3 % más allá del azar | La espera es individual |
 | Hora del primer diagnóstico como momento de la decisión de hospitalizar | Casi siempre coincide con la llegada | No marca la decisión |
 
@@ -185,7 +215,7 @@ Los datos viven fuera del proyecto. Se indican con tres variables (en Bash). `HU
 export HUN_PROCESADOS="D:/Descargas D/Datos/procesados" HUN_TABLAS="D:/Descargas D/Datos/procesados/tablas" HUN_CRUDOS="D:/Descargas D/Datos"
 ```
 1. **Tabla de episodios:** `src/analisis_etapas.py` y `src/preparar_variables.py`, con los CSV de la base en `datos/crudos/`. Copiarlos ahí solo mientras corren y mover luego `datos/procesados/` a la carpeta externa.
-2. **Construcción y prueba del estimador:** `python3 src/comparar_estimadores.py` (~1,5 min). Escribe `comparacion_estimadores_*.csv` en `HUN_TABLAS` y `resultados/graficos/comparacion_estimadores.png`.
+2. **Construcción y prueba del estimador:** `python3 src/comparar_estimadores.py` (~1,5 min). Escribe `comparacion_estimadores_*.csv` en `HUN_TABLAS` y `resultados/graficos/comparacion_estimadores.png`. Las formas de entrenar (sección 3.1): `python3 src/ventana_entrenamiento.py` (~10 min).
 3. **Escenarios de gravedad y servicio:** `python3 src/procedimientos_escenario.py` (~4 min; necesita `procedimientos_por_estancia.csv` en `HUN_CRUDOS`) y `python3 src/triage_aproximado.py` (laboratorios).
 4. **Alternativas:** `python3 src/estimador_tiempos.py` (tabla de perfiles) y `python3 src/espera_dos_series.py` (dos series).
 5. **Consulta:** `python3 src/estimador_tiempo_restante.py 67 Mujer Urgencias 6 "2026-03-04 15:00"`. Sin argumentos muestra los ejemplos de la sección 2.
