@@ -209,6 +209,16 @@ de las llegadas pronosticadas; factores externos (clima, dengue, eventos).
 
 ---
 
+### 5.4 Estimación de la espera de cada paciente (A6, `docs/estimador_tiempos.md`)
+- **La espera es individual:** los pacientes que llegan el mismo día no esperan parecido (el día explica un 0,1 % más allá del azar). La ocupación y la cola casi no ayudan.
+- **Estimador: modelo de tiempo restante** (`src/estimador_tiempo_restante.py`). Da el rango de lo que le falta a un paciente que espera cama y la probabilidad de recibirla en 6, 12 y 24 h. Usa el paciente, la hora del reloj, la ocupación, su historial (la espera se repite: Spearman 0,34 con la hospitalización anterior) y su recorrido en urgencias, con un modelo por momento de la espera.
+- **Prueba** (entrenamiento feb-2023 a jun-2025, prueba jul-2025 a 9-abr-2026, 5.430 estancias): mejora 7,6 % al llegar (IC 95 % 6,7 a 8,5) y 9,2–9,5 % a las 3–6 h frente a dar el mismo rango a todos; los percentiles aciertan (26,3 / 51,4 / 73,8 / 87,7 % debajo de p25 / p50 / p75 / p90). Le gana con margen comprobado a la tabla de perfiles, a un modelo de cuantiles y a dos modelos de cola. Agosto y septiembre de 2025 (sobredemanda, dato del equipo) dan el mismo resultado.
+- **Gravedad y servicio (procedimientos de cada estancia, sin fecha):** el hospital da cama rápido a los graves (UCI: mediana 2,7 h) y hace esperar más a urología (37,7 h), ortopedia (32,8 h) y cirugía general (29,6 h). Si al llegar se supieran la gravedad y el servicio, la mejora pasaría de 7,6 % a 15,8 % (18,6 % sumando el diagnóstico; escenario optimista). **Registrar el triage y el servicio** es la mejora de datos que más ayudaría.
+- **La hora del reloj manda:** el 24 % de las camas se asigna entre las 15 y las 17 h y el 37 % entre las 20 y las 23 h; entre las 6 y las 12 h casi nadie recibe cama.
+- **El hospital cambió** (p90 de la espera de 61 a 81 h entre 2023 y 2026): reentrenar cada mes con más peso en lo reciente mejora la estimación en todos los momentos (8,1 % al llegar, 10,3 % a las 3 h; la diferencia con el modelo fijo es real hasta las 6 h). El estimador final se entrena así (`src/ventana_entrenamiento.py`).
+
+---
+
 ## 6. Componente 4: recomendaciones (`docs/recomendaciones.md`, borrador)
 1. Registrar mejor: hora de salida de urgencias, asignación de cama y sin duplicados (habilita medir todo lo demás).
 2. Seguimiento mensual de 6 indicadores (espera p50/p90 de 18/73,9 h, % con más de 48 h sin cama 19 %, % de altas antes del mediodía 15 %, hora de
@@ -260,6 +270,8 @@ otro hospital no halló efecto); las fuentes se leyeron solo en resumen y hay qu
 | `src/analisis_etapas.py` (v3.7) | Limpia etapas y copias, arma episodios, marca estancias gemelas, espera de cama | `episodios.csv`, `bloques.csv`, `espera_cama.csv` |
 | `src/generar_borrador_mapeo_dx.py` → `src/diagnosticos_y_tiempos.py` | Agrupa diagnósticos y compara tiempos por grupo | `datos/referencia/mapeo_dx.csv`, `tiempos_por_dx.csv`, `efecto_dx_espera.csv` |
 | `src/preparar_variables.py` (v2.1) | Agrega calendario, paciente, diagnóstico, ocupación, series | `tabla_episodios.parquet`, `serie_horaria.csv`, `serie_diaria.csv` |
+| `src/comparar_estimadores.py` → `src/estimador_tiempo_restante.py` | A6: construye y prueba el estimador de la espera (historial, recorrido, un modelo por momento) contra las alternativas, y deja la función de consulta | `comparacion_estimadores_ic.csv`, `comparacion_estimadores.png` |
+| `src/estimador_tiempos.py`, `src/espera_dos_series.py`, `src/triage_aproximado.py` | A6: tabla de perfiles, espera en dos series y escenario de gravedad | `estimador_tiempos.csv`, `espera_dos_series_*.csv`, `triage_aproximado.csv` |
 | `src/exportar_para_equipo.py` (v2) | Tablas para el equipo y Power BI | `estancias_hospitalizacion.csv`, `panel_diario.csv` |
 | `src/generar_q3_q4_desde_csv.py` | Reproduce Q3 y Q4 sobre los CSV con DuckDB | `q3_episodios.csv`, `q4_ocupacion_por_hora.csv` |
 | `src/construir_segmentos.py` | Segmentos, inventario, sesgo de medición | `segmentos.csv` |
