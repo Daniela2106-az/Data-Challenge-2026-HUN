@@ -121,10 +121,12 @@ def cuantiles_de_supervivencia(S):
 # ----------------------------------------------------------------------
 # 3) M1: supervivencia por hora (tiempo restante)
 # ----------------------------------------------------------------------
-COLS_M1 = ["transcurrido", "hora_reloj", "dia_semana", "cola", "ocup", "edad_cod", "tipo_cod", "sexo_cod", "zona_cod"]
+DINAMICAS = ["transcurrido", "hora_reloj", "dia_semana", "cola", "ocup"]
+COLS_M1 = DINAMICAS + ["edad_cod", "tipo_cod", "sexo_cod", "zona_cod"]
+CATEGORICAS = ["hora_reloj", "dia_semana", "tipo_cod", "dx_cod"]
 
 
-def filas_persona_hora(d, rejilla, estado, desde=0, fijar_estado=False):
+def filas_persona_hora(d, rejilla, estado, desde=0, fijar_estado=False, cols=COLS_M1):
     """Una fila por paciente y hora de espera desde 'desde' hasta MAX_H (o hasta recibir cama si se entrena)."""
     n = len(d)
     k = np.arange(desde, MAX_H)
@@ -138,26 +140,27 @@ def filas_persona_hora(d, rejilla, estado, desde=0, fijar_estado=False):
     else:
         cola, ocup = estado_en(d.iloc[idx].reset_index(drop=True), rejilla, estado, kk)
     X = pd.DataFrame({"transcurrido": kk, "hora_reloj": reloj.hour, "dia_semana": reloj.dayofweek, "cola": cola, "ocup": ocup,
-                      **{c: d[c].to_numpy()[idx] for c in ["edad_cod", "tipo_cod", "sexo_cod", "zona_cod"]}})
+                      **{c: d[c].to_numpy()[idx] for c in cols if c not in DINAMICAS}})
     return X, idx, kk
 
 
-def entrenar_m1(tr, rejilla, estado):
-    X, idx, kk = filas_persona_hora(tr, rejilla, estado)
+def entrenar_m1(tr, rejilla, estado, cols=COLS_M1):
+    X, idx, kk = filas_persona_hora(tr, rejilla, estado, cols=cols)
     e = tr.espera_cama_h.to_numpy()[idx]
     vivo = kk <= np.floor(e)                                # en riesgo en la hora kk
     y = (kk == np.floor(e)).astype(int)
     X, y = X[vivo], y[vivo]
     print(f"M1: {len(X):,} filas paciente-hora para entrenar, {y.mean():.3f} de probabilidad media por hora")
     m = HistGradientBoostingClassifier(max_iter=300, learning_rate=0.08, max_leaf_nodes=63, min_samples_leaf=200,
-                                       categorical_features=[COLS_M1.index(c) for c in ["hora_reloj", "dia_semana", "tipo_cod"]], random_state=SEMILLA)
-    m.fit(X[COLS_M1], y)
+                                       categorical_features=[cols.index(c) for c in CATEGORICAS if c in cols], random_state=SEMILLA)
+    m.fit(X[cols], y)
+    m.cols_ = cols
     return m
 
 
 def predecir_m1(m, d, rejilla, estado, desde=0):
-    X, idx, kk = filas_persona_hora(d, rejilla, estado, desde=desde, fijar_estado=True)
-    p = m.predict_proba(X[COLS_M1])[:, 1].reshape(len(d), MAX_H - desde)
+    X, idx, kk = filas_persona_hora(d, rejilla, estado, desde=desde, fijar_estado=True, cols=m.cols_)
+    p = m.predict_proba(X[m.cols_])[:, 1].reshape(len(d), MAX_H - desde)
     S = np.hstack([np.ones((len(d), 1)), np.cumprod(1 - p, axis=1)])
     return cuantiles_de_supervivencia(S)                    # horas que faltan desde 'desde'
 

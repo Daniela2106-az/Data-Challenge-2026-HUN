@@ -141,5 +141,29 @@ Código: `src/comparar_estimadores.py`. Tablas (fuera de git): `comparacion_esti
 
 **Recomendación para A6:** entregar M1 como el estimador principal («a esta hora y con esta cola, un paciente que lleva X horas esperando recibe cama en tantas horas, con este rango») y la tabla de perfiles como su versión simple para el dashboard. M2 y M3 quedan documentados como alternativas probadas y descartadas.
 
+## Cuarta parte: la gravedad del paciente (triage)
+Código: `src/triage_aproximado.py`. Tabla (fuera de git): `triage_aproximado.csv`.
+
+En urgencias la prioridad se define con el **triage**: I (inmediata, riesgo vital), II (muy alta), III (media), IV (baja) y V (muy baja). **La base no trae el nivel de triage.** No está en ninguna de las 8 tablas, la etapa 9203 solo trae la hora, y entre los nombres de los diagnósticos no aparece ningún triage ni prioridad. Se probaron dos aproximaciones dentro del modelo de tiempo restante (M1), y ninguna es el triage:
+- **Laboratorios de las primeras 6 h:** pedir exámenes temprano indica urgencia o complejidad. Se conocen a las 6 h. El 48 % de las estancias tiene alguno.
+- **Grupo de diagnóstico:** es lo más parecido a la gravedad que hay. Los pacientes cardiovasculares y neurológicos reciben cama mucho antes (HALLAZGOS 4.5b), lo que sugiere que el hospital ya prioriza por gravedad. Pero el 88 % de los diagnósticos se registra tarde y el 35 % de las estancias no tiene ninguno. Por eso se usa como **escenario**: «¿cuánto mejoraría si el HUN registrara la gravedad al llegar?».
+
+| Horas esperando | M1 sin gravedad | M1 + laboratorios de 6 h | M1 + grupo de diagnóstico (escenario) |
+|---|---|---|---|
+| 0 h (al llegar) | 6,5 % | 7,0 % (no válido: se conocen a las 6 h) | **12,2 %** |
+| 6 h | 6,9 % | 7,0 % | **10,9 %** |
+| 12 h | 6,0 % | 6,1 % | 9,2 % |
+| 24 h | 4,5 % | 4,3 % | 6,4 % |
+| 48 h | 1,6 % | 1,4 % | 1,7 % |
+
+(Mejora frente al rango general. Los percentiles siguen bien calibrados en todas las versiones.)
+
+**Qué significa:**
+1. **Los laboratorios tempranos casi no ayudan** (+0,1 a +0,5 puntos).
+2. **Una medida de gravedad al llegar casi duplicaría la mejora**, de 6,5 % a 12 %, y eso que el diagnóstico es una aproximación tosca y tardía. Un triage real de I a V debería servir más. Es un argumento concreto para la recomendación R1 (registrar mejor los datos): **registrar el nivel de triage en la base** permitiría estimar mejor la espera de cada paciente.
+3. **Pasados los 2 días la gravedad ya no cambia la estimación.** Las esperas muy largas dependen de otras cosas.
+
+**Siguiente paso posible: los procedimientos.** Los procedimientos que recibió el paciente (ingreso a UCI, intubación, ventilación, transfusión, reanimación, cirugía) indican qué tan grave fue. Daniela ya los extrajo de la base para A2b (lote 5 de `src/auditoria_bd.py`: `Q01_procedimientos_por_estancia.csv` y `Q03_nombres_de_conceptos.csv`), así que no hace falta otra consulta. En `Q03` se puede revisar además si algún concepto se llama «triage». Limitación: los procedimientos no tienen fecha, así que no se sabe si ocurrieron antes o después de recibir la cama. Servirían como escenario y para explicar, no para estimar al llegar.
+
 ## Cómo se usa en el dashboard
 Las dos tablas son agregadas (una fila por perfil, solo con grupos de 30 casos o más) y no tiene datos por paciente. Puede alimentar una página «¿Cuánto esperaría un paciente como este?»: el usuario elige hora, edad, tipo de visita y sexo, y ve la probabilidad de hospitalizarse y los tres rangos con su n. La advertencia «rango típico de pacientes parecidos, no una predicción individual» va fija en la página. La estructura del dashboard (`docs/estructura_dashboard.md`) todavía no tiene esa página; falta decidir con Daniela dónde va.
