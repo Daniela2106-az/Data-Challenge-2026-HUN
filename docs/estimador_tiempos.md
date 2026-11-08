@@ -58,5 +58,46 @@ Para consultar cualquier perfil: `estimar(hora, grupo_edad, tipo_visita, sexo)` 
 - **Registros réplica:** las llegadas incluyen al menos un 4 % de réplicas (`CLAUDE.md` 4.6), que pesan en la probabilidad de hospitalizarse.
 - **Asociación, no causa:** que un perfil espere más no dice por qué.
 
+## Segunda parte: la espera en dos series (sin cama y demora del servicio)
+Código: `src/espera_dos_series.py`. Tablas (fuera de git): `espera_dos_series_*.csv`. Gráfico: `resultados/graficos/espera_dos_series.png`.
+
+**Cómo se separa.** Cada hora se cuentan las camas ocupadas por zona, con estancias únicas: adultos (15 años o más) frente a 88 camas y niños frente a 18, las capacidades que dio el HUN (`CLAUDE.md` 4.7). Es la misma división por zona de `docs/ocupacion_por_zona.md`. La espera de cada paciente se reparte hora por hora en dos partes que suman la espera total:
+- **Sin cama:** horas en que la zona del paciente estaba llena.
+- **Demora del servicio:** horas en que el conteo mostraba camas libres.
+
+Con esas dos partes se arman dos series diarias, según la fecha de llegada.
+
+**Reparto por año (promedio por paciente, capacidad del HUN):**
+
+| Año | % de horas con adultos llenos | Espera media | Sin cama | Demora del servicio | % de la espera sin cama |
+|---|---|---|---|---|---|
+| 2023 | 1,6 % | 28,0 h | 2,3 h | 25,7 h | 8 % |
+| 2024 | 37,5 % | 29,2 h | 10,9 h | 18,3 h | 37 % |
+| 2025 | 58,3 % | 33,4 h | 18,8 h | 14,6 h | 56 % |
+| 2026 (ene–9 abr) | 37,6 % | 34,1 h | 12,7 h | 21,4 h | 37 % |
+
+**Prueba de sensibilidad:** con capacidades 10 % mayores (97 y 20), la parte sin cama baja a 5–10 % todos los años. **La separación depende casi por completo de cuántas camas haya de verdad**, y ese número no está confirmado (el HUN no dijo a qué fecha corresponde).
+
+**Qué dicen las dos series:**
+1. **Con las camas que dio el HUN, el cambio es de composición.** En 2023 casi toda la espera ocurría con camas libres en el conteo. En 2025, más de la mitad ocurrió con la zona de adultos llena. La espera media subió unas 5 h, pero la parte sin cama subió unas 16 h y la de servicio bajó unas 11 h. Coincide con lo que mostró Daniela: la ocupación de adultos pasó del 88 % al 101 % de sus camas (`docs/ocupacion_por_zona.md`).
+2. **Pero la espera total casi no responde a esa diferencia.** La cola de espera no cambia con la ocupación (`docs/capacidad_efectiva.md`). Cuando las camas están llenas casi todo el tiempo, las horas pasan de "servicio" a "sin cama" por construcción, sin que el paciente espere más. Por eso la separación se lee como una descripción de en qué condiciones se esperó, no como la causa de la espera.
+3. **La hora de llegada mueve la demora del servicio, no la parte sin cama.** La parte sin cama es pareja en el día (~7–14 h por paciente). La de servicio es de 13–15 h para quien llega de noche y de 19–22 h para quien llega entre las 7 y las 19 h. Es coherente con las altas tardías y la asignación de cama por la tarde (`CLAUDE.md` 6b): esa parte depende del proceso del día, no del conteo de camas.
+
+**Pronóstico con las dos series** (nivel de los 28 días previos × día de la semana; el nivel solo usa llegadas de hace 7 días o más, porque la espera de quien llegó ayer aún no se conoce completa; prueba de jul-2025 a 9-abr-2026):
+
+| Método | Error medio diario, a 1 día | a 7 días | Error medio semanal, a 7 días |
+|---|---|---|---|
+| Dos series (sin cama + servicio) | 8,8 h | 8,7 h | 4,5 h |
+| Una sola serie (espera total) | 8,8 h | 8,7 h | 4,6 h |
+| Promedio histórico por día de la semana | 8,4 h | 8,4 h | 4,6 h (sesgo de −2,9 h) |
+
+La espera media diaria ronda las 33 h y cada día se hospitalizan unas 19 personas, así que el promedio de un día es muy ruidoso. Por semana, el error baja a ~4,5 h (~14 %), igual que pasa con los ingresos (`CLAUDE.md` 6b). **Separar en dos series no mejora el pronóstico:** da lo mismo que una sola. Lo que aporta es la lectura (cuánto de la espera ocurre con las camas llenas y cuánto con camas libres) y un indicador para seguir mes a mes, siempre que el HUN confirme su número de camas.
+
+**Por perfil:** en la mediana de cada perfil, la parte sin cama va de 0 % a 88 % (mediana 5 %), porque la mediana de esa parte es 0 en muchos perfiles: la mayoría de los pacientes no espera con la zona llena y unos pocos esperan mucho así. Las columnas por perfil están en `espera_dos_series_por_perfil.csv`.
+
+**Relación con el trabajo del equipo:**
+- **Daniela:** zonas y capacidades de `docs/ocupacion_por_zona.md`, el aviso de `docs/capacidad_efectiva.md`, la espera de la estancia (regla v3.8) y la mayor espera de las mujeres (A1, por eso el perfil incluye el sexo).
+- **Anthony:** su simulación Monte Carlo de camas (A5) todavía no está en el repositorio. Cuando exista, la parte sin cama se puede proyectar con su banda de ocupación en lugar del nivel reciente; su idea de A2b y A7 (qué comparten las estancias que se disparan) ya está en los documentos de Daniela.
+
 ## Cómo se usa en el dashboard
-La tabla es agregada (una fila por perfil, solo con grupos de 30 casos o más) y no tiene datos por paciente. Puede alimentar una página «¿Cuánto esperaría un paciente como este?»: el usuario elige hora, edad, tipo de visita y sexo, y ve la probabilidad de hospitalizarse y los tres rangos con su n. La advertencia «rango típico de pacientes parecidos, no una predicción individual» va fija en la página. La estructura del dashboard (`docs/estructura_dashboard.md`) todavía no tiene esa página; falta decidir con Daniela dónde va.
+Las dos tablas son agregadas (una fila por perfil, solo con grupos de 30 casos o más) y no tiene datos por paciente. Puede alimentar una página «¿Cuánto esperaría un paciente como este?»: el usuario elige hora, edad, tipo de visita y sexo, y ve la probabilidad de hospitalizarse y los tres rangos con su n. La advertencia «rango típico de pacientes parecidos, no una predicción individual» va fija en la página. La estructura del dashboard (`docs/estructura_dashboard.md`) todavía no tiene esa página; falta decidir con Daniela dónde va.

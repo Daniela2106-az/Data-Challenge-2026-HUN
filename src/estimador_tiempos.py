@@ -36,6 +36,7 @@ LIMITES
 
 COMO CORRERLO  python3 src/estimador_tiempos.py
 """
+import os
 from pathlib import Path
 
 import matplotlib
@@ -45,7 +46,9 @@ import numpy as np
 import pandas as pd
 
 RAIZ = Path(__file__).resolve().parent.parent
-PROC, TABLAS, GRAF = RAIZ / "datos" / "procesados", RAIZ / "resultados" / "tablas", RAIZ / "resultados" / "graficos"
+PROC = Path(os.environ.get("HUN_PROCESADOS", RAIZ / "datos" / "procesados"))   # los datos pueden vivir fuera del proyecto
+TABLAS = Path(os.environ.get("HUN_TABLAS", RAIZ / "resultados" / "tablas"))
+GRAF = RAIZ / "resultados" / "graficos"
 DESDE, HASTA = pd.Timestamp("2023-02-01"), pd.Timestamp("2026-04-10")   # periodo confiable (CLAUDE.md 4.9)
 CORTE = pd.Timestamp("2025-07-01")                                     # entrenar antes, probar despues
 HASTA_ESTANCIA_PRUEBA = pd.Timestamp("2026-01-10")                     # 90 dias antes del fin, para que las estancias largas terminen
