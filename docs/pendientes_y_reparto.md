@@ -101,7 +101,8 @@ demanda, alertas, días atípicos, borrador de recomendaciones y un repositorio 
 - **Insumos:** `estancias_hospitalizacion.csv`, `panel_diario.csv`; referencias: `src/simulacion_altas.py`, `src/pronostico_demanda.py`, `docs/HALLAZGOS.md` 4.6 y 5.1.
 - **Ojo:** la ocupación observada debe salir de estancias únicas (~100 camas), no de `serie_horaria.csv` viejo.
 
-### A6. Estimar tiempos de atención (componente 3) · **Samuel** (asignado por Daniela el 23-oct; queda para después de los análisis A)
+### A6. Estimar tiempos de atención (componente 3) · **Samuel** — **HECHA el 7-nov-2026** (`src/estimador_tiempos.py`, `docs/estimador_tiempos.md`)
+- **Resultado:** rango por perfil de llegada (hora, edad, tipo de visita y sexo) de la espera de cama, la estancia en cama y urgencias sin hospitalizar, más la probabilidad de hospitalizarse. En la prueba con jul-2025 a abr-2026 los rangos aciertan (el p90 queda algo corto porque los peores casos empeoran), pero el perfil afina poco: mejora el rango un 5 % en la espera y un 2 % en la estancia; AUC 0,62 para hospitalizarse. Falta decidir con Daniela en qué página del dashboard va.
 - **Qué pide el instructivo:** "modelos analíticos o predictivos que permitan estimar tiempos de atención". Es decir: cuando llega un paciente, ¿cuántas horas va a estar
   en urgencias, cuánto va a esperar cama o cuánto se va a quedar hospitalizado?
 - **Dónde estamos:** por paciente no se logra (esperar más de 24 h: AUC 0,60; estancia: R² cercano a 0; duración de urgencias de quien se va de alta: solo el 38 % tiene

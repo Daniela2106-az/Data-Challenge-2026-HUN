@@ -664,7 +664,7 @@ escenarios y supuestos escritos y se declara como limitación en el documento fi
 | Sistema repetible de diagnóstico de cuellos de botella | **Hecho** (`src/diagnostico_cuello_botella.py`, `docs/diagnostico_cuello_botella.md`); falta sumarle Monte Carlo (A5) | A7 |
 | Dashboard de Power BI (**va de último**, datos parciales; guía para su Claude en `powerbi/CLAUDE.md`) y verificar fuentes de las recomendaciones | Pendiente (Samuel) | B1 y B2 |
 | `mapeo_dx.csv` (grupos de diagnóstico) y tiempos por diagnóstico | **Hecho como borrador** (falta validación clínica); `docs/diagnosticos_y_tiempos.md` | A3 |
-| Estimar tiempos de atención (componente 3) | Para después | A6 |
+| Estimar tiempos de atención (componente 3) | **Hecho el 7-nov** (`src/estimador_tiempos.py`, `docs/estimador_tiempos.md`): rango por perfil de llegada, validado con jul-2025 a abr-2026 | A6 |
 | README y reproducibilidad desde cero | README y `requirements.txt` hechos; falta probar desde cero con alguien que no tiene los datos | `README.md` |
 | Documento final y presentación | Pendiente (plazo: fin de noviembre de 2026) | — |
 | Sesión de preguntas con el HUN | **Por agendar**: el correo no tuvo respuesta; preguntas listas | `docs/hun/sesion_de_preguntas.md`, sección 8 |
