@@ -35,6 +35,13 @@ HISTORIAL Y RECORRIDO (se conocen en el momento, sin trampa)
   ESTIMADOR FINAL: con menos de HORAS_RECORRIDO horas de espera, el modelo del momento (historial + recorrido); desde ahi, un solo modelo con el historial
   (el recorrido ya no suma: 6,8 frente a 6,6 % a las 12 h, 4,7 frente a 5,3 % a las 24 h). OJO: el corte de 12 h se eligio mirando la prueba.
 
+PROCEDIMIENTOS (si existe procedimientos_por_estancia.csv en HUN_CRUDOS; extraido por Daniela para A2b, lote 5)
+  1. Corrige la edad y el sexo de esas estancias con los de la persona real (CLAUDE.md 4.10), que trae el archivo.
+  2. Marca la GRAVEDAD (UCI, gases arteriales, lactato, troponina, transfusion, cateter central, hemocultivos, TAC de cabeza, monitoreo cardiaco) y el
+     SERVICIO que atendio al paciente (ginecobstetricia, cirugia general, urologia, ortopedia, psiquiatria, pediatria, endoscopia digestiva).
+  Los procedimientos NO tienen fecha: pueden ser de despues de recibir cama. Solo se usan como ESCENARIO (src/procedimientos_escenario.py), no en el
+  estimador final.
+
 COLA Y OCUPACION
   Por hora y por zona (adultos de 15 anos o mas, ninos), con estancias unicas: ocupacion = pacientes en cama; cola = pacientes que ya llegaron, se
   hospitalizaran y aun no tienen cama. OJO: la cola usa saber quien se hospitalizara despues; en el hospital equivale a los pacientes con orden de
@@ -103,12 +110,57 @@ def preparar():
     d["llegadas_6h"] = d.get("llegadas_6h_previas", pd.Series(np.nan, index=d.index))
     d = d.reset_index(drop=True)
     d["clave"] = np.arange(len(d))
+    d = procedimientos(d)
     d = historial(t, d)
     cargar_etapas(d)
     return d, h, rejilla, estado
 
 
 GRUPOS_DX = None
+GRAVEDAD = {"uci": [4137917], "gases_arteriales": [4239236], "lactato": [3014111], "troponina": [3033745],
+            "transfusion": [4323715, 4219996, 4205859, 4271693], "cateter_central": [4322380], "hemocultivo": [4252846, 4252847],
+            "tac_cabeza": [4125350], "monitoreo_cardiaco": [4144544]}
+SERVICIOS = {   # en orden de prioridad para el servicio principal
+    "ginecobstetricia": [4138639, 4149939, 4070024, 37312440, 42536960, 4170107, 4324607, 44790279, 37016955, 4073278, 4064145, 4149132,
+                         4015701, 4327269, 4062216],
+    "cirugia_general": [4139904, 4198190, 4163971, 2003447, 43531100, 4119555, 37157276, 4157529, 4125906, 4134713],
+    "urologia": [4125854, 4305063, 46232820, 4171400, 3031769],
+    "ortopedia": [37208848, 37016880, 2790145, 37016878, 1072908, 37204684, 1072944, 3009096, 37204683, 37019010],
+    "psiquiatria": [4136624, 4012657, 4230209, 4013683],
+    "pediatria": [4080075],
+    "endoscopia_digestiva": [4294382, 4249893],
+}
+PROC_GRAV = list(GRAVEDAD) + ["n_marcas_gravedad"]
+PROC_SERV = ["servicio_cod"] + list(SERVICIOS)
+
+
+def procedimientos(d):
+    """Corrige edad y sexo con la persona real y agrega gravedad y servicio desde procedimientos_por_estancia.csv (si existe)."""
+    ruta = CRUDOS / "procedimientos_por_estancia.csv"
+    if not ruta.exists():
+        return d
+    pr = pd.read_csv(ruta)
+    pers = pr.drop_duplicates("estancia_id").set_index("estancia_id")[["grupo_edad", "sexo"]]
+    m = d.estancia_id.map(pers.grupo_edad)
+    s = d.estancia_id.map(pers.sexo)
+    d["grupo_edad"] = m.fillna(d.grupo_edad)
+    d["sexo"] = s.where(s.isin(["Mujer", "Hombre"]), d.sexo)
+    d["edad_cod"] = d.grupo_edad.map({e: i for i, e in enumerate(et.EDADES)})
+    d["sexo_cod"] = (d.sexo == "Mujer").astype(int)
+    d["zona"] = np.where(d.grupo_edad.isin(["0-4", "5-14"]), "ninos", "adultos")
+    d["zona_cod"] = (d.zona == "ninos").astype(int)
+    tiene = pr.groupby("estancia_id").concepto.apply(set)
+    conj = d.estancia_id.map(tiene)
+    d["con_procedimientos"] = conj.notna().astype(int)
+    vacio = set()
+    for nombre, ids in {**GRAVEDAD, **SERVICIOS}.items():
+        d[nombre] = [int(bool((c if isinstance(c, set) else vacio) & set(ids))) for c in conj]
+    d["n_marcas_gravedad"] = d[list(GRAVEDAD)].sum(axis=1)
+    serv = np.full(len(d), len(SERVICIOS))                  # ultimo codigo = ninguno de esos servicios
+    for i, nombre in reversed(list(enumerate(SERVICIOS))):
+        serv = np.where(d[nombre] == 1, i, serv)
+    d["servicio_cod"] = serv
+    return d
 
 
 def historial(t, d):
@@ -247,7 +299,7 @@ HIST = ["espera_prev_h", "estancia_prev_h", "n_hosp_previas", "dias_desde_hosp",
 REC = ["n_tu_iniciadas", "n_tu_cerradas_antes", "n_tu_sin_cierre", "horas_tu_cerradas_antes", "horas_desde_ultimo_inicio", "n_admisiones"]
 DINAMICAS = ["transcurrido", "hora_reloj", "dia_semana", "cola", "ocup"] + REC
 COLS_M1 = ["transcurrido", "hora_reloj", "dia_semana", "cola", "ocup", "edad_cod", "tipo_cod", "sexo_cod", "zona_cod"]
-CATEGORICAS = ["hora_reloj", "dia_semana", "tipo_cod", "dx_cod", "dx_previo_cod"]
+CATEGORICAS = ["hora_reloj", "dia_semana", "tipo_cod", "dx_cod", "dx_previo_cod", "servicio_cod"]
 COLS_M1_BASE = [c for c in COLS_M1 if c != "cola"]      # la cola no mejora la estimacion y no se conoce del todo en el momento
 COLS_M1_FINAL = COLS_M1_BASE + HIST + REC
 
