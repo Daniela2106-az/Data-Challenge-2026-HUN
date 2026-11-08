@@ -306,6 +306,22 @@ ep.loc[_ok, "espera_cama_h"] = ((ep.ini_hosp_est - ep.ini_est).dt.total_seconds(
 _hueco = _vieja.drop_duplicates("estancia_id").set_index("estancia_id").hueco_antes_hosp_h
 ep.loc[_ok, "hueco_antes_hosp_h"] = ep.loc[_ok, "estancia_id"].map(_hueco).values
 ep.loc[cambia_de, ["espera_cama_h", "hueco_antes_hosp_h"]] = np.nan
+# v2.6 (7-nov-2026): el HUECO sin etapa antes de la cama se mide en el PROPIO registro conservado (la persona real): inicio de cama de la estancia menos el fin
+# mas tardio de sus etapas previas (ER/TU) en ese registro. Antes se copiaba el de otro registro de la estancia (_vieja, el de id menor, es decir la OTRA persona), cuya
+# visita de urgencias terminaba antes de que empezara la cama replicada: inflaba el hueco de 1,7 % a 18 % de las estancias y de 1 % a 20 % de las horas de espera.
+_bl = pd.read_csv(PROC / "bloques.csv", usecols=K + ["etapa", "ini", "fin"], parse_dates=["ini", "fin"])
+_bl = _bl[_bl.etapa.isin(["ER", "TU", "HOSP"])]
+_b = _bl.merge(ep.loc[ep.estancia_unica & ep.hospitalizado, K], on=K)
+_ih = _b[_b.etapa == "HOSP"].groupby(K).ini.min().rename("_ih").reset_index()
+_b = _b.merge(_ih, on=K)
+_fp = _b[(_b.etapa != "HOSP") & (_b.ini < _b._ih)].groupby(K).fin.max()
+_fp_ep = pd.Series(list(zip(ep.visit_occurrence_id, ep.episodio))).map(_fp.to_dict()).values
+_fp_ep = pd.to_datetime(_fp_ep)
+_mh = (ep.estancia_unica & ep.hospitalizado & ep.espera_cama_h.notna()).values & ~pd.isna(_fp_ep)
+ep["hueco_antes_hosp_h"] = np.nan
+ep.loc[_mh, "hueco_antes_hosp_h"] = ((ep.ini_hosp_est[_mh] - pd.Series(_fp_ep, index=ep.index)[_mh]).dt.total_seconds() / 3600).clip(lower=0)
+print(f"hueco sin etapa (registro conservado): {int(_mh.sum())} estancias | con hueco > 1 h: {100 * (ep.hueco_antes_hosp_h > 1).sum() / _mh.sum():.1f} % | "
+      f"horas de hueco / horas de espera: {100 * ep.hueco_antes_hosp_h.sum() / ep.loc[_mh, 'espera_cama_h'].sum():.1f} %")
 _col = f"espera_mas_{UMBRAL_ESPERA_H}h"
 ep[_col] = np.where(ep.espera_cama_h.notna(), (ep.espera_cama_h > UMBRAL_ESPERA_H).astype(float), np.nan)
 # Fusion: los dos registros suelen repartirse la informacion (uno trae diagnosticos y laboratorios, el otro procedimientos).

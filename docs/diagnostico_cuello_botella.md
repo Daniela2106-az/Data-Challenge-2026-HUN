@@ -16,7 +16,7 @@ Salidas (solo agregados, en `resultados/tablas/`): `cuello_botella_<desde>_<hast
 5. **Qué hacer.** Frases condicionadas por las cifras del periodo y ligadas a `docs/recomendaciones.md`; si una cifra no activa la regla, la frase no sale.
 
 ## Pruebas hechas
-- **Periodo confiable completo:** cuello de botella = urgencias antes de la cama (72 % del exceso de los dos componentes); las esperas de más de 48 h son el 20 % de los pacientes y el 75 % de las horas en exceso; 62,6 % de las altas entre las 14 y las 19 h; la ocupación supera las 106 camas el 23 % de las horas.
+- **Periodo confiable completo:** cuello de botella = urgencias antes de la cama (98 % del exceso de los dos componentes; el hueco sin etapa es casi inexistente tras la corrección del 7-nov); las esperas de más de 48 h son el 20 % de los pacientes y el 75 % de las horas en exceso; 62,6 % de las altas entre las 14 y las 19 h; la ocupación supera las 106 camas el 23 % de las horas.
 - **2025 frente a la referencia de 2023:** el cuello de botella **no cambió**; el exceso medio por estancia pasa de 16,9 a 22,6 h; las disparadas son el 14,7 % (en la referencia serían el 10 %); la ocupación supera 106 camas el 42 % de las horas, coincidente con `CLAUDE.md` 4.8.
 
 ## Límites (declararlos siempre)

@@ -26,7 +26,7 @@ título = conclusión; tema `tema.json`; azul = espera, naranja = referencia o e
 ## Página 4 — «Quién espera más y cuándo» — LISTO (la parte explicativa mejora con A4)
 - Histograma: tramos de `bi_estancias[espera_h]` (0–6, 6–12, 12–24, 24–48, 48–72, >72) con `[Estancias]`.
 - Líneas/columnas: por `bi_estancias[hora_llegada]` `[Espera mediana h]` y `[Espera p90 h]`; segunda vista `asignacion_cama_por_hora_llegada[pct_cama_dia_siguiente_o_mas]` (tarde ≈ la mitad recibe cama al día siguiente).
-- Barras: por `grupo_edad` y `tipo_visita`. Apiladas: `[Horas urgencias]` vs `[Horas hueco]` (79 % / 21 %).
+- Barras: por `grupo_edad` y `tipo_visita`. Apiladas: `[Horas urgencias]` vs `[Horas hueco]` (98 % / ~3 %; el hueco era 21 % antes de la corrección del 7-nov, ver `CLAUDE.md` 4.12).
 - Barras horizontales: `importancia_factores[perdida_r2_si_se_quita]` por `factor`. **Nota fija obligatoria:** «Asociación, no causa. Los factores explican solo el 16 % de la variación».
 - A4 (Anthony) puede reemplazar el modelo explicativo: ESPERA, no inventar.
 

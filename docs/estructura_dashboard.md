@@ -81,14 +81,14 @@ Es la parte que explica **todo lo que no se ve en las gráficas pero que las sos
 
 ## 1.3 Calidad de los datos y limpieza
 La página más importante del bloque: explica por qué las cifras del proyecto no coinciden con un conteo directo de la base. Una sección por problema, **cada una con cuatro partes: qué se vio, cuánto pesa, qué se decidió y qué efecto tuvo**.
-- **Problemas a cubrir:** visitas copia · estancias gemelas (la misma estancia registrada en dos personas distintas) · cuál es la persona real · etapas de urgencias sin hora de fin · etapas abiertas · visitas partidas · diagnósticos sin traducción y sin jerarquía · procedimientos sin fecha · caída total del sistema en dos días de marzo de 2026 · **el registro de etapas que se degrada desde el 10-abr-2026**.
+- **Problemas a cubrir:** visitas copia · estancias gemelas (la misma estancia registrada en dos personas distintas) · cuál es la persona real · etapas de urgencias sin hora de fin · etapas abiertas · visitas partidas · diagnósticos sin traducción y sin jerarquía · procedimientos sin fecha · el «hueco sin etapa» antes de la cama (era un artefacto de las estancias duplicadas) · caída total del sistema en dos días de marzo de 2026 · **el registro de etapas que se degrada desde el 10-abr-2026**.
 - **Explicación del periodo confiable (debe estar aquí, con su figura):** hasta el 9-abr-2026 el registro es estable: cerca de dos tercios de las visitas de urgencias tienen etapa de admisión (ER) y alrededor de un diez por ciento no tiene ninguna etapa. Desde el 10-abr las visitas registradas en la tabla de cabecera suben cerca de 40 % por día, pero la proporción de visitas con etapa ER baja y empeora más desde el 29-abr; los diagnósticos con código desaparecen desde mediados de mayo. Las visitas de cabecera no bajaron, por eso **no es que lleguen menos pacientes: falla el registro del detalle**. Como no se sabe la causa y los datos son estructuralmente distintos, esos días no se usan para estimar niveles, errores ni tendencias.
 - **Figuras obligatorias:** (1) embudo de datos de las etapas a las estancias únicas; (2) ocupación de camas antes y después de resolver las estancias gemelas; (3) visitas de urgencias frente a etapas ER por semana, con la línea vertical del 10-abr-2026.
 - **Fuente:** `CLAUDE.md` secciones 4.1 a 4.10; `docs/HALLAZGOS.md` sección 2; `powerbi/embudo_datos.csv`.
 
 ## 1.4 Las variables
 - **Lleva:** un **diccionario de variables** con buscador. Columnas: *nombre · qué significa en palabras simples · cómo se calculó · de qué tabla sale · se conoce al llegar (sí/no) · limitación*.
-- **Grupos de variables:** unidades (visita, episodio, estancia) · tiempos (espera de cama, urgencias antes de la cama, hueco sin etapa, estancia) · estado del episodio · ruta · calendario (hora, franja, día, festivos, Carnaval) · paciente (edad, sexo, tipo de visita) · carga del hospital (llegadas previas, ocupación) · clínicas (grupo de diagnóstico, laboratorios, procedimientos) · agregados diarios.
+- **Grupos de variables:** unidades (visita, episodio, estancia) · tiempos (espera de cama, urgencias antes de la cama, hueco sin etapa —casi inexistente en el periodo confiable, ver 1.3—, estancia) · estado del episodio · ruta · calendario (hora, franja, día, festivos, Carnaval) · paciente (edad, sexo, tipo de visita) · carga del hospital (llegadas previas, ocupación) · clínicas (grupo de diagnóstico, laboratorios, procedimientos) · agregados diarios.
 - **Dos reglas que se explican aquí:** un modelo «al llegar» solo usa lo que se sabe al llegar; los totales de laboratorios y diagnósticos de una visita crecen con la estancia y por eso no se usan como factor.
 - **Fuente:** `CLAUDE.md` secciones 3, 5 y 7; `powerbi/diccionario_tablas.md`.
 
@@ -118,7 +118,7 @@ La página más importante del bloque: explica por qué las cifras del proyecto 
 
 ## 2.3 Espera de cama y cuello de botella
 - **Controles:** año · tipo de visita · grupo de edad.
-- **Gráficas:** tarjetas (mediana, percentil 90, % que espera más de 24 y de 48 h); línea mensual de mediana y percentil 90; histograma por tramos de espera; barras apiladas del reparto de la espera (urgencias antes de la cama / hueco sin etapa); ranking de segmentos con las cuatro referencias; exceso medio por año.
+- **Gráficas:** tarjetas (mediana, percentil 90, % que espera más de 24 y de 48 h); línea mensual de mediana y percentil 90; histograma por tramos de espera; barras apiladas del reparto de la espera (urgencias antes de la cama / hueco sin etapa; el hueco es ~1–3 %); ranking de segmentos con las cuatro referencias; exceso medio por año.
 - **Contexto:** qué es el exceso y la referencia; de dónde viene la mayor parte de las horas (cola larga); los peores casos empeoran y la mediana no; qué no dice (si la espera es clínica o por falta de cama).
 - **Fuente:** `bi_estancias.csv`, `ranking_cuellos.csv`, `descomposicion_espera.csv`, `exceso_por_anio.csv`.
 

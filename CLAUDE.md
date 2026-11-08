@@ -331,7 +331,7 @@ Resultado: 35.343 episodios hospitalizados → **25.777 estancias** (antes 27.95
 | Espera de cama mediana / p75 / p90 | 18,0 / 37,2 / 71,5 h | **18,6 / 37,9 / 73,9 h** |
 | Espera de cama > 24 h | 42,7 % | **43,7 %** |
 | Exceso medio de espera por episodio, 2023 → 2026 | 16,4 → 22,9 h (+40 %) | **17,3 → 23,8 h (+38 %)** |
-| Reparto de las horas de espera: urgencias / hueco sin etapa | 77 % / 23 % | **80 % / 21 %** |
+| Reparto de las horas de espera: urgencias / hueco sin etapa | 77 % / 23 % | ~~80 % / 21 %~~ **corregido el 7-nov: 98 % / 3 % (99 % / 1 % hasta el 9-abr-2026), ver 4.12** |
 | Altas entre 14:00 y 18:59 / antes del mediodía | 61,5 % / 15 % | **62,7 % / 14 %** |
 | Escenario de altas (30 % de la tarde pasa a la mañana) | 5,5 camas libres a las 12 h | **5,1** (con ~103 camas ocupadas a esa hora) |
 | Ley de Little: ingresos × estancia | 21,7 × 5,46 ≈ 119 | **19,8 × 5,31 ≈ 105** |
@@ -396,6 +396,20 @@ Documentos: `docs/ocupacion_por_zona.md`, `docs/capacidad_efectiva.md`, `docs/di
 - **Supervivencia en urgencias (`docs/supervivencia_urgencias.md`):** quedarse con los episodios con hora de salida subestima la duración: mediana 9,6 h y p90 45 h frente a 11,2 h y 81 h con Kaplan-Meier (71 h ponderado). El 50 % de los episodios no tiene ningún tiempo en urgencias y no hay método que lo recupere (cotas de 0 a 24 h de mediana). Tener información depende de laboratorios, tipo de visita y edad (AUC 0,70).
 - **Fin de semana:** altas por 100 camas −27 % el domingo y −34 % en festivos; la estancia de quien entra a cama en sábado es +12 %; efecto estimado de ~1–2 camas equivalentes (cota alta); las esperas largas no mejoran en fin de semana.
 
+### 4.12 Corrección del «hueco sin etapa» antes de la cama (7-nov-2026)
+**Qué se creía:** que el 21 % de las horas de espera de cama (18–24 % de los hospitalizados) era tiempo sin ninguna etapa registrada justo antes de la hospitalización.
+**Qué era:** un artefacto de las estancias gemelas. El hueco se calcula como (inicio de cama de la estancia) − (fin de la última etapa de urgencias del registro). En el registro de la
+**persona real** (el conservado, v4.0) la etapa de urgencias termina en el mismo instante en que empieza la cama (hueco de 1 minuto o menos en el 97,7 % de las estancias). En los registros
+gemelos de la **otra** persona el hueco existe en el 62,5 %, porque la hospitalización replicada cae sobre una visita de urgencias ajena que terminó antes.
+**Dónde estaba el error:** (1) `preparar_variables.py` copiaba el hueco del registro de id menor (la otra persona) al conservado en el 16,5 % de las estancias; (2) `construir_segmentos.py`
+tomaba la estancia conservada de `episodios.csv` (id menor) y no de `tabla_episodios.parquet` (persona real). Corregidos: `preparar_variables.py` v2.6 y `construir_segmentos.py` v1.3.
+**Medida correcta (periodo confiable, 22.819 estancias):** hueco > 1 h en el **1,7 %** de las estancias y **1,1 %** de las horas de espera; urgencias antes de la cama, 98,9 %. En todo el periodo
+(con los meses desde el 10-abr-2026) es 3,0 % de las horas; desde el 10-abr sube a 31 % de las estancias porque el registro de etapas está degradado (4.9).
+**Qué NO cambia:** la espera de cama (mediana 18,6 h, p90 73,9 h): es la misma con el registro propio o con el de la estancia (17,6 y 17,7 h en el chequeo con todos los registros). El exceso medio
+de espera, 17,1 h (2023) a 23,7 h (2026), cambia en una décima. Urgencias antes de la cama sigue liderando todas las referencias y cortes.
+**Qué cambia:** el cuello de botella es casi por completo **urgencias antes de que se asigne la cama** (98 %), no una mezcla con tiempo sin registro; las preguntas 5 y 11 al HUN pierden sentido.
+Respaldo de los resultados anteriores en `resultados/respaldo_antes_hueco/` y `datos/procesados/respaldo_antes_hueco/` (no se suben a git).
+
 ## 5. Decisiones de método (ya tomadas, no reabrir sin un motivo nuevo)
 
 1. Unidad de análisis: **episodio** = atención continua de un paciente dentro de una visita
@@ -414,7 +428,8 @@ Documentos: `docs/ocupacion_por_zona.md`, `docs/capacidad_efectiva.md`, `docs/di
    (copias, etapas abiertas, corte de episodios, tope MAX_H = 2.160 h = 90 días). Se reportan mediana,
    p25, p75, p90 y media recortada 5–95 %.
 6. **Espera de cama** = inicio del episodio → inicio de la primera HOSP. Incluye el "hueco sin etapa"
-   justo antes de la HOSP.
+   justo antes de la HOSP (que, medido en el registro de la persona real, es ~1 % de las horas: ver 4.12). La etapa previa a la HOSP es TU en el 99,9 % de los casos y el
+   bloque TU termina en el mismo instante en que empieza la HOSP, por eso "desde el fin de la etapa previa" daría 0 y no sirve como espera.
 7. Diagnóstico principal = primer diagnóstico con concepto ≠ 0 por `condition_start_datetime`.
 8. Ocupación al llegar = cuántos bloques HOSP (o TU con duración) están abiertos en ese momento,
    calculada con las mismas etapas. Poco confiable fuera de feb-2023 a may-2026.
@@ -487,12 +502,12 @@ Documentos: `docs/ocupacion_por_zona.md`, `docs/capacidad_efectiva.md`, `docs/di
 ## 6b. Cuellos de botella: resultados (cifras actualizadas al 3-nov con la regla de estancia única v3.8 y la persona real v4.0; detalle en 4.8 y `docs/HALLAZGOS.md` 4; fases 2 a 5 de `docs/plan_de_accion.md`)
 
 - **Segmentos candidatos** (25.373 estancias con espera): espera de cama (mediana 18,6 h, p90 73,9 h), urgencias antes de la cama
-  (80 % de las horas de espera) y hueco sin etapa antes de la cama (6.585 estancias lo tienen, mediana 19,7 h
-  entre ellas; 21 % de las horas). La estancia en cama es servicio (va a la simulación) y urgencias sin hospitalizar solo
+  (~98 % de las horas de espera) y hueco sin etapa antes de la cama (**corregido el 7-nov, ver 4.12**: solo el 1,7 % de las estancias lo tiene en el periodo confiable y es el 1,1 % de las horas;
+  antes decíamos 21 %). La estancia en cama es servicio (va a la simulación) y urgencias sin hospitalizar solo
   es descriptiva (38 % medida, sesgada por tipo de visita, edad y año).
 - **Ranking:** el 64 % de las horas de espera de cama queda por encima de la referencia de carga baja (518 mil de 812 mil
   horas-paciente; cifra de HALLAZGOS 4.2). Urgencias antes de la cama lidera con las 4 referencias y los 3 cortes de episodio (72, 168, 336 h);
-  el peso del hueco (17–24 %) depende del corte.
+  el peso del hueco (corregido el 7-nov) es de 1,9 % con el corte de 72 h, 3,0 % con 168 h y 5,4 % con 336 h (incluye los meses posteriores al 9-abr-2026, donde el hueco sube a 31 % por el registro degradado).
 - **Tendencia:** exceso medio por episodio de 17,3 h (2023) a 23,8 h (2026), +38 %; el p90 sube de 61,6 a 81,9 h; la mediana
   se queda en 17–20 h. Empeoran los peores casos.
 - **Carga (Fase 4):** la mediana de espera sube de 14,2 h (decil con menos llegadas en 6 h) a 25,9 h (decil con más), +2,5 %
@@ -630,13 +645,13 @@ escenarios y supuestos escritos y se declara como limitación en el documento fi
 2. Etapas 3045729 con inicio = fin (ejemplo enviado al HUN; id omitido): ¿falta la hora de salida? ¿hay otra fecha de alta?
 3. Visitas solo con 9203 y sin nada clínico (ejemplo enviado al HUN; id omitido): ¿se fueron sin atención?
 4. ¿Qué proceso es 9203 y cuál 3045729? ¿El paso a 9201 es la asignación de cama o la llegada al piso?
-5. > 1 h sin etapa antes de 9201 en el 35 %: ¿dónde está el paciente? ¿se registra la asignación de cama?
+5. (Casi disuelta el 7-nov, ver 4.12: el hueco era un artefacto de las estancias duplicadas; en el registro de la persona real solo el 1,7 % tiene > 1 h sin etapa.) > 1 h sin etapa antes de 9201 en el 35 %: ¿dónde está el paciente? ¿se registra la asignación de cama?
 6. Fines con milisegundos en julio 2026: ¿pacientes aún hospitalizados al extraer?
 7. ¿Qué significa `visit_concept_id`? (ambulatorias con hospitalización; 3045729 con 43 h de mediana)
 8. Columnas del instructivo ausentes o vacías: ¿habrá versión actualizada?
 9. Número de camas y cubículos de urgencias por año (para ocupación en %).
 10. Rúbrica de evaluación, repo público, Power BI con datos agregados.
-11. ~1 de cada 4 hospitalizados tiene tiempo sin ninguna etapa antes de la cama (mediana 19,7 h entre ellos): ¿dónde está
+11. (Casi disuelta el 7-nov: era ~1,7 % y no ~1 de cada 4, ver 4.12.) ~1 de cada 4 hospitalizados tiene tiempo sin ninguna etapa antes de la cama (mediana 19,7 h entre ellos): ¿dónde está
     el paciente y se registra la asignación de cama? (ampliación de la 5)
 12. Hay episodios de varios días en urgencias (TU) sin hospitalización registrada (ej. una visita de enero de 2023 con 177 h): ¿esperan
     cama sin que se registre, observación prolongada o error?

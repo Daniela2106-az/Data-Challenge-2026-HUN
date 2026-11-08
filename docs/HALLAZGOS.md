@@ -21,7 +21,7 @@ señala qué script o consulta la produciría. Distingue siempre *asociación* d
 3. **Cuello de botella (definición del proyecto):** un segmento donde el paciente espera un recurso, con exceso sobre una referencia
    de "cuando funciona bien", impacto alto (volumen × retraso) y que se agrava con la carga.
 4. **El principal cuello de botella es la espera de cama:** mediana de **18,6 h** y percentil 90 de **73,9 h** desde que llega el
-   paciente hasta que entra a cama. El 80 % de esas horas es tiempo en urgencias y el 21 % es tiempo sin ninguna etapa registrada.
+   paciente hasta que entra a cama. Casi todas esas horas (98 %) son tiempo en urgencias antes de que se asigne la cama; el tiempo sin ninguna etapa registrada es ~1 % (corregido el 7-nov, `CLAUDE.md` 4.12).
 5. **Los peores casos empeoran:** la espera mediana casi no cambia (17–19 h) pero el percentil 90 sube de 61 h (2023) a 80 h (2026).
 6. **Las altas son tardías:** el 62,7 % de las altas ocurre entre las 14:00 y las 18:59 y solo el 14 % antes del mediodía; las camas
    se asignan a las 17–18 h. Quien llega a media tarde espera más (mediana de ~25 h frente a 12–15 h de madrugada).
@@ -101,8 +101,8 @@ controles sobre la base y sobre los CSV exportados; Q1 y Q2 también coincidiero
 - **Estancia en cama (episodio):** mediana 71 h, percentil 75 de 144 h, percentil 90 de 280 h, media 5,2 días.
 - **Urgencias sin hospitalizar (solo el 38 % tiene duración):** mediana 9,6 h, percentil 90 de 45 h. Está sesgada: los niños (30 % medidos) y las
   visitas ambulatorias (10 %) están subrepresentados frente a adultos mayores de 65 (48 %).
-- **Entre etapas casi no hay tiempo muerto:** ER>TU 99 % pegadas; HOSP>HOSP 99 %; TU>TU 94 %. La excepción es TU>HOSP: 23,8 % de los
-  hospitalizados tiene más de 1 h sin ninguna etapa antes de la cama (mediana de 19,7 h entre los que tienen hueco).
+- **Entre etapas casi no hay tiempo muerto:** ER>TU 99 % pegadas; HOSP>HOSP 99 %; TU>TU 94 %. La supuesta excepción TU>HOSP (23,8 % con más de 1 h sin etapa) **era un artefacto de las estancias duplicadas**: en el registro de la persona real solo el 1,7 % de las
+  estancias tiene más de 1 h sin etapa antes de la cama (`CLAUDE.md` 4.12).
 - **Hospitalizados:** ~20 ingresos a cama por día.
 
 ---
@@ -126,7 +126,7 @@ simulación de camas). Fuente: `src/construir_segmentos.py`, `src/ranking_cuello
 | Estancia en cama | 25.777 | 40,0 | 70,7 | 143,9 | 280,3 |
 
 - El 43,7 % espera más de 24 h y el 19 % más de 48 h.
-- Urgencias antes de la cama concentra el **80 %** de las horas de espera; el hueco, el 21 %. Lidera con las 4 referencias.
+- Urgencias antes de la cama concentra el **98 %** de las horas de espera; el hueco, ~1–3 % (antes se decía 80 % y 21 %: corrección del 7-nov, `CLAUDE.md` 4.12). Lidera con las 4 referencias.
 - Con la referencia de carga baja (mediana de 14,7 h), el **64 %** de las horas de espera de cama (518 mil de 812 mil horas-paciente) es exceso.
 
 ### 4.3 Tendencia: empeoran los peores casos

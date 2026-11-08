@@ -103,9 +103,15 @@ if abs(len(ep) - N_ESPERADO) / N_ESPERADO > 0.02:
     print(f"  AVISO: se esperaban ~{N_ESPERADO} episodios (diferencia mayor al 2 %)")
 
 # v1.2: llegada y cama a nivel de ESTANCIA (el minimo entre los registros gemelos del pipeline), asi la espera no depende de cual registro se conserve
+# v1.3 (7-nov-2026): la estancia unica sale de tabla_episodios.parquet (regla v4.0: se conserva el registro de la PERSONA REAL; edad, sexo y el hueco antes de la cama
+# son entonces los de esa persona). Antes salia de episodios.csv, donde se conserva el de id menor (la otra persona del par): su hueco era de 62 % de las estancias.
 _pip = PROC / "episodios.csv"
-if _pip.exists() and "ini_est" in pd.read_csv(_pip, nrows=1).columns:
-    _p = pd.read_csv(_pip, usecols=K + ["estancia_unica", "estancia_gemela", "ini_est", "ini_hosp_est"], parse_dates=["ini_est", "ini_hosp_est"])
+_par = PROC / "tabla_episodios.parquet"
+if _par.exists() or (_pip.exists() and "ini_est" in pd.read_csv(_pip, nrows=1).columns):
+    if _par.exists():
+        _p = pd.read_parquet(_par, columns=K + ["estancia_unica", "estancia_gemela", "ini_est", "ini_hosp_est"])
+    else:
+        _p = pd.read_csv(_pip, usecols=K + ["estancia_unica", "estancia_gemela", "ini_est", "ini_hosp_est"], parse_dates=["ini_est", "ini_hosp_est"])
     _p = _p.rename(columns={"estancia_unica": "_u", "estancia_gemela": "_g", "ini_est": "_ie", "ini_hosp_est": "_ihe"})
     ep = ep.merge(_p, on=K, how="left")
     _m = ep._ie.notna() & ep._ihe.notna() & ep.ini_hosp.notna()

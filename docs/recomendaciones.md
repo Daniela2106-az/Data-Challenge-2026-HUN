@@ -12,7 +12,7 @@ su número de camas el 29-oct (106 y 58 camillas), pero nuestra ocupación lo su
 | # | Hallazgo | Cifra |
 |---|---|---|
 | 1 | Esperar cama es largo y los peores casos empeoran | Espera mediana 18,6 h, percentil 90 de 73,9 h; el exceso medio sube de 17,3 h (2023) a 23,8 h (ene–abr 2026), +38 % |
-| 2 | Casi todo el tiempo está dentro de urgencias, no en huecos entre etapas | 80 % de las horas de espera es tiempo en urgencias antes de la cama; 21 % es tiempo sin ninguna etapa registrada |
+| 2 | Casi todo el tiempo está dentro de urgencias, no en huecos entre etapas | 98 % de las horas de espera es tiempo en urgencias antes de la cama; el tiempo sin ninguna etapa registrada es ~1–3 % (corregido el 7-nov, `CLAUDE.md` 4.12) |
 | 3 | Las altas son tardías y la cama se asigna por la tarde | 62,7 % de las altas entre las 14:00 y las 18:59, solo 14 % antes del mediodía; la cama se asigna a las 17–18 h sin importar cuándo llegó el paciente |
 | 4 | Quien llega a media tarde espera más | Mediana de 25 h al llegar entre las 13 y las 16 h contra 12–15 h de madrugada; a las 16 h, 72 % recibe cama al día siguiente o después |
 | 5 | La ocupación sube por la estancia, no por más pacientes | Camas ocupadas 94 (2023) a 105 (2025); estancia media 4,57 a 5,31 días (+16 %); ingresos ~20 por día sin crecer |
