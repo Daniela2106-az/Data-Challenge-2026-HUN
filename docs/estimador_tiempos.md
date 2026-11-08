@@ -99,5 +99,47 @@ La espera media diaria ronda las 33 h y cada día se hospitalizan unas 19 person
 - **Daniela:** zonas y capacidades de `docs/ocupacion_por_zona.md`, el aviso de `docs/capacidad_efectiva.md`, la espera de la estancia (regla v3.8) y la mayor espera de las mujeres (A1, por eso el perfil incluye el sexo).
 - **Anthony:** su simulación Monte Carlo de camas (A5) todavía no está en el repositorio. Cuando exista, la parte sin cama se puede proyectar con su banda de ocupación en lugar del nivel reciente; su idea de A2b y A7 (qué comparten las estancias que se disparan) ya está en los documentos de Daniela.
 
+## Tercera parte: tres métodos comparados (cuál estima mejor)
+Código: `src/comparar_estimadores.py`. Tablas (fuera de git): `comparacion_estimadores_*.csv` y `m1_probabilidad_por_hora_reloj.csv`. Gráfico: `resultados/graficos/comparacion_estimadores.png`.
+
+**Los métodos:**
+- **M1, tiempo restante (supervivencia por hora).** Para cada hora de espera estima la probabilidad de recibir cama en la hora siguiente. Usa cuánto lleva esperando el paciente, la hora del reloj, el día de la semana, la cola y la ocupación de su zona, la edad, el sexo y el tipo de visita, con árboles de gradiente. Hora por hora sale la distribución del tiempo que falta, y se puede recalcular en cualquier momento de la espera.
+- **M2, al llegar con más variables (regresión por cuantiles).** Un modelo por percentil, con lo que se sabe al llegar más el estado del hospital: cola, ocupación y llegadas de las 6 h previas.
+- **M3, modelo de cola.** Las camas se asignan a la tasa histórica de cada zona, hora y día de la semana. En M3a, cada hora recibe cama un paciente al azar de la cola. En M3b, la reciben en orden de llegada.
+- **Referencias:** el rango general (igual para todos) y la tabla de perfiles de la primera parte.
+
+**La cola** es el número de pacientes de la zona que ya llegaron, se hospitalizarán y aún no tienen cama. En el hospital equivale a los pacientes con orden de hospitalización pendiente, que sí se conocen en el momento. Aquí también incluye la atención clínica previa a esa orden, porque los datos no la separan. Para estimar hacia adelante, la cola y la ocupación se dejan fijas en el último valor conocido.
+
+**Prueba:** los métodos se entrenaron con llegadas de feb-2023 a jun-2025 y se probaron con las 5.430 estancias de jul-2025 a 9-abr-2026.
+
+**Al llegar:**
+
+| Método | Mejora frente al rango general | Error de la mediana | Debajo de p25 / p50 / p75 / p90 |
+|---|---|---|---|
+| **M1 tiempo restante** | **6,5 %** | 24,0 h | 27,0 / 52,6 / 75,8 / 89,1 % |
+| M2 al llegar con más variables | 6,3 % | 24,0 h | 27,1 / 52,0 / 74,0 / 87,0 % |
+| Tabla de perfiles (primera parte) | 5,8 % | 24,2 h | 27,9 / 52,0 / 73,1 / 87,0 % |
+| M3a cola, orden aleatorio | −0,3 % | 25,7 h | 31,3 / 53,9 / 74,8 / 87,4 % |
+| M3b cola, orden de llegada | −17,9 % | 28,0 h | 59,1 / 65,7 / 70,7 / 75,6 % |
+
+**Durante la espera** (lo que falta para quienes siguen sin cama), mejora frente al rango general en las mismas condiciones:
+
+| Horas esperando | M1 | Tabla de perfiles | M3a | M3b |
+|---|---|---|---|---|
+| 6 h | **6,9 %** | 5,5 % | 0,4 % | −16,9 % |
+| 12 h | **6,0 %** | 3,7 % | 0,5 % | −15,6 % |
+| 24 h | **4,5 %** | 2,2 % | 1,4 % | −14,2 % |
+| 48 h | **1,6 %** | −0,9 % | −2,4 % | −18,3 % |
+
+**Agosto y septiembre de 2025:** según el equipo, el HUN tuvo sobredemanda porque los hospitales cercanos fueron intervenidos por el Estado y quedó como la única opción de la zona. En los datos se ve poco: un 6–7 % más de llegadas que en los mismos meses de 2024, con ingresos a cama y espera mediana normales. Evaluados aparte, esos meses dan el mismo orden de métodos: M1 mejora 5,9 % y M2 6,5 % en ago-sep, frente a 6,7 % y 6,3 % en el resto. Los modelos no fallaron más en ese periodo.
+
+**Veredicto:**
+1. **El mejor es M1 (tiempo restante).** Gana o empata en todos los momentos, tiene los percentiles mejor calibrados (el p90 acierta en el 89 % de los casos, contra el 87 % de los demás) y es el único que mejora la estimación a medida que el paciente sigue esperando. Al llegar, M2 da casi lo mismo, pero solo sirve en ese momento.
+2. **El modelo de cola no funciona.** En orden de llegada falla mucho: confirma que el orden de llegada casi no predice el orden de cama (`CLAUDE.md` 6b). Con orden aleatorio no mejora al rango general, porque la cola casi no cambia la espera (`docs/capacidad_efectiva.md`).
+3. **Ningún método achica mucho el rango.** El mejor mejora un 6–7 % frente a no saber nada del paciente. La espera depende sobre todo de cosas que la base no tiene, como el servicio, el tipo de cama, la gravedad y la orden de hospitalización. Esto no se arregla con un modelo más complejo, y debe decirse así en la entrega.
+4. **Lo que más pesa en M1 es la hora del reloj.** La probabilidad de recibir cama en la hora siguiente es de ~1 % entre las 6 y las 12 h, sube a 5–8 % entre las 15 y las 17 h, baja a 1 % a las 18 h y llega a 8–10 % entre las 20 y las 22 h. Los datos crudos muestran lo mismo: el 24 % de las camas se asigna entre las 15 y las 17 h y el 37 % entre las 20 y las 23 h. Para quien espera en la mañana, lo más probable es recibir cama en la tarde o en la noche. Es coherente con las altas tardías (`CLAUDE.md` 6b). La segunda subida, de noche, no se había descrito antes; podría ser la hora en que se registra la asignación, no la del traslado.
+
+**Recomendación para A6:** entregar M1 como el estimador principal («a esta hora y con esta cola, un paciente que lleva X horas esperando recibe cama en tantas horas, con este rango») y la tabla de perfiles como su versión simple para el dashboard. M2 y M3 quedan documentados como alternativas probadas y descartadas.
+
 ## Cómo se usa en el dashboard
 Las dos tablas son agregadas (una fila por perfil, solo con grupos de 30 casos o más) y no tiene datos por paciente. Puede alimentar una página «¿Cuánto esperaría un paciente como este?»: el usuario elige hora, edad, tipo de visita y sexo, y ve la probabilidad de hospitalizarse y los tres rangos con su n. La advertencia «rango típico de pacientes parecidos, no una predicción individual» va fija en la página. La estructura del dashboard (`docs/estructura_dashboard.md`) todavía no tiene esa página; falta decidir con Daniela dónde va.
