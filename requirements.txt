@@ -7,6 +7,10 @@ matplotlib>=3.11       # graficos
 holidays>=0.107        # festivos de Colombia
 python-dateutil>=2.9   # semana santa (pronostico_demanda.py)
 openpyxl>=3.1          # analisis_etapas.py y preparar_variables.py guardan hojas de Excel
+scipy>=1.18            # comparar_estimadores.py, severidad_labs.py
+statsmodels>=0.15      # efecto_fin_de_semana.py, pruebas_ruido_pronostico.py, severidad_labs.py, prueba_carnaval.py
+scikit-learn>=1.9      # comparar_estimadores.py (estimador A6)
+joblib>=1.6            # estimador_tiempo_restante.py (modelos guardados)
 
 # Solo para src/generar_q3_q4_desde_csv.py (alternativa a exportar Q3 y Q4 desde DBeaver):
 duckdb>=2.0

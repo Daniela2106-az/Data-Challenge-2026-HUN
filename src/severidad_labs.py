@@ -108,3 +108,40 @@ h = h_todas[h_todas.espera_cama_h >= 6]
 print(f"estancias con espera >= 6 h: {len(h):,}")
 coef = smf.ols(f"ly_esp ~ {base} + C(pt)", h).fit().params.filter(like="pt")
 print("efecto de los puntos sobre la espera (% vs 0 puntos):", {k: round(100 * (np.exp(v) - 1), 1) for k, v in coef.items() if k != "Intercept"})
+
+# 3) Prueba para el estimador A6: entre quienes ya llevan 6 h esperando, ¿predice mejor lo que les falta (log de horas restantes) con las banderas?
+#    Modelo de gradiente (como A6), entrenado hasta 2025-06 y probado desde 2025-07 (mismo corte que A6); diferencia de error con intervalo por bootstrap.
+from sklearn.ensemble import HistGradientBoostingRegressor
+a6 = h_todas[h_todas.espera_cama_h > 6].copy()
+a6["resta"] = np.log1p(a6.espera_cama_h - 6)
+a6["sexo_f"] = (a6.sexo.astype(str).str.upper().str[0] == "M").astype(float)
+base_cols = ["edad", "sexo_f", "hora", "dia_semana_num", "ocup_hosp", "llegadas_6h_previas"]
+a6["tipo_cod"] = a6.tipo_visita.astype("category").cat.codes
+base_cols.append("tipo_cod")
+tr6 = (a6.ini < "2025-07-01").values
+print(f"\nPRUEBA A6: {len(a6):,} estancias con espera > 6 h (entrenamiento {tr6.sum():,}, prueba {(~tr6).sum():,})")
+rng = np.random.default_rng(7)
+errs = {}
+for nombre, cols in [("sin laboratorio", base_cols), ("+ banderas", base_cols + nb), ("+ puntos", base_cols + ["puntos"])]:
+    X = a6[cols].astype(float)
+    m = HistGradientBoostingRegressor(max_iter=200, learning_rate=0.05, max_leaf_nodes=15, min_samples_leaf=40, random_state=7).fit(X[tr6], a6.resta[tr6])
+    errs[nombre] = (a6.resta[~tr6].values - m.predict(X[~tr6])) ** 2
+y = a6.resta[~tr6].values
+filas = []
+for nombre, e2 in errs.items():
+    r2 = 1 - e2.sum() / ((y - a6.resta[tr6].mean()) ** 2).sum()
+    d = e2 - errs["sin laboratorio"]
+    bs = [d[rng.integers(0, len(d), len(d))].mean() for _ in range(1000)]
+    filas.append({"modelo": nombre, "R2 en prueba (vs media del entrenamiento)": round(r2, 4), "cambio del error cuadratico medio": round(d.mean(), 4),
+                  "IC95 bajo": round(np.percentile(bs, 2.5), 4), "IC95 alto": round(np.percentile(bs, 97.5), 4)})
+r3 = pd.DataFrame(filas); print(r3.to_string(index=False)); r3.to_csv(TABLAS / "severidad_labs_prueba_a6.csv", index=False)
+
+# 4) Efecto de cada bandera sobre la espera (esperas >= 6 h), en % frente a no tenerla, controlando edad, sexo, tipo de visita, franja y ano
+h = h_todas[h_todas.espera_cama_h >= 6]
+ajuste = smf.ols("ly_esp ~ " + base + " + " + " + ".join(f"{n}.astype(int)" for n in nb), h).fit(cov_type="HC1")
+ef = pd.DataFrame({"efecto_pct": [round(100 * (np.exp(ajuste.params[f"{n}.astype(int)"]) - 1), 1) for n in nb],
+                   "ic95_bajo": [round(100 * (np.exp(ajuste.conf_int().loc[f"{n}.astype(int)", 0]) - 1), 1) for n in nb],
+                   "ic95_alto": [round(100 * (np.exp(ajuste.conf_int().loc[f"{n}.astype(int)", 1]) - 1), 1) for n in nb],
+                   "estancias_con_bandera": [int(h[n].sum()) for n in nb]}, index=nb)
+print("\nEFECTO DE CADA BANDERA SOBRE LA ESPERA DE CAMA (esperas >= 6 h):\n" + ef.to_string())
+ef.to_csv(TABLAS / "severidad_labs_efecto_por_bandera_en_la_espera.csv")

@@ -20,3 +20,17 @@ Las diferencias son de 0,15 puntos o menos y van en ambos sentidos. Los residuos
 - Dengue en Barranquilla: la serie abierta que se encontró (SIVIGILA, 2007–2022) termina antes de que empiecen nuestros datos (feb-2023). Lo posterior solo está en boletines semanales del INS en PDF, provisionales y que se revisan después.
 - Lluvia: la serie semanal de IDEAM para Barranquilla que se encontró cubre 2000–2022. Lo posterior son boletines diarios en PDF con muchos valores no disponibles.
 - **Decisión: se descartan.** Armarlas a mano desde PDF costaría más que lo que aportarían, y el efecto esperable sobre las llegadas diarias de un hospital es pequeño frente al ruido de conteo. Queda como trabajo futuro si el HUN entrega series propias.
+
+## Carnaval: el efecto es distinto cada día, pero separarlo no mejora el pronóstico (`src/prueba_carnaval.py`, 8-nov)
+El modelo vigente usa una sola variable para los cuatro días del Carnaval de Barranquilla (sábado a martes). Con una variable por día (regresión de Poisson, periodo confiable, 4 Carnavales):
+
+| Día | Llegadas (efecto, IC 95 %) | Ingresos a cama |
+|---|---|---|
+| Sábado | −22 % (−29 a −14) | +14 % (−3 a +34) |
+| Domingo | −14 % (−22 a −5) | +2 % (−11 a +17) |
+| Lunes | **−30 %** (−33 a −26) | −14 % (−28 a +3) |
+| Martes | −16 % (−23 a −8) | −44 % (−58 a −26) |
+
+- **En llegadas la diferencia es real**: el lunes cae el doble que el domingo (los intervalos casi no se tocan). Los ingresos a cama no son confiables por día (intervalos anchos, 4 observaciones por coeficiente).
+- **Pero no mejora el pronóstico:** el error (WAPE a 1–30 días) en todos los días no cambia (llegadas 7,57 % en ambos; con atención 8,15 → 8,14 %), y en los días de Carnaval sube en llegadas (5,2 → 6,9 %), baja en llegadas con atención (7,4 → 6,9 %) y en ingresos (27,6 → 18,8 %): resultado mixto con muy pocos días (16).
+- **Decisión: no se cambia el modelo.** Si se quiere informar el Carnaval, decir que el lunes es el día más bajo (~−30 % en llegadas) y el domingo el menos afectado (~−14 %).

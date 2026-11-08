@@ -149,10 +149,10 @@ Desde el 10-abr-2026 el registro está degradado (ver 4.9 de `CLAUDE.md`): lo qu
   relación no aparece: el mecanismo es dentro del día.
 - **El orden de llegada casi no predice el orden de cama** (53 % de pares consecutivos en orden; el azar sería 50 %).
 
-### 4.5 Qué explica la espera (modelo sobre log(espera + 1), R² = 15,8 %; recalculado el 3-nov con la regla de la persona real, CLAUDE.md 4.10)
-Pérdida de R² al quitar cada factor: diagnóstico 7,0 puntos (ojo: es en parte un dato administrativo; antes 3,9 con solo 38 % de cobertura), edad y sexo 4,1, tipo de visita 1,6 (por urgencias se
-espera más: ambulatorio −31 %, treatment urgency −39 %), hora de llegada 0,7, año 0,1, carga 0,1, laboratorios de 6 h 0,1,
-calendario ~0. **El 86 % de la variación no se explica con lo que se observa.** Un modelo "al llegar" para predecir si un paciente esperará
+### 4.5 Qué explica la espera (modelo sobre log(espera + 1), R² = 16,0 %; recalculado el 8-nov con la persona real, CLAUDE.md 4.10, y el mapeo de diagnósticos final)
+Pérdida de R² al quitar cada factor: diagnóstico 7,2 puntos (ojo: es en parte un dato administrativo; antes 3,9 con solo 38 % de cobertura), edad y sexo 4,1, tipo de visita 2,0 (por urgencias se
+espera más: ambulatorio −31 %, treatment urgency −39 %), hora de llegada 0,6, año 0,1, carga 0,1, laboratorios de 6 h 0,2,
+calendario ~0. **El 84 % de la variación no se explica con lo que se observa.** Un modelo "al llegar" para predecir si un paciente esperará
 más de 24 h tiene AUC de 0,60: no sirve para alertar a un paciente individual.
 
 ### 4.5b Espera y estancia por grupo de diagnóstico (`docs/diagnosticos_y_tiempos.md`)
@@ -180,7 +180,7 @@ registro o de sistema (hipótesis). **Ningún día tuvo la espera más alta de l
 
 ### 4.8 Qué pasa durante la espera y severidad desde los laboratorios (`docs/espera_con_labs_y_severidad.md`, 8-nov)
 - **Laboratorios dentro de la espera de cama:** solo el 38 % de las estancias tiene alguna toma entre la llegada y la asignación de cama. Las tomas por día bajan de 14,8 (esperas de menos de 6 h) a 2,0 (más de 72 h); en las esperas de más de 72 h la última toma cae en mediana 32 h antes de la cama. Las esperas largas son, en lo que se ve, más pasivas en exámenes. **No separa atención de espera pura**: sin laboratorio no significa sin atención (medicamentos y vigilancia no dejan huella).
-- **Severidad desde el texto de los laboratorios de las primeras 6 h** (leucocitos, hemoglobina, creatinina, BUN, lactato, potasio, sodio, troponina, PCR; 31.266 episodios con atención y laboratorio): la hospitalización va de 20 % con 0 valores fuera de rango a 57 % con 3 o más (AUC de 0,58 a 0,65 al sumarlos). Sube la estancia (+29 % con 3 o más) y **no cambia la espera de cama** (−5 %, +1 % y −9 %; esperas de 6 h o más). Lectura: la espera parece de organización (camas y altas) y no de prioridad clínica. Límites: solo quienes tienen laboratorio, puntos de corte genéricos sin validar por un clínico, asociación.
+- **Severidad desde el texto de los laboratorios de las primeras 6 h** (leucocitos, hemoglobina, creatinina, BUN, lactato, potasio, sodio, troponina, PCR; 31.266 episodios con atención y laboratorio): la hospitalización va de 20 % con 0 valores fuera de rango a 57 % con 3 o más (AUC de 0,58 a 0,65 al sumarlos). Sube la estancia (+29 % con 3 o más). La puntuación sumada **no cambia la espera de cama** porque junta efectos opuestos: con troponina alta la espera es 41 % menor, con lactato o BUN alto ~18 % menor (reciben cama antes) y con PCR alta 13 % mayor. Agregar las banderas mejora la predicción del tiempo restante (R² de 12 % a 17 % entre quienes ya esperan 6 h; falta probarlo dentro de A6). Límites: solo quienes tienen laboratorio, puntos de corte genéricos sin validar por un clínico, asociación.
 
 ### 4.9 Reingresos depurados y réplicas de llegadas (`docs/c4_reingresos_huecos_llegadas.md`, 8-nov)
 - **Reingreso** (llegada dentro de 72 h o 30 días tras un episodio anterior con atención, sin registros gemelos ni traslapes): **5,3 % en 72 h y 14,1 % en 30 días**. Tras una hospitalización, el 28,6 % vuelve en menos de 30 días (incluye controles programados). La columna del pipeline (6,6 % y 15,4 %) cuenta traslapes y registros gemelos.
@@ -266,7 +266,7 @@ otro hospital no halló efecto). Las 12 fuentes se comprobaron el 6-nov, 4 de el
 | ¿Se puede predecir la demanda? | Llegadas sí (7,5 % de error); ingresos diarios no, por semana 9,5 % | 5.1 |
 | ¿Qué alertas se proponen? | Día congestionado a las 12 h; ocupación alta; paciente a las 48 h sin cama | 5.2 |
 | ¿Por qué se quitaron datos como "duplicados"? | 41 % de las estancias estaban en dos personas | 2 |
-| ¿Se puede reproducir sin la base? | No: hay 8 CSV exportados de la base que no están en git y no se pueden regenerar. Con ellos todo se regenera en menos de un minuto (probado en un clon limpio) | `README.md` |
+| ¿Se puede reproducir sin la base? | No: hay 10 archivos exportados de la base (los 8 CSV de entrada y P02 y P03, que dan la persona real) que no están en git y no se pueden regenerar. Con ellos el pipeline se regenera en menos de un minuto y la tabla de episodios sale idéntica (probado en un clon limpio el 8-nov) | `README.md` |
 | ¿Qué dijo el HUN? | Nada por correo; habrá una sesión de preguntas (preguntas listas en `docs/hun/sesion_de_preguntas.md`) | 7 |
 
 ---
