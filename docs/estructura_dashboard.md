@@ -199,7 +199,7 @@ La página más importante del bloque: explica por qué las cifras del proyecto 
 
 ## 4.1 Qué hacemos con esto
 - **Lleva:** tabla con prioridad, recomendación, qué dicen **nuestros datos**, qué dice la **literatura**, impacto estimado, cómo medirla, qué tan firme es y estado. Cada fila enlaza a la página que la respalda.
-- **Estado:** borrador; Samuel (B2) verifica las fuentes originales y deja las recomendaciones finales **antes de publicar cualquier impacto**.
+- **Estado:** B2 hecha (Samuel, mergeado el 8-nov-2026): las 12 fuentes se verificaron. **Pendiente antes de publicar impactos:** recalcular las ~11 horas-paciente de R6 y la alerta de ocupación de R3.
 - **Fuente:** `docs/recomendaciones.md`, `powerbi/recomendaciones_tabla.csv`.
 
 ---
@@ -235,7 +235,7 @@ Enlace al repositorio de GitHub, `README.md` («Cómo reproducirlo»), orden de 
 | 3.2, 3.3, 3.6 | Listas para construir |
 | 3.4 | Parcial: falta la simulación Monte Carlo (A5, Anthony) |
 | 3.5 | Lista; hay que generar los reportes de antemano |
-| 4.1 | Espera B2 (verificar fuentes de las recomendaciones) |
+| 4.1 | Lista para construir (B2 hecha; R3 y R6 por recalcular) |
 
 **Orden de trabajo sugerido:** esqueleto con menú y plantilla → Parte 1 (empezando por 1.3) → 2.3, 2.4, 2.2, 3.4 (el núcleo del cuello de botella y las camas) → 3.1 con su texto → 2.5 a 2.8 → 3.2, 3.3, 2.1 → 3.5 y 3.6 → Parte 5 → 4.1 cuando B2 esté lista.
 

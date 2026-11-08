@@ -33,7 +33,7 @@ preguntas que puedes hacerle:
 ## Los hallazgos principales (resumen)
 
 1. **El cuello de botella es la espera de cama:** mediana de **18,6 h** y percentil 90 de **73,9 h** desde que llega el paciente hasta que
-   entra a cama. El 80 % de ese tiempo es en urgencias y el 21 % es tiempo sin ninguna etapa registrada.
+   entra a cama. Casi todo ese tiempo (98 %) es en urgencias antes de que se asigne la cama; el tiempo sin ninguna etapa registrada es ~1 % (corregido el 7-nov, `CLAUDE.md` 4.12).
 2. **Los peores casos empeoran:** el percentil 90 de la espera sube de 61 h (2023) a 80 h (2026); la mediana casi no cambia.
 3. **Las altas son tardías:** 62,7 % entre las 14:00 y las 18:59 y solo 14 % antes del mediodía; las camas se asignan a las 17–18 h.
    Quien llega a media tarde espera más.

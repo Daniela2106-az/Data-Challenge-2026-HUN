@@ -53,7 +53,7 @@ título = conclusión; tema `tema.json`; azul = espera, naranja = referencia o e
 - Advertencia fija: «Rango típico de pacientes parecidos, no una predicción individual (el R² de los factores es 16 %)».
 - Depende de la definición final de A6; construirla al final.
 
-## Página 9 — «Qué se hace con esto» (recomendaciones) — ESPERA (B2)
+## Página 9 — «Qué se hace con esto» (recomendaciones) — LISTO (B2 hecha el 8-nov-2026; R3 y R6 sin recalcular)
 - Tabla desde `recomendaciones_tabla.csv` (`prioridad`, recomendación, impacto estimado, límite, fuente, estado). Hoy es **borrador**; B2 la verifica contra `docs/recomendaciones.md` y la actualiza. No publicar impactos sin esa revisión.
 
 ## Página 10 — «Qué tan confiable es» (metodología y límites) — LISTO
