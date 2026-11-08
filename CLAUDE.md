@@ -488,7 +488,7 @@ Documentos: `docs/c4_reingresos_huecos_llegadas.md`, `docs/quincenas_y_datos_ext
 - Hipótesis principal para recomendaciones: las altas se dan tarde y quien llega en la tarde espera cama
   hasta el día siguiente. Se prueba con la sección 7b de `preparar_variables.py` (hora de alta frente a hora
   de ingreso a cama).
-- Reingresos (v1, sin depurar): 6,9 % en 72 h, 15,9 % en 30 días.
+- Reingresos (v1, sin depurar): 6,9 % en 72 h, 15,9 % en 30 días. **Depurados el 8-nov (4.13): 5,3 % y 14,1 %.**
 
 ---
 

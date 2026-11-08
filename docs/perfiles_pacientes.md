@@ -80,7 +80,7 @@ Se corrigió con los números de persona de las filas de diagnósticos y laborat
 - Asociación, no causa. Sin servicio, sede ni cama no se puede explicar por qué esperan más ciertos perfiles.
 - La duración de urgencias de quienes no se hospitalizan solo existe en ~38 % de los episodios y está sesgada: no se usa para perfiles.
 - El tipo de visita no es confiable para saber por dónde pasó el paciente (`CLAUDE.md` sección 3): se usa solo como etiqueta de origen.
-- Reingreso sin validar. Diagnóstico con cobertura parcial y registrado tarde.
+- Reingreso: es la columna del pipeline, que cuenta traslapes y registros gemelos; depurado (C4, `docs/c4_reingresos_huecos_llegadas.md`) el reingreso a 72 h baja de ~6,6 % a 5,3 % en el total (~1,3 puntos). Sirve para comparar perfiles entre sí, no como nivel absoluto. Diagnóstico con cobertura parcial y registrado tarde.
 - La edad y el sexo de las estancias no gemelas y de las gemelas sin diagnóstico ni laboratorio no se pudieron verificar (el 99 % de las no gemelas es consistente por construcción).
 
 ## Para A2b y A7
