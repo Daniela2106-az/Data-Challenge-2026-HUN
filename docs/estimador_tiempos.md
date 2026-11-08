@@ -241,6 +241,8 @@ En todos los casos los percentiles siguen bien calibrados (al llegar, con todo: 
 | Cola en orden de llegada (M3b) | −17,9 % | El orden de llegada casi no predice el orden de cama (`CLAUDE.md` 6b) |
 | Cola en orden aleatorio (M3a) | −0,3 % | La cola casi no cambia la espera |
 | Espera en dos series: con la zona llena («sin cama») y con camas libres («demora del servicio») (`src/espera_dos_series.py`) | No mejora el pronóstico frente a una sola serie (~4,5 h de error semanal) | Es frágil: con las camas del HUN, la parte sin cama pasa del 8 % (2023) al 56 % (2025), pero con un 10 % más de camas queda en 5–10 %. Queda como lectura descriptiva |
+| Visitas previas a urgencias, congestión de urgencias al llegar y calendario (festivo, día no hábil, mes) (`src/variables_descartadas.py`) | De −0,3 a +0,5 puntos sobre el estimador final; ningún intervalo excluye el 0 | No aportan: el estimador ya captura lo útil de estos datos |
+| Hora del primer diagnóstico como señal en tiempo real | Coincide con la llegada en la mitad de los casos y en el 10 % es semanas antes (visitas copia) | No marca un momento real; se descartó sin probar |
 | Laboratorios de las primeras 6 h como aproximación a la gravedad | −0,1 a +0,7 puntos | Casi no ayudan |
 | Entrenar solo con los últimos 6 o 12 meses | 7,0 % y 7,7 % al llegar | Se pierden datos; es mejor usar todo el historial con más peso en lo reciente y reentrenar cada mes (sección 3.1) |
 | Efecto del día o de la hora de llegada | 0,1 % a 2,3 % más allá del azar | La espera es individual |
