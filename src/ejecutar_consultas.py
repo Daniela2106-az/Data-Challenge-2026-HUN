@@ -26,6 +26,7 @@ import json
 import re
 import socket
 import subprocess
+import threading
 import time
 from pathlib import Path
 
@@ -68,8 +69,17 @@ if __name__ == "__main__":
     ap.add_argument("archivo")
     ap.add_argument("--esperar", type=float, default=0, help="minutos que espera a que el servidor responda (0 = no espera)")
     ap.add_argument("--solo-listar", action="store_true")
+    ap.add_argument("--omitir-hechas", action="store_true", help="salta las consultas cuyo CSV ya existe en datos/crudos/consultas/")
+    ap.add_argument("--latido", type=int, default=30, help="cada cuantos segundos escribe 'sigue corriendo' en el log mientras corre una consulta")
     a = ap.parse_args()
     consultas = leer_consultas(a.archivo)
+    if a.omitir_hechas:
+        hechas = [n for n, _ in consultas if (SALIDA / f"{n}.csv").exists()]
+        consultas = [(n, q) for n, q in consultas if n not in hechas]
+        if hechas:
+            print(f"ya hechas (se omiten): {', '.join(hechas)}")
+        if not consultas:
+            raise SystemExit("Todas las consultas ya tienen su CSV.")
     if not consultas:
         raise SystemExit("No se encontro ninguna consulta. Cada una debe empezar con una linea '-- nombre: algo'.")
     peligrosas = [n for n, q in consultas if not re.match(r"^\s*(with|select|explain)\b", q, flags=re.I)]
@@ -99,14 +109,29 @@ if __name__ == "__main__":
             time.sleep(10)
     log("servidor alcanzable: empiezan las consultas")
     t_total = time.time()
-    for nombre, sql in consultas:
+    for i, (nombre, sql) in enumerate(consultas, 1):
         t0 = time.time()
+        log(f"INICIA {nombre} ({i} de {len(consultas)})")
+        fin_latido = threading.Event()
+
+        def latido(nombre=nombre, t0=t0):
+            # mientras la consulta corre, deja una linea cada `a.latido` segundos y revisa si el servidor sigue alcanzable
+            while not fin_latido.wait(a.latido):
+                try:
+                    socket.create_connection((cfg["host"], int(cfg.get("port", 5432))), timeout=5).close()
+                    estado = "servidor alcanzable"
+                except OSError:
+                    estado = "SERVIDOR NO RESPONDE (VPN caida?)"
+                log(f"      ... {nombre} lleva {time.time() - t0:.0f} s | {estado}")
+        threading.Thread(target=latido, daemon=True).start()
         try:
             with cb.motor(timeout_min=15).connect() as con:
                 df = pd.read_sql(text(sql), con)
             df.to_csv(SALIDA / f"{nombre}.csv", index=False)
+            fin_latido.set()
             log(f"OK    {nombre}: {len(df)} filas ({time.time() - t0:.0f} s)")
         except Exception as e:
+            fin_latido.set()
             log(f"ERROR {nombre}: {type(e).__name__}: {str(e).splitlines()[0][:220]}")
     log(f"TERMINADO en {(time.time() - t_total) / 60:.1f} min")
     notificar("Consultas terminadas. Ya puedes desconectar la VPN.")

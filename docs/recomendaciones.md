@@ -157,7 +157,7 @@ Como referencia, no como séptimo indicador: la ocupación media de todo el día
 ## 4. Lo que los datos NO respaldan
 - **Más personal según el día de la semana:** el día de la semana y los festivos casi no cambian la espera.
 - **Priorizar a un paciente concreto por riesgo de esperar:** un modelo con lo que se sabe al llegar acierta apenas mejor que el azar (AUC 0,60) y todos los factores
-  juntos explican solo el 15,8 % de la variación.
+  juntos explican solo el 16 % de la variación.
 - **Un centro de comando o tablero como solución en sí:**
   - El estudio con mejor diseño que encontramos (Mebrahtu y colegas, *Int J Qual Health Care* 2023, Bradford, Reino Unido, series de tiempo interrumpidas) **no halló cambio
     significativo en la estancia** de los ingresos por urgencias en ninguna fase. Coincidió con el COVID-19, lo que complica separar efectos.

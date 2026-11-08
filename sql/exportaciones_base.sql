@@ -6,11 +6,8 @@
 -- OJO: las dos primeras son tablas completas (3,3 M y 1,7 M de filas). Las dos ultimas recorren tablas de 38 M y 47 M de filas:
 -- pueden tardar 5-15 min cada una.
 --
--- ESTADO: visit_detail.csv y visit_occurrence.csv son los SELECT de columnas que dice CLAUDE.md (seccion 7). Las consultas de
--- dx_por_visita.csv y proc_por_visita.csv se RECONSTRUYERON a partir de los CSV que ya existen (n_dx y n_proc son conteos de
--- FILAS, no de conceptos distintos: maximos de 823.429 y 370.712 por visita) y NO se han probado contra la base. Despues de
--- correrlas, comprobar que dan 566.004 filas (dx) y 662.783 filas (proc), una de ellas con visit_occurrence_id vacio, y que
--- los totales coinciden con los CSV viejos; si no coinciden, corregir aqui.
+-- ESTADO (8-nov-2026): las consultas de dx_por_visita.csv y proc_por_visita.csv se comprobaron contra la base (sql/espera_labs_y_texto.sql, consultas c2_*):
+-- 566.004 y 662.783 filas, con las mismas sumas de n_dx (38.636.063) y n_proc (47.042.032) y una fila con visit_occurrence_id vacio en cada una.
 
 SET statement_timeout = 0;
 

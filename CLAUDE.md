@@ -410,6 +410,15 @@ de espera, 17,1 h (2023) a 23,7 h (2026), cambia en una décima. Urgencias antes
 **Qué cambia:** el cuello de botella es casi por completo **urgencias antes de que se asigne la cama** (98 %), no una mezcla con tiempo sin registro; las preguntas 5 y 11 al HUN pierden sentido.
 Respaldo de los resultados anteriores en `resultados/respaldo_antes_hueco/` y `datos/procesados/respaldo_antes_hueco/` (no se suben a git).
 
+### 4.13 Cierre de C2/C4 y exploraciones A8 6, 8 y 10 (8-nov-2026)
+Documentos: `docs/c4_reingresos_huecos_llegadas.md`, `docs/quincenas_y_datos_externos.md`, `docs/espera_con_labs_y_severidad.md` (scripts `src/c4_reingresos_huecos_llegadas.py`, `prueba_quincenas.py`, `espera_con_labs.py`, `severidad_labs.py`; consultas `sql/espera_labs_y_texto.sql`, `sql/severidad_labs_6h.sql`).
+- **C2:** la base da 566.004 filas de `dx_por_visita` y 662.783 de `proc_por_visita`, con las mismas sumas que los CSV (38.636.063 y 47.042.032) y 1 visita vacía en cada una: `sql/exportaciones_base.sql` queda verificado.
+- **Reingresos depurados** (sin registros gemelos, sin traslapes): **5,3 % en 72 h y 14,1 % en 30 días** (la columna del pipeline da 6,6 % y 15,4 %, que cuenta traslapes). Hueco TU a TU: 2,6 % de las horas de TU, sin efecto.
+- **Réplicas de llegadas: 4,3 %** (12,2 % de los episodios con cama). Proporción estable (correlación 0,998 con la serie sin réplicas): **no se deduplican las llegadas**; al citar un nivel absoluto, decir «~4 % menos, cota inferior».
+- **Quincenas** no mejoran el pronóstico (±0,15 puntos de WAPE). Dengue y lluvia: sin datos abiertos de 2023–2026, descartados.
+- **Laboratorios en la espera:** solo el 38 % de las estancias tiene alguna toma durante la espera, y las tomas por día bajan de 14,8 (espera < 6 h) a 2,0 (> 72 h). No separa atención de espera pura.
+- **Severidad desde el texto de los laboratorios (primeras 6 h):** la hospitalización va de 20 % (0 banderas) a 57 % (3 o más); AUC de 0,58 a 0,65 entre quienes tienen laboratorio. Sube la estancia (+29 % con 3 o más banderas). La suma **no cambia la espera de cama** porque junta efectos opuestos: troponina alta −41 %, lactato y BUN altos ~−18 % (cama antes), PCR alta +13 %; las banderas por separado mejoran la predicción del tiempo restante (R² de 12 % a 17 % a las 6 h de espera).
+
 ## 5. Decisiones de método (ya tomadas, no reabrir sin un motivo nuevo)
 
 1. Unidad de análisis: **episodio** = atención continua de un paciente dentro de una visita
@@ -479,7 +488,7 @@ Respaldo de los resultados anteriores en `resultados/respaldo_antes_hueco/` y `d
 - Hipótesis principal para recomendaciones: las altas se dan tarde y quien llega en la tarde espera cama
   hasta el día siguiente. Se prueba con la sección 7b de `preparar_variables.py` (hora de alta frente a hora
   de ingreso a cama).
-- Reingresos (v1, sin depurar): 6,9 % en 72 h, 15,9 % en 30 días.
+- Reingresos (v1, sin depurar): 6,9 % en 72 h, 15,9 % en 30 días. **Depurados el 8-nov (4.13): 5,3 % y 14,1 %.**
 
 ---
 
@@ -520,10 +529,10 @@ Respaldo de los resultados anteriores en `resultados/respaldo_antes_hueco/` y `d
   72 %. Los ingresos a cama siguen a las altas en la misma hora (correlación cruzada 0,17 sin el patrón horario). La prueba a nivel
   diario del 21-oct fallaba porque el mecanismo es dentro del día. Asociación, no causa: el efecto de adelantar altas se
   estima en la simulación de camas (Fase 6).
-- **Factores de la espera** (modelo sobre log(espera+1), R² = 15,8 % tras la regla de la persona real, 4.10: el 86 % de la variación no se explica con lo observado):
-  diagnóstico 7,0 puntos de R² (ojo: dato administrativo, registrado tarde y que puede venir del registro gemelo), edad y sexo 4,1, tipo de
-  visita 1,6 (quien entra por urgencias espera más: ambulatorio −31 %, treatment urgency −39 %), hora 0,7,
-  año, carga y laboratorios de 6 h 0,1 cada uno, calendario ~0.
+- **Factores de la espera** (modelo sobre log(espera+1), R² = 16,0 % tras la regla de la persona real (4.10) y el mapeo final, rehecho el 8-nov: el 84 % de la variación no se explica con lo observado):
+  diagnóstico 7,2 puntos de R² (ojo: dato administrativo, registrado tarde y que puede venir del registro gemelo), edad y sexo 4,1, tipo de
+  visita 2,0 (quien entra por urgencias espera más: ambulatorio −31 %, treatment urgency −39 %), hora 0,6,
+  año y carga 0,1 cada uno, laboratorios de 6 h 0,2, calendario ~0.
 - **Ocupación y escenario de altas (Fase 6, `simulacion_altas.py`):**
   - La ocupación sube de 94 camas (2023) a 105 (2025) y 103 (ene–9 abr 2026); es **por la estancia** (media de 4,57 a 5,31
     días, +16 %), no por más ingresos (20,6 → 19,8 por día). Con Little: volver a la estancia de 2023

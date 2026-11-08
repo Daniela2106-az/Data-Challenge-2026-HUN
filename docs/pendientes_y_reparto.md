@@ -16,9 +16,9 @@ demanda, alertas, días atípicos, borrador de recomendaciones y un repositorio 
 
 | Persona | Pendientes | Prioridad |
 |---|---|---|
-| **Daniela** | A1 perfiles de pacientes, A2 factores de la estancia hospitalaria (con la ampliación A2b: qué comparten las estancias que se disparan), A3 `mapeo_dx.csv`, y la coordinación (C1 a C3) | Ahora |
+| **Daniela** | Hechas: A1, A2, A2b, A3 (borrador), A7, A8 1 a 5 y 8, C2, C4. Pendientes: C3 (subir tablas actualizadas al drive y avisar) y C6 (validación clínica de `mapeo_dx.csv`); A8 6, 8 y 10 también hechas | Ahora |
 | **Anthony** | A4 explicar mejor los retrasos, A5 simulación Monte Carlo de camas | Ahora |
-| **Samuel** | B1 dashboard de Power BI, B2 recomendaciones (verificar fuentes y dejarlas finales), **A6 estimar tiempos de atención** | Al final (B2 puede empezar antes; A6 después de los análisis A) |
+| **Samuel** | B1 dashboard (solo Dash). B2 y A6 ya hechas y mergeadas | Al final |
 | Por decidir más adelante | A7 sistema repetible de diagnóstico de cuellos de botella, B3 documento final, B4 presentación | Después |
 
 ---
@@ -124,7 +124,9 @@ demanda, alertas, días atípicos, borrador de recomendaciones y un repositorio 
 ### A8. Exploraciones adicionales (Daniela, 4-nov-2026) · **1 a 5 HECHAS**
 1) ocupación por zona frente a las camas del HUN (`docs/ocupacion_por_zona.md`); 2) capacidad efectiva desde los datos (`docs/capacidad_efectiva.md`); 3) días-cama de baja actividad (`docs/dias_cama_baja_actividad.md`); 4) efecto de fin de semana y festivos (`docs/efecto_fin_de_semana.md`). Resumen en `CLAUDE.md` 4.11.
 5) supervivencia para las urgencias sin hora de fin (`docs/supervivencia_urgencias.md`; corrige el sesgo del grupo con información pero no recupera a los que no tienen tiempo).
-**Siguen por decidir:** 6) qué pasa durante la espera (laboratorios por hora; requiere consulta con VPN); 7) simulación de eventos discretos de camas (A5, Anthony); 8) datos externos para el pronóstico (dengue, lluvia, quincenas); 9) minería de procesos; 10) severidad desde el texto de los laboratorios.
+8) **HECHA el 8-nov:** quincenas no mejoran el pronóstico; dengue y lluvia descartados por falta de datos abiertos 2023–2026 (`docs/quincenas_y_datos_externos.md`).
+6) y 10) **HECHAS el 8-nov** (`docs/espera_con_labs_y_severidad.md`): los laboratorios no separan atención de espera pura; la severidad desde el texto de los laboratorios predice hospitalización y algo de estancia; la suma no cambia la espera, pero las banderas por separado sí (troponina −41 %, PCR +13 %) y mejoran la predicción del tiempo restante (para probar en A6, Samuel). 9) minería de procesos: descartada (solo 3 tipos de etapa).
+**Siguen por decidir:** 7) simulación de eventos discretos de camas (A5, Anthony).
 
 ---
 
@@ -159,12 +161,12 @@ demanda, alertas, días atípicos, borrador de recomendaciones y un repositorio 
 | # | Tarea | Responsable | Notas |
 |---|---|---|---|
 | C1 | **Sesión de preguntas con el HUN (HECHA el 29-oct; no habrá más)**: respuestas anotadas en `docs/hun/sesion_de_preguntas.md` y `CLAUDE.md` 4.7. Sin respuesta: caída de llegadas, cuándo se escribe el diagnóstico, meta de tiempo. Originalmente: ir con `docs/hun/sesion_de_preguntas.md`, anotar respuestas y actualizar el proyecto con su sección E | Samuel (contacto con el HUN) y Daniela | Las preguntas A1 a A5 de ese documento son las que más cambian los resultados. Por confirmar quién asiste |
-| C2 | Correr en DBeaver `sql/exportaciones_base.sql` y verificar que `dx_por_visita` da 566.004 filas y `proc_por_visita` 662.783 (están reconstruidas y sin probar contra la base) | Daniela | |
+| C2 | Correr en DBeaver `sql/exportaciones_base.sql` y verificar que `dx_por_visita` da 566.004 filas y `proc_por_visita` 662.783 (están reconstruidas y sin probar contra la base) | Daniela | **HECHA el 8-nov:** verificado contra la base (566.004 y 662.783 filas y las mismas sumas que los CSV) |
 | C3 | Subir al drive las tablas actualizadas después de cada cambio (`src/exportar_para_equipo.py` y tablas de `resultados/tablas/`) | Daniela | Avisar a Samuel y Anthony cuando haya versión nueva |
 | C5 | **Ocupación contra la capacidad del HUN** (106 camas, 58 camillas) | Daniela | **RESUELTO el 1-nov** (`CLAUDE.md` 4.8): la ocupación superaba las 106 camas por duplicados que la regla v3.7 no detectaba; con la v3.8 es 94 / 101 / 105 (2023 / 2024 / 2025). Queda como limitación la ocupación de urgencias (TU) y que la media de 2025 roza la capacidad |
 | C6 | Validación clínica de `mapeo_dx.csv` por alguien del área de salud | Daniela | Falta |
 | C7 | Revisar que Samuel (B2) actualice las recomendaciones con las cifras nuevas (R², 106 camas, hospitalización = asignación de cama) | Daniela y Samuel | `docs/recomendaciones.md` ya tiene los cambios |
-| C4 | Opcionales: reingresos depurados (existen sin validar en `tabla_episodios`), huecos TU a TU, decidir si se deduplican las llegadas, Carnaval con efecto distinto en sábado y lunes | Daniela | Solo si sobra tiempo |
+| C4 | Opcionales: reingresos depurados (existen sin validar en `tabla_episodios`), huecos TU a TU, decidir si se deduplican las llegadas, Carnaval con efecto distinto en sábado y lunes | Daniela | **HECHA el 8-nov** (`docs/c4_reingresos_huecos_llegadas.md`): reingresos depurados 5,3 % (72 h) y 14,1 % (30 d); huecos TU a TU 2,6 % de las horas, sin efecto; réplicas de llegadas 4,3 %, no se deduplican. El efecto del Carnaval por día se probó: es distinto (lunes −30 %, domingo −14 % en llegadas) pero no mejora el pronóstico (`docs/quincenas_y_datos_externos.md`) |
 
 ---
 
