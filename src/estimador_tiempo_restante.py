@@ -48,14 +48,55 @@ MODELO = Path(os.environ.get("HUN_PROCESADOS", ce.PROC)) / "modelos" / "m1_tiemp
 _CACHE = {}
 
 
+def entrenar_paquete(d, rejilla, estado, hasta=None):
+    """Los 6 modelos del estimador entrenados con las estancias que llegaron antes de 'hasta' (por defecto, todo el periodo confiable)."""
+    tr = d if hasta is None else d[d.ini_est < pd.Timestamp(hasta)].reset_index(drop=True)
+    modelos = {L: ce.entrenar_landmark(tr, rejilla, estado, L, vida_media_dias=VIDA_MEDIA_DIAS) for L in LANDMARKS}
+    modelos["desde_12h"] = ce.entrenar_m1(tr, rejilla, estado, ce.COLS_M1_BASE + ce.HIST, vida_media_dias=VIDA_MEDIA_DIAS)
+    corte = np.datetime64(pd.Timestamp(hasta) if hasta is not None else ce.HASTA)
+    fin = rejilla[(rejilla >= corte - np.timedelta64(90, "D")) & (rejilla < corte)]
+    k = np.searchsorted(rejilla, fin)
+    return {"modelos": modelos, "ocup_tipica": {z: float(np.median(estado[z]["ocup"][k])) for z in estado}, "grupos_dx": ce.GRUPOS_DX,
+            "entrenado_hasta": str(pd.Timestamp(corte).date()), "vida_media_dias": VIDA_MEDIA_DIAS, "version": 5}
+
+
+def modelo_para(paq, horas_esperando):
+    """El modelo que corresponde a cuantas horas lleva esperando el paciente."""
+    if horas_esperando >= ce.HORAS_RECORRIDO:
+        return paq["modelos"]["desde_12h"]
+    return paq["modelos"][max(L for L in LANDMARKS if L <= horas_esperando)]
+
+
+BLOQUES = [(0, 7, "madrugada (0-7 h)"), (7, 14, "mañana (7-14 h)"), (14, 19, "tarde (14-19 h)"), (19, 24, "noche (19-24 h)")]
+NOMBRES_DIA = ["hoy", "mañana", "pasado mañana"]
+
+
+def ventanas_de_cama(S, c, horas_esperando, ahora, dias=3):
+    """Probabilidad de recibir cama en cada bloque del dia (madrugada, mañana, tarde, noche) de hoy, mañana y pasado mañana, y despues.
+    S[j] = probabilidad de seguir esperando a las c + j horas desde la llegada (dado que sigue esperando ahora)."""
+    ahora = pd.Timestamp(ahora)
+    horas = c + np.arange(len(S))
+    sigue = lambda t: float(np.interp(t, horas, S, left=1.0, right=S[-1]))
+    dia0 = ahora.normalize()
+    out, t_fin = [], horas_esperando
+    for d in range(dias):
+        for a, b, nombre in BLOQUES:
+            ini, fin = dia0 + pd.Timedelta(days=d, hours=a), dia0 + pd.Timedelta(days=d, hours=b)
+            if fin <= ahora:
+                continue
+            ini = max(ini, ahora)
+            t_a = horas_esperando + (ini - ahora).total_seconds() / 3600
+            t_fin = horas_esperando + (fin - ahora).total_seconds() / 3600
+            out.append({"ventana": f"{NOMBRES_DIA[d]}, {nombre}", "desde": ini.strftime("%Y-%m-%d %H:%M"), "hasta": fin.strftime("%Y-%m-%d %H:%M"),
+                        "probabilidad": round(sigue(t_a) - sigue(t_fin), 3), "acumulada": round(1 - sigue(t_fin), 3)})
+    out.append({"ventana": "después", "desde": (dia0 + pd.Timedelta(days=dias)).strftime("%Y-%m-%d %H:%M"), "hasta": None,
+                "probabilidad": round(sigue(t_fin), 3), "acumulada": 1.0})
+    return out
+
+
 def _entrenar_y_guardar():
     d, h, rejilla, estado = ce.preparar()
-    modelos = {L: ce.entrenar_landmark(d, rejilla, estado, L, vida_media_dias=VIDA_MEDIA_DIAS) for L in LANDMARKS}   # todo el periodo confiable
-    modelos["desde_12h"] = ce.entrenar_m1(d, rejilla, estado, ce.COLS_M1_BASE + ce.HIST, vida_media_dias=VIDA_MEDIA_DIAS)
-    fin = rejilla[(rejilla >= np.datetime64(ce.HASTA) - np.timedelta64(90, "D")) & (rejilla < np.datetime64(ce.HASTA))]
-    k = np.searchsorted(rejilla, fin)
-    paquete = {"modelos": modelos, "ocup_tipica": {z: float(np.median(estado[z]["ocup"][k])) for z in estado}, "grupos_dx": ce.GRUPOS_DX,
-               "entrenado_hasta": str(ce.HASTA.date()), "vida_media_dias": VIDA_MEDIA_DIAS, "version": 5}
+    paquete = entrenar_paquete(d, rejilla, estado)                                # todo el periodo confiable
     MODELO.parent.mkdir(parents=True, exist_ok=True)
     joblib.dump(paquete, MODELO)
     return paquete
@@ -80,7 +121,7 @@ def estimar_tiempo_restante(edad, sexo, tipo_visita, horas_esperando=0, ahora=No
     if not 0 <= horas_esperando < ce.MAX_H - 1:
         raise ValueError(f"horas_esperando debe estar entre 0 y {ce.MAX_H - 1}")
     paq = _cargar()
-    m = paq["modelos"]["desde_12h"] if horas_esperando >= ce.HORAS_RECORRIDO else paq["modelos"][max(L for L in LANDMARKS if L <= horas_esperando)]
+    m = modelo_para(paq, horas_esperando)
     ahora = pd.Timestamp(ahora) if ahora is not None else pd.Timestamp.now().floor("min")
     zona = "ninos" if edad < 15 else "adultos"
     ocup = paq["ocup_tipica"][zona] if ocupacion_zona is None else float(ocupacion_zona)
@@ -106,10 +147,13 @@ def estimar_tiempo_restante(edad, sexo, tipo_visita, horas_esperando=0, ahora=No
     p = m.predict_proba(X)[:, 1]
     S = np.concatenate([[1.0], np.cumprod(1 - p)])[None, :]                    # S[j] = P(sigue esperando j horas despues de 'c')
     pct = np.clip(ce.cuantiles_de_supervivencia(S)[0] - (horas_esperando - c), 0, None)
+    ventanas = ventanas_de_cama(S[0], c, horas_esperando, ahora)
     return {"zona": zona, "ocupacion_usada": ocup,
             **{f"faltan_p{int(q * 100)}_h": round(float(v), 1) for q, v in zip(ce.Q, pct)},
             "hora_estimada_mediana": (ahora + pd.Timedelta(hours=float(pct[1]))).strftime("%Y-%m-%d %H:%M"),
             **{f"prob_cama_en_{hh}h": round(float(1 - S[0, min(hh, S.shape[1] - 1)]), 3) for hh in (6, 12, 24)},
+            "ventanas": ventanas,
+            "ventana_mas_probable": max(ventanas[:-1], key=lambda v: v["probabilidad"])["ventana"],   # entre las ventanas con fecha (sin "después")
             "aviso": "Rango de pacientes parecidos, no una promesa individual."}
 
 

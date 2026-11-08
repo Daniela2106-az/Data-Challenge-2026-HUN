@@ -7,7 +7,12 @@
 2. **El estimador es un modelo de tiempo restante.** Para un paciente que espera cama, da el rango de lo que le falta (percentiles 25, 50, 75 y 90) y la probabilidad de recibir cama en 6, 12 y 24 horas, y se recalcula a medida que pasa la espera. Usa el paciente, la hora del reloj, la ocupación, su historial de hospitalizaciones y su recorrido en urgencias, todo conocido en el momento. Se consulta con `estimar_tiempo_restante()`.
 3. **Funciona mejor que todo lo demás que probamos, pero el techo es bajo.** Reentrenado cada mes con más peso en lo reciente, que es como se debe usar porque el hospital cambió, mejora el rango 8,1 % al llegar y 9,8–10,3 % entre las 3 y las 6 horas de espera, frente a darle a todos el mismo rango. Sus percentiles aciertan en datos nuevos, y le gana con margen comprobado a las otras cinco alternativas.
 4. **Lo que más decide cuándo llega la cama es la hora del reloj:** entre las 6 y las 12 h casi nadie recibe cama; las camas se asignan entre las 15 y las 17 h y entre las 20 y las 23 h.
-5. **Lo que de verdad lo mejoraría es saber, al llegar, la gravedad y el servicio.** Los procedimientos de cada estancia muestran que el hospital da cama rápido a los graves (UCI: mediana 2,7 h) y hace esperar más a cirugía, urología y ortopedia (30–38 h). Si esa información se conociera al llegar, la mejora pasaría de 7,6 % a 15,8 %, y a 18,6 % sumando el diagnóstico (comparando modelos entrenados una sola vez). Es más que cualquier cambio de modelo, y es el argumento para registrar el triage y el servicio en la base.
+5. **Pensado para usarse cada día** (sección 3.2):
+   - **Para el paciente:** responde en ventanas del día («esta tarde», «esta noche», «mañana en la tarde») con probabilidades que dicen la verdad.
+   - **Para la reunión de camas:** dice cuántos de los que esperan tendrán cama en 12 o 24 h, con un error en el mínimo que permite el azar y un rango que acierta el 86–88 % de los días.
+   - **Para actuar antes:** a las 12 h de espera avisa quién seguirá sin cama a las 48 h.
+   - **En el dashboard:** tiene su página (`dashboard/estimador.py`).
+6. **Lo que de verdad lo mejoraría es saber, al llegar, la gravedad y el servicio.** Los procedimientos de cada estancia muestran que el hospital da cama rápido a los graves (UCI: mediana 2,7 h) y hace esperar más a cirugía, urología y ortopedia (30–38 h). Si esa información se conociera al llegar, la mejora pasaría de 7,6 % a 15,8 %, y a 18,6 % sumando el diagnóstico (comparando modelos entrenados una sola vez). Es más que cualquier cambio de modelo, y es el argumento para registrar el triage y el servicio en la base.
 
 ---
 
@@ -78,6 +83,8 @@ estimar_tiempo_restante(edad=67, sexo="Mujer", tipo_visita="Urgencias", horas_es
 - Devuelve los percentiles de lo que falta, la hora en que la mitad de los pacientes parecidos ya tendría cama y la probabilidad de recibirla en 6, 12 y 24 h.
 - Los modelos se entrenan con todo el periodo confiable, **con más peso en lo reciente** (un dato de hace 6 meses pesa la mitad), y se guardan fuera del proyecto, en `HUN_PROCESADOS/modelos/` (salen de datos clínicos). Si no existen, se entrenan al primer uso (~1 min).
 - **Hay que reentrenarlos cada mes** con los datos nuevos (basta con borrar el archivo `.joblib`). La sección 3.1 muestra por qué.
+- También devuelve `ventanas`: la probabilidad de recibir cama en cada bloque del día (madrugada 0–7 h, mañana 7–14 h, tarde 14–19 h, noche 19–24 h) de hoy, mañana y pasado mañana, y después, con la acumulada. También devuelve `ventana_mas_probable` (entre las que tienen fecha).
+- **Página del dashboard:** `dashboard/estimador.py` (Dash, puerto 8051). Se describe al paciente y muestra las ventanas, el rango y el resumen de qué tan bien funciona.
 
 **Ejemplos** (miércoles 4-mar-2026, ocupación típica):
 
@@ -147,6 +154,49 @@ En el reentrenamiento mensual, cada mes de la prueba se estimó con un modelo en
 
 ---
 
+### 3.2 ¿Qué tan útil es? Tres salidas para el día a día
+Código: `src/utilidad_estimador.py`. La precisión para un paciente tiene un techo (sección 3), pero la utilidad depende de responder las preguntas que el hospital necesita resolver cada día. Las tres salidas se probaron igual que todo lo demás: modelos entrenados hasta jun-2025 y prueba con jul-2025 a 9-abr-2026.
+
+**1. Para el paciente: ¿en qué momento del día recibirá cama?** Se responde en ventanas, porque las camas se asignan en bloques del día.
+
+| | Al llegar | A las 6 h de espera |
+|---|---|---|
+| La ventana real está entre las 2 más probables | **45,5 %** (sin modelo: 36,9 %) | **43,3 %** (sin modelo: 34,3 %) |
+| La ventana con fecha más probable acierta | 25,7 % (sin modelo: 21,6 %) | 20,8 % (sin modelo: 17,4 %) |
+| Error de las probabilidades (Brier, menor es mejor) | 0,837 (sin modelo: 0,870; −3,8 %) | 0,838 (sin modelo: 0,875; −4,3 %) |
+
+«Sin modelo» es la distribución histórica de la ventana según la hora del reloj. Hay 12 ventanas posibles, así que acertar la exacta es difícil. Lo que más importa para comunicar es que las probabilidades **dicen la verdad**: cuando el estimador dice 7 %, pasa el 7 %; cuando dice 12 %, pasa el 11 %; cuando dice 24 %, pasa el 27 %. En las probabilidades más altas queda algo corto: dice 34 % y pasa el 42 %. El 14 % de los pacientes recibe la cama después de 3 días.
+
+**2. Para la reunión de camas: de los que esperan ahora, ¿cuántos tendrán cama en 12 o 24 horas?** Cada día a las 7:00 y a las 13:00, el estimador suma las probabilidades de los pacientes en espera.
+
+| Momento y plazo | En espera | Reciben cama | Error por día | Mínimo posible por azar | Sin modelo | Rango del 80 % acierta | Error por semana |
+|---|---|---|---|---|---|---|---|
+| 7:00, en 12 h | 23,6 | 5,1 | 1,9 | 1,9 | 2,1 | 85,8 % | 20,4 % |
+| 7:00, en 24 h | 23,6 | 10,5 | 2,6 | 2,6 | 2,8 | 85,5 % | 12,4 % |
+| 13:00, en 12 h | 28,9 | 11,6 | 2,6 | 2,7 | 2,7 | 87,6 % | 10,6 % |
+| 13:00, en 24 h | 28,9 | 12,9 | 2,7 | 2,9 | 2,8 | 87,6 % | 9,6 % |
+
+**El error está en el mínimo que permite el azar.** Cuántos pacientes reciben cama en unas horas es un conteo pequeño con ruido inevitable, como contar caras al lanzar monedas. El «mínimo posible» es el error que tendría hasta un estimador perfecto (distribución de Poisson), y el estimador lo alcanza. Por eso la referencia histórica, que es la cantidad en espera por la fracción que suele recibir cama a esa hora, queda casi igual. Lo útil es el **rango**: con la distribución de Poisson del estimado, el rango del 80 % acierta el 86–88 % de los días. Una banda que supusiera pacientes independientes acertaba solo el 64–73 %, porque las camas se asignan en tandas. Por semana el error baja a 10–20 %, pero el rango semanal queda algo angosto: acierta el 67–77 % de las semanas en vez del 80 %, porque hay semanas enteras más rápidas o más lentas.
+
+**3. Para actuar antes: ¿quién seguirá sin cama a las 48 h?** A las 12 h de espera, la probabilidad de seguir sin cama a las 48 h (AUC 0,67):
+
+| Regla | Alertas por día | Acierta | Detecta |
+|---|---|---|---|
+| Sin modelo: todos los que llevan 12 h | 11,1 | 38,6 % | 100 % |
+| Probabilidad ≥ 30 % | 7,4 | 46,9 % | 81,1 % |
+| **Probabilidad ≥ 40 %** | **3,8** | **53,8 %** | 47,3 % |
+| Probabilidad ≥ 50 % | 0,9 | 59,4 % | 12,3 % |
+| Sin modelo: todos los que llevan 24 h (12 h más tarde) | 8,1 | 52,9 % | 100 % |
+
+**Lectura:** con un corte de 40 %, el estimador da 3,8 alertas diarias a las 12 h y acierta tanto como esperar a las 24 h y alertar a todos (54 % frente a 53 %), pero con **12 horas más de margen** y la mitad de alertas. A cambio, detecta solo la mitad de los que terminarán esperando más de 48 h. Complementa la alerta C de `src/alertas.py` (a las 48 h de espera), que avisa más tarde y acierta más.
+
+**4. En el dashboard.** `dashboard/estimador.py` reúne todo en una página. Se describe al paciente (edad, sexo, tipo de visita, horas de espera y, si se sabe, su hospitalización anterior y sus etapas en urgencias) y muestra:
+- la ventana más probable y el gráfico de ventanas con la acumulada;
+- lo que le falta (mediana y rango) y la probabilidad de cama en 6, 12 y 24 h;
+- el resumen de qué tan bien funciona, leído de las tablas agregadas.
+
+No usa datos de pacientes. El censo de pacientes en espera necesitaría los datos del hospital en tiempo real, que no tenemos.
+
 ## 4. Qué haría falta para mejorarlo: la gravedad y el servicio al llegar
 Código: `src/procedimientos_escenario.py` (procedimientos) y `src/triage_aproximado.py` (laboratorios). Se recalcularon todos los modelos que usan datos del paciente agregando lo que dicen los procedimientos (gravedad y servicio, sección 1.5) y el grupo de diagnóstico. Los modelos de cola y las dos series no usan datos del paciente, así que no cambian.
 
@@ -178,7 +228,7 @@ En todos los casos los percentiles siguen bien calibrados (al llegar, con todo: 
 
 **Otros pendientes:**
 - **Corrección completa de edad y sexo:** con `procedimientos_por_estancia.csv` ya se corrigieron las 14.126 estancias que trae (55 %). Para el resto, pedir a Daniela `P02_persona_de_los_diagnosticos.csv` y `P03_persona_de_los_laboratorios.csv`.
-- **Dashboard:** la estructura (`docs/estructura_dashboard.md`) no tiene página para A6. Como el dashboard está en Dash (Python), la página puede llamar a `estimar_tiempo_restante()`. Falta decidir con Daniela dónde va y si los modelos guardados pueden publicarse: contienen los cortes de los árboles, no filas de pacientes, pero salen de datos clínicos.
+- **Dashboard:** la página ya existe (`dashboard/estimador.py`), pero como una app aparte (puerto 8051). Falta integrarla al menú del dashboard (`docs/estructura_dashboard.md` todavía no la tiene) y decidir con Daniela si los modelos guardados pueden publicarse: contienen los cortes de los árboles, no filas de pacientes, pero salen de datos clínicos.
 
 ---
 
@@ -215,7 +265,9 @@ Los datos viven fuera del proyecto. Se indican con tres variables (en Bash). `HU
 export HUN_PROCESADOS="D:/Descargas D/Datos/procesados" HUN_TABLAS="D:/Descargas D/Datos/procesados/tablas" HUN_CRUDOS="D:/Descargas D/Datos"
 ```
 1. **Tabla de episodios:** `src/analisis_etapas.py` y `src/preparar_variables.py`, con los CSV de la base en `datos/crudos/`. Copiarlos ahí solo mientras corren y mover luego `datos/procesados/` a la carpeta externa.
-2. **Construcción y prueba del estimador:** `python3 src/comparar_estimadores.py` (~1,5 min). Escribe `comparacion_estimadores_*.csv` en `HUN_TABLAS` y `resultados/graficos/comparacion_estimadores.png`. Las formas de entrenar (sección 3.1): `python3 src/ventana_entrenamiento.py` (~10 min).
-3. **Escenarios de gravedad y servicio:** `python3 src/procedimientos_escenario.py` (~4 min; necesita `procedimientos_por_estancia.csv` en `HUN_CRUDOS`) y `python3 src/triage_aproximado.py` (laboratorios).
-4. **Alternativas:** `python3 src/estimador_tiempos.py` (tabla de perfiles) y `python3 src/espera_dos_series.py` (dos series).
-5. **Consulta:** `python3 src/estimador_tiempo_restante.py 67 Mujer Urgencias 6 "2026-03-04 15:00"`. Sin argumentos muestra los ejemplos de la sección 2.
+2. **Utilidad (ventanas, censo y alerta):** `python3 src/utilidad_estimador.py` (~10 min). Escribe `utilidad_*.csv` en `HUN_TABLAS` y `resultados/graficos/utilidad_estimador.png`.
+3. **Construcción y prueba del estimador:** `python3 src/comparar_estimadores.py` (~1,5 min). Escribe `comparacion_estimadores_*.csv` en `HUN_TABLAS` y `resultados/graficos/comparacion_estimadores.png`. Las formas de entrenar (sección 3.1): `python3 src/ventana_entrenamiento.py` (~10 min).
+4. **Escenarios de gravedad y servicio:** `python3 src/procedimientos_escenario.py` (~4 min; necesita `procedimientos_por_estancia.csv` en `HUN_CRUDOS`) y `python3 src/triage_aproximado.py` (laboratorios).
+5. **Alternativas:** `python3 src/estimador_tiempos.py` (tabla de perfiles) y `python3 src/espera_dos_series.py` (dos series).
+6. **Consulta:** `python3 src/estimador_tiempo_restante.py 67 Mujer Urgencias 6 "2026-03-04 15:00"`. Sin argumentos muestra los ejemplos de la sección 2.
+7. **Página del dashboard:** `python3 dashboard/estimador.py` y abrir http://127.0.0.1:8051.

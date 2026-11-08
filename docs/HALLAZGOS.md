@@ -217,6 +217,10 @@ de las llegadas pronosticadas; factores externos (clima, dengue, eventos).
 - **Gravedad y servicio (procedimientos de cada estancia, sin fecha):** el hospital da cama rápido a los graves (UCI: mediana 2,7 h) y hace esperar más a urología (37,7 h), ortopedia (32,8 h) y cirugía general (29,6 h). Si al llegar se supieran la gravedad y el servicio, la mejora pasaría de 7,6 % a 15,8 % (18,6 % sumando el diagnóstico; escenario optimista). **Registrar el triage y el servicio** es la mejora de datos que más ayudaría.
 - **La hora del reloj manda:** el 24 % de las camas se asigna entre las 15 y las 17 h y el 37 % entre las 20 y las 23 h; entre las 6 y las 12 h casi nadie recibe cama.
 - **El hospital cambió** (p90 de la espera de 61 a 81 h entre 2023 y 2026): reentrenar cada mes con más peso en lo reciente mejora la estimación en todos los momentos (8,1 % al llegar, 10,3 % a las 3 h; la diferencia con el modelo fijo es real hasta las 6 h). El estimador final se entrena así (`src/ventana_entrenamiento.py`).
+- **Uso diario** (`src/utilidad_estimador.py`, página `dashboard/estimador.py`):
+  - Responde en ventanas del día con probabilidades calibradas: la ventana real está entre las 2 más probables en el 46 % de los pacientes, frente a 37 % sin modelo.
+  - Para la reunión de camas dice cuántos de los que esperan tendrán cama en 12 o 24 h, con un error en el mínimo que permite el azar y un rango que acierta el 86–88 % de los días.
+  - A las 12 h de espera avisa quién seguirá sin cama a las 48 h: 3,8 alertas por día que aciertan en el 54 %, igual que esperar a las 24 h pero con 12 h más de margen.
 
 ---
 
