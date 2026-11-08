@@ -338,7 +338,7 @@ Resultado: 35.343 episodios hospitalizados → **25.777 estancias** (antes 27.95
 | R² de los factores de la espera | 13,8 % | **15,8 %** (tras la regla v4.0 de la persona real, 4.10) |
 
 Lo que **no cambia** (no depende de las estancias): llegadas por día, calendario, pronóstico de llegadas, días atípicos de llegadas, perfiles por hora de llegada, tiempos por diagnóstico en lo cualitativo.
-Pendiente de revisar por quien lea esto: las cifras de las secciones 4.1 a 6b de este archivo y de los documentos de `docs/` que no aparecen en la tabla (por ejemplo, detalles de las alertas de camas y de R6) son de la regla v3.7; las que
+Pendiente de revisar por quien lea esto: las cifras de las secciones 4.1 a 6b de este archivo y de los documentos de `docs/` que no aparecen en la tabla (las alertas de camas y R6 ya se recalcularon el 8-nov con la regla v3.8) pueden ser de la regla v3.7; las que
 aparecen en `docs/HALLAZGOS.md`, `docs/recomendaciones.md`, `README.md` y `powerbi/` ya se actualizaron. Respaldo completo de lo anterior en `datos/procesados/respaldo_dedup_v37/` y `resultados/respaldo_dedup_v37/` (no se suben a git).
 **Revisión directa en la base (2-nov-2026, `src/explorar_bd.py` + `src/conexion_bd.py`, solo lectura; los resultados están en `datos/crudos/exploracion_bd/`, fuera de git):**
 - **El esquema real tiene 8 tablas** (`person`, `visit_occurrence`, `visit_detail`, `condition_occurrence`, `procedure_occurrence`, `measurement`, `concept` y `cups`). `visit_detail` solo trae id, visita, tipo de etapa, inicio, fin y `provider_id`:
@@ -532,7 +532,7 @@ Respaldo de los resultados anteriores en `resultados/respaldo_antes_hueco/` y `d
     está respaldada por los datos y no se simula.
   - Con el 30 % de las altas de la tarde pasando a las 9–12 h
     quedan hasta 5,1 camas libres adicionales a las 12 h (~34 horas-cama por día; con ~103 camas ocupadas a esa hora).
-  - Traducido a espera, **como máximo ~8 % del exceso de espera (455 horas-paciente por día)** y una estimación de ~3 %
+  - Traducido a espera, **como máximo ~8 % del exceso de espera (451 horas-paciente por día)** y una estimación de ~3 %
     (cada alta extra se vuelve a ocupar con ~0,35 ingresos en 6 h). Adelantar el 100 % de las altas de la tarde: máximo 27 %.
     Adelantar altas ayuda pero no resuelve: el 83 % de las horas de espera viene de esperas de más de 24 h y el 57 % de esperas
     de más de 48 h (el 19 % de los pacientes), y unas horas menos no deshacen esperas de varios días.
@@ -570,19 +570,19 @@ Respaldo de los resultados anteriores en `resultados/respaldo_antes_hueco/` y `d
 - **Alertas (Fase 7, `alertas.py`; cortes elegidos con 2025-07 a 2025-12, prueba en ene–abr 2026 reproduciendo los días):**
   - **A. Día congestionado en tiempo real** (llegadas del día > percentil 90 del mismo día de la semana en 12 semanas): estimar el
     total del día con lo que ya llegó, mezclado con el pronóstico. Con el corte elegido en validación, **a las 12 h** AUC 0,94,
-    28 alertas (0,23 por día), 15 aciertos: precisión 54 %, detección 83 %; a las 15 h: 15 alertas, 11 aciertos (73 % y 61 %);
-    a las 9 h: 8 alertas, 5 aciertos (62 % y 28 %). **Un día antes** (solo pronóstico): AUC 0,61, 7 alertas, 3 aciertos (43 % y 17 %).
-    Avisa a media jornada, no con un día de margen. Solo 18 días congestionados en la prueba: las cifras se mueven.
+    25 alertas (0,25 por día), 13 aciertos: precisión 52 %, detección 87 %; a las 15 h: 12 alertas, 9 aciertos (75 % y 60 %);
+    a las 9 h: 7 alertas, 4 aciertos (57 % y 27 %). **Un día antes** (solo pronóstico): AUC 0,61, 7 alertas, 3 aciertos (43 % y 20 %).
+    Avisa a media jornada, no con un día de margen. Solo 15 días congestionados en la prueba (18 en la validación): las cifras se mueven. *(Recalculado el 8-nov con la regla v3.8.)*
   - **B. Camas a 24 h desde las 12 h:** la proyección (camas ahora − altas esperadas + ingresos esperados) **no mejora a la
-    persistencia** ("lo mismo que ahora"): error 4,3 contra 3,5 camas. Las altas esperadas tienen sesgo de +2,6 camas (22,4 esperadas
-    contra 19,8 reales) y correlación de 0,17 con las reales (posible causa sin comprobar: las estancias del entrenamiento son más
-    cortas que las de 2026). La alerta de "ocupación alta" (≥ percentil 80 de las 12 h del entrenamiento, 123 camas; 42 % de los
-    días de 2026) funciona mejor con la persistencia: AUC 0,92, precisión 75 %, detección 90 %, 0,5 alertas por día. Se recomienda
+    persistencia** ("lo mismo que ahora"): error 3,7 contra 3,2 camas (prueba 2026). Las altas esperadas tienen sesgo de +2,0 camas (20,1 esperadas
+    contra 18,1 reales) y correlación de 0,10 con las reales (posible causa sin comprobar: las estancias del entrenamiento son más
+    cortas que las de 2026). La alerta de "ocupación alta" (≥ percentil 80 de las 12 h del entrenamiento: 107 camas en validación y 109 en prueba; 25 de los
+    99 días de la prueba) funciona mejor con la persistencia: AUC 0,82, precisión 48 %, detección 76 %, 0,4 alertas por día (la proyección: AUC 0,78, 40 % y 84 %, 0,5 por día). Se recomienda
     la persistencia y reportar las altas esperadas solo como orden de magnitud (~20 camas se liberan por día).
-  - **C. Paciente sin cama** (solo los que luego se hospitalizan; cota inferior de la carga real): alerta a las 24 h, 9,1 por día,
-    23 % termina esperando más de 72 h; a las 36 h, 5,5 por día, 38 %; **a las 48 h, 4,1 por día, 51 %, con 24 h de margen**; a las 60 h,
-    2,7 por día, 79 %, con 12 h de margen. Más anticipación = más alertas y menos precisión.
-  - **Carga total con el diseño recomendado** (A a las 12 h, B persistencia, C a las 48 h): ~4,9 alertas por día, casi todas del
+  - **C. Paciente sin cama** (solo los que luego se hospitalizan; cota inferior de la carga real): alerta a las 24 h, 8,6 por día,
+    24 % termina esperando más de 72 h; a las 36 h, 5,3 por día, 39 %; **a las 48 h, 4,0 por día, 52 %, con 24 h de margen**; a las 60 h,
+    2,6 por día, 80 %, con 12 h de margen. Más anticipación = más alertas y menos precisión.
+  - **Carga total con el diseño recomendado** (A a las 12 h, B persistencia, C a las 48 h): ~4,6 alertas por día, casi todas del
     tipo C. La ocupación cae de ~115 camas a mediados de abril 2026 a 87 el 29-abr: coincide con la caída de datos de
     abril–mayo (pregunta 14) y no se interpreta como un cambio real.
 - Scripts: `construir_segmentos.py`, `ranking_cuellos.py`, `dependencia_carga.py`, `altas_y_factores.py`, `simulacion_altas.py`,

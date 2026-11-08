@@ -169,7 +169,7 @@ estocástica de pacientes llegando. La simulación Monte Carlo de camas (ficha 3
 - Con la ley de Little (camas = ingresos × estancia): volver a la estancia de 2023 liberaría ~15 camas; bajarla 5 %, ~5; subir los ingresos 10 %
   añadiría ~10.
 - **Escenario "30 % de las altas de la tarde antes del mediodía"** (`src/simulacion_altas.py`): hasta 5,1 camas libres adicionales a las 12 h
-  (~34 horas-cama por día). Traducido a espera: **como máximo ~8 % del exceso** (455 horas-paciente por día), estimación ~3 %. Con el 100 %:
+  (~34 horas-cama por día). Traducido a espera: **como máximo ~8 % del exceso** (451 horas-paciente por día), estimación ~3 %. Con el 100 %:
   máximo 27 %. Supuestos: el alta de los demás no cambia; es una cota, no una predicción. **Nota sobre la capacidad:** el HUN reportó 106 camas de hospitalización; la ocupación media fue 94 (2023), 101 (2024) y 105 (2025), y en 2025 superó las 106 camas el 42 % de las horas (en 2023, el 2 %). El exceso viene de estancias largas con actividad diaria de hospitalización (las de más de 30 días pasaron de 6 a 13 camas). Puede ser sobreocupación con camas adicionales o una capacidad real mayor; los datos no lo distinguen (`CLAUDE.md` 4.8).
 - El **83 % de las horas de espera** viene de esperas de más de 24 h y el 57 % de esperas de más de 48 h (el 19 % de los pacientes).
 
@@ -196,10 +196,10 @@ Entrenado hasta 2025-12, probado en ene–abr 2026, método elegido con la valid
 ### 5.2 Alertas (`src/alertas.py`, reproduciendo ene–abr 2026; cortes elegidos con la validación de 2025)
 | Alerta | Resultado |
 |---|---|
-| **A. Día congestionado a las 12 h** (llegadas > percentil 90 del mismo día de la semana) | AUC 0,94; 28 alertas (0,23/día), 15 aciertos: precisión 54 %, detección 83 %. A las 15 h: 73 % y 61 %. **Un día antes:** AUC 0,61 (precisión 43 %, detección 17 %): avisa a media jornada, no con un día de margen |
-| **B. Camas a 24 h** | La proyección (camas − altas esperadas + ingresos esperados) **no mejora a la persistencia** ("lo mismo que ahora"): error 4,3 contra 3,5 camas. Las altas esperadas tienen sesgo de +2,6 camas. Alerta de ocupación alta (≥ 123 camas): AUC 0,92, precisión 75 %, detección 90 %, 0,5 por día |
-| **C. Paciente sin cama** (solo los que luego se hospitalizan) | A las 24 h: 9,1 alertas/día, 23 % termina esperando > 72 h. **A las 48 h: 4,1/día, 51 %, 24 h de margen.** A las 60 h: 2,7/día, 79 %, 12 h de margen |
-Carga total recomendada (A a las 12 h, B persistencia, C a las 48 h): **~4,9 alertas por día**. Solo hay 18 días congestionados en la prueba: las cifras se mueven.
+| **A. Día congestionado a las 12 h** (llegadas > percentil 90 del mismo día de la semana) | AUC 0,94; 25 alertas (0,25/día), 13 aciertos: precisión 52 %, detección 87 %. A las 15 h: 75 % y 60 %. **Un día antes:** AUC 0,61 (precisión 43 %, detección 20 %): avisa a media jornada, no con un día de margen |
+| **B. Camas a 24 h** | La proyección (camas − altas esperadas + ingresos esperados) **no mejora a la persistencia** ("lo mismo que ahora"): error 3,7 contra 3,2 camas (prueba 2026). Las altas esperadas tienen sesgo de +2,0 camas. Alerta de ocupación alta (≥ percentil 80 de las 12 h: 107–109 camas): con la persistencia AUC 0,82, precisión 48 %, detección 76 %, 0,4 por día (la proyección: 40 % y 84 %, 0,5 por día) |
+| **C. Paciente sin cama** (solo los que luego se hospitalizan) | A las 24 h: 8,6 alertas/día, 24 % termina esperando > 72 h. **A las 48 h: 4,0/día, 52 %, 24 h de margen.** A las 60 h: 2,6/día, 80 %, 12 h de margen |
+Carga total recomendada (A a las 12 h, B persistencia, C a las 48 h): **~4,6 alertas por día** (recalculado el 8-nov con la regla v3.8). Solo hay 15 días congestionados en la prueba: las cifras se mueven.
 
 ### 5.3 Lo que se probó y no funcionó
 Fila de espera tipo "primero en llegar, primero en cama" (no respaldada por los datos); predecir la estancia de cada paciente (R² ≈ 0);

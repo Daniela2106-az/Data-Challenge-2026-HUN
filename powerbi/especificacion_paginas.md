@@ -39,7 +39,7 @@ título = conclusión; tema `tema.json`; azul = espera, naranja = referencia o e
 ## Página 6 — «Se puede anticipar y avisar» — LISTO
 - Real vs pronóstico: eje `pronostico_diario_test[fecha]`, `llegadas_real`, `llegadas_pronostico_h1` (o `_h7` con parámetro de campos) y banda `llegadas_banda_baja_*`/`llegadas_banda_alta_*` (usar el truco de área apilada, ver DAX). Tarjetas: error 7,5 % (1 d) y 8,8 % (7 d) de `pronostico_metricas`.
 - Ingresos: mostrar el pronóstico **semanal** (`pronostico_semanal_metricas`, error 9,5 %); el diario es ruido (~23 %). No venderlo como bueno.
-- Tabla de alertas con formato condicional: `alertas_congestion`, `alertas_camas`, `alertas_paciente` (precisión, detección, alertas por día; total ~4,9/día).
+- Tabla de alertas con formato condicional: `alertas_congestion`, `alertas_camas`, `alertas_paciente` (precisión, detección, alertas por día; total ~4,6/día).
 - Tabla `dias_atipicos` (14 llegadas / 9 ingresos / 7 espera) con drill-through. Nota: «Prueba ene–abr 2026; mayo cae por posible carga incompleta».
 
 ## Página 7 — «Simulador de camas: ¿qué pasa si...?» — PARCIAL (falta Monte Carlo, A5)

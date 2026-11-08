@@ -47,7 +47,7 @@ cuello de botella sea un patrón conocido, no una rareza del HUN.
 | 3 | Reunión diaria de camas a media mañana, con alertas | No cuantificable; la alerta de las 12 h detecta 83 % de los días congestionados | Débil: un resumen de congreso (altas más tempranas, misma estancia) y un caso escocés donde la reunión fue parte de una intervención más amplia | Media |
 | 4 | Meta de altas antes del mediodía (empezar con 25–30 %) | Hasta 5,1 camas libres a las 12 h; evita como máximo 8 % del exceso de espera (estimación central ~3 %) | Mixta: 3 proyectos con mejoras, 1 sin efecto y con más *boarding* | Media-baja |
 | 5 | Alerta por paciente a las 48 h sin cama, con responsable | ~4 alertas por día; 51 % termina esperando más de 72 h; 24 h de margen | No encontrada | Media |
-| 6 | Protocolo para quien llega entre las 13 y las 18 h y se hospitaliza | Entre ~11 y ~49 horas-paciente por día (2–11 % del exceso de 455) si esperaran como quien llega por la mañana | No encontrada | Baja (el rango depende de usar promedios o medianas) |
+| 6 | Protocolo para quien llega entre las 13 y las 18 h y se hospitaliza | Entre ~11 y ~49 horas-paciente por día (2–11 % del exceso de 451) si esperaran como quien llega por la mañana | No encontrada | Baja (el rango depende de usar promedios o medianas) |
 | 7 | Revisar sistemáticamente las estancias largas | −5 % de estancia ≈ 5 camas; volver a la de 2023 ≈ 15 camas. Las estancias de más de 14 días ocupan unas 36 camas; las de más de 30 días pasaron de 6 a 13 camas entre 2023 y 2025 | Inconsistente según la población | Media |
 
 ## 3. Detalle
@@ -81,9 +81,9 @@ Como referencia, no como séptimo indicador: la ocupación media de todo el día
 ### R3. Reunión diaria de camas con alertas (prioridad 3)
 - **Qué hacer:** una reunión corta de 10 a 15 minutos a media mañana con censo, altas previstas e ingresos previstos, apoyada en las alertas de
   `src/alertas.py`: día congestionado a las 12 h y ocupación alta.
-- **Por qué (nuestros datos):** a las 12 h la alerta de día congestionado tiene AUC de 0,94 y detecta 5 de cada 6 días congestionados (28 alertas en
-  120 días, 54 % de precisión). Para la ocupación a 24 h, "lo mismo que ahora" funciona mejor que una proyección (precisión 75 %, detección 90 %). Se
-  liberan ~20 camas por día, solo como orden de magnitud. (HALLAZGOS 5.2)
+- **Por qué (nuestros datos):** a las 12 h la alerta de día congestionado tiene AUC de 0,94 y detecta 13 de 15 días congestionados (25 alertas en
+  99 días, 52 % de precisión). Para la ocupación a 24 h (umbral de 107–109 camas, el percentil 80 de las 12 h), "lo mismo que ahora" funciona mejor que una proyección (AUC 0,82, precisión 48 %, detección 76 %, 0,4 alertas por día). Se
+  liberan ~20 camas por día, solo como orden de magnitud. (HALLAZGOS 5.2; recalculado el 8-nov con `src/alertas.py` y la regla v3.8)
 - **Evidencia externa (verificada):**
   - La guía práctica de Becker's (2014), que resume recomendaciones del Institute for Healthcare Improvement, propone 10–15 minutos con un orden fijo:
     censo, altas, ingresos y traslados previstos por unidad. **Es una guía, no un estudio: no reporta resultados.**
@@ -93,7 +93,7 @@ Como referencia, no como séptimo indicador: la ocupación media de todo el día
     del alta, y reporta menos estancia. **Ojo:** las reuniones eran parte de una intervención organizativa más amplia, y el informe no demuestra que las
     reuniones por sí solas causaran la reducción. Es un caso descriptivo, no un estudio con grupo de comparación.
 - **Cómo medirla:** alertas atendidas, acciones tomadas, ocupación a las 12 h.
-- **Límite:** las alertas se probaron sobre días pasados con pocos días congestionados (18); las cifras pueden moverse. **Orientativo:** `CLAUDE.md` 4.8 avisa que los detalles de las alertas de camas son de la regla anterior (v3.7), así que la precisión y la detección de la alerta de ocupación son una referencia, no un valor final. La alerta de día congestionado usa llegadas y no depende de esa regla. La evidencia externa es de casos
+- **Límite:** las alertas se probaron sobre días pasados con pocos días congestionados (15 en la prueba y 18 en la validación); las cifras pueden moverse. **Recalculado el 8-nov** con la regla de estancia única v3.8 (`src/alertas.py`). La evidencia externa es de casos
   únicos sin grupo de comparación, y en ellos la reunión siempre venía junto con otras medidas: no se puede aislar su efecto.
 
 ### R4. Meta de altas antes del mediodía (prioridad 4)
@@ -122,8 +122,8 @@ Como referencia, no como séptimo indicador: la ocupación media de todo el día
 
 ### R5. Alerta por paciente a las 48 h sin cama (prioridad 5)
 - **Qué hacer:** cuando un paciente lleva 48 h desde su llegada sin cama, avisar a un responsable que revise por qué.
-- **Por qué (nuestros datos):** ~4,1 alertas por día; el 51 % de esos pacientes termina esperando más de 72 h, con 24 h de margen. A las 36 h serían 5,5 por día
-  (38 %); a las 60 h, 2,7 por día (79 %, solo 12 h de margen). (HALLAZGOS 5.2)
+- **Por qué (nuestros datos):** ~4,0 alertas por día; el 52 % de esos pacientes termina esperando más de 72 h, con 24 h de margen. A las 36 h serían 5,3 por día
+  (39 %); a las 60 h, 2,6 por día (80 %, solo 12 h de margen). (HALLAZGOS 5.2)
 - **Evidencia externa:** no se encontró un estudio que evalúe esta alerta concreta. La revisión de Oskvarek y colegas (2026) menciona la gestión activa de
   camas entre las medidas de salida, que requieren coordinación de todo el sistema, y dice que la evidencia de alta calidad es limitada.
 - **Límite:** solo cuenta a quienes luego se hospitalizan, así que en tiempo real habría más alertas; riesgo de fatiga por alertas. Sin una acción definida
@@ -131,18 +131,18 @@ Como referencia, no como séptimo indicador: la ocupación media de todo el día
 
 ### R6. Protocolo para quien llega entre las 13 y las 18 h y se hospitaliza (prioridad 6)
 - **Qué hacer:** anticipar la decisión de ingreso y la solicitud de cama durante la tarde, para no esperar al ciclo de altas del día siguiente.
-- **Por qué (nuestros datos):** mediana de espera de 23,6 h al llegar entre las 13:00 y las 18:59, contra 15,7 h al llegar entre las 6:00 y las 11:59
+- **Por qué (nuestros datos):** mediana de espera de 24,2 h al llegar entre las 13:00 y las 18:59, contra 16,0 h al llegar entre las 6:00 y las 11:59
   (HALLAZGOS 4.4 describe el mismo patrón por hora: ~25 h al llegar de 13 a 16 h, con un salto a las 13:00). La carga del momento explica unos dos quintos
   del efecto de la tarde; el resto no.
-- **Impacto:** llegan unos 6,4 pacientes por día en esa franja. Si su espera bajara a la de la mañana, se evitarían **~49 horas-paciente por día midiendo con
-  medianas (11 % del exceso de 455 horas por día) pero solo ~11 midiendo con promedios (2 %)**, porque los promedios de la mañana y de la tarde se parecen
-  (~31–32 h) y los dominan las esperas largas. Por eso es de confianza baja: ayuda a la espera típica, no a la cola de esperas de varios días.
+- **Impacto:** llegan unos 5,9 pacientes por día en esa franja. Si su espera bajara a la de la mañana, se evitarían **~49 horas-paciente por día midiendo con
+  medianas (11 % del exceso de 451 horas por día) pero solo ~11 midiendo con promedios (2 %)**, porque los promedios de la mañana y de la tarde se parecen
+  (~34 y ~32 h) y los dominan las esperas largas. Por eso es de confianza baja: ayuda a la espera típica, no a la cola de esperas de varios días.
 - **Relación con los diagnósticos (A3):** la espera larga se concentra en pacientes de ortopedia, riñón y vías urinarias, digestivo y cáncer (29–39 h), frente a
   ~9–13 h en cardiovascular, neurológico y respiratorio (HALLAZGOS 4.5b; `docs/diagnosticos_y_tiempos.md`). Si se confirma que es una fila por tipo de cama o servicio, el protocolo de la tarde
   podría enfocarse en esos servicios. Hipótesis sin comprobar: la base no tiene servicio ni piso.
 - **Fuente:** `src/impacto_llegada_tarde.py` → `resultados/tablas/impacto_llegada_tarde.csv` (estancias únicas, feb-2023 a abr-2026).
 - **Evidencia externa:** no se encontró.
-- **Límite:** asociación por hora de llegada, no causa. La espera va de la llegada a la asignación de cama (así lo confirmó el HUN): mezcla atención clínica con espera de cama y no se pueden separar con los datos. **Cifra aproximada:** el valor con promedios aparecía como ~9 y ~11 en versiones anteriores; aquí se usa el de `docs/HALLAZGOS.md`. Cualquiera de los dos es cerca del 2 % del exceso, así que la conclusión no cambia.
+- **Límite:** asociación por hora de llegada, no causa. La espera va de la llegada a la asignación de cama (así lo confirmó el HUN): mezcla atención clínica con espera de cama y no se pueden separar con los datos. **Recalculado el 8-nov** con `src/impacto_llegada_tarde.py` (regla v3.8): ~49 h con medianas y 11,0 h con promedios; el valor con promedios aparecía como ~9 y ~11 en versiones anteriores. Es cerca del 2 % del exceso, así que la conclusión no cambia.
 
 ### R7. Revisar las estancias largas (prioridad 7)
 - **Qué hacer:** revisión semanal de pacientes con estancias de más de 7 días, con gestión de casos (una persona que coordina el plan y el alta de cada paciente), con foco en las de más de 14 días.
@@ -196,7 +196,7 @@ La sesión del 29-oct fue la última, así que estos puntos se declaran como lim
 
 **B2 completa, pendiente de la revisión de Daniela en el pull request (6-nov-2026).** Cada recomendación tiene fuente comprobada, o una razón escrita de por qué no la hay, y una cifra o una razón de por qué no se puede calcular.
 
-Valores aproximados, sin efecto en las conclusiones: la cifra baja de R6 y la precisión de la alerta de ocupación de R3. Se podrían afinar corriendo `src/impacto_llegada_tarde.py` y `src/alertas.py` con los datos.
+La cifra baja de R6 y la precisión de la alerta de ocupación de R3 se recalcularon el 8-nov con `src/impacto_llegada_tarde.py` y `src/alertas.py` (regla v3.8).
 
 Lo que puede cambiar estas recomendaciones más adelante:
 - **A4 y A5 (Anthony):** si el modelo explicativo o la simulación Monte Carlo cambian las cifras de R4 o R7, actualizar aquí y en `powerbi/recomendaciones_tabla.csv` (la usa la página 4.1 del dashboard).

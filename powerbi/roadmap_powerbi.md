@@ -157,7 +157,7 @@ Dependencias: las páginas 11 (perfiles y estancias) y las bandas Monte Carlo de
 | Altas entre 14:00 y 18:59 / antes del mediodía | 62,7 % / 14 % |
 | Escenario 30 % de altas adelantadas | 5,1 camas libres a las 12 h; espera evitada: máximo 8,3 %, estimación 2,9 % |
 | Llegadas: error del pronóstico a 1 día / 7 días | 7,5 % / 8,8 % |
-| Alerta de día congestionado a las 12 h | 28 alertas, 15 aciertos (precisión 54 %, detección 83 %) |
+| Alerta de día congestionado a las 12 h | 25 alertas, 13 aciertos (precisión 52 %, detección 87 %) |
 | Días atípicos (llegadas / ingresos / espera) | 14 / 9 / 7 |
 
 ---
