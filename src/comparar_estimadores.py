@@ -4,10 +4,10 @@ Tarea A6, tercera parte: tres maneras de estimar la espera de cama, comparadas e
 
 LOS TRES METODOS
   M1. TIEMPO RESTANTE (supervivencia por hora): para cada hora de espera se estima la probabilidad de recibir cama en la hora siguiente, segun cuanto lleva
-      esperando, la hora del reloj, el dia de la semana, la cola y la ocupacion de su zona en ese momento, la edad, el sexo y el tipo de visita (arboles de
-      gradiente). Multiplicando hora por hora sale la distribucion completa del tiempo que falta, y se puede recalcular en cualquier momento de la espera.
+      esperando, la hora del reloj, el dia de la semana, la ocupacion de su zona en ese momento, la edad, el sexo y el tipo de visita (arboles de
+      gradiente). La version con la cola se prueba aparte: no mejora y usa saber quien se hospitalizara, asi que la final va sin cola. Multiplicando hora por hora sale la distribucion completa del tiempo que falta, y se puede recalcular en cualquier momento de la espera.
   M2. AL LLEGAR CON MAS VARIABLES (regresion por cuantiles): un modelo por percentil (25, 50, 75, 90) con lo que se sabe al llegar mas el estado del
-      hospital en ese momento: hora, dia, mes, edad, sexo, tipo de visita, cola y ocupacion de su zona, llegadas de las 6 h previas.
+      hospital en ese momento: hora, dia, mes, edad, sexo, tipo de visita, ocupacion de su zona, llegadas de las 6 h previas (la cola, aparte).
   M3. COLA: las camas se asignan a la tasa historica de su zona en cada hora del dia y dia de la semana. Dos versiones:
       M3a orden aleatorio: cada hora, la probabilidad de recibir cama es camas asignadas / pacientes en cola;
       M3b en orden de llegada: recibe cama cuando se han asignado tantas camas como pacientes tenia delante (Poisson).
@@ -18,6 +18,7 @@ LA PRUEBA
   1. Al llegar: cada metodo da los percentiles 25, 50, 75 y 90. Se mide la perdida de cuantiles (menor es mejor), la mejora frente al rango general y si
      los percentiles aciertan (cuantos casos quedan por debajo de cada uno).
   2. Durante la espera (despues de 6, 12, 24 y 48 h sin cama): el tiempo que le falta a quien sigue esperando. M2 no aplica (solo estima al llegar).
+  3. Intervalos del 95 % por bootstrap por semanas (1.000 repeticiones) de la mejora de cada metodo y de su diferencia con M1.
 
 COLA Y OCUPACION
   Por hora y por zona (adultos de 15 anos o mas, ninos), con estancias unicas: ocupacion = pacientes en cama; cola = pacientes que ya llegaron, se
@@ -26,6 +27,7 @@ COLA Y OCUPACION
   Para estimar hacia adelante, la cola y la ocupacion se dejan fijas en el ultimo valor conocido (persistencia, que fue lo mejor para camas, CLAUDE.md 6b).
 
 ENTRADA  tabla_episodios.parquet en HUN_PROCESADOS ; SALIDAS en HUN_TABLAS: comparacion_estimadores_al_llegar.csv, comparacion_estimadores_en_espera.csv,
+         comparacion_estimadores_ic.csv,
          m1_probabilidad_por_hora_reloj.csv ; resultados/graficos/comparacion_estimadores.png
 COMO CORRERLO  HUN_PROCESADOS=... HUN_TABLAS=... python3 src/comparar_estimadores.py   (unos minutos)
 """
@@ -53,6 +55,7 @@ Q = et.CUANTILES
 MAX_H = 240                                   # horizonte de la supervivencia (10 dias); mas alla se toma como 240 h
 CONTROLES = [6, 12, 24, 48]                   # horas de espera en que se vuelve a estimar
 SEMILLA = 7
+N_BOOT = 1000
 # Ago-sep 2025: sobredemanda porque hospitales cercanos fueron intervenidos por el Estado y el HUN quedo como la unica opcion de la zona (dato del
 # equipo, 7-nov). En los datos se ve poco: +6-7 % de llegadas frente a ago-sep 2024 y ingresos y espera mediana normales. Se evaluan aparte.
 MESES_SOBREDEMANDA = ["2025-08", "2025-09"]
@@ -104,6 +107,23 @@ def perdida(y, pred):
     return np.nanmean(np.maximum(np.array(Q) * e, (np.array(Q) - 1) * e), axis=0).sum()
 
 
+def perdida_por_caso(y, pred):
+    """Perdida de cuantiles de cada caso (suma de los 4 percentiles); su promedio es perdida(y, pred)."""
+    e = y[:, None] - pred
+    return np.maximum(np.array(Q) * e, (np.array(Q) - 1) * e).sum(axis=1)
+
+
+def intervalo_mejora(semana, l_metodo, l_ref, n_rep=N_BOOT):
+    """Bootstrap por semanas (los pacientes de una misma semana se parecen): intervalo del 95 % de 1 - perdida(metodo) / perdida(referencia)."""
+    rng = np.random.default_rng(SEMILLA)
+    semanas = np.unique(semana)
+    pos = {s: np.flatnonzero(semana == s) for s in semanas}
+    sm = np.array([l_metodo[pos[s]].sum() for s in semanas]); sr = np.array([l_ref[pos[s]].sum() for s in semanas])
+    elige = rng.integers(0, len(semanas), size=(n_rep, len(semanas)))
+    mejora = 100 * (1 - sm[elige].sum(axis=1) / sr[elige].sum(axis=1))
+    return np.percentile(mejora, [2.5, 97.5])
+
+
 def cuantiles_de_supervivencia(S):
     """S: matriz n x (H+1) con S[:, k] = P(T > k horas). Devuelve n x 4 percentiles en horas (interpolados)."""
     F = 1 - S
@@ -124,6 +144,7 @@ def cuantiles_de_supervivencia(S):
 DINAMICAS = ["transcurrido", "hora_reloj", "dia_semana", "cola", "ocup"]
 COLS_M1 = DINAMICAS + ["edad_cod", "tipo_cod", "sexo_cod", "zona_cod"]
 CATEGORICAS = ["hora_reloj", "dia_semana", "tipo_cod", "dx_cod"]
+COLS_M1_FINAL = [c for c in COLS_M1 if c != "cola"]   # la cola no mejora la estimacion (comparacion_estimadores_ic.csv) y no se conoce del todo en el momento
 
 
 def filas_persona_hora(d, rejilla, estado, desde=0, fijar_estado=False, cols=COLS_M1):
@@ -176,8 +197,8 @@ def matriz_m2(d, rejilla, estado):
     return d.assign(cola0=cola0, ocup0=ocup0, mes=d.ini_est.dt.month, dia_semana_num=d.ini_est.dt.dayofweek)[COLS_M2]
 
 
-def m2(tr, te, rejilla, estado):
-    Xtr, Xte = matriz_m2(tr, rejilla, estado), matriz_m2(te, rejilla, estado)
+def m2(tr, te, rejilla, estado, cols=COLS_M2):
+    Xtr, Xte = matriz_m2(tr, rejilla, estado)[cols], matriz_m2(te, rejilla, estado)[cols]
     ytr = np.log1p(tr.espera_cama_h.to_numpy())
     pred = np.column_stack([np.expm1(HistGradientBoostingRegressor(loss="quantile", quantile=q, max_iter=300, learning_rate=0.05,
                                                                    max_leaf_nodes=31, min_samples_leaf=100, random_state=SEMILLA).fit(Xtr, ytr).predict(Xte))
@@ -244,8 +265,10 @@ if __name__ == "__main__":
     d, h, rejilla, estado = preparar()
     tr, te = d[d.ini_est < CORTE].reset_index(drop=True), d[d.ini_est >= CORTE].reset_index(drop=True)
     print(f"entrenamiento {len(tr):,} estancias | prueba {len(te):,}")
-    m1 = entrenar_m1(tr, rejilla, estado)
+    m1 = entrenar_m1(tr, rejilla, estado, COLS_M1_FINAL)                 # version final: sin la cola (que usa saber quien se hospitalizara)
+    m1_con_cola = entrenar_m1(tr, rejilla, estado)
     tasa = tasas_asignacion(h)
+    ic = []
 
     filas = []
     for desde in [0] + CONTROLES:
@@ -253,18 +276,34 @@ if __name__ == "__main__":
         y = np.minimum(sub.espera_cama_h.to_numpy() - desde, MAX_H)
         general, perfil = referencias(tr, sub, desde)
         base = perdida(y, general)
-        preds = {"rango general (referencia)": general, "tabla de perfiles (A6 actual)": perfil,
+        preds = {"rango general (referencia)": general, "tabla de perfiles": perfil,
                  "M1 tiempo restante": predecir_m1(m1, sub, rejilla, estado, desde),
+                 "M1 con cola (prueba)": predecir_m1(m1_con_cola, sub, rejilla, estado, desde),
                  "M3a cola, orden aleatorio": m3(sub, rejilla, estado, tasa, desde),
                  "M3b cola, orden de llegada": m3(sub, rejilla, estado, tasa, desde, fifo=True)}
         if desde == 0:
-            preds["M2 al llegar con mas variables"] = m2(tr, sub, rejilla, estado)
+            preds["M2 al llegar con mas variables"] = m2(tr, sub, rejilla, estado, [c for c in COLS_M2 if c != "cola0"])
+            preds["M2 con cola (prueba)"] = m2(tr, sub, rejilla, estado)
+        semana = sub.ini_est.dt.to_period("W").astype(str).to_numpy()
+        l_gen = perdida_por_caso(y, general)
+        for nombre, pred in preds.items():
+            lo, hi = intervalo_mejora(semana, perdida_por_caso(y, pred), l_gen)
+            fila = {"horas_esperando": desde, "metodo": nombre, "mejora_vs_general_pct": round(100 * (1 - perdida_por_caso(y, pred).mean() / l_gen.mean()), 1),
+                    "ic95_bajo": round(lo, 1), "ic95_alto": round(hi, 1)}
+            if nombre != "M1 tiempo restante":                       # diferencia frente a M1: positiva = M1 mejor
+                d_lo, d_hi = intervalo_mejora(semana, perdida_por_caso(y, preds["M1 tiempo restante"]), perdida_por_caso(y, pred))
+                fila.update(m1_mejor_por_pct_ic95_bajo=round(d_lo, 1), m1_mejor_por_pct_ic95_alto=round(d_hi, 1))
+            ic.append(fila)
         sobre = sub.ini_est.dt.to_period("M").astype(str).isin(MESES_SOBREDEMANDA).to_numpy()
         for periodo, m in [("toda la prueba", np.ones(len(sub), bool)), ("sin ago-sep 2025", ~sobre), ("solo ago-sep 2025", sobre)]:
             base_p = perdida(y[m], general[m])
             for nombre, pred in preds.items():
                 filas.append({"periodo": periodo, **puntuar(nombre, y[m], pred[m], base_p, desde)})
         print(f"listo: {desde} h esperando ({len(sub):,} casos)")
+    ic = pd.DataFrame(ic)
+    ic.to_csv(TABLAS / "comparacion_estimadores_ic.csv", index=False)
+    print("\nINTERVALOS DEL 95 % (bootstrap por semanas) y diferencia frente a M1 (positiva = M1 mejor)")
+    print(ic.to_string(index=False))
     todo = pd.DataFrame(filas)
     todo[todo.horas_esperando == 0].to_csv(TABLAS / "comparacion_estimadores_al_llegar.csv", index=False)
     todo.to_csv(TABLAS / "comparacion_estimadores_en_espera.csv", index=False)
@@ -278,28 +317,29 @@ if __name__ == "__main__":
     # Lectura de M1: probabilidad media de recibir cama en la hora siguiente segun la hora del reloj (con todo lo demas como en la prueba)
     X, _, _ = filas_persona_hora(te.sample(min(1500, len(te)), random_state=SEMILLA).reset_index(drop=True), rejilla, estado)
     X = X[X.transcurrido < 72]
-    reloj = pd.DataFrame({"hora_reloj": range(24), "prob_cama_siguiente_hora": [m1.predict_proba(X.assign(hora_reloj=hh)[COLS_M1])[:, 1].mean() for hh in range(24)]})
+    reloj = pd.DataFrame({"hora_reloj": range(24), "prob_cama_siguiente_hora": [m1.predict_proba(X.assign(hora_reloj=hh)[m1.cols_])[:, 1].mean() for hh in range(24)]})
     reloj.round(4).to_csv(TABLAS / "m1_probabilidad_por_hora_reloj.csv", index=False)
     print("\nM1: probabilidad media de recibir cama en la hora siguiente, por hora del reloj\n" + reloj.round(3).T.to_string())
 
     fig, (a1, a2) = plt.subplots(1, 2, figsize=(13, 4.6))
-    orden = ["rango general (referencia)", "tabla de perfiles (A6 actual)", "M2 al llegar con mas variables", "M1 tiempo restante",
+    orden = ["rango general (referencia)", "tabla de perfiles", "M2 al llegar con mas variables", "M1 tiempo restante",
              "M3a cola, orden aleatorio", "M3b cola, orden de llegada"]
-    colores = {"rango general (referencia)": "#c9c8c3", "tabla de perfiles (A6 actual)": "#8a8984", "M2 al llegar con mas variables": "#1baf7a",
+    colores = {"rango general (referencia)": "#c9c8c3", "tabla de perfiles": "#8a8984", "M2 al llegar con mas variables": "#1baf7a",
                "M1 tiempo restante": "#2a78d6", "M3a cola, orden aleatorio": "#eb6834", "M3b cola, orden de llegada": "#f2a37f"}
     for nombre in orden:
-        g = res[res.metodo == nombre]
+        g = ic[ic.metodo == nombre]
         a1.plot(g.horas_esperando, g.mejora_vs_general_pct, marker="o", color=colores[nombre], label=nombre)
+        a1.fill_between(g.horas_esperando, g.ic95_bajo, g.ic95_alto, color=colores[nombre], alpha=0.15, lw=0)
     a1.axhline(0, color="#52514e", lw=0.8)
     a1.set_xlabel("horas que el paciente ya lleva esperando")
     a1.set_ylabel("mejora frente al rango general (%)")
-    a1.set_title("¿Qué método estima mejor el tiempo que falta?")
+    a1.set_title("¿Qué método estima mejor el tiempo que falta? (banda: IC 95 %)")
     a1.legend(frameon=False, fontsize=8)
     a1.grid(axis="y", color="#e5e4df")
     a2.bar(reloj.hora_reloj, 100 * reloj.prob_cama_siguiente_hora, color="#2a78d6")
     a2.set_xlabel("hora del reloj")
     a2.set_ylabel("% que recibe cama en la hora siguiente")
-    a2.set_title("M1: la hora del día manda (paciente que sigue esperando)")
+    a2.set_title("Tiempo restante: la hora del reloj manda (paciente que sigue esperando)")
     a2.grid(axis="y", color="#e5e4df")
     fig.text(0.01, 0.01, "Prueba con jul-2025 a 9-abr-2026 (entrenamiento feb-2023 a jun-2025). Fuente: src/comparar_estimadores.py", fontsize=8, color="#52514e")
     fig.tight_layout(rect=(0, 0.04, 1, 1))

@@ -25,17 +25,17 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import comparar_estimadores as ce  # noqa: E402
 
 VARIANTES = {
-    "M1 sin gravedad": ce.COLS_M1,
-    "M1 + laboratorios de 6 h": ce.COLS_M1 + ["n_lab_6h"],
-    "M1 + grupo de diagnostico (escenario)": ce.COLS_M1 + ["dx_cod"],
-    "M1 + ambos (escenario)": ce.COLS_M1 + ["n_lab_6h", "dx_cod"],
+    "M1 sin gravedad": ce.COLS_M1_FINAL,
+    "M1 + laboratorios de 6 h": ce.COLS_M1_FINAL + ["n_lab_6h"],
+    "M1 + grupo de diagnostico (escenario)": ce.COLS_M1_FINAL + ["dx_cod"],
+    "M1 + ambos (escenario)": ce.COLS_M1_FINAL + ["n_lab_6h", "dx_cod"],
 }
 
 if __name__ == "__main__":
     pd.set_option("display.width", 220)
     d, h, rejilla, estado = ce.preparar()
     grupos = sorted(d.categoria_dx.dropna().unique())
-    d["dx_cod"] = d.categoria_dx.map({g: i for i, g in enumerate(grupos)})          # sin diagnostico = vacio (el modelo lo trata aparte)
+    d["dx_cod"] = d.categoria_dx.map({g: i for i, g in enumerate(grupos)})          # "Sin diagnostico" es una categoria mas (35 % de las estancias)
     d["n_lab_6h"] = d.n_lab_6h.fillna(0)
     tr, te = d[d.ini_est < ce.CORTE].reset_index(drop=True), d[d.ini_est >= ce.CORTE].reset_index(drop=True)
     print(f"con grupo de diagnostico: {d.dx_cod.notna().mean():.0%} de las estancias | con algun laboratorio en 6 h: {(d.n_lab_6h > 0).mean():.0%}")

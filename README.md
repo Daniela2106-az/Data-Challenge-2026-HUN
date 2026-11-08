@@ -62,7 +62,7 @@ preguntas que puedes hacerle:
 | Recomendaciones (componente 4) | Borrador; Samuel verifica las fuentes |
 | Dashboard de Power BI | Pendiente (Samuel; va de último, guía en `powerbi/`) |
 | `mapeo_dx.csv` (grupos de diagnóstico) | Pendiente (Daniela) |
-| Estimar tiempos de atención (componente 3) | **Hecho** (`docs/estimador_tiempos.md`; en revisión de Daniela) |
+| Estimar tiempos de atención (componente 3) | **Hecho**: modelo de tiempo restante (`docs/estimador_tiempos.md`; en revisión de Daniela) |
 | Sesión de preguntas con el HUN | Preguntas listas (`docs/hun/`); falta la sesión |
 | Documento final y presentación | Pendiente (fin de noviembre de 2026) |
 

@@ -209,6 +209,14 @@ de las llegadas pronosticadas; factores externos (clima, dengue, eventos).
 
 ---
 
+### 5.4 Estimación de la espera de cada paciente (A6, `docs/estimador_tiempos.md`)
+- **Estimador elegido: modelo de tiempo restante** (supervivencia por hora; `src/estimador_tiempo_restante.py`). Da el rango de lo que le falta a un paciente que espera cama y la probabilidad de recibirla en 6, 12 y 24 h, recalculable durante la espera y solo con datos conocidos en el momento.
+- **Prueba** (entrenamiento feb-2023 a jun-2025, prueba jul-2025 a 9-abr-2026, 5.430 estancias): mejora 6,6 % (IC 95 % 5,5 a 7,5) frente a dar el mismo rango a todos; los percentiles aciertan (26,8 / 52,9 / 76,0 / 89,2 % debajo de p25 / p50 / p75 / p90). Le gana a la tabla de perfiles en todos los momentos y empata con un modelo de cuantiles al llegar; el modelo de cola no funciona (en orden de llegada, −17,9 %). Agosto y septiembre de 2025 (sobredemanda por la intervención de hospitales cercanos, dato del equipo) dan el mismo resultado.
+- **Límite principal:** ningún método mejora más de ~7 %; la espera depende de lo que la base no registra. Con una aproximación a la gravedad al llegar (grupo de diagnóstico, como escenario) la mejora sube a 12,3 %: **registrar el triage** es la mejora de datos que más ayudaría.
+- **La hora del reloj manda:** el 24 % de las camas se asigna entre las 15 y las 17 h y el 37 % entre las 20 y las 23 h; entre las 6 y las 12 h casi nadie recibe cama.
+
+---
+
 ## 6. Componente 4: recomendaciones (`docs/recomendaciones.md`, borrador)
 1. Registrar mejor: hora de salida de urgencias, asignación de cama y sin duplicados (habilita medir todo lo demás).
 2. Seguimiento mensual de 6 indicadores (espera p50/p90 de 18/73,9 h, % con más de 48 h sin cama 19 %, % de altas antes del mediodía 15 %, hora de
@@ -260,6 +268,8 @@ otro hospital no halló efecto); las fuentes se leyeron solo en resumen y hay qu
 | `src/analisis_etapas.py` (v3.7) | Limpia etapas y copias, arma episodios, marca estancias gemelas, espera de cama | `episodios.csv`, `bloques.csv`, `espera_cama.csv` |
 | `src/generar_borrador_mapeo_dx.py` → `src/diagnosticos_y_tiempos.py` | Agrupa diagnósticos y compara tiempos por grupo | `datos/referencia/mapeo_dx.csv`, `tiempos_por_dx.csv`, `efecto_dx_espera.csv` |
 | `src/preparar_variables.py` (v2.1) | Agrega calendario, paciente, diagnóstico, ocupación, series | `tabla_episodios.parquet`, `serie_horaria.csv`, `serie_diaria.csv` |
+| `src/comparar_estimadores.py` → `src/estimador_tiempo_restante.py` | A6: compara cinco formas de estimar la espera y deja la función de consulta del modelo elegido | `comparacion_estimadores_ic.csv`, `comparacion_estimadores.png` |
+| `src/estimador_tiempos.py`, `src/espera_dos_series.py`, `src/triage_aproximado.py` | A6: tabla de perfiles, espera en dos series y escenario de gravedad | `estimador_tiempos.csv`, `espera_dos_series_*.csv`, `triage_aproximado.csv` |
 | `src/exportar_para_equipo.py` (v2) | Tablas para el equipo y Power BI | `estancias_hospitalizacion.csv`, `panel_diario.csv` |
 | `src/generar_q3_q4_desde_csv.py` | Reproduce Q3 y Q4 sobre los CSV con DuckDB | `q3_episodios.csv`, `q4_ocupacion_por_hora.csv` |
 | `src/construir_segmentos.py` | Segmentos, inventario, sesgo de medición | `segmentos.csv` |
