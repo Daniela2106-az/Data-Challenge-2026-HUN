@@ -209,6 +209,7 @@ de las llegadas pronosticadas; factores externos (clima, dengue, eventos).
 
 ---
 
+<<<<<<< HEAD
 ### 5.4 Estimación de la espera de cada paciente (A6, `docs/estimador_tiempos.md`)
 - **La espera es individual:** los pacientes que llegan el mismo día no esperan parecido (el día explica un 0,1 % más allá del azar). La ocupación y la cola casi no ayudan.
 - **Estimador: modelo de tiempo restante** (`src/estimador_tiempo_restante.py`). Da el rango de lo que le falta a un paciente que espera cama y la probabilidad de recibirla en 6, 12 y 24 h. Usa el paciente, la hora del reloj, la ocupación, su historial (la espera se repite: Spearman 0,34 con la hospitalización anterior) y su recorrido en urgencias, con un modelo por momento de la espera.
@@ -220,17 +221,20 @@ de las llegadas pronosticadas; factores externos (clima, dengue, eventos).
 ---
 
 ## 6. Componente 4: recomendaciones (`docs/recomendaciones.md`, borrador)
+=======
+## 6. Componente 4: recomendaciones (`docs/recomendaciones.md`, en revisión)
+>>>>>>> origin/samuel/b2-integrada
 1. Registrar mejor: hora de salida de urgencias, asignación de cama y sin duplicados (habilita medir todo lo demás).
-2. Seguimiento mensual de 6 indicadores (espera p50/p90 de 18/73,9 h, % con más de 48 h sin cama 19 %, % de altas antes del mediodía 15 %, hora de
+2. Seguimiento mensual de 6 indicadores (espera p50/p90 de 18,6/73,9 h, % con más de 48 h sin cama 19 %, % de altas antes del mediodía 14 %, hora de
    asignación de cama 17–18 h, camas ocupadas a las 12 h ~103, estancia media 5,31 días).
 3. Reunión diaria de camas a media mañana apoyada en las alertas.
 4. Meta de altas antes del mediodía (empezar con 25–30 %): hasta 5,1 camas libres, como máximo 8 % del exceso de espera.
 5. Alerta por paciente a las 48 h sin cama, con un responsable (~4 por día).
 6. Protocolo para quien llega entre las 13 y las 18 h y se hospitaliza (entre ~11 y ~49 horas-paciente por día, ver `src/impacto_llegada_tarde.py`; confianza baja).
 7. Revisión semanal de estancias largas (−5 % de estancia ≈ 5 camas).
-**Los datos no respaldan:** "hacen falta más camas" (la ocupación ya supera las 106 camas reportadas el 42 % de las horas de 2025, pero no se sabe si es sobreocupación o mayor capacidad real), más personal según el día de la semana, ni priorizar pacientes
-concretos por riesgo de esperar. La literatura externa sobre altas antes del mediodía es **mixta** (un programa reportó 0,30 días menos de estancia;
-otro hospital no halló efecto); las fuentes se leyeron solo en resumen y hay que verificarlas.
+**Los datos no respaldan:** más personal según el día de la semana, ni priorizar pacientes
+concretos por riesgo de esperar. Tampoco permiten calcular cuántas camas harían falta: la ocupación supera las 106 camas reportadas el 42 % de las horas de 2025, pero no se sabe si es sobreocupación o mayor capacidad real. La literatura externa sobre altas antes del mediodía es **mixta** (un programa reportó 0,30 días menos de estancia;
+otro hospital no halló efecto). Las 12 fuentes se comprobaron el 6-nov, 4 de ellas con un resumen (nivel de verificación de cada una en `docs/recomendaciones.md`, sección 6).
 
 ---
 
