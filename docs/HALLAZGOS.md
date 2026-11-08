@@ -210,9 +210,10 @@ de las llegadas pronosticadas; factores externos (clima, dengue, eventos).
 ---
 
 ### 5.4 Estimación de la espera de cada paciente (A6, `docs/estimador_tiempos.md`)
-- **Estimador elegido: modelo de tiempo restante** (supervivencia por hora; `src/estimador_tiempo_restante.py`). Da el rango de lo que le falta a un paciente que espera cama y la probabilidad de recibirla en 6, 12 y 24 h, recalculable durante la espera y solo con datos conocidos en el momento.
-- **Prueba** (entrenamiento feb-2023 a jun-2025, prueba jul-2025 a 9-abr-2026, 5.430 estancias): mejora 6,6 % (IC 95 % 5,5 a 7,5) frente a dar el mismo rango a todos; los percentiles aciertan (26,8 / 52,9 / 76,0 / 89,2 % debajo de p25 / p50 / p75 / p90). Le gana a la tabla de perfiles en todos los momentos y empata con un modelo de cuantiles al llegar; el modelo de cola no funciona (en orden de llegada, −17,9 %). Agosto y septiembre de 2025 (sobredemanda por la intervención de hospitales cercanos, dato del equipo) dan el mismo resultado.
-- **Límite principal:** ningún método mejora más de ~7 %; la espera depende de lo que la base no registra. Con una aproximación a la gravedad al llegar (grupo de diagnóstico, como escenario) la mejora sube a 12,3 %: **registrar el triage** es la mejora de datos que más ayudaría.
+- **La espera es individual:** los pacientes que llegan el mismo día no esperan parecido (el día explica un 0,1 % más allá del azar). La ocupación y la cola casi no ayudan.
+- **Estimador: modelo de tiempo restante** (`src/estimador_tiempo_restante.py`). Da el rango de lo que le falta a un paciente que espera cama y la probabilidad de recibirla en 6, 12 y 24 h. Usa el paciente, la hora del reloj, la ocupación, su historial (la espera se repite: Spearman 0,34 con la hospitalización anterior) y su recorrido en urgencias, con un modelo por momento de la espera.
+- **Prueba** (entrenamiento feb-2023 a jun-2025, prueba jul-2025 a 9-abr-2026, 5.430 estancias): mejora 7,6 % al llegar (IC 95 % 6,7 a 8,5) y 9,2–9,5 % a las 3–6 h frente a dar el mismo rango a todos; los percentiles aciertan (26,3 / 51,4 / 73,8 / 87,7 % debajo de p25 / p50 / p75 / p90). Le gana con margen comprobado a la tabla de perfiles, a un modelo de cuantiles y a dos modelos de cola. Agosto y septiembre de 2025 (sobredemanda, dato del equipo) dan el mismo resultado.
+- **Límite:** el error de la mediana sigue en ~24 h. Con una aproximación a la gravedad al llegar (grupo de diagnóstico, como escenario) la mejora llega a 12,7 %: **registrar el triage** es la mejora de datos que más ayudaría.
 - **La hora del reloj manda:** el 24 % de las camas se asigna entre las 15 y las 17 h y el 37 % entre las 20 y las 23 h; entre las 6 y las 12 h casi nadie recibe cama.
 
 ---
@@ -268,7 +269,7 @@ otro hospital no halló efecto); las fuentes se leyeron solo en resumen y hay qu
 | `src/analisis_etapas.py` (v3.7) | Limpia etapas y copias, arma episodios, marca estancias gemelas, espera de cama | `episodios.csv`, `bloques.csv`, `espera_cama.csv` |
 | `src/generar_borrador_mapeo_dx.py` → `src/diagnosticos_y_tiempos.py` | Agrupa diagnósticos y compara tiempos por grupo | `datos/referencia/mapeo_dx.csv`, `tiempos_por_dx.csv`, `efecto_dx_espera.csv` |
 | `src/preparar_variables.py` (v2.1) | Agrega calendario, paciente, diagnóstico, ocupación, series | `tabla_episodios.parquet`, `serie_horaria.csv`, `serie_diaria.csv` |
-| `src/comparar_estimadores.py` → `src/estimador_tiempo_restante.py` | A6: compara cinco formas de estimar la espera y deja la función de consulta del modelo elegido | `comparacion_estimadores_ic.csv`, `comparacion_estimadores.png` |
+| `src/comparar_estimadores.py` → `src/estimador_tiempo_restante.py` | A6: construye y prueba el estimador de la espera (historial, recorrido, un modelo por momento) contra las alternativas, y deja la función de consulta | `comparacion_estimadores_ic.csv`, `comparacion_estimadores.png` |
 | `src/estimador_tiempos.py`, `src/espera_dos_series.py`, `src/triage_aproximado.py` | A6: tabla de perfiles, espera en dos series y escenario de gravedad | `estimador_tiempos.csv`, `espera_dos_series_*.csv`, `triage_aproximado.csv` |
 | `src/exportar_para_equipo.py` (v2) | Tablas para el equipo y Power BI | `estancias_hospitalizacion.csv`, `panel_diario.csv` |
 | `src/generar_q3_q4_desde_csv.py` | Reproduce Q3 y Q4 sobre los CSV con DuckDB | `q3_episodios.csv`, `q4_ocupacion_por_hora.csv` |

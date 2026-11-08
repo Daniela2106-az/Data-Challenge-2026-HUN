@@ -1,11 +1,14 @@
 """
-comparar_estimadores.py  -  version 1 (7-nov-2026)
-Tarea A6, tercera parte: tres maneras de estimar la espera de cama, comparadas en la misma prueba.
+comparar_estimadores.py  -  version 2 (7-nov-2026)
+Tarea A6: maneras de estimar la espera de cama, comparadas en la misma prueba. Define tambien el modelo final (M1), que usa
+estimador_tiempo_restante.py.
+(v2: M1 suma el HISTORIAL del paciente y su RECORRIDO en urgencias, con un modelo por momento de la espera ("landmark"); ver abajo.)
 
 LOS TRES METODOS
   M1. TIEMPO RESTANTE (supervivencia por hora): para cada hora de espera se estima la probabilidad de recibir cama en la hora siguiente, segun cuanto lleva
       esperando, la hora del reloj, el dia de la semana, la ocupacion de su zona en ese momento, la edad, el sexo y el tipo de visita (arboles de
-      gradiente). La version con la cola se prueba aparte: no mejora y usa saber quien se hospitalizara, asi que la final va sin cola. Multiplicando hora por hora sale la distribucion completa del tiempo que falta, y se puede recalcular en cualquier momento de la espera.
+      gradiente), mas su historial y su recorrido en urgencias. La version con la cola se prueba aparte: no mejora y usa saber quien se hospitalizara,
+      asi que la final va sin cola. Multiplicando hora por hora sale la distribucion completa del tiempo que falta, y se puede recalcular en cualquier momento de la espera.
   M2. AL LLEGAR CON MAS VARIABLES (regresion por cuantiles): un modelo por percentil (25, 50, 75, 90) con lo que se sabe al llegar mas el estado del
       hospital en ese momento: hora, dia, mes, edad, sexo, tipo de visita, ocupacion de su zona, llegadas de las 6 h previas (la cola, aparte).
   M3. COLA: las camas se asignan a la tasa historica de su zona en cada hora del dia y dia de la semana. Dos versiones:
@@ -20,13 +23,25 @@ LA PRUEBA
   2. Durante la espera (despues de 6, 12, 24 y 48 h sin cama): el tiempo que le falta a quien sigue esperando. M2 no aplica (solo estima al llegar).
   3. Intervalos del 95 % por bootstrap por semanas (1.000 repeticiones) de la mejora de cada metodo y de su diferencia con M1.
 
+HISTORIAL Y RECORRIDO (se conocen en el momento, sin trampa)
+  Historial: de la ultima hospitalizacion de la misma persona terminada antes de llegar: su espera, su estancia, cuantos dias hace; cuantas hospitalizaciones
+  previas tiene; y el grupo del ultimo diagnostico registrado en una visita anterior. La espera se repite (Spearman 0,34 con la anterior).
+  Recorrido: registros de urgencias de la propia visita (visit_detail, etapas 9203 y 3045729) iniciados antes de cada hora: cuantas etapas de atencion
+  empezaron, cuantas se sabe que cerraron y sus horas, cuantas siguen sin cierre, horas desde la ultima que empezo y cuantas admisiones. Solo cuenta un
+  cierre si ocurrio antes de esa hora. Supuesto: el sistema registra cada etapa cuando empieza (no se pudo comprobar).
+  Un modelo por momento ("landmark": al llegar, 3, 6, 12 h...): cada uno se entrena con quienes seguian esperando en ese momento y con el recorrido tal
+  como se conocia entonces, y estima desde ahi. Un solo modelo con el recorrido hora por hora falla al estimar hacia adelante (al llegar, el recorrido
+  queda congelado en cero etapas, algo que en los datos casi no ocurre despues de la primera hora).
+  ESTIMADOR FINAL: con menos de HORAS_RECORRIDO horas de espera, el modelo del momento (historial + recorrido); desde ahi, un solo modelo con el historial
+  (el recorrido ya no suma: 6,8 frente a 6,6 % a las 12 h, 4,7 frente a 5,3 % a las 24 h). OJO: el corte de 12 h se eligio mirando la prueba.
+
 COLA Y OCUPACION
   Por hora y por zona (adultos de 15 anos o mas, ninos), con estancias unicas: ocupacion = pacientes en cama; cola = pacientes que ya llegaron, se
   hospitalizaran y aun no tienen cama. OJO: la cola usa saber quien se hospitalizara despues; en el hospital equivale a los pacientes con orden de
   hospitalizacion pendiente, que si se conocen en el momento, pero aqui incluye tambien la atencion clinica previa a esa orden.
   Para estimar hacia adelante, la cola y la ocupacion se dejan fijas en el ultimo valor conocido (persistencia, que fue lo mejor para camas, CLAUDE.md 6b).
 
-ENTRADA  tabla_episodios.parquet en HUN_PROCESADOS ; SALIDAS en HUN_TABLAS: comparacion_estimadores_al_llegar.csv, comparacion_estimadores_en_espera.csv,
+ENTRADA  tabla_episodios.parquet en HUN_PROCESADOS y visit_detail.csv en HUN_CRUDOS (por defecto datos/crudos) ; SALIDAS en HUN_TABLAS: comparacion_estimadores_al_llegar.csv, comparacion_estimadores_en_espera.csv,
          comparacion_estimadores_ic.csv,
          m1_probabilidad_por_hora_reloj.csv ; resultados/graficos/comparacion_estimadores.png
 COMO CORRERLO  HUN_PROCESADOS=... HUN_TABLAS=... python3 src/comparar_estimadores.py   (unos minutos)
@@ -49,11 +64,13 @@ import estimador_tiempos as et  # noqa: E402
 
 PROC = Path(os.environ.get("HUN_PROCESADOS", RAIZ / "datos" / "procesados"))
 TABLAS = Path(os.environ.get("HUN_TABLAS", RAIZ / "resultados" / "tablas"))
+CRUDOS = Path(os.environ.get("HUN_CRUDOS", RAIZ / "datos" / "crudos"))
 GRAF = RAIZ / "resultados" / "graficos"
 DESDE, HASTA, CORTE = et.DESDE, et.HASTA, et.CORTE
 Q = et.CUANTILES
 MAX_H = 240                                   # horizonte de la supervivencia (10 dias); mas alla se toma como 240 h
-CONTROLES = [6, 12, 24, 48]                   # horas de espera en que se vuelve a estimar
+CONTROLES = [3, 6, 12, 24, 48]
+HORAS_RECORRIDO = 12                          # desde aqui el estimador final usa solo el historial                   # horas de espera en que se vuelve a estimar
 SEMILLA = 7
 N_BOOT = 1000
 # Ago-sep 2025: sobredemanda porque hospitales cercanos fueron intervenidos por el Estado y el HUN quedo como la unica opcion de la zona (dato del
@@ -85,7 +102,92 @@ def preparar():
     d["zona_cod"] = (d.zona == "ninos").astype(int)
     d["llegadas_6h"] = d.get("llegadas_6h_previas", pd.Series(np.nan, index=d.index))
     d = d.reset_index(drop=True)
+    d["clave"] = np.arange(len(d))
+    d = historial(t, d)
+    cargar_etapas(d)
     return d, h, rejilla, estado
+
+
+GRUPOS_DX = None
+
+
+def historial(t, d):
+    """Datos de visitas anteriores de la misma persona, todos conocidos al llegar."""
+    global GRUPOS_DX
+    ep = t[["person_id", "ini", "hospitalizado", "estancia_unica", "espera_cama_h", "categoria_dx", "ini_hosp_est", "fin_hosp_est"]]
+    hs = ep[ep.hospitalizado & ep.estancia_unica & ep.fin_hosp_est.notna()]
+    hp = hs.assign(estancia_prev_h=(hs.fin_hosp_est - hs.ini_hosp_est).dt.total_seconds() / 3600)[["person_id", "fin_hosp_est", "espera_cama_h", "estancia_prev_h"]]
+    hp = hp.rename(columns={"fin_hosp_est": "t_hosp", "espera_cama_h": "espera_prev_h"}).sort_values("t_hosp")
+    dxp = ep[ep.categoria_dx.notna() & (ep.categoria_dx != "Sin diagnostico")][["person_id", "ini", "categoria_dx"]].rename(columns={"ini": "t_dx", "categoria_dx": "dx_previo"})
+    q = d[["clave", "person_id", "ini_est"]].sort_values("ini_est")
+    q = pd.merge_asof(q, hp, left_on="ini_est", right_on="t_hosp", by="person_id", allow_exact_matches=False)
+    q = pd.merge_asof(q.sort_values("ini_est"), dxp.sort_values("t_dx"), left_on="ini_est", right_on="t_dx", by="person_id", allow_exact_matches=False)
+    fines = hs.groupby("person_id").fin_hosp_est.apply(lambda s: np.sort(s.to_numpy()))
+    vacio = np.array([], dtype="datetime64[ns]")
+    q["n_hosp_previas"] = [int(np.searchsorted(fines.get(p, vacio), np.datetime64(x))) for p, x in zip(q.person_id, q.ini_est)]
+    q["dias_desde_hosp"] = (q.ini_est - q.t_hosp).dt.total_seconds() / 86400
+    GRUPOS_DX = sorted(ep.categoria_dx.dropna().unique())
+    q["dx_previo_cod"] = q.dx_previo.map({g: i for i, g in enumerate(GRUPOS_DX)})
+    return d.merge(q[["clave"] + HIST], on="clave", how="left")
+
+
+ETAPAS = {}
+
+
+def cargar_etapas(d):
+    """Etapas de urgencias de cada estancia, en horas desde la llegada: inicios y fines de atencion (fin = nan si no tiene cierre) y admisiones."""
+    ruta = CRUDOS / "visit_detail.csv"
+    if not ruta.exists():
+        raise FileNotFoundError(f"Falta {ruta}: el recorrido en urgencias sale de visit_detail.csv (indicar la carpeta con HUN_CRUDOS)")
+    vd = pd.read_csv(ruta, usecols=["visit_occurrence_id", "visit_detail_concept_id", "visit_detail_start_datetime", "visit_detail_end_datetime"],
+                     parse_dates=["visit_detail_start_datetime", "visit_detail_end_datetime"])
+    vd = vd[vd.visit_detail_concept_id.isin([9203, 3045729]) & vd.visit_occurrence_id.isin(d.visit_occurrence_id)]
+    vd = vd.merge(d[["visit_occurrence_id", "clave", "ini_est", "ini_hosp_est"]], on="visit_occurrence_id")
+    vd = vd[(vd.visit_detail_start_datetime >= vd.ini_est) & (vd.visit_detail_start_datetime < vd.ini_hosp_est)]
+    s = (vd.visit_detail_start_datetime - vd.ini_est).dt.total_seconds() / 3600
+    e = ((vd.visit_detail_end_datetime - vd.ini_est).dt.total_seconds() / 3600).where(vd.visit_detail_end_datetime > vd.visit_detail_start_datetime)
+    vd = vd.assign(s=s, e=e)
+    ETAPAS.clear()
+    for clave, g in vd.groupby("clave"):
+        tu = g[g.visit_detail_concept_id == 3045729]
+        ETAPAS[clave] = (tu.s.to_numpy(), tu.e.to_numpy(), g.loc[g.visit_detail_concept_id == 9203, "s"].to_numpy())
+
+
+def recorrido_paciente(s, e, er, k_info, k):
+    """Variables del recorrido con lo que se sabe en k_info (horas desde la llegada), para las horas k (las horas desde la ultima etapa se cuentan hasta k)."""
+    k_info, k = np.asarray(k_info, float), np.asarray(k, float)
+    out = {c: np.zeros(len(k)) for c in REC}
+    out["horas_desde_ultimo_inicio"] = np.full(len(k), np.nan)
+    if len(s):
+        empezo = s[None, :] < k_info[:, None]
+        valida = ~np.isnan(e)
+        cerro = empezo & valida[None, :] & (np.where(valida, e, np.inf)[None, :] <= k_info[:, None])
+        out["n_tu_iniciadas"] = empezo.sum(1).astype(float)
+        out["n_tu_cerradas_antes"] = cerro.sum(1).astype(float)
+        out["n_tu_sin_cierre"] = out["n_tu_iniciadas"] - out["n_tu_cerradas_antes"]
+        out["horas_tu_cerradas_antes"] = (cerro * np.where(valida, np.nan_to_num(e) - s, 0)[None, :]).sum(1)
+        ultima = np.where(empezo, s[None, :], -np.inf).max(1)
+        out["horas_desde_ultimo_inicio"] = np.where(np.isfinite(ultima), k - ultima, np.nan)
+    if len(er):
+        out["n_admisiones"] = (er[None, :] < k_info[:, None]).sum(1).astype(float)
+    return out
+
+
+def recorrido_filas(d, idx, kk, desde, fijar):
+    """Recorrido de cada fila paciente-hora; si fijar, con lo sabido en 'desde' (estimacion hacia adelante)."""
+    res = {c: np.zeros(len(idx)) for c in REC}
+    claves = d.clave.to_numpy()
+    orden = np.argsort(idx, kind="stable")
+    unicos, inicio = np.unique(idx[orden], return_index=True)
+    fin = np.append(inicio[1:], len(orden))
+    vacio = (np.array([]), np.array([]), np.array([]))
+    for i, a, b in zip(unicos, inicio, fin):
+        filas = orden[a:b]
+        k = kk[filas]
+        r = recorrido_paciente(*ETAPAS.get(claves[i], vacio), np.full(len(k), desde) if fijar else k, k)
+        for c in REC:
+            res[c][filas] = r[c]
+    return res
 
 
 def estado_en(d, rejilla, estado, horas_despues):
@@ -141,10 +243,13 @@ def cuantiles_de_supervivencia(S):
 # ----------------------------------------------------------------------
 # 3) M1: supervivencia por hora (tiempo restante)
 # ----------------------------------------------------------------------
-DINAMICAS = ["transcurrido", "hora_reloj", "dia_semana", "cola", "ocup"]
-COLS_M1 = DINAMICAS + ["edad_cod", "tipo_cod", "sexo_cod", "zona_cod"]
-CATEGORICAS = ["hora_reloj", "dia_semana", "tipo_cod", "dx_cod"]
-COLS_M1_FINAL = [c for c in COLS_M1 if c != "cola"]   # la cola no mejora la estimacion (comparacion_estimadores_ic.csv) y no se conoce del todo en el momento
+HIST = ["espera_prev_h", "estancia_prev_h", "n_hosp_previas", "dias_desde_hosp", "dx_previo_cod"]
+REC = ["n_tu_iniciadas", "n_tu_cerradas_antes", "n_tu_sin_cierre", "horas_tu_cerradas_antes", "horas_desde_ultimo_inicio", "n_admisiones"]
+DINAMICAS = ["transcurrido", "hora_reloj", "dia_semana", "cola", "ocup"] + REC
+COLS_M1 = ["transcurrido", "hora_reloj", "dia_semana", "cola", "ocup", "edad_cod", "tipo_cod", "sexo_cod", "zona_cod"]
+CATEGORICAS = ["hora_reloj", "dia_semana", "tipo_cod", "dx_cod", "dx_previo_cod"]
+COLS_M1_BASE = [c for c in COLS_M1 if c != "cola"]      # la cola no mejora la estimacion y no se conoce del todo en el momento
+COLS_M1_FINAL = COLS_M1_BASE + HIST + REC
 
 
 def filas_persona_hora(d, rejilla, estado, desde=0, fijar_estado=False, cols=COLS_M1):
@@ -162,6 +267,9 @@ def filas_persona_hora(d, rejilla, estado, desde=0, fijar_estado=False, cols=COL
         cola, ocup = estado_en(d.iloc[idx].reset_index(drop=True), rejilla, estado, kk)
     X = pd.DataFrame({"transcurrido": kk, "hora_reloj": reloj.hour, "dia_semana": reloj.dayofweek, "cola": cola, "ocup": ocup,
                       **{c: d[c].to_numpy()[idx] for c in cols if c not in DINAMICAS}})
+    if any(c in REC for c in cols):
+        for c, v in recorrido_filas(d, idx, kk, desde, fijar_estado).items():
+            X[c] = v
     return X, idx, kk
 
 
@@ -176,6 +284,23 @@ def entrenar_m1(tr, rejilla, estado, cols=COLS_M1):
                                        categorical_features=[cols.index(c) for c in CATEGORICAS if c in cols], random_state=SEMILLA)
     m.fit(X[cols], y)
     m.cols_ = cols
+    return m
+
+
+def entrenar_landmark(tr, rejilla, estado, desde, cols=None):
+    """Modelo para estimar desde 'desde' horas de espera: quienes seguian esperando, con lo que se sabia en ese momento."""
+    cols = COLS_M1_FINAL if cols is None else cols
+    sub = tr[tr.espera_cama_h > desde].reset_index(drop=True)
+    X, idx, kk = filas_persona_hora(sub, rejilla, estado, desde=desde, fijar_estado=True, cols=cols)
+    e = sub.espera_cama_h.to_numpy()[idx]
+    vivo = kk <= np.floor(e)
+    y = (kk == np.floor(e)).astype(int)
+    X = X[vivo]
+    cols = [c for c in cols if X[c].nunique(dropna=True) > 1]           # al llegar, el recorrido aun no tiene informacion (todo cero): se deja fuera
+    m = HistGradientBoostingClassifier(max_iter=300, learning_rate=0.08, max_leaf_nodes=63, min_samples_leaf=200,
+                                       categorical_features=[cols.index(c) for c in CATEGORICAS if c in cols], random_state=SEMILLA)
+    m.fit(X[cols], y[vivo])
+    m.cols_, m.desde_ = cols, desde
     return m
 
 
@@ -265,8 +390,9 @@ if __name__ == "__main__":
     d, h, rejilla, estado = preparar()
     tr, te = d[d.ini_est < CORTE].reset_index(drop=True), d[d.ini_est >= CORTE].reset_index(drop=True)
     print(f"entrenamiento {len(tr):,} estancias | prueba {len(te):,}")
-    m1 = entrenar_m1(tr, rejilla, estado, COLS_M1_FINAL)                 # version final: sin la cola (que usa saber quien se hospitalizara)
-    m1_con_cola = entrenar_m1(tr, rejilla, estado)
+    m1_base = entrenar_m1(tr, rejilla, estado, COLS_M1_BASE)             # sin historial ni recorrido
+    m1_hist = entrenar_m1(tr, rejilla, estado, COLS_M1_BASE + HIST)      # solo con historial
+    m1_con_cola = entrenar_m1(tr, rejilla, estado, COLS_M1_BASE + ["cola"])
     tasa = tasas_asignacion(h)
     ic = []
 
@@ -277,8 +403,10 @@ if __name__ == "__main__":
         general, perfil = referencias(tr, sub, desde)
         base = perdida(y, general)
         preds = {"rango general (referencia)": general, "tabla de perfiles": perfil,
-                 "M1 tiempo restante": predecir_m1(m1, sub, rejilla, estado, desde),
-                 "M1 con cola (prueba)": predecir_m1(m1_con_cola, sub, rejilla, estado, desde),
+                 "M1 tiempo restante": predecir_m1(entrenar_landmark(tr, rejilla, estado, desde) if desde < HORAS_RECORRIDO else m1_hist, sub, rejilla, estado, desde),
+                 "M1 sin historial ni recorrido": predecir_m1(m1_base, sub, rejilla, estado, desde),
+                 "M1 solo con historial": predecir_m1(m1_hist, sub, rejilla, estado, desde),
+                 "M1 sin historial ni recorrido, con cola (prueba)": predecir_m1(m1_con_cola, sub, rejilla, estado, desde),
                  "M3a cola, orden aleatorio": m3(sub, rejilla, estado, tasa, desde),
                  "M3b cola, orden de llegada": m3(sub, rejilla, estado, tasa, desde, fifo=True)}
         if desde == 0:
@@ -315,17 +443,18 @@ if __name__ == "__main__":
           "error_abs_mediana_h", "pct_debajo_p25", "pct_debajo_p50", "pct_debajo_p75", "pct_debajo_p90"]].to_string(index=False))
 
     # Lectura de M1: probabilidad media de recibir cama en la hora siguiente segun la hora del reloj (con todo lo demas como en la prueba)
-    X, _, _ = filas_persona_hora(te.sample(min(1500, len(te)), random_state=SEMILLA).reset_index(drop=True), rejilla, estado)
+    m1 = entrenar_landmark(tr, rejilla, estado, 0)
+    X, _, _ = filas_persona_hora(te.sample(min(1500, len(te)), random_state=SEMILLA).reset_index(drop=True), rejilla, estado, cols=m1.cols_)
     X = X[X.transcurrido < 72]
     reloj = pd.DataFrame({"hora_reloj": range(24), "prob_cama_siguiente_hora": [m1.predict_proba(X.assign(hora_reloj=hh)[m1.cols_])[:, 1].mean() for hh in range(24)]})
     reloj.round(4).to_csv(TABLAS / "m1_probabilidad_por_hora_reloj.csv", index=False)
     print("\nM1: probabilidad media de recibir cama en la hora siguiente, por hora del reloj\n" + reloj.round(3).T.to_string())
 
     fig, (a1, a2) = plt.subplots(1, 2, figsize=(13, 4.6))
-    orden = ["rango general (referencia)", "tabla de perfiles", "M2 al llegar con mas variables", "M1 tiempo restante",
+    orden = ["rango general (referencia)", "tabla de perfiles", "M2 al llegar con mas variables", "M1 sin historial ni recorrido", "M1 tiempo restante",
              "M3a cola, orden aleatorio", "M3b cola, orden de llegada"]
     colores = {"rango general (referencia)": "#c9c8c3", "tabla de perfiles": "#8a8984", "M2 al llegar con mas variables": "#1baf7a",
-               "M1 tiempo restante": "#2a78d6", "M3a cola, orden aleatorio": "#eb6834", "M3b cola, orden de llegada": "#f2a37f"}
+               "M1 sin historial ni recorrido": "#9fc3ee", "M1 tiempo restante": "#2a78d6", "M3a cola, orden aleatorio": "#eb6834", "M3b cola, orden de llegada": "#f2a37f"}
     for nombre in orden:
         g = ic[ic.metodo == nombre]
         a1.plot(g.horas_esperando, g.mejora_vs_general_pct, marker="o", color=colores[nombre], label=nombre)
@@ -333,13 +462,13 @@ if __name__ == "__main__":
     a1.axhline(0, color="#52514e", lw=0.8)
     a1.set_xlabel("horas que el paciente ya lleva esperando")
     a1.set_ylabel("mejora frente al rango general (%)")
-    a1.set_title("¿Qué método estima mejor el tiempo que falta? (banda: IC 95 %)")
+    a1.set_title("¿Qué método estima mejor lo que falta? (banda: IC 95 %)")
     a1.legend(frameon=False, fontsize=8)
     a1.grid(axis="y", color="#e5e4df")
     a2.bar(reloj.hora_reloj, 100 * reloj.prob_cama_siguiente_hora, color="#2a78d6")
     a2.set_xlabel("hora del reloj")
     a2.set_ylabel("% que recibe cama en la hora siguiente")
-    a2.set_title("Tiempo restante: la hora del reloj manda (paciente que sigue esperando)")
+    a2.set_title("La hora del reloj manda (paciente que sigue esperando)")
     a2.grid(axis="y", color="#e5e4df")
     fig.text(0.01, 0.01, "Prueba con jul-2025 a 9-abr-2026 (entrenamiento feb-2023 a jun-2025). Fuente: src/comparar_estimadores.py", fontsize=8, color="#52514e")
     fig.tight_layout(rect=(0, 0.04, 1, 1))

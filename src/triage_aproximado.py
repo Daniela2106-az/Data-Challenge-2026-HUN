@@ -24,11 +24,12 @@ import pandas as pd
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import comparar_estimadores as ce  # noqa: E402
 
+BASE = ce.COLS_M1_BASE + ce.HIST          # el estimador final con 12 h o mas (sin recorrido, que necesita un modelo por momento)
 VARIANTES = {
-    "M1 sin gravedad": ce.COLS_M1_FINAL,
-    "M1 + laboratorios de 6 h": ce.COLS_M1_FINAL + ["n_lab_6h"],
-    "M1 + grupo de diagnostico (escenario)": ce.COLS_M1_FINAL + ["dx_cod"],
-    "M1 + ambos (escenario)": ce.COLS_M1_FINAL + ["n_lab_6h", "dx_cod"],
+    "M1 sin gravedad": BASE,
+    "M1 + laboratorios de 6 h": BASE + ["n_lab_6h"],
+    "M1 + grupo de diagnostico (escenario)": BASE + ["dx_cod"],
+    "M1 + ambos (escenario)": BASE + ["n_lab_6h", "dx_cod"],
 }
 
 if __name__ == "__main__":
