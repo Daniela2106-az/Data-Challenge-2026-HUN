@@ -410,6 +410,15 @@ de espera, 17,1 h (2023) a 23,7 h (2026), cambia en una décima. Urgencias antes
 **Qué cambia:** el cuello de botella es casi por completo **urgencias antes de que se asigne la cama** (98 %), no una mezcla con tiempo sin registro; las preguntas 5 y 11 al HUN pierden sentido.
 Respaldo de los resultados anteriores en `resultados/respaldo_antes_hueco/` y `datos/procesados/respaldo_antes_hueco/` (no se suben a git).
 
+### 4.13 Cierre de C2/C4 y exploraciones A8 6, 8 y 10 (8-nov-2026)
+Documentos: `docs/c4_reingresos_huecos_llegadas.md`, `docs/quincenas_y_datos_externos.md`, `docs/espera_con_labs_y_severidad.md` (scripts `src/c4_reingresos_huecos_llegadas.py`, `prueba_quincenas.py`, `espera_con_labs.py`, `severidad_labs.py`; consultas `sql/espera_labs_y_texto.sql`, `sql/severidad_labs_6h.sql`).
+- **C2:** la base da 566.004 filas de `dx_por_visita` y 662.783 de `proc_por_visita`, con las mismas sumas que los CSV (38.636.063 y 47.042.032) y 1 visita vacía en cada una: `sql/exportaciones_base.sql` queda verificado.
+- **Reingresos depurados** (sin registros gemelos, sin traslapes): **5,3 % en 72 h y 14,1 % en 30 días** (la columna del pipeline da 6,6 % y 15,4 %, que cuenta traslapes). Hueco TU a TU: 2,6 % de las horas de TU, sin efecto.
+- **Réplicas de llegadas: 4,3 %** (12,2 % de los episodios con cama). Proporción estable (correlación 0,998 con la serie sin réplicas): **no se deduplican las llegadas**; al citar un nivel absoluto, decir «~4 % menos, cota inferior».
+- **Quincenas** no mejoran el pronóstico (±0,15 puntos de WAPE). Dengue y lluvia: sin datos abiertos de 2023–2026, descartados.
+- **Laboratorios en la espera:** solo el 38 % de las estancias tiene alguna toma durante la espera, y las tomas por día bajan de 14,8 (espera < 6 h) a 2,0 (> 72 h). No separa atención de espera pura.
+- **Severidad desde el texto de los laboratorios (primeras 6 h):** la hospitalización va de 20 % (0 banderas) a 57 % (3 o más); AUC de 0,58 a 0,65 entre quienes tienen laboratorio. Sube la estancia (+29 % con 3 o más banderas) y **no cambia la espera de cama**, coherente con una espera de organización y no de prioridad clínica.
+
 ## 5. Decisiones de método (ya tomadas, no reabrir sin un motivo nuevo)
 
 1. Unidad de análisis: **episodio** = atención continua de un paciente dentro de una visita
