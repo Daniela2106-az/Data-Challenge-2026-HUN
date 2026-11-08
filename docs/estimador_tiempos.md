@@ -57,6 +57,7 @@ Para consultar cualquier perfil: `estimar(hora, grupo_edad, tipo_visita, sexo)` 
 - **Edad y sexo de las estancias duplicadas:** esta corrida no tuvo los archivos del lote 4 de `src/auditoria_bd.py` (`P02` y `P03`). Por eso, en las estancias registradas en dos personas se conservó el registro con más información, que es el de la persona real en ~81–85 % de los casos (`CLAUDE.md` 4.10). Con esos archivos, la edad y el sexo de esas estancias quedarían corregidos.
 - **Registros réplica:** las llegadas incluyen al menos un 4 % de réplicas (`CLAUDE.md` 4.6), que pesan en la probabilidad de hospitalizarse.
 - **Asociación, no causa:** que un perfil espere más no dice por qué.
+- **Cama o silla:** según el equipo (7-nov), a muchos pacientes se les atiende en sillas, y no se sabe si eso se registra como estar en cama. La base no tiene columna de cama, silla, piso ni servicio (`CLAUDE.md` 4.8). Si a un paciente hospitalizado se le registra la etapa 9201 estando en una silla o camilla de apoyo, la «espera de cama» mide la espera hasta la asignación administrativa, no hasta una cama real. Además, la ocupación de hospitalización incluiría puestos que no son camas, lo que explicaría que pase de las 106 camas el 42 % de las horas de 2025. En urgencias ya se sabía que la etapa 3045729 incluye sillas, consultorios y observación.
 
 ## Segunda parte: la espera en dos series (sin cama y demora del servicio)
 Código: `src/espera_dos_series.py`. Tablas (fuera de git): `espera_dos_series_*.csv`. Gráfico: `resultados/graficos/espera_dos_series.png`.
@@ -76,7 +77,7 @@ Con esas dos partes se arman dos series diarias, según la fecha de llegada.
 | 2025 | 58,3 % | 33,4 h | 18,8 h | 14,6 h | 56 % |
 | 2026 (ene–9 abr) | 37,6 % | 34,1 h | 12,7 h | 21,4 h | 37 % |
 
-**Prueba de sensibilidad:** con capacidades 10 % mayores (97 y 20), la parte sin cama baja a 5–10 % todos los años. **La separación depende casi por completo de cuántas camas haya de verdad**, y ese número no está confirmado (el HUN no dijo a qué fecha corresponde).
+**Prueba de sensibilidad:** con capacidades 10 % mayores (97 y 20), la parte sin cama baja a 5–10 % todos los años. **La separación depende casi por completo de cuántas camas haya de verdad**, y ese número no está confirmado (el HUN no dijo a qué fecha corresponde). Además, si se usan sillas o camillas de apoyo y se registran como cama, «zona llena» no significa que no hubiera dónde ubicar al paciente.
 
 **Qué dicen las dos series:**
 1. **Con las camas que dio el HUN, el cambio es de composición.** En 2023 casi toda la espera ocurría con camas libres en el conteo. En 2025, más de la mitad ocurrió con la zona de adultos llena. La espera media subió unas 5 h, pero la parte sin cama subió unas 16 h y la de servicio bajó unas 11 h. Coincide con lo que mostró Daniela: la ocupación de adultos pasó del 88 % al 101 % de sus camas (`docs/ocupacion_por_zona.md`).
