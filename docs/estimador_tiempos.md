@@ -1,11 +1,11 @@
-# A6 · Estimación del tiempo de espera de cama (7 y 8-nov-2026)
+# A6 · Estimación del tiempo de espera de cama (7 y 8-nov-2026; revisado e integrado el 9-nov, sección 7)
 
 **Qué pide el instructivo (componente 3):** «modelos analíticos o predictivos que permitan estimar tiempos de atención». La pregunta concreta: **cuando un paciente espera cama, ¿cuánto le falta?**
 
 ## Resumen
 1. **La espera es individual.** Pacientes que llegan el mismo día o a la misma hora no esperan parecido. Por eso la ocupación del hospital o la cola casi no ayudan a estimarla, y lo que sirve es información de cada paciente.
-2. **El estimador es un modelo de tiempo restante.** Para un paciente que espera cama, da el rango de lo que le falta (percentiles 25, 50, 75 y 90) y la probabilidad de recibir cama en 6, 12 y 24 horas, y se recalcula a medida que pasa la espera. Usa el paciente, la hora del reloj, la ocupación, su historial de hospitalizaciones, su recorrido en urgencias y, desde las 6 h de espera, las banderas de sus laboratorios de las primeras 6 h (sección 3.3), todo conocido en el momento. Se consulta con `estimar_tiempo_restante()`.
-3. **Funciona mejor que todo lo demás que probamos, pero el techo es bajo.** Reentrenado cada mes con más peso en lo reciente, que es como se debe usar porque el hospital cambió, mejora el rango 8,9 % al llegar y 11,3–11,7 % entre las 3 y las 6 horas de espera, frente a darle a todos el mismo rango. Sus percentiles aciertan en datos nuevos, y le gana con margen comprobado a las otras cinco alternativas.
+2. **El estimador es un modelo de tiempo restante.** Para un paciente que espera cama (**es decir, que ya tiene orden de hospitalización**: se entrenó solo con quienes recibieron cama, ver sección 7), da el rango de lo que le falta (percentiles 25, 50, 75 y 90) y la probabilidad de recibir cama en 6, 12 y 24 horas, y se recalcula a medida que pasa la espera. Usa el paciente, la hora del reloj, la ocupación, su historial de hospitalizaciones, su recorrido en urgencias y, desde las 6 h de espera, las banderas de sus laboratorios de las primeras 6 h (sección 3.3), todo conocido en el momento. Se consulta con `estimar_tiempo_restante()`.
+3. **Funciona mejor que todo lo demás que probamos, pero el techo es bajo.** Reentrenado cada mes con más peso en lo reciente, que es como se debe usar porque el hospital cambió, mejora el rango 9,2 % al llegar y 11,0–11,3 % entre las 3 y las 6 horas de espera (cifras del 9-nov, con las correcciones de la revisión), frente a darle a todos el mismo rango. Sus percentiles aciertan en datos nuevos, y le gana con margen comprobado a las otras cinco alternativas.
 4. **Lo que más decide cuándo llega la cama es la hora del reloj:** entre las 6 y las 12 h casi nadie recibe cama; las camas se asignan entre las 15 y las 17 h y entre las 20 y las 23 h.
 5. **Pensado para usarse cada día** (sección 3.2):
    - **Para el paciente:** responde en ventanas del día («esta tarde», «esta noche», «mañana en la tarde») con probabilidades que dicen la verdad.
@@ -68,7 +68,7 @@ Código: `src/estimador_tiempo_restante.py` (consulta) y `src/comparar_estimador
 | Historial | De su última hospitalización: espera, estancia y hace cuántos días terminó; hospitalizaciones previas; grupo del último diagnóstico de una visita anterior | Al llegar |
 | Recorrido en urgencias | Etapas de atención iniciadas, cerradas y abiertas; horas de las cerradas; horas desde la última que empezó; admisiones | En cada momento |
 
-**Un modelo por momento de la espera.** El recorrido cambia mientras el paciente espera. Por eso hay un modelo para cada momento (al llegar, a las 2, 4, 6 y 9 h), entrenado con quienes seguían esperando en ese momento y con lo que se sabía entonces. Esta técnica se llama «landmark». Desde las 12 h de espera el recorrido ya no suma, y se usa un solo modelo con el historial. El corte de 12 h se eligió mirando la prueba.
+**Un modelo por momento de la espera.** El recorrido cambia mientras el paciente espera. Por eso hay un modelo para cada hora de espera de 0 a 11 h (desde el 9-nov; antes eran 0, 2, 4, 6 y 9 h, ver sección 7), entrenado con quienes seguían esperando en ese momento y con lo que se sabía entonces. Esta técnica se llama «landmark». Desde las 12 h de espera el recorrido ya no suma, y se usa un solo modelo con el historial. El corte de 12 h se eligió mirando la prueba.
 
 **Qué no usa, y por qué.** No usa la cola de pacientes esperando cama: contarla exige saber quién se hospitalizará, y además empeora la estimación (al llegar, 6,2 % con cola frente a 7,0 % sin ella).
 
@@ -136,12 +136,12 @@ Un modelo entrenado sobre todo con 2023 y 2024 aprende un hospital que ya no exi
 
 | Forma de entrenar | Al llegar | 3 h | 6 h | 12 h | 24 h |
 |---|---|---|---|---|---|
-| Todo feb-2023 a jun-2025 (modelo fijo) | 8,4 % | 10,4 % | 10,6 % | 8,0 % | 6,1 % |
-| Solo los últimos 12 meses | 8,3 % | 10,3 % | 10,1 % | 6,6 % | 4,8 % |
-| Solo los últimos 6 meses | 8,4 % | 9,8 % | 9,5 % | 7,1 % | 5,8 % |
-| Todo, con más peso en lo reciente (vida media de 6 meses) | 8,6 % | 10,6 % | 10,9 % | 8,1 % | 6,3 % |
-| Reentrenado cada mes con todo lo anterior | 8,9 % | 10,9 % | 11,0 % | 8,4 % | 6,5 % |
-| **Reentrenado cada mes, con más peso en lo reciente** | **8,9 %** | **11,3 %** | **11,7 %** | **7,9 %** | **6,3 %** |
+| Todo feb-2023 a jun-2025 (modelo fijo) | 8,6 % | 10,5 % | 9,6 % | 7,3 % | 5,4 % |
+| Solo los últimos 12 meses | 8,7 % | 10,4 % | 9,9 % | 6,4 % | 4,7 % |
+| Solo los últimos 6 meses | 8,2 % | 10,1 % | 9,5 % | 7,2 % | 5,7 % |
+| Todo, con más peso en lo reciente (vida media de 6 meses) | 8,9 % | 10,7 % | 10,0 % | 7,3 % | 5,3 % |
+| Reentrenado cada mes con todo lo anterior | 9,0 % | 10,9 % | 10,3 % | 7,5 % | 5,7 % |
+| **Reentrenado cada mes, con más peso en lo reciente** | **9,2 %** | **11,3 %** | **11,0 %** | **7,5 %** | **6,0 %** |
 
 En el reentrenamiento mensual, cada mes de la prueba se estimó con un modelo entrenado solo con lo que se sabía antes de empezar ese mes. Es decir, con las estancias que ya tenían cama y que llegaron al menos 14 días antes.
 
@@ -210,9 +210,9 @@ Con los valores de las primeras 6 h de la visita se arma una bandera por cada va
 | 24 h | 5,3 % | **6,1 % (4,5 a 7,8)** | 6,3 % | **6,3 % (4,4 a 8,0)** |
 | 48 h | 1,5 % | **2,9 % (0,9 a 4,7)** | — | — |
 
-Antes de las 6 h nada cambia (8,4 % / 8,9 % al llegar y 10,4 % / 11,3 % a las 3 h). En la prueba con el modelo fijo, la diferencia por las banderas es real: +1,1 puntos a las 6 h (IC 0,7 a 1,5), +1,1 a las 12 h (0,5 a 1,8) y +1,1 a las 24 h (0,4 a 1,9). Los percentiles siguen calibrados (87–88 % debajo del p90). Con el reentreno mensual, la ganancia se concentra en las 6 h; a las 12 y 24 h el reentreno ya no le suma al modelo fijo (diferencia −0,7 a +0,6 y −0,9 a +1,1).
+Antes de las 6 h nada cambia (la tabla de arriba es de la corrida del 8-nov; la comparación principal de la sección 3.1 se rehízo el 9-nov). En la prueba con el modelo fijo, la diferencia por las banderas es real: +1,1 puntos a las 6 h (IC 0,7 a 1,5), +1,1 a las 12 h (0,5 a 1,8) y +1,1 a las 24 h (0,4 a 1,9). Los percentiles siguen calibrados (87–88 % debajo del p90). Con el reentreno mensual, la ganancia se concentra en las 6 h; a las 12 y 24 h el reentreno ya no le suma al modelo fijo (diferencia −0,7 a +0,6 y −0,9 a +1,1).
 
-**Manera 2: el modelo que se consulta, con todos los datos** (feb-2023 a 9-abr-2026, con más peso en lo reciente, vida media de 6 meses). Es el que guarda `src/estimador_tiempo_restante.py` (versión 6 del paquete, en `HUN_PROCESADOS/modelos/`, fuera del repositorio). **No se puede calificar con datos que no vio**, porque usa todos los meses y no queda nada para probar. Su precisión esperada es la de la columna «reentreno mensual» de la manera 1, que imita justamente esto: cada mes se entrena con todo lo conocido hasta ese momento, con más peso en lo reciente. Por eso se recomienda volver a entrenarlo cada mes (borrar el `.joblib`).
+**Manera 2: el modelo que se consulta, con todos los datos** (feb-2023 a 9-abr-2026, con más peso en lo reciente, vida media de 6 meses). Es el que guarda `src/estimador_tiempo_restante.py` (versión 8 del paquete, en `HUN_PROCESADOS/modelos/`, fuera del repositorio). **No se puede calificar con datos que no vio**, porque usa todos los meses y no queda nada para probar. Su precisión esperada es la de la columna «reentreno mensual» de la manera 1, que imita justamente esto: cada mes se entrena con todo lo conocido hasta ese momento, con más peso en lo reciente. Por eso se recomienda volver a entrenarlo cada mes (borrar el `.joblib`).
 
 **Cómo se consulta:** `estimar_tiempo_restante(..., laboratorios_6h={"troponina_max": 2.3, "pcr_max": 80})`. Los valores que falten se toman como normales; sin el argumento se supone que no le tomaron laboratorio.
 
@@ -273,17 +273,44 @@ En todos los casos los percentiles siguen bien calibrados (al llegar, con todo: 
 ---
 
 ## 6. Límites (van junto al estimador)
+- **Solo aplica a quien se va a hospitalizar.** Se entrena y se prueba solo con pacientes que al final recibieron cama. Al llegar a urgencias nadie sabe quién se hospitalizará (solo el ~9 % lo hace y el modelo de "¿se hospitaliza?" tiene AUC 0,62), así que la cifra "al llegar" vale para un paciente del que ya se sabe que se hospitalizará, no para cualquiera. Tampoco contempla a quien se va, se traslada o muere en urgencias.
+- **No se puede reentrenar cada mes por ahora.** Los datos confiables terminan el 9-abr-2026 (`CLAUDE.md` 4.9). Consultado hoy, el modelo tiene más de 7 meses de atraso y la ocupación que usa por defecto es la típica de ene–abr 2026; la función lo avisa.
+- **Varias decisiones se tomaron mirando la prueba** (el corte de 12 h, la vida media de 6 meses y la mejor de 7 formas de entrenar). No hay un periodo que nadie haya mirado, así que las cifras son algo optimistas; las diferencias de 0,5–0,8 puntos entre formas de entrenar pueden ser suerte.
 - **Rango de pacientes parecidos, no una promesa para una persona.** Sirve para comunicar expectativas y planear, no para darle una hora a un paciente.
 - **La espera termina en la asignación administrativa.** Mezcla la atención clínica en urgencias con la espera de cama, y no se pueden separar.
 - **Cama o silla:** según el equipo, a muchos pacientes se les atiende en sillas aunque necesiten una cama, y no se sabe si eso se registra como estar en cama. La base no tiene columna de cama, silla, piso ni servicio (`CLAUDE.md` 4.8). Si se registra, la espera real hasta una cama sería más larga, la falta de camas mayor de lo que muestran los datos y la ocupación incluiría puestos que no son camas (lo que explicaría que pase de las 106 camas el 42 % de las horas de 2025).
 - **El recorrido supone que el sistema registra cada etapa cuando empieza.** No se pudo comprobar. Si las etapas se cargan después, el recorrido no estaría disponible en tiempo real.
 - **Edad y sexo de las estancias duplicadas:** corregidos con la persona real (P02 y P03); en las pocas estancias duplicadas donde no se pudo identificar, se conserva el registro con más información (`CLAUDE.md` 4.10).
+- **El recorrido podría ser una fuga del trámite de hospitalización:** si las etapas que se abren poco antes de la cama son parte del trámite, el modelo estaría viendo que ya se pidió la cama, no prediciéndola. Se mide en la sección 7.
+- **La subida de asignaciones entre las 20 y las 23 h** puede ser la hora en que se digita en el sistema y no la del traslado; el modelo aprendería costumbres de registro.
+- **La espera se recorta en 10 días (240 h).**
+
 - **La ocupación hacia adelante se deja fija** en el último valor conocido.
 - **Asociación, no causa.**
 
 ---
 
-## 7. Cómo reproducirlo
+## 7. Revisión del 9-nov-2026: problemas encontrados en el código y qué se hizo
+Al revisar el código aparecieron problemas que la versión del 7-nov no había medido. Se corrigió lo que se podía y se midió con los datos reales (`src/revision_estimador.py`, 9-nov, jul-2025 a 9-abr-2026, ramas `a6-utilidad` y `a6-revision` integradas).
+
+| # | Problema | Qué se hizo | Resultado con datos reales |
+|---|---|---|---|
+| 1 | Solo aprende de pacientes que se hospitalizaron; la cifra "al llegar" no vale para cualquier paciente | Se dice en el resumen, en los límites, en el código y en cada respuesta de `estimar_tiempo_restante()` (campo `avisos`) | No se puede corregir con estos datos: haría falta la hora de la orden de hospitalización |
+| 2 | No se puede reentrenar cada mes: los datos confiables terminan el 9-abr-2026 | La función avisa cuando la fecha consultada está a más de 60 días del fin del entrenamiento y cuando usa la ocupación típica | Hecho |
+| 3 | El modelo que se consultaba (0, 2, 4, 6 y 9 h; el más cercano por debajo) no era el que se probó | Un modelo por cada hora de 0 a 11 h | Mejora real pero pequeña: claramente mejor solo a la 1 h (+0,7 puntos) y a las 3 h (+0,4); en las demás horas, igual o dentro del azar |
+| 4 | Posible fuga: las etapas que se abren justo antes de la cama pueden ser el trámite de hospitalización | Prueba 2: el modelo reentrenado viendo el recorrido con 0, 1, 2 y 3 h de retraso | **En parte sí.** El recorrido aporta +1,4 puntos sin retraso; con 2 h de retraso conserva el 43 % de ese aporte a las 3 h y el 57 % a las 6 h. A las 3 h está por debajo de la mitad: ese aporte es sobre todo trámite y **no debe venderse como predicción**. Sin el recorrido el modelo sigue mejorando 9,2 % a las 3 h y 8,4 % a las 6 h |
+| 5 | Fuga del diagnóstico previo: se fechaba con el inicio del episodio anterior | Se fecha al fin del episodio anterior | Cambia en el 1,2 % de las estancias; la mejora al llegar pasa de 8,4 % (con fuga) a 8,6 %: la fuga era despreciable |
+| 6 | La ocupación por zona usaba la edad sin corregir | Usa la edad de la persona real | Ya no cambia ninguna estancia (0,00 %): P02 y P03 dejaron la edad corregida en todas |
+| 7 | Decisiones tomadas mirando la prueba (corte de 12 h, vida media) | Estabilidad por periodo y, para el corte y el p90, un periodo de validación aparte (7.1) | Jul-dic 2025 y ene-9 abr 2026 dan resultados parecidos (al llegar 8,7 % y 8,5 %; a las 3 h 10,9 % y 9,7 %); el p90 cubre 86–88 % en los dos |
+
+### 7.1 Corte de 12 h y percentil 90, con un periodo de validación (`src/calibracion_y_corte.py`)
+Entrenamiento hasta dic-2024, validación ene–jun 2025 y prueba jul-2025 a 9-abr-2026, que no se usa para decidir.
+- **Corte.** El modelo por momento (con el recorrido) le gana al modelo único en la validación hasta las 24 h (ventaja +3,5 %, IC95 +0,6 a +6,4) y deja de ganarle claramente a las 36 h (+1,0 %, IC95 −0,7 a +2,8). Por la regla (el corte más bajo sin ventaja clara) saldría 36 h, no 12. Con 36 h, en la prueba la mejora sube solo 0,4 puntos a las 12 h (7,3 % a 7,7 %) y 0,1 a las 24 h, y haría falta guardar 37 modelos en vez de 13. **Se deja el corte en 12 h por costo**, y queda dicho que ya no es «porque el recorrido deje de servir», sino porque ganar más tendría poco efecto.
+- **P90.** Con el nivel 0,90 el p90 deja por debajo al 87,9 % de los casos en la validación; con **0,93 llega al 90,7 %**. Se aplica 0,93 (`NIVEL_P90` en `estimador_tiempo_restante.py` v5). En la prueba, con el nivel ya fijado, el p90 queda en 91–92 % (antes 87–88 %) desde las 0 hasta las 24 h, y la mejora frente al rango general no cambia (8,9 % a 9,0 % al llegar). A las 48 h queda en 92,5 %, algo pasado.
+
+---
+
+## 8. Cómo reproducirlo
 Los datos viven fuera del proyecto. Se indican con tres variables (en Bash). `HUN_CRUDOS` es la carpeta con `visit_detail.csv` y `procedimientos_por_estancia.csv`; este último corrige la edad y el sexo y alimenta los escenarios.
 ```bash
 export HUN_PROCESADOS="D:/Descargas D/Datos/procesados" HUN_TABLAS="D:/Descargas D/Datos/procesados/tablas" HUN_CRUDOS="D:/Descargas D/Datos"
@@ -293,5 +320,7 @@ export HUN_PROCESADOS="D:/Descargas D/Datos/procesados" HUN_TABLAS="D:/Descargas
 3. **Construcción y prueba del estimador:** `python3 src/comparar_estimadores.py` (~1,5 min). Escribe `comparacion_estimadores_*.csv` en `HUN_TABLAS` y `resultados/graficos/comparacion_estimadores.png`. Las formas de entrenar (sección 3.1): `python3 src/ventana_entrenamiento.py` (~10 min). Las banderas de laboratorio (sección 3.3) entran solas si `sev_hemograma_6h_*.csv` y `sev_quimica_6h_*.csv` están en `HUN_CRUDOS`; el modelo de consulta con todos los datos se entrena con `python3 src/estimador_tiempo_restante.py` (borrando antes el `.joblib`).
 4. **Escenarios de gravedad y servicio:** `python3 src/procedimientos_escenario.py` (~4 min; necesita `procedimientos_por_estancia.csv` en `HUN_CRUDOS`) y `python3 src/triage_aproximado.py` (laboratorios).
 5. **Alternativas:** `python3 src/estimador_tiempos.py` (tabla de perfiles), `python3 src/espera_dos_series.py` (dos series) y `python3 src/variables_descartadas.py` (datos que no aportan).
-6. **Consulta:** `python3 src/estimador_tiempo_restante.py 67 Mujer Urgencias 6 "2026-03-04 15:00"`. Sin argumentos muestra los ejemplos de la sección 2.
-7. **Página del dashboard:** `python3 dashboard/estimador.py` y abrir http://127.0.0.1:8051.
+6. **Revisión del 9-nov (sección 7):** `python3 src/revision_estimador.py` (~15–25 min; `RAPIDO=1` omite la prueba hora por hora). Escribe `revision_estimador_*.csv` y `revision_estimador_resumen.txt` en `HUN_TABLAS`.
+7. **Corte y calibración del p90 con un periodo de validación (sección 7.1):** `python3 src/calibracion_y_corte.py` (~15 min). Escribe `calibracion_corte_*.csv` y `calibracion_corte_resumen.txt` en `HUN_TABLAS`.
+8. **Consulta:** `python3 src/estimador_tiempo_restante.py 67 Mujer Urgencias 6 "2026-03-04 15:00"`. Sin argumentos muestra los ejemplos de la sección 2.
+9. **Página del dashboard:** `python3 dashboard/estimador.py` y abrir http://127.0.0.1:8051.

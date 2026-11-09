@@ -1,9 +1,14 @@
 """
-comparar_estimadores.py  -  version 2 (7-nov-2026)
+comparar_estimadores.py  -  version 3 (9-nov-2026)
 Tarea A6: maneras de estimar la espera de cama, comparadas en la misma prueba. Define tambien el modelo final (M1), que usa
 estimador_tiempo_restante.py.
 (v2: M1 suma el HISTORIAL del paciente y su RECORRIDO en urgencias, con un modelo por momento de la espera ("landmark"); ver abajo.)
 (v3, 8-nov: desde las 6 h de espera suma las BANDERAS DE LABORATORIO de las primeras 6 h, de src/severidad_labs.py de Daniela; ver abajo.)
+(v4, 9-nov: correcciones de la revision de A6, docs/estimador_tiempos.md seccion 7: (1) el diagnostico previo se fecha al FIN del episodio anterior, no
+ a su inicio (habia fuga); (2) la ocupacion por zona usa la edad corregida de la persona real; (3) opcion retraso_h para probar si el recorrido en
+ urgencias es una fuga del tramite de hospitalizacion. Las pruebas de la revision estan en src/revision_estimador.py.)
+OJO SOBRE A QUIEN APLICA: se entrena y se prueba solo con pacientes que al final recibieron cama. Sirve para quien ya tiene orden de hospitalizacion,
+no para cualquier paciente que llega a urgencias (solo ~9 % se hospitaliza).
 
 LOS TRES METODOS
   M1. TIEMPO RESTANTE (supervivencia por hora): para cada hora de espera se estima la probabilidad de recibir cama en la hora siguiente, segun cuanto lleva
@@ -84,12 +89,13 @@ DESDE, HASTA, CORTE = et.DESDE, et.HASTA, et.CORTE
 Q = et.CUANTILES
 MAX_H = 240                                   # horizonte de la supervivencia (10 dias); mas alla se toma como 240 h
 CONTROLES = [3, 6, 12, 24, 48]
-HORAS_RECORRIDO = 12                          # desde aqui el estimador final usa solo el historial                   # horas de espera en que se vuelve a estimar
+HORAS_RECORRIDO = 12                          # desde aqui el estimador final usa solo el historial
 SEMILLA = 7
 N_BOOT = 1000
 # Ago-sep 2025: sobredemanda porque hospitales cercanos fueron intervenidos por el Estado y el HUN quedo como la unica opcion de la zona (dato del
 # equipo, 7-nov). En los datos se ve poco: +6-7 % de llegadas frente a ago-sep 2024 y ingresos y espera mediana normales. Se evaluan aparte.
 MESES_SOBREDEMANDA = ["2025-08", "2025-09"]
+DX_PREVIO_AL_INICIO = os.environ.get("DX_PREVIO_AL_INICIO", "0") == "1"   # 1 = comportamiento de la v2 (con fuga), solo para comparar
 H1 = np.timedelta64(1, "h")
 
 
@@ -101,12 +107,6 @@ def preparar():
     h = t[t.hospitalizado & t.estancia_unica & t.edad.notna() & (t.ini_est <= t.ini_hosp_est)].copy()
     h["zona"] = np.where(h.edad < 15, "ninos", "adultos")
     rejilla = pd.date_range(h.ini_est.min().floor("h"), h.fin_hosp_est.max().ceil("h"), freq="h").to_numpy()
-    estado = {}
-    for zona, g in h.groupby("zona"):
-        def contar(a, b):
-            return np.searchsorted(np.sort(a), rejilla, side="right") - np.searchsorted(np.sort(b), rejilla, side="right")
-        estado[zona] = {"cola": contar(g.ini_est.to_numpy(), g.ini_hosp_est.to_numpy()),
-                        "ocup": contar(g.ini_hosp_est.to_numpy(), g.fin_hosp_est.to_numpy())}
     d = h[(h.ini_est >= DESDE) & (h.ini_est < HASTA) & h.espera_cama_h.notna() & h.sexo.isin(["Mujer", "Hombre"]) & h.tipo_visita.isin(et.TIPOS)].copy()
     d["grupo_edad"] = d.grupo_edad.astype(str)
     d["bloque_hora"] = pd.Series(et.BLOQUES)[d.hora.to_numpy() // 3].to_numpy()
@@ -119,9 +119,23 @@ def preparar():
     d["clave"] = np.arange(len(d))
     d = procedimientos(d)
     d = laboratorios(t, d)
+    # v3 (9-nov): la zona (adultos o ninos) de la ocupacion se cuenta con la edad CORREGIDA de la persona real cuando se conoce, igual que la del
+    # paciente; antes la ocupacion usaba la edad sin corregir y un paciente podia quedar con la ocupacion de la otra zona.
+    if "estancia_id" in d.columns:
+        zona_corr = d.drop_duplicates("estancia_id").set_index("estancia_id").zona
+        h["zona"] = h.estancia_id.map(zona_corr).fillna(h.zona)
+    estado = contar_estado(h, rejilla)
     d = historial(t, d)
     cargar_etapas(d)
     return d, h, rejilla, estado
+
+
+def contar_estado(h, rejilla):
+    """Cola y ocupacion por hora y zona."""
+    def contar(a, b):
+        return np.searchsorted(np.sort(a), rejilla, side="right") - np.searchsorted(np.sort(b), rejilla, side="right")
+    return {zona: {"cola": contar(g.ini_est.to_numpy(), g.ini_hosp_est.to_numpy()), "ocup": contar(g.ini_hosp_est.to_numpy(), g.fin_hosp_est.to_numpy())}
+            for zona, g in h.groupby("zona")}
 
 
 GRUPOS_DX = None
@@ -223,7 +237,13 @@ def historial(t, d):
     hs = ep[ep.hospitalizado & ep.estancia_unica & ep.fin_hosp_est.notna()]
     hp = hs.assign(estancia_prev_h=(hs.fin_hosp_est - hs.ini_hosp_est).dt.total_seconds() / 3600)[["person_id", "fin_hosp_est", "espera_cama_h", "estancia_prev_h"]]
     hp = hp.rename(columns={"fin_hosp_est": "t_hosp", "espera_cama_h": "espera_prev_h"}).sort_values("t_hosp")
-    dxp = ep[ep.categoria_dx.notna() & (ep.categoria_dx != "Sin diagnostico")][["person_id", "ini", "categoria_dx"]].rename(columns={"ini": "t_dx", "categoria_dx": "dx_previo"})
+    # v3 (9-nov): el diagnostico de una visita anterior se da por conocido cuando TERMINA ese episodio, no cuando empieza: el 88 % de los
+    # diagnosticos se registra tarde y con el inicio se colaba informacion que aun no existia al llegar (fuga). DX_PREVIO_AL_INICIO=1 vuelve a lo anterior.
+    t_dx = "ini" if (DX_PREVIO_AL_INICIO or "fin" not in t.columns) else "fin"
+    if t_dx == "ini" and not DX_PREVIO_AL_INICIO:
+        print("AVISO: tabla_episodios no trae 'fin'; el diagnostico previo se fecha con el inicio del episodio (puede tener fuga)")
+    dxp = t[t.categoria_dx.notna() & (t.categoria_dx != "Sin diagnostico") & t[t_dx].notna()][["person_id", t_dx, "categoria_dx"]]
+    dxp = dxp.rename(columns={t_dx: "t_dx", "categoria_dx": "dx_previo"})
     q = d[["clave", "person_id", "ini_est"]].sort_values("ini_est")
     q = pd.merge_asof(q, hp, left_on="ini_est", right_on="t_hosp", by="person_id", allow_exact_matches=False)
     q = pd.merge_asof(q.sort_values("ini_est"), dxp.sort_values("t_dx"), left_on="ini_est", right_on="t_dx", by="person_id", allow_exact_matches=False)
@@ -278,8 +298,9 @@ def recorrido_paciente(s, e, er, k_info, k):
     return out
 
 
-def recorrido_filas(d, idx, kk, desde, fijar):
-    """Recorrido de cada fila paciente-hora; si fijar, con lo sabido en 'desde' (estimacion hacia adelante)."""
+def recorrido_filas(d, idx, kk, desde, fijar, retraso_h=0.0):
+    """Recorrido de cada fila paciente-hora; si fijar, con lo sabido en 'desde' (estimacion hacia adelante).
+    retraso_h > 0: solo se ve lo que paso hasta 'retraso_h' horas antes (prueba de fuga, src/revision_estimador.py)."""
     res = {c: np.zeros(len(idx)) for c in REC}
     claves = d.clave.to_numpy()
     orden = np.argsort(idx, kind="stable")
@@ -289,7 +310,7 @@ def recorrido_filas(d, idx, kk, desde, fijar):
     for i, a, b in zip(unicos, inicio, fin):
         filas = orden[a:b]
         k = kk[filas]
-        r = recorrido_paciente(*ETAPAS.get(claves[i], vacio), np.full(len(k), desde) if fijar else k, k)
+        r = recorrido_paciente(*ETAPAS.get(claves[i], vacio), (np.full(len(k), desde) if fijar else k) - retraso_h, k)
         for c in REC:
             res[c][filas] = r[c]
     return res
@@ -331,11 +352,13 @@ def intervalo_mejora(semana, l_metodo, l_ref, n_rep=N_BOOT):
     return np.percentile(mejora, [2.5, 97.5])
 
 
-def cuantiles_de_supervivencia(S):
-    """S: matriz n x (H+1) con S[:, k] = P(T > k horas). Devuelve n x 4 percentiles en horas (interpolados)."""
+def cuantiles_de_supervivencia(S, niveles=None):
+    """S: matriz n x (H+1) con S[:, k] = P(T > k horas). Devuelve n x 4 percentiles en horas (interpolados).
+    niveles: otros niveles en lugar de 25 / 50 / 75 / 90 % (calibracion del p90, src/calibracion_y_corte.py)."""
     F = 1 - S
-    out = np.full((len(S), len(Q)), float(S.shape[1] - 1))
-    for j, q in enumerate(Q):
+    niveles = Q if niveles is None else niveles
+    out = np.full((len(S), len(niveles)), float(S.shape[1] - 1))
+    for j, q in enumerate(niveles):
         llega = F >= q
         k = np.where(llega.any(axis=1), llega.argmax(axis=1), -1)
         ok = k > 0
@@ -357,7 +380,7 @@ COLS_M1_BASE = [c for c in COLS_M1 if c != "cola"]      # la cola no mejora la e
 COLS_M1_FINAL = COLS_M1_BASE + HIST + REC
 
 
-def filas_persona_hora(d, rejilla, estado, desde=0, fijar_estado=False, cols=COLS_M1):
+def filas_persona_hora(d, rejilla, estado, desde=0, fijar_estado=False, cols=COLS_M1, retraso_h=0.0):
     """Una fila por paciente y hora de espera desde 'desde' hasta MAX_H (o hasta recibir cama si se entrena)."""
     n = len(d)
     k = np.arange(desde, MAX_H)
@@ -370,10 +393,10 @@ def filas_persona_hora(d, rejilla, estado, desde=0, fijar_estado=False, cols=COL
         cola, ocup = cola0[idx], ocup0[idx]
     else:
         cola, ocup = estado_en(d.iloc[idx].reset_index(drop=True), rejilla, estado, kk)
-    X = pd.DataFrame({"transcurrido": kk, "hora_reloj": reloj.hour, "dia_semana": reloj.dayofweek, "cola": cola, "ocup": ocup,
+    X = pd.DataFrame({"transcurrido": kk, "hora_reloj": reloj.hour, "dia_semana": reloj.day_of_week, "cola": cola, "ocup": ocup,
                       **{c: d[c].to_numpy()[idx] for c in cols if c not in DINAMICAS}})
     if any(c in REC for c in cols):
-        for c, v in recorrido_filas(d, idx, kk, desde, fijar_estado).items():
+        for c, v in recorrido_filas(d, idx, kk, desde, fijar_estado, retraso_h).items():
             X[c] = v
     return X, idx, kk
 
@@ -401,11 +424,11 @@ def entrenar_m1(tr, rejilla, estado, cols=COLS_M1, vida_media_dias=None):
     return m
 
 
-def entrenar_landmark(tr, rejilla, estado, desde, cols=None, vida_media_dias=None):
+def entrenar_landmark(tr, rejilla, estado, desde, cols=None, vida_media_dias=None, retraso_h=0.0):
     """Modelo para estimar desde 'desde' horas de espera: quienes seguian esperando, con lo que se sabia en ese momento."""
     cols = cols_finales(desde) if cols is None else cols
     sub = tr[tr.espera_cama_h > desde].reset_index(drop=True)
-    X, idx, kk = filas_persona_hora(sub, rejilla, estado, desde=desde, fijar_estado=True, cols=cols)
+    X, idx, kk = filas_persona_hora(sub, rejilla, estado, desde=desde, fijar_estado=True, cols=cols, retraso_h=retraso_h)
     e = sub.espera_cama_h.to_numpy()[idx]
     vivo = kk <= np.floor(e)
     y = (kk == np.floor(e)).astype(int)
@@ -415,12 +438,12 @@ def entrenar_landmark(tr, rejilla, estado, desde, cols=None, vida_media_dias=Non
     m = HistGradientBoostingClassifier(max_iter=300, learning_rate=0.08, max_leaf_nodes=63, min_samples_leaf=200,
                                        categorical_features=[cols.index(c) for c in CATEGORICAS if c in cols], random_state=SEMILLA)
     m.fit(X[cols], y[vivo], sample_weight=None if w is None else w[vivo])
-    m.cols_, m.desde_ = cols, desde
+    m.cols_, m.desde_, m.retraso_h_ = cols, desde, retraso_h
     return m
 
 
 def predecir_m1(m, d, rejilla, estado, desde=0):
-    X, idx, kk = filas_persona_hora(d, rejilla, estado, desde=desde, fijar_estado=True, cols=m.cols_)
+    X, idx, kk = filas_persona_hora(d, rejilla, estado, desde=desde, fijar_estado=True, cols=m.cols_, retraso_h=getattr(m, "retraso_h_", 0.0))
     p = m.predict_proba(X[m.cols_])[:, 1].reshape(len(d), MAX_H - desde)
     S = np.hstack([np.ones((len(d), 1)), np.cumprod(1 - p, axis=1)])
     return cuantiles_de_supervivencia(S)                    # horas que faltan desde 'desde'
@@ -434,7 +457,7 @@ COLS_M2 = ["hora", "dia_semana_num", "mes", "edad_cod", "tipo_cod", "sexo_cod", 
 
 def matriz_m2(d, rejilla, estado):
     cola0, ocup0 = estado_en(d, rejilla, estado, 0)
-    return d.assign(cola0=cola0, ocup0=ocup0, mes=d.ini_est.dt.month, dia_semana_num=d.ini_est.dt.dayofweek)[COLS_M2]
+    return d.assign(cola0=cola0, ocup0=ocup0, mes=d.ini_est.dt.month, dia_semana_num=d.ini_est.dt.day_of_week)[COLS_M2]
 
 
 def m2(tr, te, rejilla, estado, cols=COLS_M2):
@@ -453,10 +476,10 @@ def tasas_asignacion(h):
     """Camas asignadas por hora, por zona, hora del dia y dia de la semana (promedio del entrenamiento)."""
     a = h[(h.ini_hosp_est >= DESDE) & (h.ini_hosp_est < CORTE)]
     slots = pd.date_range(DESDE, CORTE, freq="h", inclusive="left")
-    n_slots = pd.Series(1, index=slots).groupby([slots.dayofweek, slots.hour]).sum()
+    n_slots = pd.Series(1, index=slots).groupby([slots.day_of_week, slots.hour]).sum()
     tasa = {}
     for zona, g in a.groupby("zona"):
-        c = g.groupby([g.ini_hosp_est.dt.dayofweek, g.ini_hosp_est.dt.hour]).size()
+        c = g.groupby([g.ini_hosp_est.dt.day_of_week, g.ini_hosp_est.dt.hour]).size()
         tasa[zona] = (c.reindex(n_slots.index, fill_value=0) / n_slots).to_numpy().reshape(7, 24)
     return tasa
 
@@ -467,7 +490,7 @@ def m3(d, rejilla, estado, tasa, desde=0, fifo=False):
     t = d.ini_est.to_numpy()[:, None] + k[None, :] * H1
     reloj = pd.DatetimeIndex(t.ravel())
     ninos = (d.zona.to_numpy() == "ninos")[:, None]
-    lam = np.where(ninos, tasa["ninos"][reloj.dayofweek, reloj.hour].reshape(t.shape), tasa["adultos"][reloj.dayofweek, reloj.hour].reshape(t.shape))
+    lam = np.where(ninos, tasa["ninos"][reloj.day_of_week, reloj.hour].reshape(t.shape), tasa["adultos"][reloj.day_of_week, reloj.hour].reshape(t.shape))
     if fifo:
         delante = np.maximum(cola - 1, 0)                   # la cola ya incluye al paciente
         Lam = np.cumsum(lam, axis=1)
