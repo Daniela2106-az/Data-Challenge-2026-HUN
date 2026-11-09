@@ -3,6 +3,7 @@ comparar_estimadores.py  -  version 2 (7-nov-2026)
 Tarea A6: maneras de estimar la espera de cama, comparadas en la misma prueba. Define tambien el modelo final (M1), que usa
 estimador_tiempo_restante.py.
 (v2: M1 suma el HISTORIAL del paciente y su RECORRIDO en urgencias, con un modelo por momento de la espera ("landmark"); ver abajo.)
+(v3, 8-nov: desde las 6 h de espera suma las BANDERAS DE LABORATORIO de las primeras 6 h, de src/severidad_labs.py de Daniela; ver abajo.)
 
 LOS TRES METODOS
   M1. TIEMPO RESTANTE (supervivencia por hora): para cada hora de espera se estima la probabilidad de recibir cama en la hora siguiente, segun cuanto lleva
@@ -41,6 +42,12 @@ PROCEDIMIENTOS (si existe procedimientos_por_estancia.csv en HUN_CRUDOS; extraid
      SERVICIO que atendio al paciente (ginecobstetricia, cirugia general, urologia, ortopedia, psiquiatria, pediatria, endoscopia digestiva).
   Los procedimientos NO tienen fecha: pueden ser de despues de recibir cama. Solo se usan como ESCENARIO (src/procedimientos_escenario.py), no en el
   estimador final.
+
+BANDERAS DE LABORATORIO (si existen sev_hemograma_6h_*.csv y sev_quimica_6h_*.csv en HUN_CRUDOS; consultas de sql/severidad_labs_6h.sql)
+  Valores de las primeras 6 h de la visita (leucocitos, hemoglobina, creatinina, BUN, lactato, potasio, sodio, troponina, PCR) con los mismos puntos de corte de
+  src/severidad_labs.py: una bandera por valor anormal, por separado (sumarlas cancela efectos opuestos: troponina y lactato reciben cama antes, PCR alta despues).
+  Por estancia se toma lo mas extremo entre sus registros. Solo se usan para estimar desde las 6 h de espera (antes no se conocen). ~40 % de las estancias tiene
+  algun valor; sin laboratorio, todas las banderas quedan en 0 y con_laboratorio_6h = 0.
 
 COLA Y OCUPACION
   Por hora y por zona (adultos de 15 anos o mas, ninos), con estancias unicas: ocupacion = pacientes en cama; cola = pacientes que ya llegaron, se
@@ -111,6 +118,7 @@ def preparar():
     d = d.reset_index(drop=True)
     d["clave"] = np.arange(len(d))
     d = procedimientos(d)
+    d = laboratorios(t, d)
     d = historial(t, d)
     cargar_etapas(d)
     return d, h, rejilla, estado
@@ -132,6 +140,51 @@ SERVICIOS = {   # en orden de prioridad para el servicio principal
 }
 PROC_GRAV = list(GRAVEDAD) + ["n_marcas_gravedad"]
 PROC_SERV = ["servicio_cod"] + list(SERVICIOS)
+BANDERAS_LAB = {"leucocitos_alt": ("leuc_max", 12, "mayor"), "leucopenia": ("leuc_min", 4, "menor"), "anemia": ("hb_min", 10, "menor"),
+                "creatinina_alta": ("creat_max", 1.5, "mayor"), "bun_alto": ("bun_max", 40, "mayor"), "lactato_alto": ("lactato_max", 2.2, "mayor"),
+                "potasio_alt": ("k_max", 5.5, "mayor"), "sodio_bajo": ("na_min", 130, "menor"), "sodio_alto": ("na_max", 150, "mayor"),
+                "troponina_alta": ("troponina_max", 1.0, "mayor"), "pcr_alta": ("pcr_max", 50, "mayor")}
+LAB = list(BANDERAS_LAB) + ["con_laboratorio_6h"]
+HORAS_LAB = 6                                  # las banderas son de las primeras 6 h: se usan desde las 6 h de espera
+HAY_LAB = False
+
+
+def banderas_desde_valores(v):
+    """v: DataFrame (o dict) con los valores de laboratorio; devuelve las banderas (0/1) con los puntos de corte de severidad_labs.py."""
+    v = pd.DataFrame(v) if not isinstance(v, pd.DataFrame) else v
+    out = {}
+    for n, (col, corte, lado) in BANDERAS_LAB.items():
+        s = pd.to_numeric(v[col], errors="coerce") if col in v else pd.Series(np.nan, index=v.index)
+        out[n] = ((s > corte) if lado == "mayor" else (s < corte)).fillna(False).astype(float).to_numpy()
+    return pd.DataFrame(out, index=v.index)
+
+
+def laboratorios(t, d):
+    """Banderas de laboratorio de las primeras 6 h por estancia (si estan los CSV de Daniela)."""
+    global HAY_LAB
+    hem, qui = sorted(CRUDOS.glob("sev_hemograma_6h_*.csv")), sorted(CRUDOS.glob("sev_quimica_6h_*.csv"))
+    if not hem or not qui:
+        return d
+    agg = {"leuc_max": "max", "leuc_min": "min", "hb_min": "min", "creat_max": "max", "bun_max": "max", "lactato_max": "max", "k_max": "max",
+           "na_max": "max", "na_min": "min", "troponina_max": "max", "pcr_max": "max"}
+    s = pd.concat([pd.read_csv(f) for f in hem]).merge(pd.concat([pd.read_csv(f) for f in qui]), on="visit_occurrence_id", how="outer")
+    cop = pd.read_csv(PROC / "copias.csv", usecols=["visit_occurrence_id", "raiz_id", "misma_persona"])
+    cop = cop[cop.misma_persona]                                                   # como severidad_labs.py: solo copias de la misma persona
+    s["visit_occurrence_id"] = s.visit_occurrence_id.map(cop.set_index("visit_occurrence_id").raiz_id).fillna(s.visit_occurrence_id).astype("int64")
+    s = s.groupby("visit_occurrence_id").agg(agg).reset_index()
+    reg = t.loc[t.hospitalizado & (t.estancia_id >= 0) & (t.episodio == 0), ["visit_occurrence_id", "estancia_id"]]
+    e = reg.merge(s, on="visit_occurrence_id").groupby("estancia_id").agg(agg)     # lo mas extremo entre los registros de la estancia
+    e = banderas_desde_valores(e).assign(con_laboratorio_6h=1.0)
+    d = d.merge(e, left_on="estancia_id", right_index=True, how="left")
+    d[LAB] = d[LAB].fillna(0.0)
+    HAY_LAB = True
+    return d
+
+
+def cols_finales(desde):
+    """Variables del estimador final segun cuantas horas lleva esperando el paciente."""
+    base = COLS_M1_FINAL if desde < HORAS_RECORRIDO else COLS_M1_BASE + HIST
+    return base + (LAB if HAY_LAB and desde >= HORAS_LAB else [])
 
 
 def procedimientos(d):
@@ -350,7 +403,7 @@ def entrenar_m1(tr, rejilla, estado, cols=COLS_M1, vida_media_dias=None):
 
 def entrenar_landmark(tr, rejilla, estado, desde, cols=None, vida_media_dias=None):
     """Modelo para estimar desde 'desde' horas de espera: quienes seguian esperando, con lo que se sabia en ese momento."""
-    cols = COLS_M1_FINAL if cols is None else cols
+    cols = cols_finales(desde) if cols is None else cols
     sub = tr[tr.espera_cama_h > desde].reset_index(drop=True)
     X, idx, kk = filas_persona_hora(sub, rejilla, estado, desde=desde, fijar_estado=True, cols=cols)
     e = sub.espera_cama_h.to_numpy()[idx]
@@ -465,7 +518,8 @@ if __name__ == "__main__":
         general, perfil = referencias(tr, sub, desde)
         base = perdida(y, general)
         preds = {"rango general (referencia)": general, "tabla de perfiles": perfil,
-                 "M1 tiempo restante": predecir_m1(entrenar_landmark(tr, rejilla, estado, desde) if desde < HORAS_RECORRIDO else m1_hist, sub, rejilla, estado, desde),
+                 "M1 tiempo restante": predecir_m1(entrenar_landmark(tr, rejilla, estado, desde) if desde < HORAS_RECORRIDO
+                                                   else entrenar_m1(tr, rejilla, estado, cols_finales(desde)), sub, rejilla, estado, desde),
                  "M1 sin historial ni recorrido": predecir_m1(m1_base, sub, rejilla, estado, desde),
                  "M1 solo con historial": predecir_m1(m1_hist, sub, rejilla, estado, desde),
                  "M1 sin historial ni recorrido, con cola (prueba)": predecir_m1(m1_con_cola, sub, rejilla, estado, desde),

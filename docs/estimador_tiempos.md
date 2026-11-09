@@ -4,8 +4,8 @@
 
 ## Resumen
 1. **La espera es individual.** Pacientes que llegan el mismo día o a la misma hora no esperan parecido. Por eso la ocupación del hospital o la cola casi no ayudan a estimarla, y lo que sirve es información de cada paciente.
-2. **El estimador es un modelo de tiempo restante.** Para un paciente que espera cama, da el rango de lo que le falta (percentiles 25, 50, 75 y 90) y la probabilidad de recibir cama en 6, 12 y 24 horas, y se recalcula a medida que pasa la espera. Usa el paciente, la hora del reloj, la ocupación, su historial de hospitalizaciones y su recorrido en urgencias, todo conocido en el momento. Se consulta con `estimar_tiempo_restante()`.
-3. **Funciona mejor que todo lo demás que probamos, pero el techo es bajo.** Reentrenado cada mes con más peso en lo reciente, que es como se debe usar porque el hospital cambió, mejora el rango 8,9 % al llegar y 10,8–11,3 % entre las 3 y las 6 horas de espera, frente a darle a todos el mismo rango. Sus percentiles aciertan en datos nuevos, y le gana con margen comprobado a las otras cinco alternativas.
+2. **El estimador es un modelo de tiempo restante.** Para un paciente que espera cama, da el rango de lo que le falta (percentiles 25, 50, 75 y 90) y la probabilidad de recibir cama en 6, 12 y 24 horas, y se recalcula a medida que pasa la espera. Usa el paciente, la hora del reloj, la ocupación, su historial de hospitalizaciones, su recorrido en urgencias y, desde las 6 h de espera, las banderas de sus laboratorios de las primeras 6 h (sección 3.3), todo conocido en el momento. Se consulta con `estimar_tiempo_restante()`.
+3. **Funciona mejor que todo lo demás que probamos, pero el techo es bajo.** Reentrenado cada mes con más peso en lo reciente, que es como se debe usar porque el hospital cambió, mejora el rango 8,9 % al llegar y 11,3–11,7 % entre las 3 y las 6 horas de espera, frente a darle a todos el mismo rango. Sus percentiles aciertan en datos nuevos, y le gana con margen comprobado a las otras cinco alternativas.
 4. **Lo que más decide cuándo llega la cama es la hora del reloj:** entre las 6 y las 12 h casi nadie recibe cama; las camas se asignan entre las 15 y las 17 h y entre las 20 y las 23 h.
 5. **Pensado para usarse cada día** (sección 3.2):
    - **Para el paciente:** responde en ventanas del día («esta tarde», «esta noche», «mañana en la tarde») con probabilidades que dicen la verdad.
@@ -101,23 +101,23 @@ estimar_tiempo_restante(edad=67, sexo="Mujer", tipo_visita="Urgencias", horas_es
 ## 3. Qué tan bien funciona
 **La prueba.** Todo se entrenó con llegadas de feb-2023 a jun-2025 y se probó con las 5.430 estancias de jul-2025 a 9-abr-2026, que ningún modelo había visto. Se mide la **mejora frente al rango general** (darle a todos los mismos percentiles), con la pérdida de cuantiles, que es el error estándar para percentiles. Los intervalos del 95 % salen de un bootstrap por semanas (1.000 repeticiones), porque los pacientes de una misma semana se parecen entre sí.
 
-**Cómo mejora al sumar información** (lo que le falta a quien sigue esperando). Todos los modelos de esta tabla se entrenaron una sola vez, para compararlos en igualdad de condiciones. Reentrenado cada mes con más peso en lo reciente, el estimador final gana entre 0,5 y 1,1 puntos más (sección 3.1).
+**Cómo mejora al sumar información** (lo que le falta a quien sigue esperando). Todos los modelos de esta tabla se entrenaron una sola vez, para compararlos en igualdad de condiciones. Reentrenado cada mes con más peso en lo reciente, el estimador final gana hasta 1,3 puntos más en las primeras 6 h (sección 3.1). Desde las 6 h incluye las banderas de laboratorio (sección 3.3).
 
 | Horas esperando | Tabla de perfiles | Modelo sin historial ni recorrido | + historial | **Estimador final** (IC 95 %) |
 |---|---|---|---|---|
 | 0 (al llegar) | 6,4 % | 7,0 % | 8,0 % | **8,4 % (7,5 a 9,3)** |
 | 3 h | 7,1 % | 8,0 % | 8,7 % | **10,4 % (9,4 a 11,3)** |
-| 6 h | 6,2 % | 7,7 % | 8,3 % | **9,7 % (8,8 a 10,7)** |
-| 12 h | 4,1 % | 6,7 % | 7,1 % | **7,1 % (5,5 a 8,5)** |
-| 24 h | 2,6 % | 4,9 % | 5,3 % | **5,3 % (3,5 a 7,0)** |
-| 48 h | −1,3 % | 2,0 % | 1,5 % | **1,5 % (−0,5 a 3,3)** |
+| 6 h | 6,2 % | 7,7 % | 8,3 % | **10,6 % (9,6 a 11,6)** |
+| 12 h | 4,1 % | 6,7 % | 7,1 % | **8,0 % (6,4 a 9,5)** |
+| 24 h | 2,6 % | 4,9 % | 5,3 % | **6,1 % (4,5 a 7,8)** |
+| 48 h | −1,3 % | 2,0 % | 1,5 % | **2,9 % (0,9 a 4,7)** |
 
-**¿Aciertan los percentiles?** Lo ideal es que el 25 / 50 / 75 / 90 % de los casos nuevos quede por debajo de cada uno. Con el estimador final quedan 26,5 / 51,8 / 74,2 / 87,7 % al llegar y 25,6 / 49,1 / 72,2 / 87,3 % a las 6 h. El p90 queda algo corto (87–88 %) porque los peores casos siguen empeorando (`HALLAZGOS.md` 4.3); conviene leerlo como un piso.
+**¿Aciertan los percentiles?** Lo ideal es que el 25 / 50 / 75 / 90 % de los casos nuevos quede por debajo de cada uno. Con el estimador final quedan 26,5 / 51,8 / 74,2 / 87,7 % al llegar y 25,5 / 49,4 / 72,1 / 87,2 % a las 6 h. El p90 queda algo corto (87–88 %) porque los peores casos siguen empeorando (`HALLAZGOS.md` 4.3); conviene leerlo como un piso.
 
 **Cómo leerlo:**
 - **Contra la tabla de perfiles, la ventaja es real en todos los momentos:** el intervalo de la diferencia nunca incluye el 0 (+1,4 a +2,8 puntos al llegar; +3,0 a +4,7 a las 6 h).
 - **Contra el modelo de cuantiles al llegar,** que era el segundo mejor, la ventaja también es real: +0,8 a +2,1 puntos.
-- **El historial suma desde la llegada, y el recorrido en las primeras horas** (probado a las 3 y a las 6 h). Desde las 12 h, la espera depende de otras cosas; a las 48 h ningún método mejora con claridad al rango general.
+- **El historial suma desde la llegada, y el recorrido en las primeras horas** (probado a las 3 y a las 6 h). Desde las 6 h suman las banderas de laboratorio (+0,9 puntos a las 6 h, +0,9 a las 12 h, +0,8 a las 24 h); a las 48 h la mejora es pequeña (2,9 %), aunque ya no incluye el 0.
 - **El techo es bajo:** el error de la mediana sigue siendo de unas 24 h al llegar.
 
 **Agosto y septiembre de 2025.** Según el equipo, el HUN tuvo sobredemanda porque los hospitales cercanos fueron intervenidos por el Estado y quedó como la única opción de la zona. En los datos se ve poco: un 6–7 % más de llegadas que en los mismos meses de 2024, con ingresos a cama y espera mediana normales. Evaluado aparte, el estimador mejora 8,4 % en esos meses y 8,4 % en el resto. El resultado se sostiene.
@@ -136,12 +136,12 @@ Un modelo entrenado sobre todo con 2023 y 2024 aprende un hospital que ya no exi
 
 | Forma de entrenar | Al llegar | 3 h | 6 h | 12 h | 24 h |
 |---|---|---|---|---|---|
-| Todo feb-2023 a jun-2025 (modelo fijo) | 8,4 % | 10,4 % | 9,7 % | 7,1 % | 5,3 % |
-| Solo los últimos 12 meses | 8,3 % | 10,3 % | 9,8 % | 6,3 % | 4,7 % |
-| Solo los últimos 6 meses | 8,4 % | 9,8 % | 9,2 % | 7,0 % | 5,9 % |
-| Todo, con más peso en lo reciente (vida media de 6 meses) | 8,6 % | 10,6 % | 9,9 % | 7,0 % | 5,3 % |
-| Reentrenado cada mes con todo lo anterior | 8,9 % | 10,9 % | 10,2 % | 7,5 % | 6,0 % |
-| **Reentrenado cada mes, con más peso en lo reciente** | **8,9 %** | **11,3 %** | **10,8 %** | **7,6 %** | **6,3 %** |
+| Todo feb-2023 a jun-2025 (modelo fijo) | 8,4 % | 10,4 % | 10,6 % | 8,0 % | 6,1 % |
+| Solo los últimos 12 meses | 8,3 % | 10,3 % | 10,1 % | 6,6 % | 4,8 % |
+| Solo los últimos 6 meses | 8,4 % | 9,8 % | 9,5 % | 7,1 % | 5,8 % |
+| Todo, con más peso en lo reciente (vida media de 6 meses) | 8,6 % | 10,6 % | 10,9 % | 8,1 % | 6,3 % |
+| Reentrenado cada mes con todo lo anterior | 8,9 % | 10,9 % | 11,0 % | 8,4 % | 6,5 % |
+| **Reentrenado cada mes, con más peso en lo reciente** | **8,9 %** | **11,3 %** | **11,7 %** | **7,9 %** | **6,3 %** |
 
 En el reentrenamiento mensual, cada mes de la prueba se estimó con un modelo entrenado solo con lo que se sabía antes de empezar ese mes. Es decir, con las estancias que ya tenían cama y que llegaron al menos 14 días antes.
 
@@ -183,12 +183,12 @@ Código: `src/utilidad_estimador.py`. La precisión para un paciente tiene un te
 | Regla | Alertas por día | Acierta | Detecta |
 |---|---|---|---|
 | Sin modelo: todos los que llevan 12 h | 11,1 | 38,6 % | 100 % |
-| Probabilidad ≥ 30 % | 7,0 | 48,2 % | 79,5 % |
-| **Probabilidad ≥ 40 %** | **4,1** | **53,6 %** | 51,7 % |
-| Probabilidad ≥ 50 % | 1,3 | 59,5 % | 17,9 % |
+| Probabilidad ≥ 30 % | 7,0 | 47,9 % | 78,3 % |
+| **Probabilidad ≥ 40 %** | **4,1** | **55,3 %** | 53,5 % |
+| Probabilidad ≥ 50 % | 1,5 | 58,9 % | 20,3 % |
 | Sin modelo: todos los que llevan 24 h (12 h más tarde) | 8,1 | 52,9 % | 100 % |
 
-**Lectura:** con un corte de 40 %, el estimador da 4,1 alertas diarias a las 12 h y acierta tanto como esperar a las 24 h y alertar a todos (54 % frente a 53 %), pero con **12 horas más de margen** y la mitad de alertas. A cambio, detecta solo a la mitad (52 %) de los que terminarán esperando más de 48 h. Complementa la alerta C de `src/alertas.py` (a las 48 h de espera), que avisa más tarde y acierta más.
+**Lectura:** con un corte de 40 %, el estimador da 4,1 alertas diarias a las 12 h y acierta algo más que esperar a las 24 h y alertar a todos (55 % frente a 53 %), pero con **12 horas más de margen** y la mitad de alertas. A cambio, detecta solo a la mitad (54 %) de los que terminarán esperando más de 48 h. Complementa la alerta C de `src/alertas.py` (a las 48 h de espera), que avisa más tarde y acierta más.
 
 **4. En el dashboard.** `dashboard/estimador.py` reúne todo en una página. Se describe al paciente (edad, sexo, tipo de visita, horas de espera y, si se sabe, su hospitalización anterior y sus etapas en urgencias) y muestra:
 - la ventana más probable y el gráfico de ventanas con la acumulada;
@@ -196,6 +196,25 @@ Código: `src/utilidad_estimador.py`. La precisión para un paciente tiene un te
 - el resumen de qué tan bien funciona, leído de las tablas agregadas.
 
 No usa datos de pacientes. El censo de pacientes en espera necesitaría los datos del hospital en tiempo real, que no tenemos.
+
+### 3.3 Banderas de laboratorio de las primeras 6 h (8-nov) y las dos maneras de entrenar
+Código: `src/comparar_estimadores.py` v3 (`laboratorios()`, `cols_finales()`); datos: `sev_hemograma_6h_*.csv` y `sev_quimica_6h_*.csv` (`sql/severidad_labs_6h.sql`, de Daniela).
+Con los valores de las primeras 6 h de la visita se arma una bandera por cada valor anormal, con los cortes de `src/severidad_labs.py`: leucocitos > 12 o < 4, hemoglobina < 10, creatinina > 1,5, BUN > 40, lactato > 2,2, potasio > 5,5, sodio < 130 o > 150, troponina > 1,0 y PCR > 50. Se usan **por separado**, porque sumarlas cancela efectos opuestos (`docs/espera_con_labs_y_severidad.md`). Las banderas solo entran desde las 6 h de espera, porque antes el resultado no se conoce. El 40 % de las estancias tiene algún valor; las demás quedan con todas las banderas en 0 y `con_laboratorio_6h = 0`. Con los valores numéricos en vez de las banderas el resultado es casi igual; se eligen las banderas porque se explican solas.
+
+**Manera 1: validación honesta** (entrenar hasta jun-2025 y probar con jul-2025 a 9-abr-2026). Mejora frente al rango general:
+
+| Horas esperando | Sin banderas, modelo fijo | **Con banderas, modelo fijo** | Sin banderas, reentreno mensual | **Con banderas, reentreno mensual** |
+|---|---|---|---|---|
+| 6 h | 9,7 % | **10,6 % (9,6 a 11,6)** | 10,8 % | **11,7 % (10,7 a 12,8)** |
+| 12 h | 7,1 % | **8,0 % (6,4 a 9,5)** | 7,6 % | **7,9 % (6,3 a 9,5)** |
+| 24 h | 5,3 % | **6,1 % (4,5 a 7,8)** | 6,3 % | **6,3 % (4,4 a 8,0)** |
+| 48 h | 1,5 % | **2,9 % (0,9 a 4,7)** | — | — |
+
+Antes de las 6 h nada cambia (8,4 % / 8,9 % al llegar y 10,4 % / 11,3 % a las 3 h). En la prueba con el modelo fijo, la diferencia por las banderas es real: +1,1 puntos a las 6 h (IC 0,7 a 1,5), +1,1 a las 12 h (0,5 a 1,8) y +1,1 a las 24 h (0,4 a 1,9). Los percentiles siguen calibrados (87–88 % debajo del p90). Con el reentreno mensual, la ganancia se concentra en las 6 h; a las 12 y 24 h el reentreno ya no le suma al modelo fijo (diferencia −0,7 a +0,6 y −0,9 a +1,1).
+
+**Manera 2: el modelo que se consulta, con todos los datos** (feb-2023 a 9-abr-2026, con más peso en lo reciente, vida media de 6 meses). Es el que guarda `src/estimador_tiempo_restante.py` (versión 6 del paquete, en `HUN_PROCESADOS/modelos/`, fuera del repositorio). **No se puede calificar con datos que no vio**, porque usa todos los meses y no queda nada para probar. Su precisión esperada es la de la columna «reentreno mensual» de la manera 1, que imita justamente esto: cada mes se entrena con todo lo conocido hasta ese momento, con más peso en lo reciente. Por eso se recomienda volver a entrenarlo cada mes (borrar el `.joblib`).
+
+**Cómo se consulta:** `estimar_tiempo_restante(..., laboratorios_6h={"troponina_max": 2.3, "pcr_max": 80})`. Los valores que falten se toman como normales; sin el argumento se supone que no le tomaron laboratorio.
 
 ## 4. Qué haría falta para mejorarlo: la gravedad y el servicio al llegar
 Código: `src/procedimientos_escenario.py` (procedimientos) y `src/triage_aproximado.py` (laboratorios). Se recalcularon todos los modelos que usan datos del paciente agregando lo que dicen los procedimientos (gravedad y servicio, sección 1.5) y el grupo de diagnóstico. Los modelos de cola y las dos series no usan datos del paciente, así que no cambian.
@@ -222,7 +241,7 @@ En todos los casos los percentiles siguen bien calibrados (al llegar, con todo: 
 1. **La gravedad y el servicio son la información que faltaba.** Juntos duplican la mejora al llegar (de 8,4 % a 16,9 %), y con el diagnóstico la llevan a 20,0 %. Ningún cambio de modelo se acercó a eso. El error de la mediana baja de 23,7 h a 20,8 h.
 2. **Gravedad y servicio aportan cosas distintas,** porque juntos suman más que cada uno por separado. La gravedad dice quién recibe cama rápido (UCI); el servicio dice quién espera más (cirugía, urología, ortopedia).
 3. **Un triage real debería servir todavía más,** porque se registra al llegar y no tiene el ruido de los procedimientos sin fecha.
-4. **Los laboratorios tempranos casi no ayudan** (−0,3 a +0,4 puntos, `src/triage_aproximado.py`).
+4. **El número de laboratorios tempranos casi no ayuda** (−0,3 a +0,4 puntos, `src/triage_aproximado.py`), pero **sus valores sí**: las banderas de valores anormales de Daniela suman ~1 punto desde las 6 h y ya están en el estimador (sección 3.3). Esta tabla de escenarios se calculó antes de sumarlas (columna «Sin procedimientos» = estimador sin banderas).
 
 **Para la recomendación R1** (`docs/recomendaciones.md`): **registrar en la base el nivel de triage y el servicio que recibirá al paciente**, con su hora. Con esos dos datos, la estimación de la espera de cada paciente podría mejorar alrededor del doble.
 
@@ -271,7 +290,7 @@ export HUN_PROCESADOS="D:/Descargas D/Datos/procesados" HUN_TABLAS="D:/Descargas
 ```
 1. **Tabla de episodios:** `src/analisis_etapas.py` y `src/preparar_variables.py`, con los CSV de la base en `datos/crudos/` y `P02_persona_de_los_diagnosticos.csv` y `P03_persona_de_los_laboratorios.csv` en `datos/crudos/auditoria_bd/`. Copiarlos ahí solo mientras corren y mover luego `datos/procesados/` a la carpeta externa.
 2. **Utilidad (ventanas, censo y alerta):** `python3 src/utilidad_estimador.py` (~10 min). Escribe `utilidad_*.csv` en `HUN_TABLAS` y `resultados/graficos/utilidad_estimador.png`.
-3. **Construcción y prueba del estimador:** `python3 src/comparar_estimadores.py` (~1,5 min). Escribe `comparacion_estimadores_*.csv` en `HUN_TABLAS` y `resultados/graficos/comparacion_estimadores.png`. Las formas de entrenar (sección 3.1): `python3 src/ventana_entrenamiento.py` (~10 min).
+3. **Construcción y prueba del estimador:** `python3 src/comparar_estimadores.py` (~1,5 min). Escribe `comparacion_estimadores_*.csv` en `HUN_TABLAS` y `resultados/graficos/comparacion_estimadores.png`. Las formas de entrenar (sección 3.1): `python3 src/ventana_entrenamiento.py` (~10 min). Las banderas de laboratorio (sección 3.3) entran solas si `sev_hemograma_6h_*.csv` y `sev_quimica_6h_*.csv` están en `HUN_CRUDOS`; el modelo de consulta con todos los datos se entrena con `python3 src/estimador_tiempo_restante.py` (borrando antes el `.joblib`).
 4. **Escenarios de gravedad y servicio:** `python3 src/procedimientos_escenario.py` (~4 min; necesita `procedimientos_por_estancia.csv` en `HUN_CRUDOS`) y `python3 src/triage_aproximado.py` (laboratorios).
 5. **Alternativas:** `python3 src/estimador_tiempos.py` (tabla de perfiles), `python3 src/espera_dos_series.py` (dos series) y `python3 src/variables_descartadas.py` (datos que no aportan).
 6. **Consulta:** `python3 src/estimador_tiempo_restante.py 67 Mujer Urgencias 6 "2026-03-04 15:00"`. Sin argumentos muestra los ejemplos de la sección 2.
