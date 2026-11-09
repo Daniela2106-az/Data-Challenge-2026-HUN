@@ -30,7 +30,7 @@ DIAS_SIN_USAR = 14             # en el reentrenamiento mensual, las llegadas de 
 def modelo(d, rejilla, estado, tr, desde, vida=None):
     if desde < ce.HORAS_RECORRIDO:
         return ce.entrenar_landmark(tr, rejilla, estado, desde, vida_media_dias=vida)
-    return ce.entrenar_m1(tr, rejilla, estado, ce.COLS_M1_BASE + ce.HIST, vida_media_dias=vida)
+    return ce.entrenar_m1(tr, rejilla, estado, ce.cols_finales(desde), vida_media_dias=vida)
 
 
 def reentreno_mensual(d, rejilla, estado, sub, desde, vida):
