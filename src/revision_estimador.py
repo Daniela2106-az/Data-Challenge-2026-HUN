@@ -4,9 +4,9 @@ Tarea A6: revision del estimador de tiempo restante (docs/estimador_tiempos.md, 
 codigo y que la v2 no habia medido. Usa la misma prueba que comparar_estimadores.py (entrenamiento feb-2023 a jun-2025, prueba jul-2025 a 9-abr-2026).
 
 QUE PRUEBA
-  1. EL MODELO QUE SE USA, HORA POR HORA. La v2 se probo con modelos por momento entrenados justo en 0, 3 y 6 h, pero el que se consulta tiene modelos en
-     0, 2, 4, 6 y 9 h y para otras horas usa el mas cercano por debajo. Aqui se evalua ese esquema en cada hora de 0 a 11 y se compara con un modelo
-     entrenado justo en esa hora. Si en alguna hora el esquema usado pierde mucho, hay que agregar modelos.
+  1. EL MODELO QUE SE USA, HORA POR HORA. La v2 se probo con modelos entrenados justo en 0, 3 y 6 h, pero el que se consultaba tenia modelos en 0, 2, 4,
+     6 y 9 h (el mas cercano por debajo). Desde estimador_tiempo_restante.py v4 hay un modelo por cada hora de 0 a 11, asi que aqui se mide su resultado
+     en cada hora y, para comparar, el del esquema viejo (0, 2, 4, 6, 9). Que el nuevo gane confirma el cambio.
   2. ¿EL RECORRIDO EN URGENCIAS ES UNA FUGA? Sospecha: quien tiene varias etapas abiertas recibe cama pronto porque esas etapas se abren en el tramite de
      hospitalizacion (el modelo veria que ya se pidio la cama, no lo predeciria). Dos pruebas:
      a) descriptiva: cuanto antes de la cama empieza la ultima etapa de urgencias, y en cuantas estancias empieza en la hora previa;
@@ -44,8 +44,11 @@ def decir(texto=""):
     LINEAS.append(texto)
 
 
-def landmark_usado(h):
-    return max(L for L in etr.LANDMARKS if L <= h)
+LANDMARKS_V3 = [0, 2, 4, 6, 9]                  # esquema anterior, solo para comparar
+
+
+def landmark_usado(h, landmarks=None):
+    return max(L for L in (landmarks or etr.LANDMARKS) if L <= h)
 
 
 def evaluar(tr, sub, preds, desde):
@@ -76,24 +79,24 @@ def diferencia(y, semana, p_a, p_b):
 # ----------------------------------------------------------------------
 def prueba_por_hora(tr, te, rejilla, estado):
     decir("\n1) MODELO QUE SE USA, HORA POR HORA (0 a 11 h de espera)")
-    usados = {L: ce.entrenar_landmark(tr, rejilla, estado, L) for L in etr.LANDMARKS}
+    modelos = {L: ce.entrenar_landmark(tr, rejilla, estado, L) for L in sorted(set(etr.LANDMARKS) | set(LANDMARKS_V3))}
     filas = []
     for h in HORAS:
         sub = te[te.espera_cama_h > h].reset_index(drop=True)
-        L = landmark_usado(h)
-        p_usado = ce.predecir_m1(usados[L], sub, rejilla, estado, h)
-        p_justo = p_usado if L == h else ce.predecir_m1(ce.entrenar_landmark(tr, rejilla, estado, h), sub, rejilla, estado, h)
-        f, y, sem = evaluar(tr, sub, {f"usado (modelo de {L} h)": p_usado, "entrenado justo en esa hora": p_justo}, h)
-        dif = diferencia(y, sem, p_justo, p_usado) if L != h else (0.0, 0.0, 0.0)
+        L, Lv = landmark_usado(h), landmark_usado(h, LANDMARKS_V3)
+        p_nuevo = ce.predecir_m1(modelos[L], sub, rejilla, estado, h)
+        p_viejo = p_nuevo if Lv == L else ce.predecir_m1(modelos[Lv], sub, rejilla, estado, h)
+        f, y, sem = evaluar(tr, sub, {f"v4: modelo de {L} h": p_nuevo, f"v3: modelo de {Lv} h": p_viejo}, h)
+        dif = diferencia(y, sem, p_nuevo, p_viejo) if L != Lv else (0.0, 0.0, 0.0)
         for fila in f:
-            fila.update(landmark_usado=L, justo_mejor_que_usado_pct=dif[0], ic95_dif_bajo=dif[1], ic95_dif_alto=dif[2])
+            fila.update(landmark_usado=L, landmark_v3=Lv, justo_mejor_que_usado_pct=dif[0], ic95_dif_bajo=dif[1], ic95_dif_alto=dif[2])
         filas += f
-        decir(f"  {h:>2} h (usa el de {L} h): usado {f[0]['mejora_vs_general_pct']:+.1f} %  |  justo en la hora {f[1]['mejora_vs_general_pct']:+.1f} %  |  "
-              f"diferencia {dif[0]:+.1f} (IC {dif[1]:+.1f} a {dif[2]:+.1f})")
+        decir(f"  {h:>2} h: v4 (modelo de {L} h) {f[0]['mejora_vs_general_pct']:+.1f} %  |  v3 (modelo de {Lv} h) {f[1]['mejora_vs_general_pct']:+.1f} %  |  "
+              f"v4 mejor por {dif[0]:+.1f} (IC {dif[1]:+.1f} a {dif[2]:+.1f})")
     r = pd.DataFrame(filas)
     r.to_csv(ce.TABLAS / "revision_estimador_por_hora.csv", index=False)
     malas = r[(r.justo_mejor_que_usado_pct > 0) & (r.ic95_dif_bajo > 0)].horas_esperando.unique()
-    decir(f"  Horas en que un modelo propio seria claramente mejor (IC sin el 0): {list(map(int, malas)) or 'ninguna'}")
+    decir(f"  Horas en que el modelo propio de la hora (v4) es claramente mejor que el esquema viejo (IC sin el 0): {list(map(int, malas)) or 'ninguna'}")
     return r
 
 

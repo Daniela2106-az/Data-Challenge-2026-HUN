@@ -1,5 +1,7 @@
 """
-estimador_tiempo_restante.py  -  version 3 (9-nov-2026)
+estimador_tiempo_restante.py  -  version 4 (9-nov-2026)
+(v4: un modelo por cada hora de espera de 0 a 11 h, en vez de 0, 2, 4, 6 y 9 h con el mas cercano por debajo; asi el modelo que se consulta es el mismo
+ que se prueba en cada hora (src/revision_estimador.py, prueba 1). Modelo guardado version 7: el .joblib anterior se vuelve a entrenar solo.)
 (v3: avisa cuando el modelo esta desactualizado frente a la fecha consultada y cuando se usa la ocupacion tipica en vez de la real; dice a quien aplica
  (pacientes con orden de hospitalizacion); el modelo guardado pasa a la version 6 porque comparar_estimadores.py v3 corrigio el diagnostico previo y la
  zona de la ocupacion, asi que el .joblib anterior se vuelve a entrenar solo.)
@@ -13,14 +15,14 @@ QUE USA (todo se conoce en el momento de la consulta)
     tiene; y el grupo del ultimo diagnostico de una visita anterior. Sin historial, el modelo lo trata como paciente nuevo.
   - Su recorrido en urgencias (opcional): las etapas de atencion de esta visita, en horas desde la llegada (inicio y fin, o fin vacio si sigue abierta),
     y las admisiones. Si no se da, se asume lo mas comun: una etapa de atencion abierta desde la llegada y una admision al llegar.
-  Modelo: comparar_estimadores.py (M1, version 2): con menos de 12 h de espera, un modelo por momento (LANDMARKS: el mas cercano por debajo) con historial y recorrido; desde las 12 h, un
+  Modelo: comparar_estimadores.py (M1, version 2): con menos de 12 h de espera, un modelo por cada hora de espera (LANDMARKS: 0 a 11 h; se usa el de la hora entera ya cumplida) con historial y recorrido; desde las 12 h, un
   modelo con solo el historial (el recorrido ya no suma). Validado con jul-2025 a 9-abr-2026 (docs/estimador_tiempos.md); el modelo que se consulta se entrena
   con TODO el periodo confiable (feb-2023 a 9-abr-2026), con MAS PESO A LO RECIENTE (un dato de hace 6 meses pesa la mitad): el hospital cambio y asi
   estima mejor los meses nuevos (src/ventana_entrenamiento.py). Lo ideal es volver a entrenarlo cada mes con los datos nuevos (borrar el .joblib).
 
 DONDE SE GUARDA EL MODELO
   HUN_PROCESADOS/modelos/m1_tiempo_restante.joblib, fuera del proyecto (sale de datos clinicos). Si no existe, se entrena al primer uso (~2 min); para eso
-  hacen falta la tabla de episodios (HUN_PROCESADOS) y visit_detail.csv (HUN_CRUDOS). Son 6 modelos (5 por momento de la espera y 1 desde las 12 h).
+  hacen falta la tabla de episodios (HUN_PROCESADOS) y visit_detail.csv (HUN_CRUDOS). Son 13 modelos (12 por hora de espera y 1 desde las 12 h); entrenarlos tarda unos 4-5 min.
 
 USO
   from estimador_tiempo_restante import estimar_tiempo_restante
@@ -36,7 +38,7 @@ LIMITES
   paciente cualquiera que llega a urgencias no sirve (solo ~9 % se hospitaliza y eso no se sabe al llegar).
   DESACTUALIZACION: los datos confiables terminan el 9-abr-2026 (CLAUDE.md 4.9) y no se puede reentrenar con meses nuevos mientras el registro siga
   degradado. Si la fecha consultada esta a mas de DIAS_AVISO dias del fin del entrenamiento, el resultado trae un aviso.
-  Los modelos por momento (0, 2, 4, 6 y 9 h) se validan hora por hora en src/revision_estimador.py (la v2 solo se habia probado en 0, 3 y 6 h).
+  Hay un modelo por cada hora de 0 a 11 h, validado hora por hora en src/revision_estimador.py (la v2 tenia 0, 2, 4, 6 y 9 h y solo se probo en 0, 3 y 6 h).
 """
 import os
 import sys
@@ -50,10 +52,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import comparar_estimadores as ce  # noqa: E402
 import estimador_tiempos as et  # noqa: E402
 
-LANDMARKS = [0, 2, 4, 6, 9]                    # con 12 h o mas de espera se usa el modelo con solo el historial
+LANDMARKS = list(range(ce.HORAS_RECORRIDO))    # 0 a 11 h, uno por hora; con 12 h o mas se usa el modelo con solo el historial
 VIDA_MEDIA_DIAS = 182                          # peso a lo reciente: la mitad cada 6 meses hacia atras
 DIAS_AVISO = 60                                # mas de 60 dias entre el fin del entrenamiento y la fecha consultada: el modelo puede estar viejo
-VERSION_MODELO = 6
+VERSION_MODELO = 7
 MODELO = Path(os.environ.get("HUN_PROCESADOS", ce.PROC)) / "modelos" / "m1_tiempo_restante.joblib"
 _CACHE = {}
 
@@ -107,7 +109,7 @@ def estimar_tiempo_restante(edad, sexo, tipo_visita, horas_esperando=0, ahora=No
     s = np.array([a for a, _ in etapas], float)
     e = np.array([np.nan if b is None else b for _, b in etapas], float)
     rec = ce.recorrido_paciente(s, e, np.array(adm, float), np.full(len(k), float(horas_esperando)), k.astype(float))
-    X = pd.DataFrame({"transcurrido": k, "hora_reloj": reloj.hour, "dia_semana": reloj.dayofweek, "ocup": ocup,
+    X = pd.DataFrame({"transcurrido": k, "hora_reloj": reloj.hour, "dia_semana": reloj.day_of_week, "ocup": ocup,
                       "edad_cod": et.EDADES.index(grupo), "tipo_cod": et.TIPOS.index(tipo_visita), "sexo_cod": int(sexo == "Mujer"),
                       "zona_cod": int(zona == "ninos"),
                       "espera_prev_h": hp.get("espera_h", np.nan), "estancia_prev_h": hp.get("estancia_h", np.nan),

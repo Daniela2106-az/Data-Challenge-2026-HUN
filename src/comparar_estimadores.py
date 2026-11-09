@@ -82,7 +82,7 @@ DESDE, HASTA, CORTE = et.DESDE, et.HASTA, et.CORTE
 Q = et.CUANTILES
 MAX_H = 240                                   # horizonte de la supervivencia (10 dias); mas alla se toma como 240 h
 CONTROLES = [3, 6, 12, 24, 48]
-HORAS_RECORRIDO = 12                          # desde aqui el estimador final usa solo el historial                   # horas de espera en que se vuelve a estimar
+HORAS_RECORRIDO = 12                          # desde aqui el estimador final usa solo el historial
 SEMILLA = 7
 N_BOOT = 1000
 # Ago-sep 2025: sobredemanda porque hospitales cercanos fueron intervenidos por el Estado y el HUN quedo como la unica opcion de la zona (dato del
@@ -338,7 +338,7 @@ def filas_persona_hora(d, rejilla, estado, desde=0, fijar_estado=False, cols=COL
         cola, ocup = cola0[idx], ocup0[idx]
     else:
         cola, ocup = estado_en(d.iloc[idx].reset_index(drop=True), rejilla, estado, kk)
-    X = pd.DataFrame({"transcurrido": kk, "hora_reloj": reloj.hour, "dia_semana": reloj.dayofweek, "cola": cola, "ocup": ocup,
+    X = pd.DataFrame({"transcurrido": kk, "hora_reloj": reloj.hour, "dia_semana": reloj.day_of_week, "cola": cola, "ocup": ocup,
                       **{c: d[c].to_numpy()[idx] for c in cols if c not in DINAMICAS}})
     if any(c in REC for c in cols):
         for c, v in recorrido_filas(d, idx, kk, desde, fijar_estado, retraso_h).items():
@@ -402,7 +402,7 @@ COLS_M2 = ["hora", "dia_semana_num", "mes", "edad_cod", "tipo_cod", "sexo_cod", 
 
 def matriz_m2(d, rejilla, estado):
     cola0, ocup0 = estado_en(d, rejilla, estado, 0)
-    return d.assign(cola0=cola0, ocup0=ocup0, mes=d.ini_est.dt.month, dia_semana_num=d.ini_est.dt.dayofweek)[COLS_M2]
+    return d.assign(cola0=cola0, ocup0=ocup0, mes=d.ini_est.dt.month, dia_semana_num=d.ini_est.dt.day_of_week)[COLS_M2]
 
 
 def m2(tr, te, rejilla, estado, cols=COLS_M2):
@@ -421,10 +421,10 @@ def tasas_asignacion(h):
     """Camas asignadas por hora, por zona, hora del dia y dia de la semana (promedio del entrenamiento)."""
     a = h[(h.ini_hosp_est >= DESDE) & (h.ini_hosp_est < CORTE)]
     slots = pd.date_range(DESDE, CORTE, freq="h", inclusive="left")
-    n_slots = pd.Series(1, index=slots).groupby([slots.dayofweek, slots.hour]).sum()
+    n_slots = pd.Series(1, index=slots).groupby([slots.day_of_week, slots.hour]).sum()
     tasa = {}
     for zona, g in a.groupby("zona"):
-        c = g.groupby([g.ini_hosp_est.dt.dayofweek, g.ini_hosp_est.dt.hour]).size()
+        c = g.groupby([g.ini_hosp_est.dt.day_of_week, g.ini_hosp_est.dt.hour]).size()
         tasa[zona] = (c.reindex(n_slots.index, fill_value=0) / n_slots).to_numpy().reshape(7, 24)
     return tasa
 
@@ -435,7 +435,7 @@ def m3(d, rejilla, estado, tasa, desde=0, fifo=False):
     t = d.ini_est.to_numpy()[:, None] + k[None, :] * H1
     reloj = pd.DatetimeIndex(t.ravel())
     ninos = (d.zona.to_numpy() == "ninos")[:, None]
-    lam = np.where(ninos, tasa["ninos"][reloj.dayofweek, reloj.hour].reshape(t.shape), tasa["adultos"][reloj.dayofweek, reloj.hour].reshape(t.shape))
+    lam = np.where(ninos, tasa["ninos"][reloj.day_of_week, reloj.hour].reshape(t.shape), tasa["adultos"][reloj.day_of_week, reloj.hour].reshape(t.shape))
     if fifo:
         delante = np.maximum(cola - 1, 0)                   # la cola ya incluye al paciente
         Lam = np.cumsum(lam, axis=1)
