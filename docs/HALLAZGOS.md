@@ -21,7 +21,7 @@ señala qué script o consulta la produciría. Distingue siempre *asociación* d
 3. **Cuello de botella (definición del proyecto):** un segmento donde el paciente espera un recurso, con exceso sobre una referencia
    de "cuando funciona bien", impacto alto (volumen × retraso) y que se agrava con la carga.
 4. **El principal cuello de botella es la espera de cama:** mediana de **18,6 h** y percentil 90 de **73,9 h** desde que llega el
-   paciente hasta que entra a cama. El 80 % de esas horas es tiempo en urgencias y el 21 % es tiempo sin ninguna etapa registrada.
+   paciente hasta que entra a cama. Casi todas esas horas (98 %) son tiempo en urgencias antes de que se asigne la cama; el tiempo sin ninguna etapa registrada es ~1 % (corregido el 7-nov, `CLAUDE.md` 4.12).
 5. **Los peores casos empeoran:** la espera mediana casi no cambia (17–19 h) pero el percentil 90 sube de 61 h (2023) a 80 h (2026).
 6. **Las altas son tardías:** el 62,7 % de las altas ocurre entre las 14:00 y las 18:59 y solo el 14 % antes del mediodía; las camas
    se asignan a las 17–18 h. Quien llega a media tarde espera más (mediana de ~25 h frente a 12–15 h de madrugada).
@@ -101,8 +101,8 @@ controles sobre la base y sobre los CSV exportados; Q1 y Q2 también coincidiero
 - **Estancia en cama (episodio):** mediana 71 h, percentil 75 de 144 h, percentil 90 de 280 h, media 5,2 días.
 - **Urgencias sin hospitalizar (solo el 38 % tiene duración):** mediana 9,6 h, percentil 90 de 45 h. Está sesgada: los niños (30 % medidos) y las
   visitas ambulatorias (10 %) están subrepresentados frente a adultos mayores de 65 (48 %).
-- **Entre etapas casi no hay tiempo muerto:** ER>TU 99 % pegadas; HOSP>HOSP 99 %; TU>TU 94 %. La excepción es TU>HOSP: 23,8 % de los
-  hospitalizados tiene más de 1 h sin ninguna etapa antes de la cama (mediana de 19,7 h entre los que tienen hueco).
+- **Entre etapas casi no hay tiempo muerto:** ER>TU 99 % pegadas; HOSP>HOSP 99 %; TU>TU 94 %. La supuesta excepción TU>HOSP (23,8 % con más de 1 h sin etapa) **era un artefacto de las estancias duplicadas**: en el registro de la persona real solo el 1,7 % de las
+  estancias tiene más de 1 h sin etapa antes de la cama (`CLAUDE.md` 4.12).
 - **Hospitalizados:** ~20 ingresos a cama por día.
 
 ---
@@ -126,7 +126,7 @@ simulación de camas). Fuente: `src/construir_segmentos.py`, `src/ranking_cuello
 | Estancia en cama | 25.777 | 40,0 | 70,7 | 143,9 | 280,3 |
 
 - El 43,7 % espera más de 24 h y el 19 % más de 48 h.
-- Urgencias antes de la cama concentra el **80 %** de las horas de espera; el hueco, el 21 %. Lidera con las 4 referencias.
+- Urgencias antes de la cama concentra el **98 %** de las horas de espera; el hueco, ~1–3 % (antes se decía 80 % y 21 %: corrección del 7-nov, `CLAUDE.md` 4.12). Lidera con las 4 referencias.
 - Con la referencia de carga baja (mediana de 14,7 h), el **64 %** de las horas de espera de cama (518 mil de 812 mil horas-paciente) es exceso.
 
 ### 4.3 Tendencia: empeoran los peores casos
@@ -149,10 +149,10 @@ Desde el 10-abr-2026 el registro está degradado (ver 4.9 de `CLAUDE.md`): lo qu
   relación no aparece: el mecanismo es dentro del día.
 - **El orden de llegada casi no predice el orden de cama** (53 % de pares consecutivos en orden; el azar sería 50 %).
 
-### 4.5 Qué explica la espera (modelo sobre log(espera + 1), R² = 15,8 %; recalculado el 3-nov con la regla de la persona real, CLAUDE.md 4.10)
-Pérdida de R² al quitar cada factor: diagnóstico 7,0 puntos (ojo: es en parte un dato administrativo; antes 3,9 con solo 38 % de cobertura), edad y sexo 4,1, tipo de visita 1,6 (por urgencias se
-espera más: ambulatorio −31 %, treatment urgency −39 %), hora de llegada 0,7, año 0,1, carga 0,1, laboratorios de 6 h 0,1,
-calendario ~0. **El 86 % de la variación no se explica con lo que se observa.** Un modelo "al llegar" para predecir si un paciente esperará
+### 4.5 Qué explica la espera (modelo sobre log(espera + 1), R² = 16,0 %; recalculado el 8-nov con la persona real, CLAUDE.md 4.10, y el mapeo de diagnósticos final)
+Pérdida de R² al quitar cada factor: diagnóstico 7,2 puntos (ojo: es en parte un dato administrativo; antes 3,9 con solo 38 % de cobertura), edad y sexo 4,1, tipo de visita 2,0 (por urgencias se
+espera más: ambulatorio −31 %, treatment urgency −39 %), hora de llegada 0,6, año 0,1, carga 0,1, laboratorios de 6 h 0,2,
+calendario ~0. **El 84 % de la variación no se explica con lo que se observa.** Un modelo "al llegar" para predecir si un paciente esperará
 más de 24 h tiene AUC de 0,60: no sirve para alertar a un paciente individual.
 
 ### 4.5b Espera y estancia por grupo de diagnóstico (`docs/diagnosticos_y_tiempos.md`)
@@ -169,7 +169,7 @@ estocástica de pacientes llegando. La simulación Monte Carlo de camas (ficha 3
 - Con la ley de Little (camas = ingresos × estancia): volver a la estancia de 2023 liberaría ~15 camas; bajarla 5 %, ~5; subir los ingresos 10 %
   añadiría ~10.
 - **Escenario "30 % de las altas de la tarde antes del mediodía"** (`src/simulacion_altas.py`): hasta 5,1 camas libres adicionales a las 12 h
-  (~34 horas-cama por día). Traducido a espera: **como máximo ~8 % del exceso** (455 horas-paciente por día), estimación ~3 %. Con el 100 %:
+  (~34 horas-cama por día). Traducido a espera: **como máximo ~8 % del exceso** (451 horas-paciente por día), estimación ~3 %. Con el 100 %:
   máximo 27 %. Supuestos: el alta de los demás no cambia; es una cota, no una predicción. **Nota sobre la capacidad:** el HUN reportó 106 camas de hospitalización; la ocupación media fue 94 (2023), 101 (2024) y 105 (2025), y en 2025 superó las 106 camas el 42 % de las horas (en 2023, el 2 %). El exceso viene de estancias largas con actividad diaria de hospitalización (las de más de 30 días pasaron de 6 a 13 camas). Puede ser sobreocupación con camas adicionales o una capacidad real mayor; los datos no lo distinguen (`CLAUDE.md` 4.8).
 - El **83 % de las horas de espera** viene de esperas de más de 24 h y el 57 % de esperas de más de 48 h (el 19 % de los pacientes).
 
@@ -177,6 +177,15 @@ estocástica de pacientes llegando. La simulación Monte Carlo de camas (ficha 3
 Con |z| > 3 frente al pronóstico: 14 días de llegadas, 9 de ingresos y 7 de espera (por azar se esperarían ~3 por serie). Casi todos son de
 menos actividad. Los dos más extremos (sábados 28-mar-2026 y 15-jun-2024: 88 y 111 llegadas con 1 y 8 ingresos a cama) parecen cortes de
 registro o de sistema (hipótesis). **Ningún día tuvo la espera más alta de lo esperado: el problema es crónico y de cola larga, no de días puntuales.**
+
+### 4.8 Qué pasa durante la espera y severidad desde los laboratorios (`docs/espera_con_labs_y_severidad.md`, 8-nov)
+- **Laboratorios dentro de la espera de cama:** solo el 38 % de las estancias tiene alguna toma entre la llegada y la asignación de cama. Las tomas por día bajan de 14,8 (esperas de menos de 6 h) a 2,0 (más de 72 h); en las esperas de más de 72 h la última toma cae en mediana 32 h antes de la cama. Las esperas largas son, en lo que se ve, más pasivas en exámenes. **No separa atención de espera pura**: sin laboratorio no significa sin atención (medicamentos y vigilancia no dejan huella).
+- **Severidad desde el texto de los laboratorios de las primeras 6 h** (leucocitos, hemoglobina, creatinina, BUN, lactato, potasio, sodio, troponina, PCR; 31.266 episodios con atención y laboratorio): la hospitalización va de 20 % con 0 valores fuera de rango a 57 % con 3 o más (AUC de 0,58 a 0,65 al sumarlos). Sube la estancia (+29 % con 3 o más). La puntuación sumada **no cambia la espera de cama** porque junta efectos opuestos: con troponina alta la espera es 41 % menor, con lactato o BUN alto ~18 % menor (reciben cama antes) y con PCR alta 13 % mayor. Agregar las banderas mejora la predicción del tiempo restante (R² de 12 % a 17 % entre quienes ya esperan 6 h; falta probarlo dentro de A6). Límites: solo quienes tienen laboratorio, puntos de corte genéricos sin validar por un clínico, asociación.
+
+### 4.9 Reingresos depurados y réplicas de llegadas (`docs/c4_reingresos_huecos_llegadas.md`, 8-nov)
+- **Reingreso** (llegada dentro de 72 h o 30 días tras un episodio anterior con atención, sin registros gemelos ni traslapes): **5,3 % en 72 h y 14,1 % en 30 días**. Tras una hospitalización, el 28,6 % vuelve en menos de 30 días (incluye controles programados). La columna del pipeline (6,6 % y 15,4 %) cuenta traslapes y registros gemelos.
+- **Réplicas de llegadas: 4,3 %** de los episodios (12,2 % de los que tienen cama; cota inferior). La proporción es estable (correlación de 0,998 entre la serie con y sin réplicas), así que no se deduplican: el pronóstico no mejora. Al citar un nivel absoluto, decir «~4 % menos, cota inferior».
+- **Hueco entre etapas** de un mismo episodio: 0,6 % del tiempo (TU a TU, 2,6 % de las horas de TU). No cambia ninguna cifra.
 
 ---
 
@@ -196,31 +205,41 @@ Entrenado hasta 2025-12, probado en ene–abr 2026, método elegido con la valid
 ### 5.2 Alertas (`src/alertas.py`, reproduciendo ene–abr 2026; cortes elegidos con la validación de 2025)
 | Alerta | Resultado |
 |---|---|
-| **A. Día congestionado a las 12 h** (llegadas > percentil 90 del mismo día de la semana) | AUC 0,94; 28 alertas (0,23/día), 15 aciertos: precisión 54 %, detección 83 %. A las 15 h: 73 % y 61 %. **Un día antes:** AUC 0,61 (precisión 43 %, detección 17 %): avisa a media jornada, no con un día de margen |
-| **B. Camas a 24 h** | La proyección (camas − altas esperadas + ingresos esperados) **no mejora a la persistencia** ("lo mismo que ahora"): error 4,3 contra 3,5 camas. Las altas esperadas tienen sesgo de +2,6 camas. Alerta de ocupación alta (≥ 123 camas): AUC 0,92, precisión 75 %, detección 90 %, 0,5 por día |
-| **C. Paciente sin cama** (solo los que luego se hospitalizan) | A las 24 h: 9,1 alertas/día, 23 % termina esperando > 72 h. **A las 48 h: 4,1/día, 51 %, 24 h de margen.** A las 60 h: 2,7/día, 79 %, 12 h de margen |
-Carga total recomendada (A a las 12 h, B persistencia, C a las 48 h): **~4,9 alertas por día**. Solo hay 18 días congestionados en la prueba: las cifras se mueven.
+| **A. Día congestionado a las 12 h** (llegadas > percentil 90 del mismo día de la semana) | AUC 0,94; 25 alertas (0,25/día), 13 aciertos: precisión 52 %, detección 87 %. A las 15 h: 75 % y 60 %. **Un día antes:** AUC 0,61 (precisión 43 %, detección 20 %): avisa a media jornada, no con un día de margen |
+| **B. Camas a 24 h** | La proyección (camas − altas esperadas + ingresos esperados) **no mejora a la persistencia** ("lo mismo que ahora"): error 3,7 contra 3,2 camas (prueba 2026). Las altas esperadas tienen sesgo de +2,0 camas. Alerta de ocupación alta (≥ percentil 80 de las 12 h: 107–109 camas): con la persistencia AUC 0,82, precisión 48 %, detección 76 %, 0,4 por día (la proyección: 40 % y 84 %, 0,5 por día) |
+| **C. Paciente sin cama** (solo los que luego se hospitalizan) | A las 24 h: 8,6 alertas/día, 24 % termina esperando > 72 h. **A las 48 h: 4,0/día, 52 %, 24 h de margen.** A las 60 h: 2,6/día, 80 %, 12 h de margen |
+Carga total recomendada (A a las 12 h, B persistencia, C a las 48 h): **~4,6 alertas por día** (recalculado el 8-nov con la regla v3.8). Solo hay 15 días congestionados en la prueba: las cifras se mueven.
 
 ### 5.3 Lo que se probó y no funcionó
 Fila de espera tipo "primero en llegar, primero en cama" (no respaldada por los datos); predecir la estancia de cada paciente (R² ≈ 0);
 pronóstico diario de ingresos con modelos más finos; proyección de camas a 24 h con altas esperadas; nivel con mediana de 28 días;
-deduplicar las llegadas, separar por edad o tipo de visita, puentes festivos y quincena (sin mejora). *No probado:* ingresos como fracción
-de las llegadas pronosticadas; factores externos (clima, dengue, eventos).
+deduplicar las llegadas, separar por edad o tipo de visita, puentes festivos y quincenas (el error cambia ±0,15 puntos, en ambos sentidos; `docs/quincenas_y_datos_externos.md`). *No probado:* ingresos como fracción
+de las llegadas pronosticadas. *Descartado por falta de datos:* dengue y lluvia (las series abiertas terminan en 2022; nuestros datos empiezan en 2023).
 
 ---
 
-## 6. Componente 4: recomendaciones (`docs/recomendaciones.md`, borrador)
+### 5.4 Estimación de la espera de cada paciente (A6, `docs/estimador_tiempos.md`)
+- **La espera es individual:** los pacientes que llegan el mismo día no esperan parecido (el día explica un 0,1 % más allá del azar). La ocupación y la cola casi no ayudan.
+- **Estimador: modelo de tiempo restante** (`src/estimador_tiempo_restante.py`). Da el rango de lo que le falta a un paciente que espera cama y la probabilidad de recibirla en 6, 12 y 24 h. Usa el paciente, la hora del reloj, la ocupación, su historial (la espera se repite: Spearman 0,34 con la hospitalización anterior) y su recorrido en urgencias, con un modelo por momento de la espera.
+- **Prueba** (entrenamiento feb-2023 a jun-2025, prueba jul-2025 a 9-abr-2026, 5.430 estancias): mejora 7,6 % al llegar (IC 95 % 6,7 a 8,5) y 9,2–9,5 % a las 3–6 h frente a dar el mismo rango a todos; los percentiles aciertan (26,3 / 51,4 / 73,8 / 87,7 % debajo de p25 / p50 / p75 / p90). Le gana con margen comprobado a la tabla de perfiles, a un modelo de cuantiles y a dos modelos de cola. Agosto y septiembre de 2025 (sobredemanda, dato del equipo) dan el mismo resultado.
+- **Gravedad y servicio (procedimientos de cada estancia, sin fecha):** el hospital da cama rápido a los graves (UCI: mediana 2,7 h) y hace esperar más a urología (37,7 h), ortopedia (32,8 h) y cirugía general (29,6 h). Si al llegar se supieran la gravedad y el servicio, la mejora pasaría de 7,6 % a 15,8 % (18,6 % sumando el diagnóstico; escenario optimista). **Registrar el triage y el servicio** es la mejora de datos que más ayudaría.
+- **La hora del reloj manda:** el 24 % de las camas se asigna entre las 15 y las 17 h y el 37 % entre las 20 y las 23 h; entre las 6 y las 12 h casi nadie recibe cama.
+- **El hospital cambió** (p90 de la espera de 61 a 81 h entre 2023 y 2026): reentrenar cada mes con más peso en lo reciente mejora la estimación en todos los momentos (8,1 % al llegar, 10,3 % a las 3 h; la diferencia con el modelo fijo es real hasta las 6 h). El estimador final se entrena así (`src/ventana_entrenamiento.py`).
+
+---
+
+## 6. Componente 4: recomendaciones (`docs/recomendaciones.md`, fuentes verificadas el 6-nov)
 1. Registrar mejor: hora de salida de urgencias, asignación de cama y sin duplicados (habilita medir todo lo demás).
-2. Seguimiento mensual de 6 indicadores (espera p50/p90 de 18/73,9 h, % con más de 48 h sin cama 19 %, % de altas antes del mediodía 15 %, hora de
+2. Seguimiento mensual de 6 indicadores (espera p50/p90 de 18,6/73,9 h, % con más de 48 h sin cama 19 %, % de altas antes del mediodía 14 %, hora de
    asignación de cama 17–18 h, camas ocupadas a las 12 h ~103, estancia media 5,31 días).
 3. Reunión diaria de camas a media mañana apoyada en las alertas.
 4. Meta de altas antes del mediodía (empezar con 25–30 %): hasta 5,1 camas libres, como máximo 8 % del exceso de espera.
 5. Alerta por paciente a las 48 h sin cama, con un responsable (~4 por día).
 6. Protocolo para quien llega entre las 13 y las 18 h y se hospitaliza (entre ~11 y ~49 horas-paciente por día, ver `src/impacto_llegada_tarde.py`; confianza baja).
 7. Revisión semanal de estancias largas (−5 % de estancia ≈ 5 camas).
-**Los datos no respaldan:** "hacen falta más camas" (la ocupación ya supera las 106 camas reportadas el 42 % de las horas de 2025, pero no se sabe si es sobreocupación o mayor capacidad real), más personal según el día de la semana, ni priorizar pacientes
-concretos por riesgo de esperar. La literatura externa sobre altas antes del mediodía es **mixta** (un programa reportó 0,30 días menos de estancia;
-otro hospital no halló efecto); las fuentes se leyeron solo en resumen y hay que verificarlas.
+**Los datos no respaldan:** más personal según el día de la semana, ni priorizar pacientes
+concretos por riesgo de esperar. Tampoco permiten calcular cuántas camas harían falta: la ocupación supera las 106 camas reportadas el 42 % de las horas de 2025, pero no se sabe si es sobreocupación o mayor capacidad real. La literatura externa sobre altas antes del mediodía es **mixta** (un programa reportó 0,30 días menos de estancia;
+otro hospital no halló efecto). Las 12 fuentes se comprobaron el 6-nov, 4 de ellas con un resumen (nivel de verificación de cada una en `docs/recomendaciones.md`, sección 6).
 
 ---
 
@@ -229,10 +248,9 @@ otro hospital no halló efecto); las fuentes se leyeron solo en resumen y hay qu
 - **Por qué se degrada el registro de etapas desde el 10-abr-2026:** cambio de sistema o de extracción; la auditoría descarta que sea menos demanda (las visitas no bajaron).
 - **Cuál de las dos personas es la real** en las estancias gemelas.
 - **La espera en urgencias mezcla atención y espera de cama**; no se pueden separar con los datos.
-- Las **llegadas** incluyen ≥ 4 % de réplicas (sin deduplicar a propósito); la ocupación de urgencias (`ocup_tu`) y la cobertura por ruta cuentan todos los episodios.
+- Las **llegadas** incluyen 4,3 % de réplicas (cota inferior; sin deduplicar a propósito, 4.9); la ocupación de urgencias (`ocup_tu`) y la cobertura por ruta cuentan todos los episodios.
 - Todo son **asociaciones y escenarios**, no causas probadas.
-- **El reparto de lo que falta, con responsable y entrega, está en `docs/pendientes_y_reparto.md`.** Pendiente de ensamblaje: documento final, dashboard de Power BI (Samuel), simulación Monte Carlo de camas y modelo explicativo (Anthony), perfiles de pacientes y factores de la estancia (Daniela),
-  `mapeo_dx.csv` (grupos de diagnóstico), sesión de preguntas con el HUN y una simulación estocástica (Monte Carlo) de la ocupación de camas.
+- **El reparto de lo que falta, con responsable y entrega, está en `docs/pendientes_y_reparto.md`.** Pendiente de ensamblaje (8-nov): documento final, dashboard en Dash (Samuel), modelo explicativo de la espera y simulación Monte Carlo de camas (Anthony). `mapeo_dx.csv` queda como borrador sin validación clínica (limitación declarada).
 
 ---
 
@@ -248,7 +266,7 @@ otro hospital no halló efecto); las fuentes se leyeron solo en resumen y hay qu
 | ¿Se puede predecir la demanda? | Llegadas sí (7,5 % de error); ingresos diarios no, por semana 9,5 % | 5.1 |
 | ¿Qué alertas se proponen? | Día congestionado a las 12 h; ocupación alta; paciente a las 48 h sin cama | 5.2 |
 | ¿Por qué se quitaron datos como "duplicados"? | 41 % de las estancias estaban en dos personas | 2 |
-| ¿Se puede reproducir sin la base? | No: hay 8 CSV exportados de la base que no están en git y no se pueden regenerar. Con ellos todo se regenera en menos de un minuto (probado en un clon limpio) | `README.md` |
+| ¿Se puede reproducir sin la base? | No: hay 10 archivos exportados de la base (los 8 CSV de entrada y P02 y P03, que dan la persona real) que no están en git y no se pueden regenerar. Con ellos el pipeline se regenera en menos de un minuto y la tabla de episodios sale idéntica (probado en un clon limpio el 8-nov) | `README.md` |
 | ¿Qué dijo el HUN? | Nada por correo; habrá una sesión de preguntas (preguntas listas en `docs/hun/sesion_de_preguntas.md`) | 7 |
 
 ---
@@ -260,6 +278,8 @@ otro hospital no halló efecto); las fuentes se leyeron solo en resumen y hay qu
 | `src/analisis_etapas.py` (v3.7) | Limpia etapas y copias, arma episodios, marca estancias gemelas, espera de cama | `episodios.csv`, `bloques.csv`, `espera_cama.csv` |
 | `src/generar_borrador_mapeo_dx.py` → `src/diagnosticos_y_tiempos.py` | Agrupa diagnósticos y compara tiempos por grupo | `datos/referencia/mapeo_dx.csv`, `tiempos_por_dx.csv`, `efecto_dx_espera.csv` |
 | `src/preparar_variables.py` (v2.1) | Agrega calendario, paciente, diagnóstico, ocupación, series | `tabla_episodios.parquet`, `serie_horaria.csv`, `serie_diaria.csv` |
+| `src/comparar_estimadores.py` → `src/estimador_tiempo_restante.py` | A6: construye y prueba el estimador de la espera (historial, recorrido, un modelo por momento) contra las alternativas, y deja la función de consulta | `comparacion_estimadores_ic.csv`, `comparacion_estimadores.png` |
+| `src/estimador_tiempos.py`, `src/espera_dos_series.py`, `src/triage_aproximado.py` | A6: tabla de perfiles, espera en dos series y escenario de gravedad | `estimador_tiempos.csv`, `espera_dos_series_*.csv`, `triage_aproximado.csv` |
 | `src/exportar_para_equipo.py` (v2) | Tablas para el equipo y Power BI | `estancias_hospitalizacion.csv`, `panel_diario.csv` |
 | `src/generar_q3_q4_desde_csv.py` | Reproduce Q3 y Q4 sobre los CSV con DuckDB | `q3_episodios.csv`, `q4_ocupacion_por_hora.csv` |
 | `src/construir_segmentos.py` | Segmentos, inventario, sesgo de medición | `segmentos.csv` |
@@ -270,6 +290,10 @@ otro hospital no halló efecto); las fuentes se leyeron solo en resumen y hay qu
 | `src/pronostico_demanda.py` (v1.3) | Pronóstico de demanda | `pronostico_metricas.csv` |
 | `src/alertas.py` | Alertas A, B y C | `alertas_*.csv` |
 | `src/dias_atipicos.py` | Días atípicos | `dias_atipicos.csv` |
+| `src/c4_reingresos_huecos_llegadas.py` | Reingresos depurados, huecos entre etapas y réplicas de llegadas | `c4_*.csv` |
+| `src/prueba_quincenas.py` | Prueba de quincenas en el pronóstico | `prueba_quincenas.csv` |
+| `src/espera_con_labs.py` (con `sql/espera_labs_y_texto.sql`) | Laboratorios dentro de la espera de cama | `espera_con_labs_por_banda.csv` |
+| `src/severidad_labs.py` (con `sql/severidad_labs_6h.sql`) | Severidad desde el texto de los laboratorios | `severidad_labs_*.csv` |
 | `sql/exportaciones_base.sql`, `sql/consultas_semana1.sql` | Exportan de la base los 8 CSV de entrada | `datos/crudos/*.csv` |
 | `sql/consultas_cuellos_botella.sql` | Q0 a Q5 y Q3b | — |
 

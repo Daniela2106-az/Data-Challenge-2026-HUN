@@ -16,10 +16,10 @@ demanda, alertas, días atípicos, borrador de recomendaciones y un repositorio 
 
 | Persona | Pendientes | Prioridad |
 |---|---|---|
-| **Daniela** | A1 perfiles de pacientes, A2 factores de la estancia hospitalaria (con la ampliación A2b: qué comparten las estancias que se disparan), A3 `mapeo_dx.csv`, y la coordinación (C1 a C3) | Ahora |
+| **Daniela** | Hechas: A1, A2, A2b, A3 (borrador), A7, A8 1 a 5 y 8 (y 6/8/10), C2, C4. Pendientes: C3 (subir tablas actualizadas al drive y avisar) y C6 (validación clínica de `mapeo_dx.csv`) | Ahora |
 | **Anthony** | Ninguno — A4 (8-nov) y A5 (9-nov) hechas | — |
-| **Samuel** | B1 dashboard de Power BI, B2 recomendaciones (verificar fuentes y dejarlas finales), **A6 estimar tiempos de atención** | Al final (B2 puede empezar antes; A6 después de los análisis A) |
-| Por decidir más adelante | A7 sistema repetible de diagnóstico de cuellos de botella, B3 documento final, B4 presentación | Después |
+| **Samuel** | B1 dashboard (solo Dash). B2 y A6 ya hechas y mergeadas | Al final |
+| Por decidir más adelante | B3 documento final, B4 presentación | Después |
 
 ---
 
@@ -101,7 +101,8 @@ demanda, alertas, días atípicos, borrador de recomendaciones y un repositorio 
 - **Insumos:** `estancias_hospitalizacion.csv`, `panel_diario.csv`; referencias: `src/simulacion_altas.py`, `src/pronostico_demanda.py`, `docs/HALLAZGOS.md` 4.6 y 5.1.
 - **Ojo:** la ocupación observada debe salir de estancias únicas (~100 camas), no de `serie_horaria.csv` viejo.
 
-### A6. Estimar tiempos de atención (componente 3) · **Samuel** (asignado por Daniela el 23-oct; queda para después de los análisis A)
+### A6. Estimar tiempos de atención (componente 3) · **Samuel** — **HECHA el 7-nov-2026** (`docs/estimador_tiempos.md`; función de consulta `src/estimador_tiempo_restante.py`)
+- **Resultado:** la espera de cama es individual (no depende del momento de llegada). Estimador: modelo de tiempo restante con el paciente, la hora del reloj, la ocupación, su historial y su recorrido en urgencias; mejora 7,6 % al llegar y 9,2–9,5 % a las 3–6 h (IC comprobados) frente al rango general, con percentiles calibrados, y le gana a las otras cinco alternativas. Techo bajo (error de la mediana ~24 h). Con los procedimientos de Daniela (7-nov): edad y sexo corregidos en el 55 % de las estancias; el hospital da cama rápido a los graves (UCI 2,7 h) y hace esperar a urología, ortopedia y cirugía (30–38 h); si al llegar se supieran la gravedad y el servicio, la mejora llegaría a 15,8 % (18,6 % con el diagnóstico), argumento para registrar el triage y el servicio. El hospital cambió: reentrenar cada mes con más peso en lo reciente lleva la mejora a 8,1 % al llegar y 10,3 % a las 3 h; el estimador final se entrena así y debe reentrenarse cada mes. Pendiente: P02 y P03 para el resto de las estancias y la página del dashboard.
 - **Qué pide el instructivo:** "modelos analíticos o predictivos que permitan estimar tiempos de atención". Es decir: cuando llega un paciente, ¿cuántas horas va a estar
   en urgencias, cuánto va a esperar cama o cuánto se va a quedar hospitalizado?
 - **Dónde estamos:** por paciente no se logra (esperar más de 24 h: AUC 0,60; estancia: R² cercano a 0; duración de urgencias de quien se va de alta: solo el 38 % tiene
@@ -121,6 +122,14 @@ demanda, alertas, días atípicos, borrador de recomendaciones y un repositorio 
 - **Entrega futura:** `src/diagnostico_cuello_botella.py` que reciba un periodo y devuelva un reporte (cuello de botella, qué se dispara, qué tienen en común).
 - **Encaja con el instructivo:** "sistemas de alerta temprana" y "herramientas de apoyo a decisiones". **Depende de** A2b, A1 y A5 (A5 lista). Falta A2b.
 
+
+### A8. Exploraciones adicionales (Daniela, 4-nov-2026) · **1 a 5 HECHAS**
+1) ocupación por zona frente a las camas del HUN (`docs/ocupacion_por_zona.md`); 2) capacidad efectiva desde los datos (`docs/capacidad_efectiva.md`); 3) días-cama de baja actividad (`docs/dias_cama_baja_actividad.md`); 4) efecto de fin de semana y festivos (`docs/efecto_fin_de_semana.md`). Resumen en `CLAUDE.md` 4.11.
+5) supervivencia para las urgencias sin hora de fin (`docs/supervivencia_urgencias.md`; corrige el sesgo del grupo con información pero no recupera a los que no tienen tiempo).
+8) **HECHA el 8-nov:** quincenas no mejoran el pronóstico; dengue y lluvia descartados por falta de datos abiertos 2023–2026 (`docs/quincenas_y_datos_externos.md`).
+6) y 10) **HECHAS el 8-nov** (`docs/espera_con_labs_y_severidad.md`): los laboratorios no separan atención de espera pura; la severidad desde el texto de los laboratorios predice hospitalización y algo de estancia; la suma no cambia la espera, pero las banderas por separado sí (troponina −41 %, PCR +13 %) y mejoran la predicción del tiempo restante (para probar en A6, Samuel). 9) minería de procesos: descartada (solo 3 tipos de etapa).
+7) **HECHA el 9-nov** (A5, Anthony): simulación de Monte Carlo de camas (`docs/modelo_camas.md`, `docs/simulacion.md`, `src/simulacion_camas_montecarlo.py`).
+
 ---
 
 ## B. Entregables (al final)
@@ -137,6 +146,7 @@ demanda, alertas, días atípicos, borrador de recomendaciones y un repositorio 
 - **Qué:** `docs/recomendaciones.md` es un borrador con 7 recomendaciones, sus números y sus límites. Falta **verificar las fuentes** (solo se leyeron resúmenes de búsqueda),
   ampliar si hace falta y comprobar que cada cifra coincide con `docs/HALLAZGOS.md`.
 - **Terminado cuando:** cada recomendación tiene fuente verificada y una cifra o una razón clara de por qué no se puede calcular. Puede empezar antes de que termine A.
+- **Estado (6-nov): COMPLETA, pendiente de la revisión de Daniela en el pull request.** Las 12 fuentes se comprobaron de nuevo el 6-nov, 4 de ellas con un resumen (una mal descrita corregida: BMC 2024 no es una revisión; las cifras de minutos de los estudios son *boarding*). Cifras al día con `main` y tabla `powerbi/recomendaciones_tabla.csv` actualizada. Puede cambiar si A4 y A5 mueven las cifras de R4 o R7.
 
 ### B3. Documento final · **Por decidir (más adelante)**
 **Qué exige el HUN (instructivo): casi nada de formato.** Lista tres entregables: **documentación del proyecto**, **repositorio en GitHub** y **enlace al dashboard interactivo**. No pide un documento con una estructura fija, un número de páginas ni una presentación. La rúbrica, el plazo exacto y si el repositorio debe ser público no se preguntaron a tiempo (preguntas D1 a D3 de `docs/hun/sesion_de_preguntas.md`) y ya no hay más sesiones: **se declara como supuesto**.
@@ -153,12 +163,12 @@ demanda, alertas, días atípicos, borrador de recomendaciones y un repositorio 
 | # | Tarea | Responsable | Notas |
 |---|---|---|---|
 | C1 | **Sesión de preguntas con el HUN (HECHA el 29-oct; no habrá más)**: respuestas anotadas en `docs/hun/sesion_de_preguntas.md` y `CLAUDE.md` 4.7. Sin respuesta: caída de llegadas, cuándo se escribe el diagnóstico, meta de tiempo. Originalmente: ir con `docs/hun/sesion_de_preguntas.md`, anotar respuestas y actualizar el proyecto con su sección E | Samuel (contacto con el HUN) y Daniela | Las preguntas A1 a A5 de ese documento son las que más cambian los resultados. Por confirmar quién asiste |
-| C2 | Correr en DBeaver `sql/exportaciones_base.sql` y verificar que `dx_por_visita` da 566.004 filas y `proc_por_visita` 662.783 (están reconstruidas y sin probar contra la base) | Daniela | |
+| C2 | Correr en DBeaver `sql/exportaciones_base.sql` y verificar que `dx_por_visita` da 566.004 filas y `proc_por_visita` 662.783 (están reconstruidas y sin probar contra la base) | Daniela | **HECHA el 8-nov:** verificado contra la base (566.004 y 662.783 filas y las mismas sumas que los CSV) |
 | C3 | Subir al drive las tablas actualizadas después de cada cambio (`src/exportar_para_equipo.py` y tablas de `resultados/tablas/`) | Daniela | Avisar a Samuel y Anthony cuando haya versión nueva |
 | C5 | **Ocupación contra la capacidad del HUN** (106 camas, 58 camillas) | Daniela | **RESUELTO el 1-nov** (`CLAUDE.md` 4.8): la ocupación superaba las 106 camas por duplicados que la regla v3.7 no detectaba; con la v3.8 es 94 / 101 / 105 (2023 / 2024 / 2025). Queda como limitación la ocupación de urgencias (TU) y que la media de 2025 roza la capacidad |
 | C6 | Validación clínica de `mapeo_dx.csv` por alguien del área de salud | Daniela | Falta |
 | C7 | Revisar que Samuel (B2) actualice las recomendaciones con las cifras nuevas (R², 106 camas, hospitalización = asignación de cama) | Daniela y Samuel | `docs/recomendaciones.md` ya tiene los cambios |
-| C4 | Opcionales: reingresos depurados (existen sin validar en `tabla_episodios`), huecos TU a TU, decidir si se deduplican las llegadas, Carnaval con efecto distinto en sábado y lunes | Daniela | Solo si sobra tiempo |
+| C4 | Opcionales: reingresos depurados (existen sin validar en `tabla_episodios`), huecos TU a TU, decidir si se deduplican las llegadas, Carnaval con efecto distinto en sábado y lunes | Daniela | **HECHA el 8-nov** (`docs/c4_reingresos_huecos_llegadas.md`): reingresos depurados 5,3 % (72 h) y 14,1 % (30 d); huecos TU a TU 2,6 % de las horas, sin efecto; réplicas de llegadas 4,3 %, no se deduplican. El efecto del Carnaval por día se probó: es distinto (lunes −30 %, domingo −14 % en llegadas) pero no mejora el pronóstico (`docs/quincenas_y_datos_externos.md`) |
 
 ---
 

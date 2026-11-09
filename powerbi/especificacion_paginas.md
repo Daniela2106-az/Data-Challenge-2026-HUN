@@ -26,7 +26,7 @@ título = conclusión; tema `tema.json`; azul = espera, naranja = referencia o e
 ## Página 4 — «Quién espera más y cuándo» — LISTO (la parte explicativa mejora con A4)
 - Histograma: tramos de `bi_estancias[espera_h]` (0–6, 6–12, 12–24, 24–48, 48–72, >72) con `[Estancias]`.
 - Líneas/columnas: por `bi_estancias[hora_llegada]` `[Espera mediana h]` y `[Espera p90 h]`; segunda vista `asignacion_cama_por_hora_llegada[pct_cama_dia_siguiente_o_mas]` (tarde ≈ la mitad recibe cama al día siguiente).
-- Barras: por `grupo_edad` y `tipo_visita`. Apiladas: `[Horas urgencias]` vs `[Horas hueco]` (79 % / 21 %).
+- Barras: por `grupo_edad` y `tipo_visita`. Apiladas: `[Horas urgencias]` vs `[Horas hueco]` (98 % / ~3 %; el hueco era 21 % antes de la corrección del 7-nov, ver `CLAUDE.md` 4.12).
 - Barras horizontales: `importancia_factores[perdida_r2_si_se_quita]` por `factor`. **Nota fija obligatoria:** «Asociación, no causa. Los factores explican solo el 16 % de la variación».
 - A4 (Anthony) puede reemplazar el modelo explicativo: ESPERA, no inventar.
 
@@ -39,7 +39,7 @@ título = conclusión; tema `tema.json`; azul = espera, naranja = referencia o e
 ## Página 6 — «Se puede anticipar y avisar» — LISTO
 - Real vs pronóstico: eje `pronostico_diario_test[fecha]`, `llegadas_real`, `llegadas_pronostico_h1` (o `_h7` con parámetro de campos) y banda `llegadas_banda_baja_*`/`llegadas_banda_alta_*` (usar el truco de área apilada, ver DAX). Tarjetas: error 7,5 % (1 d) y 8,8 % (7 d) de `pronostico_metricas`.
 - Ingresos: mostrar el pronóstico **semanal** (`pronostico_semanal_metricas`, error 9,5 %); el diario es ruido (~23 %). No venderlo como bueno.
-- Tabla de alertas con formato condicional: `alertas_congestion`, `alertas_camas`, `alertas_paciente` (precisión, detección, alertas por día; total ~4,9/día).
+- Tabla de alertas con formato condicional: `alertas_congestion`, `alertas_camas`, `alertas_paciente` (precisión, detección, alertas por día; total ~4,6/día).
 - Tabla `dias_atipicos` (14 llegadas / 9 ingresos / 7 espera) con drill-through. Nota: «Prueba ene–abr 2026; mayo cae por posible carga incompleta».
 
 ## Página 7 — «Simulador de camas: ¿qué pasa si...?» — PARCIAL (falta Monte Carlo, A5)
@@ -53,7 +53,7 @@ título = conclusión; tema `tema.json`; azul = espera, naranja = referencia o e
 - Advertencia fija: «Rango típico de pacientes parecidos, no una predicción individual (el R² de los factores es 16 %)».
 - Depende de la definición final de A6; construirla al final.
 
-## Página 9 — «Qué se hace con esto» (recomendaciones) — ESPERA (B2)
+## Página 9 — «Qué se hace con esto» (recomendaciones) — LISTO (B2 hecha el 8-nov-2026; R3 y R6 sin recalcular)
 - Tabla desde `recomendaciones_tabla.csv` (`prioridad`, recomendación, impacto estimado, límite, fuente, estado). Hoy es **borrador**; B2 la verifica contra `docs/recomendaciones.md` y la actualiza. No publicar impactos sin esa revisión.
 
 ## Página 10 — «Qué tan confiable es» (metodología y límites) — LISTO
