@@ -17,7 +17,7 @@ demanda, alertas, días atípicos, borrador de recomendaciones y un repositorio 
 | Persona | Pendientes | Prioridad |
 |---|---|---|
 | **Daniela** | A1 perfiles de pacientes, A2 factores de la estancia hospitalaria (con la ampliación A2b: qué comparten las estancias que se disparan), A3 `mapeo_dx.csv`, y la coordinación (C1 a C3) | Ahora |
-| **Anthony** | A4 explicar mejor los retrasos, A5 simulación Monte Carlo de camas | Ahora |
+| **Anthony** | Ninguno — A4 (8-nov) y A5 (9-nov) hechas | — |
 | **Samuel** | B1 dashboard de Power BI, B2 recomendaciones (verificar fuentes y dejarlas finales), **A6 estimar tiempos de atención** | Al final (B2 puede empezar antes; A6 después de los análisis A) |
 | Por decidir más adelante | A7 sistema repetible de diagnóstico de cuellos de botella, B3 documento final, B4 presentación | Después |
 
@@ -77,7 +77,7 @@ demanda, alertas, días atípicos, borrador de recomendaciones y un repositorio 
 - **Habilita:** A1, A2 y A4.
 - **Estado (26-oct): HECHA como borrador + análisis.** Mapeo por reglas (`src/generar_borrador_mapeo_dx.py`, 0,9 % sin clasificar) y análisis de tiempos por grupo (`src/diagnosticos_y_tiempos.py`, `docs/diagnosticos_y_tiempos.md`). Hallazgos: cardiovascular y neurológico reciben cama en ~4 h, musculoesquelético, renal, digestivo y cáncer esperan 22–32 h; y el diagnóstico se registra más cuando la cama llega rápido (sesgo; pregunta B9 al HUN). **3-nov: revisión completa del mapeo hecha por Claude (562 correcciones, `docs/revision_mapeo_dx.md`).** Falta: validación clínica del mapeo por alguien del área de salud (no se buscó cada diagnóstico en una fuente externa).
 
-### A4. Explicar mejor los retrasos (modelo explicativo de la espera) · **Anthony**
+### A4. Explicar mejor los retrasos (modelo explicativo de la espera) · **Anthony** — **HECHA el 8-nov-2026** (`docs/modelo_espera.md`, `src/modelo_espera_explicativo.py`)
 - **Qué pide el instructivo:** "qué características están asociadas a retrasos". Hoy todos los factores juntos explican solo el **16 %** de la variación de la espera.
 - **Qué hacer:** ficha 3.3 de `docs/fichas_de_tareas.md` (regresión logística de `espera_mas_24h` con variables que se conocen al llegar, validación temporal,
   razones de probabilidades con intervalo, AUC y Brier sin esconderlos). Intentar mejorar sobre el 16 %: perfiles (A1), diagnóstico agrupado (A3), reingreso,
@@ -87,7 +87,7 @@ demanda, alertas, días atípicos, borrador de recomendaciones y un repositorio 
 - **Terminado cuando:** la página dice qué factores pesan, cuánto explica el modelo y por qué **no** sirve para alertar a un paciente individual.
 - **Insumos:** `tabla_episodios.parquet` filtrada a `estancia_unica == True`; variables permitidas y prohibidas: ficha 3.3. Resultados actuales: `CLAUDE.md` 6b y `docs/HALLAZGOS.md` 4.5.
 
-### A5. Simulación Monte Carlo de camas · **Anthony**
+### A5. Simulación Monte Carlo de camas · **Anthony** — **HECHA el 9-nov-2026** (`docs/modelo_camas.md`, `docs/simulacion.md`, `src/simulacion_camas_montecarlo.py`)
 - **Qué pide el instructivo:** "modelos de simulación". Lo que hay hoy (`src/simulacion_altas.py`) es un **análisis de escenarios sobre datos históricos**, no una simulación
   estocástica.
 - **Qué hacer** (fichas 3.1 y 3.2): para cada día futuro, sacar cuántos ingresos llegan (del pronóstico semanal de `src/pronostico_demanda.py`, con su incertidumbre),
@@ -111,20 +111,22 @@ demanda, alertas, días atípicos, borrador de recomendaciones y un repositorio 
   actualice durante la visita con diagnóstico y laboratorios de las primeras horas; (3) estimar la probabilidad de hospitalización al llegar. Cualquiera debe declarar que
   la duración de urgencias está sesgada.
 
-### A7. Sistema repetible de diagnóstico de cuellos de botella · **HECHA el 3-nov-2026** (`src/diagnostico_cuello_botella.py`, `docs/diagnostico_cuello_botella.md`; falta agregarle la simulación Monte Carlo cuando exista A5) (idea de Anthony del 23-oct)
+### A7. Sistema repetible de diagnóstico de cuellos de botella · **HECHA el 3-nov-2026** (`src/diagnostico_cuello_botella.py`, `docs/diagnostico_cuello_botella.md`; **pendiente: enchufarle la simulación Monte Carlo de A5, ya hecha el 9-nov** — `src/simulacion_camas_montecarlo.py`, `docs/modelo_camas.md`) (idea de Anthony del 23-oct)
 - **La idea:** que la lógica con la que encontramos que el cuello de botella eran las camas se pueda **repetir sobre datos nuevos** y diga si el cuello de botella
   sigue siendo ese u otro: (1) detectar cuál segmento tiene más exceso, (2) con la simulación ver qué se dispara, (3) sacar los registros que se disparan,
   (4) caracterizarlos (A2b y A1) y (5) explicar qué hacer. No hay datos en tiempo real: se haría **repitiendo el análisis en una ventana nueva** (reproducir un periodo).
-- **Qué ya existe:** el paso 1 (`src/ranking_cuellos.py`, `src/alertas.py`); falta el 2 (A5, Anthony), el 4 (A2b, Daniela) y juntarlos en un solo flujo.
+- **Qué ya existe:** el paso 1 (`src/ranking_cuellos.py`, `src/alertas.py`) y, desde el 9-nov, el paso 2
+  (`src/simulacion_camas_montecarlo.py`: probabilidad de saturación total/niños/adultos, backtest con cobertura 85,9 %); falta el 4 (A2b, Daniela) y
+  juntar los tres en un solo flujo.
 - **Entrega futura:** `src/diagnostico_cuello_botella.py` que reciba un periodo y devuelva un reporte (cuello de botella, qué se dispara, qué tienen en común).
-- **Encaja con el instructivo:** "sistemas de alerta temprana" y "herramientas de apoyo a decisiones". **Depende de** A2b, A1 y A5. Se decide después de ellas.
+- **Encaja con el instructivo:** "sistemas de alerta temprana" y "herramientas de apoyo a decisiones". **Depende de** A2b, A1 y A5 (A5 lista). Falta A2b.
 
 ---
 
 ## B. Entregables (al final)
 
 ### B1. Dashboard de Power BI · **Samuel** — **va de último** (roadmap: `powerbi/roadmap_powerbi.md`; guía para su Claude: `powerbi/CLAUDE.md`)
-- **Estado de los datos (23-oct):** el paquete actual es una **versión parcial**. Sirve para las páginas 1 a 7 y 10; las páginas 8 (A6), 9 (B2) y 11 (A1, A2, A2b) y las bandas Monte Carlo de la 7 (A5) esperan análisis pendientes. Empieza cuando A1 a A5 y B2 estén entregados (análisis cerrados hacia el 13-nov); lo que ya está listo se puede ir armando antes. Regenerar el paquete: `python3 src/exportar_para_powerbi.py`.
+- **Estado de los datos (23-oct, actualizar: A5 ya está hecha el 9-nov):** el paquete actual es una **versión parcial**. Sirve para las páginas 1 a 7 y 10; las páginas 8 (A6), 9 (B2) y 11 (A1, A2, A2b) esperan análisis pendientes. Las bandas Monte Carlo de la página 7 ya están disponibles (`resultados/tablas/simcamas_proyeccion.csv`, `simcamas_saturacion.csv`, `simcamas_escenarios.csv`, `docs/modelo_camas.md`, `docs/simulacion.md`). Empieza cuando A1, A2, A2b y B2 estén entregados; lo que ya está listo se puede ir armando antes. Regenerar el paquete: `python3 src/exportar_para_powerbi.py`.
 - **Qué:** ficha de Persona 2: 6 páginas (llegadas, rutas y tiempos, espera de cama, pronóstico y alertas, camas y escenarios, recomendaciones), plantilla `.pbit`, medidas DAX
   y enlace de acceso. El `.pbix` no se sube a git.
 - **Insumos:** tablas del drive (`panel_diario.csv`, `serie_horaria.csv`, `serie_diaria.csv`, `estancias_hospitalizacion.csv`, tablas de `resultados/tablas/`). **Volver a descargarlas:
