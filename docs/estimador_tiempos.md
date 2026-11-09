@@ -1,10 +1,10 @@
-# A6 · Estimación del tiempo de espera de cama (7-nov-2026)
+# A6 · Estimación del tiempo de espera de cama (7-nov-2026; revisado el 9-nov, sección 7)
 
 **Qué pide el instructivo (componente 3):** «modelos analíticos o predictivos que permitan estimar tiempos de atención». La pregunta concreta: **cuando un paciente espera cama, ¿cuánto le falta?**
 
 ## Resumen
 1. **La espera es individual.** Pacientes que llegan el mismo día o a la misma hora no esperan parecido. Por eso la ocupación del hospital o la cola casi no ayudan a estimarla, y lo que sirve es información de cada paciente.
-2. **El estimador es un modelo de tiempo restante.** Para un paciente que espera cama, da el rango de lo que le falta (percentiles 25, 50, 75 y 90) y la probabilidad de recibir cama en 6, 12 y 24 horas, y se recalcula a medida que pasa la espera. Usa el paciente, la hora del reloj, la ocupación, su historial de hospitalizaciones y su recorrido en urgencias, todo conocido en el momento. Se consulta con `estimar_tiempo_restante()`.
+2. **El estimador es un modelo de tiempo restante.** Para un paciente que espera cama (**es decir, que ya tiene orden de hospitalización**: se entrenó solo con quienes recibieron cama, ver sección 7), da el rango de lo que le falta (percentiles 25, 50, 75 y 90) y la probabilidad de recibir cama en 6, 12 y 24 horas, y se recalcula a medida que pasa la espera. Usa el paciente, la hora del reloj, la ocupación, su historial de hospitalizaciones y su recorrido en urgencias, todo conocido en el momento. Se consulta con `estimar_tiempo_restante()`.
 3. **Funciona mejor que todo lo demás que probamos, pero el techo es bajo.** Reentrenado cada mes con más peso en lo reciente, que es como se debe usar porque el hospital cambió, mejora el rango 8,1 % al llegar y 9,8–10,3 % entre las 3 y las 6 horas de espera, frente a darle a todos el mismo rango. Sus percentiles aciertan en datos nuevos, y le gana con margen comprobado a las otras cinco alternativas.
 4. **Lo que más decide cuándo llega la cama es la hora del reloj:** entre las 6 y las 12 h casi nadie recibe cama; las camas se asignan entre las 15 y las 17 h y entre las 20 y las 23 h.
 5. **Lo que de verdad lo mejoraría es saber, al llegar, la gravedad y el servicio.** Los procedimientos de cada estancia muestran que el hospital da cama rápido a los graves (UCI: mediana 2,7 h) y hace esperar más a cirugía, urología y ortopedia (30–38 h). Si esa información se conociera al llegar, la mejora pasaría de 7,6 % a 15,8 %, y a 18,6 % sumando el diagnóstico (comparando modelos entrenados una sola vez). Es más que cualquier cambio de modelo, y es el argumento para registrar el triage y el servicio en la base.
@@ -199,17 +199,40 @@ En todos los casos los percentiles siguen bien calibrados (al llegar, con todo: 
 ---
 
 ## 6. Límites (van junto al estimador)
+- **Solo aplica a quien se va a hospitalizar.** Se entrena y se prueba solo con pacientes que al final recibieron cama. Al llegar a urgencias nadie sabe quién se hospitalizará (solo el ~9 % lo hace y el modelo de "¿se hospitaliza?" tiene AUC 0,62), así que la cifra "al llegar" vale para un paciente del que ya se sabe que se hospitalizará, no para cualquiera. Tampoco contempla a quien se va, se traslada o muere en urgencias.
+- **No se puede reentrenar cada mes por ahora.** Los datos confiables terminan el 9-abr-2026 (`CLAUDE.md` 4.9). Consultado hoy, el modelo tiene más de 7 meses de atraso y la ocupación que usa por defecto es la típica de ene–abr 2026; la función lo avisa.
+- **Varias decisiones se tomaron mirando la prueba** (el corte de 12 h, la vida media de 6 meses y la mejor de 7 formas de entrenar). No hay un periodo que nadie haya mirado, así que las cifras son algo optimistas; las diferencias de 0,5–0,8 puntos entre formas de entrenar pueden ser suerte.
 - **Rango de pacientes parecidos, no una promesa para una persona.** Sirve para comunicar expectativas y planear, no para darle una hora a un paciente.
 - **La espera termina en la asignación administrativa.** Mezcla la atención clínica en urgencias con la espera de cama, y no se pueden separar.
 - **Cama o silla:** según el equipo, a muchos pacientes se les atiende en sillas aunque necesiten una cama, y no se sabe si eso se registra como estar en cama. La base no tiene columna de cama, silla, piso ni servicio (`CLAUDE.md` 4.8). Si se registra, la espera real hasta una cama sería más larga, la falta de camas mayor de lo que muestran los datos y la ocupación incluiría puestos que no son camas (lo que explicaría que pase de las 106 camas el 42 % de las horas de 2025).
 - **El recorrido supone que el sistema registra cada etapa cuando empieza.** No se pudo comprobar. Si las etapas se cargan después, el recorrido no estaría disponible en tiempo real.
+- **El recorrido podría ser una fuga del trámite de hospitalización:** si las etapas que se abren poco antes de la cama son parte del trámite, el modelo estaría viendo que ya se pidió la cama, no prediciéndola. Se mide en la sección 7.
+- **La subida de asignaciones entre las 20 y las 23 h** puede ser la hora en que se digita en el sistema y no la del traslado; el modelo aprendería costumbres de registro.
+- **La espera se recorta en 10 días (240 h).**
 - **Edad y sexo de las estancias duplicadas:** se corrigieron con la persona real en las 14.126 estancias de `procedimientos_por_estancia.csv` (55 %). En el resto se conservó el registro con más información, que es el de la persona real en ~81–85 % de los casos (`CLAUDE.md` 4.10). El historial, que se busca por persona, tiene la misma limitación.
 - **La ocupación hacia adelante se deja fija** en el último valor conocido.
 - **Asociación, no causa.**
 
 ---
 
-## 7. Cómo reproducirlo
+## 7. Revisión del 9-nov-2026: problemas encontrados en el código y qué se hizo
+Al revisar el código aparecieron problemas que la versión del 7-nov no había medido. Se corrigió lo que se podía corregir sin datos y se preparó la prueba de lo demás en `src/revision_estimador.py`. **Las pruebas solo se corrieron con datos inventados para comprobar que el código funciona; falta correrlas con los datos reales** y anotar aquí los resultados.
+
+| # | Problema | Qué se hizo | Estado |
+|---|---|---|---|
+| 1 | Solo aprende de pacientes que se hospitalizaron; la cifra "al llegar" no vale para cualquier paciente | Se dice en el resumen, en los límites, en el código y en cada respuesta de `estimar_tiempo_restante()` (campo `avisos`) | Hecho (no se puede corregir con estos datos: haría falta la hora de la orden de hospitalización) |
+| 2 | No se puede reentrenar cada mes: los datos confiables terminan el 9-abr-2026 | La función avisa cuando la fecha consultada está a más de 60 días del fin del entrenamiento, y cuando usa la ocupación típica en vez de la real | Hecho |
+| 3 | El modelo que se usa (modelos en 0, 2, 4, 6 y 9 h; el más cercano por debajo) no es el que se probó (0, 3 y 6 h exactos) | Prueba 1: se evalúa el esquema usado en cada hora de 0 a 11 y se compara con un modelo entrenado justo en esa hora | **Falta correr con datos reales.** Si en alguna hora pierde claramente, agregar modelos en esas horas |
+| 4 | Posible fuga: las etapas que se abren justo antes de la cama pueden ser el trámite de hospitalización | Prueba 2: cuánto antes de la cama empieza la última etapa, y el modelo de 3 y 6 h reentrenado viendo el recorrido con 1, 2 y 3 h de retraso | **Falta correr con datos reales.** Si con 2 h de retraso el recorrido conserva menos de la mitad de su aporte, no presentarlo como predicción |
+| 5 | Fuga del diagnóstico previo: se fechaba con el inicio del episodio anterior, y el 88 % de los diagnósticos se registra tarde | Corregido en `comparar_estimadores.py` v3: se fecha al fin del episodio anterior. Prueba 3 mide cuánto cambiaba | Corregido; **falta medir el efecto con datos reales** |
+| 6 | La ocupación por zona usaba la edad sin corregir | Corregido en `comparar_estimadores.py` v3: usa la edad de la persona real cuando se conoce | Corregido; la prueba 5 cuenta cuántas estancias cambian |
+| 7 | Decisiones tomadas mirando la prueba (corte de 12 h, vida media) | Prueba 4: el resultado por separado en jul–dic 2025 y en ene–9 abr 2026. No reemplaza a un periodo nuevo, que no existe | **Falta correr con datos reales** |
+
+**Ojo con las cifras de las secciones 2 a 5:** son de la versión del 7-nov. Con las correcciones 5 y 6 pueden moverse un poco; hay que volver a correr `src/comparar_estimadores.py` y `src/ventana_entrenamiento.py` y actualizarlas. El modelo guardado pasa a la versión 6 y se vuelve a entrenar solo en la primera consulta.
+
+---
+
+## 8. Cómo reproducirlo
 Los datos viven fuera del proyecto. Se indican con tres variables (en Bash). `HUN_CRUDOS` es la carpeta con `visit_detail.csv` y `procedimientos_por_estancia.csv`; este último corrige la edad y el sexo y alimenta los escenarios.
 ```bash
 export HUN_PROCESADOS="D:/Descargas D/Datos/procesados" HUN_TABLAS="D:/Descargas D/Datos/procesados/tablas" HUN_CRUDOS="D:/Descargas D/Datos"
@@ -218,4 +241,5 @@ export HUN_PROCESADOS="D:/Descargas D/Datos/procesados" HUN_TABLAS="D:/Descargas
 2. **Construcción y prueba del estimador:** `python3 src/comparar_estimadores.py` (~1,5 min). Escribe `comparacion_estimadores_*.csv` en `HUN_TABLAS` y `resultados/graficos/comparacion_estimadores.png`. Las formas de entrenar (sección 3.1): `python3 src/ventana_entrenamiento.py` (~10 min).
 3. **Escenarios de gravedad y servicio:** `python3 src/procedimientos_escenario.py` (~4 min; necesita `procedimientos_por_estancia.csv` en `HUN_CRUDOS`) y `python3 src/triage_aproximado.py` (laboratorios).
 4. **Alternativas:** `python3 src/estimador_tiempos.py` (tabla de perfiles) y `python3 src/espera_dos_series.py` (dos series).
-5. **Consulta:** `python3 src/estimador_tiempo_restante.py 67 Mujer Urgencias 6 "2026-03-04 15:00"`. Sin argumentos muestra los ejemplos de la sección 2.
+5. **Revisión del 9-nov (sección 7):** `python3 src/revision_estimador.py` (~15–25 min; `RAPIDO=1` omite la prueba hora por hora). Escribe `revision_estimador_*.csv` y `revision_estimador_resumen.txt` en `HUN_TABLAS`.
+6. **Consulta:** `python3 src/estimador_tiempo_restante.py 67 Mujer Urgencias 6 "2026-03-04 15:00"`. Sin argumentos muestra los ejemplos de la sección 2.

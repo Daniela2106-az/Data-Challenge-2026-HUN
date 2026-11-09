@@ -1,5 +1,8 @@
 """
-estimador_tiempo_restante.py  -  version 2 (7-nov-2026)
+estimador_tiempo_restante.py  -  version 3 (9-nov-2026)
+(v3: avisa cuando el modelo esta desactualizado frente a la fecha consultada y cuando se usa la ocupacion tipica en vez de la real; dice a quien aplica
+ (pacientes con orden de hospitalizacion); el modelo guardado pasa a la version 6 porque comparar_estimadores.py v3 corrigio el diagnostico previo y la
+ zona de la ocupacion, asi que el .joblib anterior se vuelve a entrenar solo.)
 Tarea A6: funcion de consulta del estimador final (modelo de tiempo restante). Para un paciente que espera cama, dice cuanto le falta (percentiles 25, 50,
 75 y 90), la hora en que la mitad de los pacientes parecidos ya tendria cama y la probabilidad de recibirla en las proximas 6, 12 y 24 horas.
 
@@ -29,6 +32,11 @@ USO
 LIMITES
   Rango de pacientes parecidos, no una promesa para una persona: mejora ~8-10 % frente a dar el mismo rango a todos. La espera depende sobre todo de lo que
   la base no registra (triage, servicio, tipo de cama). La "espera de cama" termina en la asignacion administrativa, que puede ser una silla o camilla.
+  A QUIEN APLICA: solo a pacientes que se van a hospitalizar (orden de hospitalizacion ya dada). Se entreno solo con quienes recibieron cama; para un
+  paciente cualquiera que llega a urgencias no sirve (solo ~9 % se hospitaliza y eso no se sabe al llegar).
+  DESACTUALIZACION: los datos confiables terminan el 9-abr-2026 (CLAUDE.md 4.9) y no se puede reentrenar con meses nuevos mientras el registro siga
+  degradado. Si la fecha consultada esta a mas de DIAS_AVISO dias del fin del entrenamiento, el resultado trae un aviso.
+  Los modelos por momento (0, 2, 4, 6 y 9 h) se validan hora por hora en src/revision_estimador.py (la v2 solo se habia probado en 0, 3 y 6 h).
 """
 import os
 import sys
@@ -44,6 +52,8 @@ import estimador_tiempos as et  # noqa: E402
 
 LANDMARKS = [0, 2, 4, 6, 9]                    # con 12 h o mas de espera se usa el modelo con solo el historial
 VIDA_MEDIA_DIAS = 182                          # peso a lo reciente: la mitad cada 6 meses hacia atras
+DIAS_AVISO = 60                                # mas de 60 dias entre el fin del entrenamiento y la fecha consultada: el modelo puede estar viejo
+VERSION_MODELO = 6
 MODELO = Path(os.environ.get("HUN_PROCESADOS", ce.PROC)) / "modelos" / "m1_tiempo_restante.joblib"
 _CACHE = {}
 
@@ -55,7 +65,7 @@ def _entrenar_y_guardar():
     fin = rejilla[(rejilla >= np.datetime64(ce.HASTA) - np.timedelta64(90, "D")) & (rejilla < np.datetime64(ce.HASTA))]
     k = np.searchsorted(rejilla, fin)
     paquete = {"modelos": modelos, "ocup_tipica": {z: float(np.median(estado[z]["ocup"][k])) for z in estado}, "grupos_dx": ce.GRUPOS_DX,
-               "entrenado_hasta": str(ce.HASTA.date()), "vida_media_dias": VIDA_MEDIA_DIAS, "version": 5}
+               "entrenado_hasta": str((ce.HASTA - pd.Timedelta(days=1)).date()), "vida_media_dias": VIDA_MEDIA_DIAS, "version": VERSION_MODELO}
     MODELO.parent.mkdir(parents=True, exist_ok=True)
     joblib.dump(paquete, MODELO)
     return paquete
@@ -64,7 +74,7 @@ def _entrenar_y_guardar():
 def _cargar():
     if "m" not in _CACHE:
         paq = joblib.load(MODELO) if MODELO.exists() else None
-        _CACHE["m"] = paq if paq is not None and paq.get("version") == 5 else _entrenar_y_guardar()
+        _CACHE["m"] = paq if paq is not None and paq.get("version") == VERSION_MODELO else _entrenar_y_guardar()
     return _CACHE["m"]
 
 
@@ -106,11 +116,19 @@ def estimar_tiempo_restante(edad, sexo, tipo_visita, horas_esperando=0, ahora=No
     p = m.predict_proba(X)[:, 1]
     S = np.concatenate([[1.0], np.cumprod(1 - p)])[None, :]                    # S[j] = P(sigue esperando j horas despues de 'c')
     pct = np.clip(ce.cuantiles_de_supervivencia(S)[0] - (horas_esperando - c), 0, None)
+    avisos = ["Rango de pacientes parecidos, no una promesa individual.",
+              "Solo para pacientes con orden de hospitalizacion: el modelo se entreno con quienes recibieron cama."]
+    atraso = (ahora - pd.Timestamp(paq["entrenado_hasta"])).days
+    if atraso > DIAS_AVISO:
+        avisos.append(f"Modelo entrenado hasta {paq['entrenado_hasta']} ({atraso} dias antes de la fecha consultada): el hospital pudo cambiar y no hay "
+                      "datos confiables nuevos para reentrenarlo (registro degradado desde el 10-abr-2026).")
+    if ocupacion_zona is None:
+        avisos.append(f"Se uso la ocupacion tipica de ene-abr 2026 ({ocup:.0f} camas, zona {zona}), no la real del momento.")
     return {"zona": zona, "ocupacion_usada": ocup,
             **{f"faltan_p{int(q * 100)}_h": round(float(v), 1) for q, v in zip(ce.Q, pct)},
             "hora_estimada_mediana": (ahora + pd.Timedelta(hours=float(pct[1]))).strftime("%Y-%m-%d %H:%M"),
             **{f"prob_cama_en_{hh}h": round(float(1 - S[0, min(hh, S.shape[1] - 1)]), 3) for hh in (6, 12, 24)},
-            "aviso": "Rango de pacientes parecidos, no una promesa individual."}
+            "avisos": avisos}
 
 
 if __name__ == "__main__":
