@@ -299,6 +299,7 @@ el 1 da contexto y el 4 sale de los dos anteriores.
 Respuestas (tomadas en la reunión, sin documento escrito; no habrá más sesiones):
 - **Camas:** 106 camas de hospitalización (piso y UCI: Adultos 64, Pediátrica 8, TPR 4, Intermedia Adultos 6, Intensiva Adultos 14, incubadoras neonatales 6 + 3 + 1) y **58 camillas de urgencias**
   (Observación Pediátrica 14, Adultos Hombres 18, Adultos Mujeres 26; primero dijeron 68 y corrigieron). No dijeron a qué fecha corresponde la lista.
+  **Confirmado el 8-nov-2026 con una tabla del HUN** (mismos números, con el desglose completo por tipo): este desglose se usa en A5 (`docs/modelo_camas.md`) para simular la ocupación por el proxy niños (pediátrica+neonatal=18) / adultos (64+6+14+4=88), ya que la base no distingue servicio/piso/cama.
 - **Cuándo se registra la hospitalización (9201):** cuando **se asigna la cama**; el traslado físico tarda solo un par de minutos. Nuestra "espera de cama" es, por tanto, llegada hasta asignación de cama
   (sigue sin poder separarse la atención clínica de la espera de cama dentro de urgencias).
 - **Estancias gemelas:** "lo más probable es que sean duplicados"; elegir el registro que tenga la información clínica (condición, procedimiento, etc.).
@@ -683,7 +684,8 @@ escenarios y supuestos escritos y se declara como limitación en el documento fi
 | **Reparto completo de lo que falta** | Ver **`docs/pendientes_y_reparto.md`** (Daniela: perfiles, factores de la estancia, `mapeo_dx.csv`; Anthony: explicar retrasos y Monte Carlo de camas; Samuel: Power BI y recomendaciones) | `docs/pendientes_y_reparto.md` |
 | Perfiles de pacientes (A1) | **Hecha** (`docs/perfiles_pacientes.md`) | A1 |
 | Factores de la estancia | **Hecha** (`docs/factores_estancia.md`) | A2 |
-| Explicar mejor los retrasos; simulación Monte Carlo de camas | Pendiente (Anthony) | A4 y A5 |
+| Explicar mejor los retrasos | **Hecho el 8-nov-2026** (AUC 0,68-0,70, techo bajo confirmado con y sin "trampa" de diagnóstico; no sirve para alertar individualmente) | A4, `docs/modelo_espera.md` |
+| Simulación Monte Carlo de camas | **Hecho el 9-nov-2026** (backtest con 85,9 % de cobertura; probabilidad de saturar 106 camas ~53 % en los próximos 6 meses, concentrada en adultos: 60 % contra 29,5 % en niños; escenario de −5 % estancia casi iguala al de +10 % ingresos en efecto sobre la ocupación) | A5, `docs/modelo_camas.md`, `docs/simulacion.md` |
 | Qué comparten las estancias que se disparan (idea de Anthony) | **Hecha** (`docs/estancias_disparadas.md`) | A2b |
 | Sistema repetible de diagnóstico de cuellos de botella | **Hecho** (`src/diagnostico_cuello_botella.py`, `docs/diagnostico_cuello_botella.md`); falta sumarle Monte Carlo (A5) | A7 |
 | Dashboard de Power BI (**va de último**, datos parciales; guía para su Claude en `powerbi/CLAUDE.md`) y verificar fuentes de las recomendaciones | B2 (verificar fuentes de las recomendaciones) **hecha** (PR #1 de Samuel, mergeado el 8-nov-2026; falta recalcular las ~11 horas-paciente de R6 y la alerta de ocupación de R3). B1 (dashboard) pendiente | B1 y B2 |
