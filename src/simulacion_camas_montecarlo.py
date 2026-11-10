@@ -132,6 +132,47 @@ print(f"\nmezcla de grupo_edad entre ingresos ({VENTANA_MEZCLA_EDAD[0]} a {VENTA
 print(mezcla.round(3).to_string())
 print(f"niños (0-4 + 5-14) de la mezcla: {100 * mezcla.reindex(GRUPOS_NINOS).sum():.1f} %")
 
+# ------------------------------------------------------------------
+# 2b) MEJORA: bootstrap por perfil (edad x ruta) y mezcla conjunta real (para mezcla_edad/mezcla_ruta ajustables)
+# ------------------------------------------------------------------
+titulo("2b. BOOTSTRAP POR PERFIL (edad x ruta) Y MEZCLA CONJUNTA")
+# Treatment urgency se queda 63% mas que Urgencias (docs/factores_estancia.md): si no se reestratifica el
+# bootstrap por ruta, cambiar la mezcla de ruta en un escenario no moveria la ocupacion - pierde el sentido.
+TIPOS_VALIDOS = ["Urgencias", "Treatment urgency", "Ambulatorio"]  # Inpatient es <1% (casi desaparecio desde 2025, CLAUDE.md); se pliega a Urgencias
+PERFIL_MIN_CELDA = 30
+
+reciente_perfil = reciente.copy()
+reciente_perfil["ruta"] = reciente_perfil.tipo_visita.where(reciente_perfil.tipo_visita.isin(TIPOS_VALIDOS), "Urgencias")
+tam_celda = reciente_perfil.groupby(["grupo_edad", "ruta"], observed=True).size()
+BOOTSTRAP_PERFIL = {(g, t): gg.horas_hosp.values for (g, t), gg in
+                    reciente_perfil.groupby(["grupo_edad", "ruta"], observed=True) if len(gg) >= PERFIL_MIN_CELDA}
+print(f"bootstrap por perfil: {len(BOOTSTRAP_PERFIL)} de {tam_celda.size} celdas (edad x ruta) con >= {PERFIL_MIN_CELDA} "
+      f"casos en {VENTANA_BOOTSTRAP[0]} a {VENTANA_BOOTSTRAP[1]}; el resto cae al bootstrap de solo-edad")
+print(tam_celda.unstack(fill_value=0).to_string())
+
+
+def horas_para(grupo, ruta, rng, n):
+    """Bootstrap de horas_hosp para `n` pacientes de un (grupo_edad, ruta); respaldo: pool de solo-edad si la celda es chica."""
+    pool = BOOTSTRAP_PERFIL.get((grupo, ruta))
+    if pool is None:
+        pool = BOOTSTRAP[grupo]
+    return rng.choice(pool, size=n, replace=True)
+
+
+mezcla_perfil_real = est[(est.ingreso_cama >= VENTANA_MEZCLA_EDAD[0]) & (est.ingreso_cama < VENTANA_MEZCLA_EDAD[1])
+                         & est.grupo_edad.notna() & est.tipo_visita.notna()].copy()
+mezcla_perfil_real["ruta"] = mezcla_perfil_real.tipo_visita.where(mezcla_perfil_real.tipo_visita.isin(TIPOS_VALIDOS), "Urgencias")
+_mp = mezcla_perfil_real.groupby(["grupo_edad", "ruta"], observed=True).size()
+MEZCLA_PERFIL = _mp / _mp.sum()
+PERFILES_HIST = list(MEZCLA_PERFIL.index)    # lista de tuplas (grupo_edad, ruta)
+PROB_PERFILES = MEZCLA_PERFIL.values
+print(f"\nmezcla conjunta real (edad x ruta), {len(PERFILES_HIST)} perfiles — DEFAULT de simular(): conserva la "
+      f"correlacion real entre edad y ruta cuando no se ajusta ninguna mezcla:")
+print(MEZCLA_PERFIL.round(3).to_string())
+
+RUTAS_HIST = mezcla_perfil_real.ruta.value_counts(normalize=True)
+print(f"\nruta sola (marginal de respaldo si solo se ajusta mezcla_edad): {RUTAS_HIST.round(3).to_dict()}")
+
 
 # ----------------------------------------------------------------------
 # 3) Motor de Monte Carlo
@@ -139,10 +180,10 @@ print(f"niños (0-4 + 5-14) de la mezcla: {100 * mezcla.reindex(GRUPOS_NINOS).su
 titulo("3. MOTOR DE SIMULACION")
 
 
-def _una_repeticion(lam, rng, ajuste_estancia, n0=0):
+def _una_repeticion(lam, rng, ajuste_estancia, n0=0, mezcla_edad=None, mezcla_ruta=None):
     """Una repeticion sobre un horizonte de len(lam) dias. `n0` pacientes YA estan hospitalizados el dia 0
-    (censo real del dia de corte, para no arrancar con el hospital vacio - ver nota en simular()). Devuelve
-    3 arrays (total, ninos, adultos) de censo diario."""
+    (censo real del dia de corte, para no arrancar con el hospital vacio - ver nota en simular()).
+    `mezcla_edad`/`mezcla_ruta`: ver simular(). Devuelve 3 arrays (total, ninos, adultos) de censo diario."""
     n_dias = len(lam)
     n_ingresos = rng.poisson(np.clip(lam, 0, None))
     dia_ingreso_nuevos = np.repeat(np.arange(n_dias), n_ingresos)
@@ -151,12 +192,25 @@ def _una_repeticion(lam, rng, ajuste_estancia, n0=0):
     if total == 0:
         z = np.zeros(n_dias)
         return z, z.copy(), z.copy()
-    grupo = rng.choice(GRUPOS_HIST, size=total, p=PROB_GRUPOS)
+
+    if mezcla_edad is None and mezcla_ruta is None:
+        # DEFAULT: perfil conjunto real (edad, ruta) — conserva la correlacion real entre las dos.
+        idx = rng.choice(len(PERFILES_HIST), size=total, p=PROB_PERFILES)
+        grupo = np.array([PERFILES_HIST[i][0] for i in idx])
+        ruta = np.array([PERFILES_HIST[i][1] for i in idx])
+    else:
+        # AJUSTADO: edad y ruta se muestrean POR SEPARADO (simplificacion declarada en simular()).
+        grupos_e, probs_e = (list(mezcla_edad.keys()), list(mezcla_edad.values())) if mezcla_edad else (list(GRUPOS_HIST), list(PROB_GRUPOS))
+        rutas_r, probs_r = (list(mezcla_ruta.keys()), list(mezcla_ruta.values())) if mezcla_ruta else (list(RUTAS_HIST.index), list(RUTAS_HIST.values))
+        grupo = rng.choice(grupos_e, size=total, p=probs_e)
+        ruta = rng.choice(rutas_r, size=total, p=probs_r)
+
     horas = np.empty(total)
-    for g in GRUPOS_HIST:
-        m = grupo == g
-        if m.any():
-            horas[m] = rng.choice(BOOTSTRAP[g], size=int(m.sum()), replace=True)
+    for g in np.unique(grupo):
+        for t in np.unique(ruta):
+            m = (grupo == g) & (ruta == t)
+            if m.any():
+                horas[m] = horas_para(g, t, rng, int(m.sum()))
     horas = horas * ajuste_estancia
     dur_dias = np.clip(np.ceil(horas / 24).astype(int), 1, None)
     dia_alta = dia_ingreso + dur_dias   # exclusivo
@@ -173,15 +227,23 @@ def _una_repeticion(lam, rng, ajuste_estancia, n0=0):
 
 
 def simular(serie, corte, dias, escenario="historico", ajuste_ingresos=1.0, ajuste_estancia=1.0,
-            n_rep=N_REP, semilla=SEMILLA):
+            n_rep=N_REP, semilla=SEMILLA, mezcla_edad=None, mezcla_ruta=None):
     """Simula `dias` dias despues de `corte`. Devuelve (fechas, censos) donde censos es un dict
     {'total'/'ninos'/'adultos': array (n_rep, dias)} con el censo diario de cada repeticion.
+
     SIEMBRA el dia 0 con el censo REAL del dia de corte (ocup_d), para no arrancar con el hospital vacio -
     sin esto, la ocupacion simulada tarda ~3-4 semanas en "llenarse" y ese arranque artificial no existe en la
     realidad. Simplificacion declarada: a cada paciente ya hospitalizado se le asigna como tiempo QUE LE QUEDA
     un valor sacado del mismo bootstrap de estancias COMPLETAS (no se corrige el sesgo de seleccion de que un
     paciente ya hospitalizado tiende a estar en una estancia mas larga que el promedio - "inspection paradox");
-    es una aproximacion, no afecta la ocupacion de REGIMEN (mas alla de los primeros ~30 dias)."""
+    es una aproximacion, no afecta la ocupacion de REGIMEN (mas alla de los primeros ~30 dias).
+
+    `mezcla_edad`, `mezcla_ruta`: dicts opcionales {categoria: probabilidad, deben sumar 1} para sustituir la
+    mezcla real de 2025. Por defecto (los dos en None) se muestrea el PERFIL CONJUNTO real (edad x ruta, con
+    su correlacion real). Si se fija alguno de los dos, edad y ruta se muestrean POR SEPARADO en ESE escenario
+    (se pierde la correlacion real solo ahi, nunca en el "hoy" por defecto) — parametros independientes y
+    combinables entre si y con ajuste_ingresos/ajuste_estancia, pensados para conectarse a controles de un
+    dashboard (B1)."""
     rng = np.random.default_rng(semilla)
     cal = mp.calendario(pd.date_range(serie.index.min(), pd.Timestamp(corte) + pd.Timedelta(days=dias + 2)))
     pron = mp.pronosticar_desde(serie, cal, pd.Timestamp(corte), dias, escenario) * ajuste_ingresos
@@ -193,16 +255,29 @@ def simular(serie, corte, dias, escenario="historico", ajuste_ingresos=1.0, ajus
     n0 = int(round(censo_real))
     out = {"total": np.zeros((n_rep, dias)), "ninos": np.zeros((n_rep, dias)), "adultos": np.zeros((n_rep, dias))}
     for r in range(n_rep):
-        t, n, a = _una_repeticion(lam, rng, ajuste_estancia, n0=n0)
+        t, n, a = _una_repeticion(lam, rng, ajuste_estancia, n0=n0, mezcla_edad=mezcla_edad, mezcla_ruta=mezcla_ruta)
         out["total"][r], out["ninos"][r], out["adultos"][r] = t, n, a
     return fechas, out
+
+
+def curva_capacidad(censos, grupo, rango_capacidad, umbral_riesgo=0.10):
+    """Paso 3 de la mejora: NO vuelve a simular — sobre un censo ya calculado, barre varias capacidades y
+    devuelve (tabla capacidad->prob_saturacion, capacidad minima que baja el riesgo debajo de umbral_riesgo
+    o None si ninguna del rango lo logra)."""
+    c = censos[grupo]
+    filas = [{"capacidad": cap, "prob_saturacion_%": round(100 * float((c > cap).mean()), 1)} for cap in rango_capacidad]
+    tabla = pd.DataFrame(filas)
+    bajo_umbral = tabla[tabla["prob_saturacion_%"] <= 100 * umbral_riesgo]
+    minima = int(bajo_umbral.capacidad.min()) if len(bajo_umbral) else None
+    return tabla, minima
 
 
 def percentiles(censos, pcts=(10, 50, 90)):
     return {k: {p: np.percentile(v, p, axis=0) for p in pcts} for k, v in censos.items()}
 
 
-print(f"motor listo: {N_REP} repeticiones, bootstrap por grupo_edad, ingresos ~ Poisson(pronostico)")
+print(f"motor listo: {N_REP} repeticiones, bootstrap por perfil (edad x ruta), ingresos ~ Poisson(pronostico), "
+      f"mezcla_edad/mezcla_ruta ajustables")
 
 # ----------------------------------------------------------------------
 # 4) BACKTEST (ficha 3.1, puerta de decision)
@@ -284,6 +359,24 @@ print("\nEscenario A (altas antes del mediodia) NO se recalcula aqui: ya esta en
 print("(resultado ya documentado: max. 8 % del exceso de espera evitado, estimacion ~3 % - CLAUDE.md 6b).")
 
 # ----------------------------------------------------------------------
+# 6b) MEJORA: curva de capacidad (no vuelve a simular - usa el censo de la proyeccion base ya calculada)
+# ----------------------------------------------------------------------
+titulo("6b. CURVA DE CAPACIDAD: minimo de camas adicionales para un riesgo de saturacion aceptable")
+UMBRAL_RIESGO = 0.10
+RANGO_CAPACIDAD = {"total": range(100, 141, 2), "ninos": range(14, 31, 1), "adultos": range(80, 121, 2)}
+curvas, minimos = {}, {}
+for grupo in ("total", "ninos", "adultos"):
+    curvas[grupo], minimos[grupo] = curva_capacidad(censos_f, grupo, RANGO_CAPACIDAD[grupo], UMBRAL_RIESGO)
+    curvas[grupo].insert(0, "grupo", grupo)
+    print(f"\n{grupo} (capacidad HUN = {CAPACIDAD[grupo]}): minimo para riesgo <= {100*UMBRAL_RIESGO:.0f} % "
+          f"= {minimos[grupo]} camas "
+          f"({'+' + str(minimos[grupo]-CAPACIDAD[grupo]) if minimos[grupo] else 'fuera del rango probado'} sobre la capacidad actual)")
+curva_tabla = pd.concat(curvas.values(), ignore_index=True)
+curva_tabla.to_csv(TABLAS / "simcamas_curva_capacidad.csv", index=False)
+print("\nguardado: resultados/tablas/simcamas_curva_capacidad.csv")
+print("\n(No se volvio a simular: la capacidad solo se usa para comparar contra el censo ya proyectado en la seccion 5.)")
+
+# ----------------------------------------------------------------------
 # 7) Graficos
 # ----------------------------------------------------------------------
 try:
@@ -295,8 +388,8 @@ except ImportError:
 else:
     SUPERFICIE, TINTA, TINTA2, REJILLA = "#fcfcfb", "#0b0b0b", "#52514e", "#e5e4df"
     AZUL, NARANJA, AQUA = "#2a78d6", "#eb6834", "#1baf7a"
-    fig, axs = plt.subplots(1, 4, figsize=(20.5, 4.8), facecolor=SUPERFICIE,
-                            gridspec_kw={"width_ratios": [1.05, 1.0, 1.05, .95]})
+    fig, axs = plt.subplots(1, 5, figsize=(25, 4.8), facecolor=SUPERFICIE,
+                            gridspec_kw={"width_ratios": [1.05, 1.0, 1.05, .95, 1.0]})
 
     def estilo(ax):
         ax.set_facecolor(SUPERFICIE)
@@ -363,6 +456,21 @@ else:
     ax.set_xticks(x)
     ax.set_xticklabels(nombres_esc, fontsize=8)
     ax.set_title("Ocupacion media por escenario (total)", loc="left", color=TINTA, fontsize=10.5, fontweight="bold")
+    estilo(ax)
+
+    # panel nuevo: curva de capacidad (total) - no es la respuesta obvia "mas camas = menos riesgo", es CUANTAS hacen falta
+    ax = axs[4]
+    ct = curvas["total"]
+    ax.plot(ct.capacidad, ct["prob_saturacion_%"], color=AZUL, linewidth=1.8, marker="o", markersize=3)
+    ax.axhline(100 * UMBRAL_RIESGO, color=TINTA2, linewidth=.8, linestyle=(0, (1, 2)))
+    ax.axvline(CAPACIDAD["total"], color=TINTA, linewidth=1, linestyle=(0, (4, 3)), label="106 (hoy)")
+    if minimos["total"]:
+        ax.axvline(minimos["total"], color=NARANJA, linewidth=1, linestyle=(0, (4, 3)),
+                   label=f"{minimos['total']} (riesgo <= {100*UMBRAL_RIESGO:.0f} %)")
+    ax.set_title("Curva de capacidad (total): camas vs. riesgo", loc="left", color=TINTA, fontsize=10.5, fontweight="bold")
+    ax.set_xlabel("camas de capacidad", color=TINTA2, fontsize=9)
+    ax.set_ylabel("prob. de saturacion (%)", color=TINTA2, fontsize=9)
+    ax.legend(frameon=False, fontsize=7.5, labelcolor=TINTA2, loc="upper right")
     estilo(ax)
 
     fig.tight_layout(rect=(0, .02, 1, 1))
