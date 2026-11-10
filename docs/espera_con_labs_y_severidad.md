@@ -1,5 +1,7 @@
 # Qué pasa durante la espera de cama y severidad desde los laboratorios (A8 puntos 6 y 10, 8-nov-2026)
 
+> **Aviso del 10-nov:** la cobertura de laboratorio durante la espera (38 %) de este documento salía de un cruce que omitía los laboratorios de las visitas copia. Con la corrección, ~70 % de las estancias tiene alguna toma (`docs/caracterizacion_tu.md`). Las banderas por laboratorio y sus efectos (sección de severidad) hay que volver a verificar con el cruce completo.
+
 Scripts: `src/espera_con_labs.py` y `src/severidad_labs.py`. Consultas: `sql/espera_labs_y_texto.sql` y `sql/severidad_labs_6h.sql` (resultados en `datos/crudos/consultas/`, fuera de git).
 Periodo confiable (feb-2023 a 9-abr-2026). Todo son asociaciones.
 

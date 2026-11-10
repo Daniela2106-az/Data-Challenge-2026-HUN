@@ -53,7 +53,11 @@ def visitas_de_estancia():
     e = pd.read_csv(PROC / "episodios.csv", usecols=["visit_occurrence_id", "estancia_id", "hospitalizado"])
     e = e[e.hospitalizado & e.estancia_id.notna()][["visit_occurrence_id", "estancia_id"]].drop_duplicates()
     e["estancia_id"] = e.estancia_id.astype(int)
-    return e
+    # la informacion clinica tambien cuelga de las visitas COPIA (copias.csv: copia -> visita raiz): se lleva a la estancia de su raiz; despues se filtra por persona.
+    # (v1 omitia las copias: perdia ~80 % de las filas de laboratorio con concepto traducido y subestimaba la cobertura; corregido el 10-nov)
+    cop = pd.read_csv(PROC / "copias.csv", usecols=["visit_occurrence_id", "raiz_id"])
+    cop = cop.merge(e.rename(columns={"visit_occurrence_id": "raiz_id"}), on="raiz_id")[["visit_occurrence_id", "estancia_id"]]
+    return pd.concat([e, cop], ignore_index=True).drop_duplicates()
 
 
 def filas_en_ventana(nombre, c, vis, col_hora, extra):

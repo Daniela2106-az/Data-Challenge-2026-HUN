@@ -1,4 +1,6 @@
-# Las etapas TU antes de la cama, una por una (9-nov-2026)
+# Las etapas TU antes de la cama, una por una (9-nov-2026; cifras de laboratorio y diagnóstico corregidas el 10-nov)
+
+> **Corrección del 10-nov:** la primera versión omitía los laboratorios y diagnósticos que cuelgan de visitas copia (ver el aviso de `docs/caracterizacion_tu.md`). Cobertura de laboratorio en la espera: ~70 % de las estancias, no 38 %. Cambian los porcentajes de la sección 3 y 4; las duraciones por etapa (sección 2) no dependen de eso y no cambian. El patrón se mantiene.
 
 Script: `src/caracterizar_etapas_tu.py` (tablas `tu_etapas_*.csv` en `resultados/tablas/`, fuera de git). Continúa `docs/caracterizacion_tu.md`, que miraba la espera como un solo bloque.
 Periodo confiable, estancias únicas con espera medida; **22.466 estancias con 55.457 etapas TU crudas** antes de la cama (del registro de la persona real).
@@ -23,27 +25,27 @@ La primera etapa dura unas 2 h en todos los grupos. La última etapa empieza a l
 
 | Posición | % de etapas con alguna toma | Tomas por 10 h de etapa | Duración mediana |
 |---|---|---|---|
-| Única (solo una etapa) | 97,5 % | 9,3 | 4,2 h |
-| Primera | 32,9 % | 5,7 | 1,9 h |
-| Intermedia | 66,3 % | 3,8 | 6,5 h |
-| Última | 66,2 % | 1,75 | 16,2 h |
+| Única (solo una etapa) | 86,8 % | 7,3 | 3,6 h |
+| Primera | 32,2 % | 5,6 | 1,8 h |
+| Intermedia | 65,7 % | 3,9 | 6,3 h |
+| Última | 66,8 % | 1,86 | 14,7 h |
 
-- En la primera etapa casi no hay tomas en la primera hora (0,11 por etapa) y sí después: se evalúa primero y se piden exámenes luego.
-- **Cada etapa nueva (intermedia o última) arranca con una ráfaga de tomas:** 0,87 en su primera hora frente a 0,21 por hora en el resto, 4,1 veces más.
-- **La última etapa se vuelve silenciosa en las esperas largas:** tomas por 10 h de etapa de **19,9 en A, 2,2 en B y 1,05 en C**. Quien recibe cama pronto sigue en trabajo activo hasta el final; quien espera mucho pasa su última etapa casi sin laboratorios (una toma cada ~10 h).
+- En la primera etapa casi no hay tomas en la primera hora (0,12 por etapa) y sí después: se evalúa primero y se piden exámenes luego.
+- **Cada etapa nueva (intermedia o última) arranca con una ráfaga de tomas:** 0,86 en su primera hora frente a 0,21 por hora en el resto, 4,1 veces más.
+- **La última etapa se vuelve silenciosa en las esperas largas:** tomas por 10 h de etapa de **19,3 en A, 2,3 en B y 1,1 en C**. Quien recibe cama pronto sigue en trabajo activo hasta el final; quien espera mucho pasa su última etapa casi sin laboratorios (una toma cada ~9 h).
 
-**4. Los diagnósticos se registran en la primera etapa.** El 73,1 % de los diagnósticos distintos se registra por primera vez en la primera etapa y el 17,2 % en la única; solo el 5,6 % en la última, aunque esa etapa concentra el **60,5 %** de las horas de TU.
+**4. Los diagnósticos se registran sobre todo en la primera etapa.** El 52,7 % de los diagnósticos distintos se registra por primera vez en la primera etapa y el 31,7 % en la única; solo el 9,8 % en la última, aunque esa etapa concentra el **60,5 %** de las horas de TU.
 
 **5. La hora del cambio de etapa** no sigue claramente los cambios de turno: se reparte durante el día, con picos a las 17–18 h (6–7 %) y entre las 22 y la 1 h (5–6 %). La última etapa empieza con mayor frecuencia a las 18 h (6,7 %), a las 0–1 h y a las 22–23 h. Es parecido a las dos olas de asignación de cama (15–17 h y 20–23 h) de `docs/saturacion_y_espera.md`.
 
 ## Lectura
 - Las etapas parecen una **secuencia de fases**: una primera etapa de ~2 h (valoración inicial, donde se registra el diagnóstico), etapas intermedias (reevaluaciones con nuevos exámenes) y una **última etapa** de duración variable.
-- **El cuello de botella está en la última etapa TU** (62–78 % de la espera), y en las esperas largas es una etapa de **poca actividad clínica registrada** (laboratorios ~1 por 10 h, casi ningún diagnóstico nuevo). Eso es consistente con **espera con poca atención nueva** (por ejemplo, con la hospitalización ya decidida y sin cama), no con atención demorada. Es una **hipótesis**: la base no dice qué significa cada etapa.
+- **El cuello de botella está en la última etapa TU** (62–78 % de la espera), y en las esperas largas es una etapa de **poca actividad clínica registrada** (laboratorios ~1 por 10 h, pocos diagnósticos nuevos). Eso es consistente con **espera con poca atención nueva** (por ejemplo, con la hospitalización ya decidida y sin cama), no con atención demorada. Es una **hipótesis**: la base no dice qué significa cada etapa.
 - Junto con `docs/saturacion_y_espera.md`: la mediana de la espera no sube con la ocupación, pero la cama se asigna en dos olas; la última etapa de las esperas largas es una espera con poca actividad. Todo apunta a un **límite de proceso y de horario de asignación** además de la saturación de la cola larga.
 
 ## Limitaciones
 - No sabemos qué es cada etapa (la base no trae servicio, ubicación ni profesional: `provider_id` siempre vale 0). La lectura es por intervalo y actividad, no por significado.
-- La **cobertura** de laboratorio es del 38 % de las estancias; los diagnósticos se registran en la primera etapa y justo antes de la cama; los procedimientos no se pueden fechar. Una etapa sin tomas puede estar siendo atendida (enfermería, imágenes, interconsultas) sin que quede en la base.
+- La **cobertura** de laboratorio es de ~70 % de las estancias; los diagnósticos se registran en la primera etapa y justo antes de la cama; los procedimientos no se pueden fechar. Una etapa sin tomas puede estar siendo atendida (enfermería, imágenes, interconsultas) sin que quede en la base.
 - Las etapas sin hora de fin (2,9 % de las etapas antes de la cama) se llevaron hasta la asignación de cama.
 - La comparación entre etapas «última» e «intermedia» solo se puede hacer en estancias con 2 o más etapas (el 74 % de las estancias).
 - El número de etapas crece con la espera en parte por construcción (más tiempo, más cambios).
