@@ -1,0 +1,9 @@
+# Lo minimo para publicar el dashboard (Render u otro servicio). Instalar con:  pip install -r dashboard/requirements.txt
+# El estimador (pagina 3.7) necesita ademas scikit-learn, scipy, joblib y pyarrow, y el modelo entrenado, que sale de datos clinicos y no se
+# publica: sin ellos la pagina muestra un aviso y el resto del dashboard funciona.
+dash>=4.0
+pandas>=3.0
+numpy>=2.5
+holidays>=0.107
+python-dateutil>=2.9
+gunicorn>=23.0

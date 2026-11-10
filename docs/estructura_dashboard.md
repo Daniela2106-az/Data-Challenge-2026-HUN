@@ -230,6 +230,9 @@ Enlace al repositorio de GitHub, `README.md` («Cómo reproducirlo»), orden de 
 - **Páginas de texto** (Parte 1 y 5): Markdown renderizado con `dcc.Markdown`, con figuras como imágenes de `resultados/graficos/` o gráficas de Plotly.
 - **Panel de contexto:** un componente reutilizable con las cuatro pestañas (*qué ves, cómo se calculó, qué significa, qué no dice*) para no repetir código.
 - **Publicación:** subir solo la carpeta del dashboard y las tablas agregadas; probar el enlace en un navegador distinto antes de entregarlo.
+- **Publicación en Render (9-nov):** *Web Service* (no *Static Site*: Dash necesita un servidor de Python). Build: `pip install -r dashboard/requirements.txt`; Start: `gunicorn --chdir dashboard app:server`.
+  `panel_diario.csv` se sube como **Secret File** de Render con ese mismo nombre (queda en `/etc/secrets/panel_diario.csv`, que `src/modelo_pronostico.py` busca solo), así no pasa por GitHub.
+  La página 3.7 muestra un aviso mientras no se decida publicar el modelo del estimador.
 
 # 5. Qué depende de qué
 

@@ -43,7 +43,11 @@ import pandas as pd
 from dateutil.easter import easter
 
 RAIZ = Path(__file__).resolve().parent.parent
-PANEL = Path(os.environ.get("HUN_PROCESADOS", RAIZ / "datos" / "procesados")) / "para_equipo" / "panel_diario.csv"   # HUN_PROCESADOS: fuera del proyecto (9-nov)
+# Donde buscar panel_diario.csv (9-nov), en este orden: HUN_PANEL (ruta exacta); el "Secret File" de Render (/etc/secrets/panel_diario.csv, asi el
+# archivo no pasa por GitHub); HUN_PROCESADOS/para_equipo (datos fuera del proyecto); datos/procesados/para_equipo del proyecto.
+_CANDIDATOS = [os.environ.get("HUN_PANEL"), "/etc/secrets/panel_diario.csv",
+               Path(os.environ.get("HUN_PROCESADOS", RAIZ / "datos" / "procesados")) / "para_equipo" / "panel_diario.csv"]
+PANEL = next((Path(c) for c in _CANDIDATOS if c and Path(c).exists()), RAIZ / "datos" / "procesados" / "para_equipo" / "panel_diario.csv")
 OBJETIVOS = {"llegadas_con_atencion": "Llegadas con atención por día (TU u hospitalización)", "llegadas": "Llegadas por día (todas)",
              "ingresos_a_cama": "Ingresos a cama por día"}
 # Auditoria en la base (CLAUDE.md 4.9, 2-nov-2026): el registro de las etapas es confiable hasta el 9-abr-2026. Desde el 10-abr aparecen visitas de mas sin etapas
