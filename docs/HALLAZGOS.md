@@ -226,7 +226,7 @@ de las llegadas pronosticadas. *Descartado por falta de datos:* dengue y lluvia 
 - **La hora del reloj manda:** el 24 % de las camas se asigna entre las 15 y las 17 h y el 37 % entre las 20 y las 23 h; entre las 6 y las 12 h casi nadie recibe cama.
 - **El hospital cambió** (p90 de la espera de 61 a 81 h entre 2023 y 2026): reentrenar cada mes con más peso en lo reciente mejora la estimación en todos los momentos (8,9 % al llegar, 11,3 % a las 3 h y 11,7 % a las 6 h; la diferencia con el modelo fijo es real a las 3 y 6 h). El estimador final se entrena así, con todos los datos hasta el 9-abr-2026 (`src/ventana_entrenamiento.py`).
 - **Banderas de laboratorio de las primeras 6 h (8-nov, `src/severidad_labs.py` de Daniela):** desde las 6 h de espera, una bandera por valor anormal (troponina, lactato, PCR, creatinina, etc.) suma ~1 punto real de mejora (modelo fijo: 6 h de 9,7 a 10,6 %, 12 h de 7,1 a 8,0 %, 24 h de 5,3 a 6,1 %; IC de la diferencia sin el 0). Ya están en el estimador (`docs/estimador_tiempos.md` 3.3).
-- **Uso diario** (`src/utilidad_estimador.py`, página `dashboard/estimador.py`):
+- **Uso diario** (`src/utilidad_estimador.py`, página 3.7 del dashboard, `dashboard/pages/estimador.py`):
   - Responde en ventanas del día con probabilidades calibradas: la ventana real está entre las 2 más probables en el 46 % de los pacientes, frente a 37 % sin modelo.
   - Para la reunión de camas dice cuántos de los que esperan tendrán cama en 12 o 24 h, con un error en el mínimo que permite el azar y un rango que acierta el 87–88 % de los días.
   - A las 12 h de espera avisa quién seguirá sin cama a las 48 h: 4,1 alertas por día que aciertan en el 54 %, igual que esperar a las 24 h pero con 12 h más de margen.

@@ -17,7 +17,7 @@ Menú lateral con cinco partes, en este orden. El orden cuenta la historia: prim
 | **0. Inicio** | ¿De qué trata esto? | Portada |
 | **1. Contexto** | ¿Qué datos hay y qué tan confiables son? | 1.1 a 1.6 |
 | **2. Resultados** | ¿Qué está pasando en el hospital? | 2.1 a 2.8 |
-| **3. Predicción y anticipación** | ¿Qué podemos prever y avisar? | 3.1 a 3.5 |
+| **3. Predicción y anticipación** | ¿Qué podemos prever y avisar? | 3.1 a 3.7 |
 | **4. Recomendaciones** | ¿Qué hacemos con esto? | 4.1 |
 | **5. Anexos** | Límites, glosario, repositorio | 5.1 a 5.3 |
 
@@ -193,6 +193,12 @@ La página más importante del bloque: explica por qué las cifras del proyecto 
 - **Lleva:** una tabla de «alternativas probadas → resultado → decisión» por cada modelo: pronóstico de demanda, alertas, modelos explicativos, escenarios de camas, días atípicos. Incluye el piso de ruido de los conteos, las pruebas con meses conocidos y con 2026, la comparación de bandas con y sin la caída, y lo que se descartó.
 - **Fuente:** `src/modelo_pronostico.py`, `src/evaluacion_modelo.py`, `src/pruebas_ruido_pronostico.py`, `src/prueba_mes_conocido.py`, `src/prueba_2026.py`, `src/elegir_tau.py`; tablas `evaluacion_modelo.csv`, `pruebas_pronostico_resumen.csv`, `prueba_2026.csv`; `CLAUDE.md` 4.9 y 6b.
 
+## 3.7 ¿Cuándo recibirá cama este paciente? (A6, hecha el 9-nov)
+- **Controles:** edad, sexo, tipo de visita, horas de espera, fecha y hora; opcionales: hospitalización anterior, etapas en urgencias y laboratorios de las primeras 6 h · botón «Estimar».
+- **Gráficas:** barras con la probabilidad de recibir cama en cada bloque del día (hoy, mañana, pasado mañana) y la acumulada; tarjetas de la ventana más probable, lo que falta (mediana y rango) y la probabilidad de cama en 6, 12 y 24 h.
+- **Contexto obligatorio:** solo vale para quien ya tiene orden de hospitalización; rango de pacientes parecidos, no una promesa; el modelo tiene atraso (datos confiables hasta el 9-abr-2026); la página muestra los avisos de la función.
+- **Fuente:** `dashboard/pages/estimador.py`, `src/estimador_tiempo_restante.py`, `utilidad_*.csv`; `docs/estimador_tiempos.md`. **Nota:** necesita el modelo guardado (sale de datos clínicos); sin él la página muestra un aviso.
+
 ---
 
 # PARTE 4 — RECOMENDACIONES
@@ -219,7 +225,7 @@ Enlace al repositorio de GitHub, `README.md` («Cómo reproducirlo»), orden de 
 
 # 4. Cómo armarlo en Dash
 
-- **Estructura de la app:** una app multipágina (`dash.page_registry`) con un menú lateral. Una carpeta `dashboard/` con `app.py` (menú y tema), `pages/` (una página por sección), `componentes.py` (tarjeta, panel de contexto, pie de fuente, aviso de limitación), `datos.py` (carga de las tablas una sola vez) y `assets/` (estilos y tema de colores).
+- **Estructura de la app (esqueleto hecho el 9-nov: `dashboard/app.py` con el menú completo, `dashboard/pages/pronostico.py` y `dashboard/pages/estimador.py`, `dashboard/componentes.py`; las páginas que faltan salen en gris como «pendiente»):** una app multipágina (`dash.page_registry`) con un menú lateral. Una carpeta `dashboard/` con `app.py` (menú y tema), `pages/` (una página por sección), `componentes.py` (tarjeta, panel de contexto, pie de fuente, aviso de limitación), `datos.py` (carga de las tablas una sola vez) y `assets/` (estilos y tema de colores).
 - **Datos:** leer solo tablas agregadas de una carpeta `dashboard/datos/` (copia de las tablas que se publican). La app no abre la base.
 - **Páginas de texto** (Parte 1 y 5): Markdown renderizado con `dcc.Markdown`, con figuras como imágenes de `resultados/graficos/` o gráficas de Plotly.
 - **Panel de contexto:** un componente reutilizable con las cuatro pestañas (*qué ves, cómo se calculó, qué significa, qué no dice*) para no repetir código.
@@ -232,8 +238,9 @@ Enlace al repositorio de GitHub, `README.md` («Cómo reproducirlo»), orden de 
 | Portada, Parte 1 y Parte 5 | Se arman con documentos que ya existen |
 | 2.1 a 2.8 | Listas para construir (los análisis están hechos) |
 | 3.1 | **Hecha**; falta el texto de contexto y el enlace a 3.6 |
+| 3.7 | **Hecha** (9-nov); falta decidir si se publica el modelo |
 | 3.2, 3.3, 3.6 | Listas para construir |
-| 3.4 | Parcial: falta la simulación Monte Carlo (A5, Anthony) |
+| 3.4 | Lista: la simulación Monte Carlo (A5) se hizo el 9-nov (`simcamas_*.csv`) |
 | 3.5 | Lista; hay que generar los reportes de antemano |
 | 4.1 | Lista para construir (B2 hecha; R3 y R6 por recalcular) |
 

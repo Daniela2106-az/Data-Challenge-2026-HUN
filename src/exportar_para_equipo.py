@@ -19,13 +19,14 @@ SALIDAS
   panel_diario.csv               una fila por dia: llegadas, hospitalizados, ingresos a cama, altas, ocupacion,
                                  espera de cama y calendario (insumo del Modelo A y de la deteccion de dias atipicos)
 """
+import os
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 
 RAIZ = Path(__file__).resolve().parent.parent
-PROC = RAIZ / "datos" / "procesados"
+PROC = Path(os.environ.get("HUN_PROCESADOS", RAIZ / "datos" / "procesados"))   # HUN_PROCESADOS: datos fuera del proyecto (9-nov)
 SALIDA = PROC / "para_equipo"
 SALIDA.mkdir(parents=True, exist_ok=True)
 OCUP_DESDE, OCUP_HASTA = "2023-02-01", "2026-04-10"   # mismo rango confiable de preparar_variables.py

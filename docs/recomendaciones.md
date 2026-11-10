@@ -1,4 +1,4 @@
-# Recomendaciones para el HUN (versión verificada, cifras al 6-nov-2026)
+# Recomendaciones para el HUN (versión verificada, cifras al 9-nov-2026)
 
 Tarea B2 (Samuel): fuentes verificadas el 1-nov y comprobadas de nuevo el 6-nov; integrada con las cifras vigentes de `main` el 6-nov. Parte del borrador de Daniela del 22-oct, con las cifras de R2 y R6 que Daniela respaldó con scripts el 25-oct
 (`src/simulacion_altas.py` y `src/impacto_llegada_tarde.py`). Cambios frente al borrador:
@@ -12,6 +12,10 @@ Tarea B2 (Samuel): fuentes verificadas el 1-nov y comprobadas de nuevo el 6-nov;
 5. **Todas las cifras propias tienen script de origen.** R2: las ~103 camas son el promedio a las 12 h (`escenario_camas_por_hora.csv`). R6: Daniela
    recalculó el impacto con `src/impacto_llegada_tarde.py` (antes no tenía script) y la franja quedó en 13:00–18:59 frente a 6:00–11:59.
 6. **Las 12 fuentes externas se comprobaron de nuevo el 6-nov** y cada una tiene su nivel de verificación escrito (sección 6).
+7. **Revisión del 9-nov con lo nuevo del equipo:** A4 (modelo explicativo, `docs/modelo_espera.md`), A5 (simulación Monte Carlo de camas, `docs/modelo_camas.md` y `docs/simulacion.md`),
+   A6 (estimador de tiempo restante, `docs/estimador_tiempos.md`), saturación y espera (`docs/saturacion_y_espera.md`), etapas de urgencias (`docs/caracterizacion_etapas_tu.md`)
+   y pronóstico de la cola (`docs/pronostico_espera_sistema.md`). Ninguna recomendación cambia de orden; se corrigieron dos afirmaciones que ya no se sostienen (la ocupación «casi no importa»
+   y el AUC de 0,60) y se sumaron cifras que refuerzan R3, R4, R5, R6 y R7.
 
 **Cómo leerlo.** Todo son **asociaciones y escenarios con supuestos escritos**, no causas probadas. El HUN dio su número de camas el 29-oct (106 camas de
 hospitalización y 58 camillas de urgencias), sin decir a qué fecha corresponde; no tenemos el motivo clínico de cada espera. Donde un efecto no se puede calcular, se dice. Cifras propias: `docs/HALLAZGOS.md` y `CLAUDE.md` (secciones 4.8 a 4.11 y 6b).
@@ -27,11 +31,12 @@ hospitalización y 58 camillas de urgencias), sin decir a qué fecha corresponde
 |---|---|---|---|
 | 1 | Esperar cama es largo y los peores casos empeoran | Espera mediana 18,6 h, percentil 90 de 73,9 h; el exceso medio sube de 17,3 h (2023) a 23,8 h (ene–abr 2026), +38 % | HALLAZGOS 4.2 y 4.3 |
 | 2 | Casi todo el tiempo está dentro de urgencias, no en huecos entre etapas | 98 % de las horas de espera es tiempo en urgencias antes de la cama; el tiempo sin ninguna etapa registrada es ~1–3 % (corregido el 7-nov: el 21 % anterior era un artefacto de las estancias duplicadas, `CLAUDE.md` 4.12) | HALLAZGOS 4.2 |
-| 3 | Las altas son tardías y la cama se asigna por la tarde | 62,7 % de las altas entre las 14:00 y las 18:59, solo 14 % antes del mediodía; la cama se asigna a las 17–18 h sin importar cuándo llegó el paciente | HALLAZGOS 4.4 |
+| 3 | Las altas son tardías y la cama se asigna en dos olas | 62,7 % de las altas entre las 14:00 y las 18:59, solo 14 % antes del mediodía; el 61 % de las camas se asigna entre las 15 y las 17 h o entre las 20 y las 23 h, y solo el 9 % entre las 6 y las 11 h. Una cama que se libera en la mañana tarda una mediana de 1,8 h en volver a asignarse aunque haya ~26 pacientes esperando: además de faltar camas, hay un límite de proceso | HALLAZGOS 4.4; `docs/saturacion_y_espera.md` 3 y 4 |
 | 4 | Quien llega a media tarde espera más | Mediana de ~25 h al llegar entre las 13 y las 16 h contra 12–15 h de madrugada; a las 16 h, el 72 % recibe cama al día siguiente | HALLAZGOS 4.4 |
 | 5 | La ocupación sube por la estancia, no por más pacientes | Camas ocupadas 94 (2023) a 105 (2025); estancia media 4,57 a 5,31 días (+16 %); ingresos ~20 por día sin crecer | HALLAZGOS 4.6 |
-| 6 | La carga del momento explica poco | Cada decil más de llegadas en 6 h sube la espera ~2,5 %; la ocupación y el día de la semana casi no importan | HALLAZGOS 4.4 y 4.5 |
+| 6 | La saturación del momento mueve poco la espera típica, pero sí la cola larga | Cada 10 camas ocupadas más al llegar suben la espera ~7 % (adultos +7,2 %, IC +3,5 a +11,1); la mediana casi no cambia (18,7 h con ≤ 90 camas, 19,8 h con > 115) y el p90 pasa de 60 a 80 h. Cada decil más de llegadas en 6 h sube la espera ~2,5 %; el día de la semana casi no importa. El hospital está saturado casi siempre: en adultos nunca hay una hora sin pacientes esperando cama | HALLAZGOS 4.4 y 4.5; `docs/saturacion_y_espera.md` 1, 2 y 4 |
 | 7 | La espera larga concentra las horas perdidas | El 83 % de las horas de espera viene de esperas de más de 24 h; el 19 % de los pacientes espera más de 48 h | HALLAZGOS 4.2 y 4.6 |
+| 8 | En las esperas largas, el tiempo se va en la última etapa de urgencias, con poca actividad | La última etapa concentra el 63 % de la espera de quien espera 12–48 h y el 78 % de quien espera más de 72 h (mediana de 69 h); en ella hay ~1 laboratorio cada 10 h y casi ningún diagnóstico nuevo. Es compatible con un paciente ya decidido que espera cama, pero es una hipótesis: la base no dice qué es cada etapa | `docs/caracterizacion_etapas_tu.md` |
 
 **Qué dice la literatura sobre el problema en general:** dos revisiones sistemáticas de saturación de urgencias señalan causas del lado de salida del hospital: la espera de cama de
 pacientes ya admitidos (*boarding*) y la falta de camas (Hoot y Aronsky 2008, 93 estudios), y el *boarding* y las altas tardías
@@ -44,11 +49,11 @@ cuello de botella sea un patrón conocido, no una rareza del HUN.
 |---|---|---|---|---|
 | 1 | Registrar mejor: hora de salida de urgencias, asignación de cama y sin duplicados | Habilita medir todo lo demás | No aplica | Alta |
 | 2 | Seguimiento mensual de 6 indicadores | Permite ver si algo mejora | No aplica | Alta |
-| 3 | Reunión diaria de camas a media mañana, con alertas | No cuantificable; la alerta de las 12 h detecta 83 % de los días congestionados | Débil: un resumen de congreso (altas más tempranas, misma estancia) y un caso escocés donde la reunión fue parte de una intervención más amplia | Media |
-| 4 | Meta de altas antes del mediodía (empezar con 25–30 %) | Hasta 5,1 camas libres a las 12 h; evita como máximo 8 % del exceso de espera (estimación central ~3 %) | Mixta: 3 proyectos con mejoras, 1 sin efecto y con más *boarding* | Media-baja |
-| 5 | Alerta por paciente a las 48 h sin cama, con responsable | ~4 alertas por día; 51 % termina esperando más de 72 h; 24 h de margen | No encontrada | Media |
+| 3 | Reunión diaria de camas a media mañana, con alertas | No cuantificable; la alerta de las 12 h detecta 87 % de los días congestionados (13 de 15); la cola de pacientes sin cama se pronostica a 6–12 h con un tercio menos de error que «lo mismo que ahora» | Débil: un resumen de congreso (altas más tempranas, misma estancia) y un caso escocés donde la reunión fue parte de una intervención más amplia | Media |
+| 4 | Meta de altas antes del mediodía (empezar con 25–30 %), y asignar enseguida la cama que se libera | Hasta 5,1 camas libres a las 12 h; evita como máximo 8 % del exceso de espera (estimación central ~3 %). Hoy una cama liberada en la mañana tarda 1,8 h en asignarse | Mixta: 3 proyectos con mejoras, 1 sin efecto y con más *boarding* | Media-baja |
+| 5 | Alerta por paciente a las 48 h sin cama, con responsable | ~4 alertas por día; 52 % termina esperando más de 72 h; 24 h de margen. Opción más temprana con el estimador A6: a las 12 h, ~4 alertas por día con 55 % de acierto | No encontrada | Media |
 | 6 | Protocolo para quien llega entre las 13 y las 18 h y se hospitaliza | Entre ~11 y ~49 horas-paciente por día (2–11 % del exceso de 451) si esperaran como quien llega por la mañana | No encontrada | Baja (el rango depende de usar promedios o medianas) |
-| 7 | Revisar sistemáticamente las estancias largas | −5 % de estancia ≈ 5 camas; volver a la de 2023 ≈ 15 camas. Las estancias de más de 14 días ocupan unas 36 camas; las de más de 30 días pasaron de 6 a 13 camas entre 2023 y 2025 | Inconsistente según la población | Media |
+| 7 | Revisar sistemáticamente las estancias largas | −5 % de estancia ≈ 5 camas (la simulación Monte Carlo da 4,7 y baja la probabilidad de saturar las 106 camas de 53 % a 36 % de los días); volver a la de 2023 ≈ 15 camas. Las estancias de más de 14 días ocupan unas 36 camas; las de más de 30 días pasaron de 6 a 13 camas entre 2023 y 2025 | Inconsistente según la población | Media |
 
 ## 3. Detalle
 
@@ -84,6 +89,10 @@ Como referencia, no como séptimo indicador: la ocupación media de todo el día
 - **Por qué (nuestros datos):** a las 12 h la alerta de día congestionado tiene AUC de 0,94 y detecta 13 de 15 días congestionados (25 alertas en
   99 días, 52 % de precisión). Para la ocupación a 24 h (umbral de 107–109 camas, el percentil 80 de las 12 h), "lo mismo que ahora" funciona mejor que una proyección (AUC 0,82, precisión 48 %, detección 76 %, 0,4 alertas por día). Se
   liberan ~20 camas por día, solo como orden de magnitud. (HALLAZGOS 5.2; recalculado el 8-nov con `src/alertas.py` y la regla v3.8)
+- **Dos insumos nuevos para la reunión (9-nov):**
+  - **Cuántos pacientes seguirán sin cama en 6 y 12 h:** el modelo de flujo (cola de ahora + llegadas esperadas − camas que se suelen asignar a esa hora) se equivoca en 2,6 pacientes a 6 h y 3,5 a 12 h,
+    frente a 3,8 y 5,5 de «lo mismo que ahora» (−33 % y −36 %); a 24 h la ventaja baja a −9 %. (`docs/pronostico_espera_sistema.md` 1a)
+  - **Cuántos de los que esperan tendrán cama en 12 o 24 h:** el censo del estimador A6 acierta con su rango del 80 % el 87–88 % de los días, y su error está en el mínimo que permite el azar. (`docs/estimador_tiempos.md` 3.2)
 - **Evidencia externa (verificada):**
   - La guía práctica de Becker's (2014), que resume recomendaciones del Institute for Healthcare Improvement, propone 10–15 minutos con un orden fijo:
     censo, altas, ingresos y traslados previstos por unidad. **Es una guía, no un estudio: no reporta resultados.**
@@ -115,7 +124,10 @@ Como referencia, no como séptimo indicador: la ocupación media de todo el día
   **mixta**: algunos estudios no hallan relación con la estancia y otros la ven aumentar.
 - **Ojo al comparar:** Baystate mide *órdenes* de alta; el HUN y los demás miden la *salida* del paciente. Una orden antes del mediodía no garantiza que la cama
   quede libre antes del mediodía.
-- **Cómo medirla:** % de altas antes de las 12 h; hora mediana de asignación de cama; espera de quien llega de 12 a 18 h.
+- **Cómo medirla:** % de altas antes de las 12 h; tiempo entre un alta de la mañana y la siguiente asignación de cama; hora mediana de asignación de cama; espera de quien llega de 12 a 18 h.
+- **No basta con dar el alta antes: la cama liberada tiene que asignarse enseguida.** Hoy las camas que se liberan entre las 6 y las 12 h tardan una mediana de 1,8 h en volver a asignarse
+  (un tercio tarda más de 3 h), aunque siempre hay ~26 pacientes esperando; las de la tarde tardan 0,4 h. Solo el 9 % de las camas se asigna entre las 6 y las 11 h. Si la asignación de la mañana
+  sigue lenta, adelantar altas rinde menos de lo estimado. Prueba débil: no hay identificador de cama ni de servicio. (`docs/saturacion_y_espera.md` 3 y 4)
 - **Complemento de bajo costo:** dar altas también en fin de semana y festivos. Las altas por cada 100 camas bajan 27 % el domingo y 34 % en festivos, pero el efecto estimado es pequeño: ~1–2 camas equivalentes (`docs/efecto_fin_de_semana.md`).
 - **Límite:** es una cota con supuestos (el alta de los demás pacientes no cambia; la ocupación es de ~103 camas a las 12 h frente a las 106 que dio el HUN). Mejora la **hora** de la cama,
   no la capacidad. Todos los estudios externos son de un solo centro y sin grupo de comparación.
@@ -124,6 +136,9 @@ Como referencia, no como séptimo indicador: la ocupación media de todo el día
 - **Qué hacer:** cuando un paciente lleva 48 h desde su llegada sin cama, avisar a un responsable que revise por qué.
 - **Por qué (nuestros datos):** ~4,0 alertas por día; el 52 % de esos pacientes termina esperando más de 72 h, con 24 h de margen. A las 36 h serían 5,3 por día
   (39 %); a las 60 h, 2,6 por día (80 %, solo 12 h de margen). (HALLAZGOS 5.2)
+- **Opción más temprana (9-nov, estimador A6):** a las 12 h de espera, avisar cuando el estimador dé 40 % o más de probabilidad de seguir sin cama a las 48 h: 4,1 alertas por día,
+  acierta en el 55 % (igual que alertar a todos los que llevan 24 h, 53 %) pero con 12 h más de margen; a cambio detecta solo a la mitad (54 %). Sirve solo para pacientes con orden
+  de hospitalización. (`docs/estimador_tiempos.md` 3.2)
 - **Evidencia externa:** no se encontró un estudio que evalúe esta alerta concreta. La revisión de Oskvarek y colegas (2026) menciona la gestión activa de
   camas entre las medidas de salida, que requieren coordinación de todo el sistema, y dice que la evidencia de alta calidad es limitada.
 - **Límite:** solo cuenta a quienes luego se hospitalizan, así que en tiempo real habría más alertas; riesgo de fatiga por alertas. Sin una acción definida
@@ -140,6 +155,9 @@ Como referencia, no como séptimo indicador: la ocupación media de todo el día
 - **Relación con los diagnósticos (A3):** la espera larga se concentra en pacientes de ortopedia, riñón y vías urinarias, digestivo y cáncer (29–39 h), frente a
   ~9–13 h en cardiovascular, neurológico y respiratorio (HALLAZGOS 4.5b; `docs/diagnosticos_y_tiempos.md`). Si se confirma que es una fila por tipo de cama o servicio, el protocolo de la tarde
   podría enfocarse en esos servicios. Hipótesis sin comprobar: la base no tiene servicio ni piso.
+- **Por qué anticipar la decisión ayuda (9-nov):** en las esperas largas, la última etapa de urgencias dura una mediana de 69 h con casi ninguna prueba nueva (`docs/caracterizacion_etapas_tu.md`),
+  y la cama se asigna sobre todo entre las 15 y las 17 h y entre las 20 y las 23 h (`docs/saturacion_y_espera.md` 4). Quien llega a media tarde queda fuera de la ola de las 15–17 h si la solicitud
+  de cama no está lista a tiempo. Hipótesis: la base no registra la hora de la orden de hospitalización.
 - **Fuente:** `src/impacto_llegada_tarde.py` → `resultados/tablas/impacto_llegada_tarde.csv` (estancias únicas, feb-2023 a abr-2026).
 - **Evidencia externa:** no se encontró.
 - **Límite:** asociación por hora de llegada, no causa. La espera va de la llegada a la asignación de cama (así lo confirmó el HUN): mezcla atención clínica con espera de cama y no se pueden separar con los datos. **Recalculado el 8-nov** con `src/impacto_llegada_tarde.py` (regla v3.8): ~49 h con medianas y 11,0 h con promedios; el valor con promedios aparecía como ~9 y ~11 en versiones anteriores. Es cerca del 2 % del exceso, así que la conclusión no cambia.
@@ -151,13 +169,17 @@ Como referencia, no como séptimo indicador: la ocupación media de todo el día
 - **Evidencia externa:** una revisión de 19 revisiones sistemáticas (*JAMA Netw Open* 2021, encargada por la agencia AHRQ de
   Estados Unidos) evaluó 8 estrategias. Las rutas clínicas (protocolos paso a paso por enfermedad) y la gestión de casos se asociaron con menos estancia en
   **insuficiencia cardíaca**. En pacientes con varias enfermedades, la planificación del alta y los equipos interdisciplinarios dieron **resultados inconsistentes**.
+- **Qué dice la simulación Monte Carlo (A5, 9-nov):** proyectando 180 días desde el 9-abr-2026, bajar la estancia 5 % lleva la ocupación media de 107,6 a 102,9 camas (−4,7, casi lo mismo que la ley de Little)
+  y los días saturados de 53 % a 36 % (adultos de 60 % a 44 %). En cambio, 10 % más de ingresos la sube a 117,9 camas y a 84 % de días saturados. **La estancia pesa más que el volumen.**
+  Es una proyección condicionada a que el patrón siga igual, no una predicción. (`docs/simulacion.md`)
 - **Qué dice A2:** cerca de la mitad del aumento de la estancia media viene de las estancias de más de 30 días (de 54 a 117 por año); del resto, una parte importante es la llegada de visitas «Treatment urgency». La mediana casi no cambió (`docs/factores_estancia.md`).
 - **Límite:** es una asociación y requiere revisión clínica. No es una recomendación de «reducir días evitables»: las camas de baja actividad son ~6 y no crecen, y las estancias largas son de pacientes con actividad clínica (`docs/dias_cama_baja_actividad.md`).
 
 ## 4. Lo que los datos NO respaldan
 - **Más personal según el día de la semana:** el día de la semana y los festivos casi no cambian la espera.
-- **Priorizar a un paciente concreto por riesgo de esperar:** un modelo con lo que se sabe al llegar acierta apenas mejor que el azar (AUC 0,60) y todos los factores
-  juntos explican solo el 16 % de la variación.
+- **Priorizar a un paciente concreto por riesgo de esperar:** el modelo explicativo de A4, con lo que se sabe al llegar, tiene un AUC de 0,68 en la prueba de 2026: para no perder
+  casos habría que marcar al 44 % de los pacientes, y 4 de cada 10 marcados serían falsas alarmas (`docs/modelo_espera.md` 5). Todos los factores juntos explican solo el 16 % de la variación,
+  y el estimador A6 mejora el rango apenas un 9 % al llegar. Sirven para planear y para la alerta a las 12 h (R5), no para ordenar la fila al llegar.
 - **Un centro de comando o tablero como solución en sí:**
   - El estudio con mejor diseño que encontramos (Mebrahtu y colegas, *Int J Qual Health Care* 2023, Bradford, Reino Unido, series de tiempo interrumpidas) **no halló cambio
     significativo en la estancia** de los ingresos por urgencias en ninguna fase. Coincidió con el COVID-19, lo que complica separar efectos.
@@ -165,13 +187,13 @@ Como referencia, no como séptimo indicador: la ocupación media de todo el día
     de dólares de ahorro, pero las cifras las dio el propio hospital, la nota se publicó en colaboración con el proveedor del centro de comando, no hay grupo de comparación
     y el ahorro es un cálculo con un costo diario supuesto.
 
-**Lo que los datos tampoco permiten calcular: cuántas camas harían falta.** La ocupación media de 2025 (105) roza las 106 camas que dio el HUN y las supera el 42 % de las horas; en adultos es el 101 % de sus 88 camas. No se distingue si es sobreocupación o una capacidad real mayor. Por otro lado, la espera casi no sube con la ocupación (la carga explica 0,1 punto de la variación) y la ocupación subió por la estancia, no por la demanda. Por eso no se recomienda ni se descarta aumentar camas.
+**Lo que los datos tampoco permiten calcular: cuántas camas harían falta.** La ocupación media de 2025 (105) roza las 106 camas que dio el HUN y las supera el 42 % de las horas; en adultos es el 101 % de sus 88 camas. No se distingue si es sobreocupación o una capacidad real mayor. Por otro lado, la espera típica casi no sube con la ocupación (~7 % por cada 10 camas; la mediana no cambia, sí el p90) y la ocupación subió por la estancia, no por la demanda. La simulación Monte Carlo da 53 % de días con más de 106 camas ocupadas en los próximos 6 meses (60 % en adultos), así que el problema de capacidad existe, pero bajar la estancia 5 % lo reduce casi tanto como lo empeoraría un 10 % más de ingresos (`docs/simulacion.md`). Por eso no se recomienda ni se descarta aumentar camas: primero la estancia y el proceso de asignación.
 
 ## 5. Qué quedó sin respuesta del HUN
 La sesión del 29-oct fue la última, así que estos puntos se declaran como limitaciones:
 1. Desde cuándo rige el número de camas (106 y 58 camillas) y cuál es la meta de tiempo para asignar cama.
 2. Por qué se degrada el registro de las etapas desde el 10-abr-2026 (la auditoría del 2-nov descarta que sea menos demanda).
-3. Dónde está el paciente durante el tiempo sin etapa antes de la cama (~1 de cada 4 hospitalizados) y qué significa esa espera en urgencias.
+3. Qué significa cada etapa de urgencias y qué pasa en la última, donde se va la mayor parte de las esperas largas con poca actividad registrada (`docs/caracterizacion_etapas_tu.md`). (La pregunta sobre el «tiempo sin etapa» antes de la cama perdió sentido el 7-nov: era un artefacto de las estancias duplicadas y solo afecta al 1,7 % de las estancias, `CLAUDE.md` 4.12.)
 
 ## 6. Fuentes y verificación (25-oct-2026; comprobación parcial el 6-nov)
 
@@ -194,9 +216,10 @@ La sesión del 29-oct fue la última, así que estos puntos se declaran como lim
 
 ## 7. Estado
 
-**B2 completa, pendiente de la revisión de Daniela en el pull request (6-nov-2026).** Cada recomendación tiene fuente comprobada, o una razón escrita de por qué no la hay, y una cifra o una razón de por qué no se puede calcular.
+**B2 completa (mergeada el 8-nov) y revisada el 9-nov con A4, A5, A6 y los análisis de saturación, etapas de urgencias y pronóstico de la cola.** Cada recomendación tiene fuente comprobada, o una razón escrita de por qué no la hay, y una cifra o una razón de por qué no se puede calcular.
 
 La cifra baja de R6 y la precisión de la alerta de ocupación de R3 se recalcularon el 8-nov con `src/impacto_llegada_tarde.py` y `src/alertas.py` (regla v3.8).
 
 Lo que puede cambiar estas recomendaciones más adelante:
-- **A4 y A5 (Anthony):** si el modelo explicativo o la simulación Monte Carlo cambian las cifras de R4 o R7, actualizar aquí y en `powerbi/recomendaciones_tabla.csv` (la usa la página 4.1 del dashboard).
+- **A4 y A5 (Anthony): revisadas el 9-nov.** No cambian las cifras de R4 (el escenario de altas sigue siendo el de `src/simulacion_altas.py`; A5 no lo recalculó) y confirman la de R7 por otro método (−4,7 camas frente a ~5). A4 corrige el AUC de la sección 4 (0,68 en vez de 0,60).
+- Si cambian las cifras, actualizar aquí y en `powerbi/recomendaciones_tabla.csv` (la usará la página 4.1 del dashboard).
