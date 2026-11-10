@@ -41,6 +41,20 @@ Aumento de la probabilidad de tener cada laboratorio si la estancia tiene el pro
 - **Los laboratorios sin traducir (58 %) son los que más información esconden**: sus órdenes están en los procedimientos, pero sin hora no se cruzan una por una.
 - Para saber qué procedimientos se repiten en estancias largas, ver `docs/estancias_disparadas.md` (acceso venoso prolongado, nutrición, transfusión, curaciones).
 
+## 4. ¿Se pueden ubicar los procedimientos en el tiempo con el orden de sus identificadores? **No** (prueba del 10-nov)
+**Idea:** que el orden de `procedure_occurrence_id` siga el orden en que se registraron, para ordenar los procedimientos entre sí y, con las órdenes de laboratorio como ancla (misma prueba, con hora de toma), ubicarlos entre dos anclas, o sea, en una etapa TU aproximada.
+**Prueba** (`src/prueba_ids_procedimientos.py`, con `sql/ids_procedimientos.sql`: 775.779 filas de procedimientos de 48.460 visitas y 434.135 filas de laboratorio de 31.788 visitas):
+
+| Comprobación | Resultado |
+|---|---|
+| Laboratorios (donde la hora sí se conoce): correlación entre `measurement_id` y la hora de toma, por visita | Spearman **mediana 0,12**; solo el 3,5 % de las visitas pasa de 0,8 |
+| Lo mismo solo en visitas cuyos ids están en un bloque estrecho (todas las visitas: rango mediano de 75 ids) | Igual: mediana 0,12 |
+| Procedimientos: id de la orden frente a la hora de toma del mismo examen (124.246 anclas en 14.387 visitas) | Spearman **mediana 0,14**; el 6,0 % pasa de 0,8 y el 22,5 % de 0,5 |
+| Procedimientos: ¿cargas mezcladas? | El 50,6 % de los (visita, procedimiento) tiene ids que abarcan más de 1.000.000 (varias cargas) |
+| Ids de laboratorio por mes | Suben en general con la fecha (13,8 M en feb-2023 a ~24 M en 2025), con altibajos |
+
+**Conclusión:** los identificadores vienen en bloques por visita y, en general, crecen con la fecha de la visita, pero **dentro de una visita su orden no sigue la hora** (ni siquiera en laboratorios, donde se puede verificar). Por eso **no sirven para ubicar un procedimiento en una etapa TU**. Queda cerrado el camino: la única relación entre procedimientos y etapas es la indirecta por asociación con laboratorios (sección 3).
+
 ## Límites
 - Solo estancias cortas (≤ 48 h en cama): las largas tienen laboratorios después de las 48 h que no se extrajeron con hora.
 - La orden y el resultado se cruzan por la presencia en la estancia, no por la hora (la orden no tiene hora).
