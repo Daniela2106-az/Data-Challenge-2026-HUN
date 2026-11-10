@@ -1,4 +1,4 @@
-# Simulación de escenarios de camas (ficha A5 / 3.2, 9-nov-2026)
+# Simulación de escenarios de camas (ficha A5 / 3.2, 9-nov-2026; mejora del 9-nov)
 
 **Qué pide el instructivo:** "¿qué efecto tendrían cambios operativos sobre la ocupación y la disponibilidad de
 camas?" Tres escenarios mínimos, cada uno con sus supuestos escritos. Motor: `src/simulacion_camas_montecarlo.py`
@@ -12,11 +12,27 @@ que dio el HUN (total/niños/adultos).
 | Escenario | Supuesto | Ocupación media (total) | % de días-repetición saturados (total / niños / adultos) | Frase para un gerente |
 |---|---|---|---|---|
 | **A: altas antes del mediodía** | 30 % de las altas de la tarde pasan a las 9-12 h del mismo día (no cambia la estancia en días, solo la hora de salida) | *No recalculado — citado de `src/simulacion_altas.py` (22-oct-2026)* | — | Libera hasta 5,1 camas adicionales a las 12 h; evita **como máximo el 8 % del exceso de espera** (estimación ~3 %). Ayuda, pero no resuelve: el 83 % de las horas de espera viene de esperas de más de 24 h, que unas horas de adelanto no deshacen |
-| **B: ingresos +10 %** | Un aumento sostenido de demanda (ej. brote, temporada alta) | **117,9** (+10,3 sobre el base de 107,6) | 83,8 % / 43,9 % / 86,1 % | Un 10 % más de pacientes llevaría al hospital a estar saturado más de 8 de cada 10 días — el escenario más costoso de los tres |
-| **C: estancia −5 %** | Más eficiencia clínica (altas más tempranas, procesos más rápidos) | **102,9** (−4,7 sobre el base) | 36,1 % / 23,5 % / 44,1 % | Bajar la estancia 5 % reduce la saturación a la mitad frente a hoy, sin necesitar una sola cama más |
+| **B: ingresos +10 %** | Un aumento sostenido de demanda (ej. brote, temporada alta) | **119,6** (+10,6 sobre el base de 109,0) | 87,1 % / 46,3 % / 89,0 % | Un 10 % más de pacientes llevaría al hospital a estar saturado casi 9 de cada 10 días — el escenario más costoso de los tres |
+| **C: estancia −5 %** | Más eficiencia clínica (altas más tempranas, procesos más rápidos) | **104,3** (−4,7 sobre el base) | 41,0 % / 25,7 % / 48,6 % | Bajar la estancia 5 % reduce la saturación en un tercio frente a hoy, sin necesitar una sola cama más |
 
-**Referencia (hoy, sin cambios):** ocupación media 107,6 camas; 53,2 % / 29,5 % / 60,0 % de días-repetición
+**Referencia (hoy, sin cambios):** ocupación media 109,0 camas; 58,4 % / 32,0 % / 64,4 % de días-repetición
 saturados (total / niños / adultos) — ver `docs/modelo_camas.md`.
+
+## Mejora del 9-nov: mezcla de ruta ajustable (escenario de ejemplo, no uno de los 3 mínimos)
+
+Además de ingresos y estancia, ahora se puede simular un cambio en **qué proporción** de los ingresos llega por
+cada ruta (Urgencias / Treatment urgency / Ambulatorio) — sin tocar el resto del motor, porque el bootstrap de
+estancias ya está separado por ruta (ver `docs/modelo_camas.md`). Ejemplo con base real: la ruta Treatment
+urgency **ya duplicó su peso** entre 2023 y 2025 (3,8 % → 13,5 % de las estancias, `docs/factores_estancia.md`,
+y se queda 63 % más tiempo que Urgencias). Si ese crecimiento se duplica otra vez (13,5 % → 27 %):
+
+| Escenario | Ocupación media (total) | % días-repetición saturados (total) |
+|---|---|---|
+| Hoy (13,5 % Treatment urgency) | 109,0 | 58,4 % |
+| Treatment urgency al 27 % | **115,9** (+6,9) | **79,6 %** |
+
+No es un escenario hipotético sin base: es la misma tendencia que A2 ya documentó, proyectada hacia adelante.
+`mezcla_edad` funciona igual para probar, por ejemplo, un escenario de envejecimiento de la población atendida.
 
 ## Lectura conjunta
 
@@ -26,8 +42,8 @@ confirma, con un método distinto (simulación estocástica en vez de la ley de 
 había encontrado: la ocupación subió por la **estancia** (+16 % 2023→2025), no por más ingresos (~20 por día,
 estables). La recomendación **R7** del equipo (`docs/recomendaciones.md`, "Revisar las estancias largas") ya
 estimaba con la ley de Little que bajar la estancia 5 % libera ~5 camas — la simulación lo reproduce casi exacto
-de forma independiente (107,6 → 102,9, una diferencia de 4,7 camas). Dos métodos distintos llegando al mismo
-número no es casualidad: da confianza en la cifra.
+de forma independiente (109,0 → 104,3, una diferencia de 4,7 camas, igual que con el motor anterior). Dos
+métodos distintos llegando al mismo número no es casualidad: da confianza en la cifra.
 
 **Dónde mirar para lograr ese −5 % de estancia** (de `docs/factores_estancia.md`, ya documentado, no inventado
 aquí): la ruta "Treatment urgency" se queda 63 % más tiempo que quien entra por urgencias normales y creció
@@ -47,9 +63,10 @@ corregir; eso requiere revisión clínica dentro del hospital (mismo límite que
 - Asociación, no causa; todo lo de siempre del proyecto.
 
 ## Gráfico
-Panel derecho de `resultados/graficos/simcamas_resultados.png` ("Ocupación media por escenario"): compara las
-tres barras (hoy / B / C) contra la línea de 106 camas.
+Cuarto panel de `resultados/graficos/simcamas_resultados.png` ("Ocupación media por escenario"): compara las
+tres barras (hoy / B / C) contra la línea de 106 camas. El quinto panel (curva de capacidad) está documentado
+en `docs/modelo_camas.md`, sección 4.
 
 ## Entregables
 - `resultados/tablas/simcamas_escenarios.csv` (B y C, con el desglose niños/adultos).
-- Este documento. El código y el backtest del motor están en `docs/modelo_camas.md`.
+- Este documento. El código, el backtest y la curva de capacidad están en `docs/modelo_camas.md`.
