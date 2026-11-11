@@ -1,4 +1,4 @@
-# Modelo de camas: simulación de Monte Carlo (ficha A5 / 3.1, 9-nov-2026; mejora del 9-nov)
+# Modelo de camas: simulación de Monte Carlo (ficha A5 / 3.1, 9-nov-2026; mejora del 9-nov; bootstrap suavizado del 10-nov)
 
 **Qué pide el instructivo (componente 3):** "modelos de simulación". Hasta ahora el proyecto solo tenía
 `src/simulacion_altas.py`, un **análisis de escenarios sobre datos históricos** (determinista) — esta ficha
@@ -36,6 +36,13 @@ Código: `src/simulacion_camas_montecarlo.py`. Tablas: `resultados/tablas/simcam
   el "hoy" por defecto — simplificación declarada). Son parámetros independientes de `ajuste_ingresos` y
   `ajuste_estancia`, así que cualquier combinación funciona sin código adicional — pensado para conectarse
   directo a controles de un dashboard (B1, ver "Para B1" más abajo).
+- **Bootstrap suavizado (10-nov):** cada valor de `horas_hosp` remuestreado se desplaza con ruido gaussiano de
+  ancho de Silverman (`ancho_banda_silverman()`), que crece cuando la celda (grupo_edad × ruta) tiene pocos
+  casos. Evita que una celda chica repita siempre los mismos valores exactos o deje un valor atípico con una
+  probabilidad fija de 1/n. El ancho va de 8,2 h (celdas grandes) a 47,1 h (celdas chicas). Sube un poco todas
+  las cifras de ocupación y riesgo frente a la versión sin suavizar (por ejemplo, el riesgo de saturar 106 en
+  el escenario base pasa de 58,4 % a 65,4 %) porque el suavizado ensancha ligeramente la cola alta de la
+  estancia simulada — dirección esperada, no un error; los números de este documento ya son los suavizados.
 - **Dos correcciones hechas durante la construcción** (se dejan documentadas porque cambiaron el resultado):
   1. El bootstrap de estancias se restringió a **2024-2025** (no toda la historia): la mediana de estancia sube
      con el año en casi todos los grupos de edad (p. ej. 75+: 96,1 h en 2023 → 110,9 h en 2025,
@@ -68,13 +75,14 @@ La estancia sube con la edad y tiene cola larga en todos los grupos — coherent
 
 | Métrica | Resultado | Meta de la ficha |
 |---|---|---|
-| Error absoluto medio | 7,6 camas | — |
-| Sesgo (simulada − real) | +4,9 camas | — |
-| % de días con la ocupación real dentro de la banda 10-90 % | **83,8 %** | entre 70 % y 90 % |
+| Error absoluto medio | 8,6 camas | — |
+| Sesgo (simulada − real) | +7,0 camas | — |
+| % de días con la ocupación real dentro de la banda 10-90 % | **78,8 %** | entre 70 % y 90 % |
 
-(Antes de la mejora del bootstrap por perfil: 7,0 camas, +3,8 de sesgo, 85,9 % de cobertura — la mejora mueve
-los números un poco, no los saca de la meta; ver "Qué significa para el hospital" sobre por qué el sesgo sube
-un poco.)
+(Antes del bootstrap suavizado (10-nov): 7,6 camas, +4,9 de sesgo, 83,8 % de cobertura; antes de la mejora del
+bootstrap por perfil (9-nov): 7,0 camas, +3,8 de sesgo, 85,9 % de cobertura. Cada mejora sube un poco el sesgo
+porque ensancha o afina la cola alta de la estancia simulada — sigue dentro de la meta de cobertura en los tres
+casos; ver "Qué significa para el hospital" sobre por qué el sesgo sube un poco.)
 
 **Cumple la puerta de decisión.** El error relativo (~6-7 % sobre una ocupación de ~100-108) es razonable para
 un modelo que proyecta 3-4 meses hacia adelante sin ver esos datos. A diferencia del modelo de A4 (AUC 0,68-0,70,
@@ -87,14 +95,17 @@ más predecible.
 
 | Grupo | Umbral | Valor | Prob. media del horizonte | Día 30 | Día 60 | Día 90 |
 |---|---|---|---|---|---|---|
-| Total | 106 camas (HUN) | 106 | **58,4 %** | 64,8 % | 45,0 % | 62,3 % |
-| Total | p90 histórico | 109,5 | 47,5 % | 54,0 % | 33,6 % | 52,2 % |
-| Niños | 18 camas (HUN) | 18 | 32,0 % | 33,5 % | 24,2 % | 31,5 % |
-| **Adultos** | **88 camas (HUN)** | 88 | **64,4 %** | 70,7 % | 54,1 % | 66,5 % |
+| Total | 106 camas (HUN) | 106 | **65,4 %** | 72,0 % | 51,8 % | 72,8 % |
+| Total | p90 histórico | 109,5 | 55,0 % | 61,5 % | 41,0 % | 61,5 % |
+| Niños | 18 camas (HUN) | 18 | 34,5 % | 39,0 % | 26,5 % | 38,2 % |
+| **Adultos** | **88 camas (HUN)** | 88 | **70,6 %** | 76,1 % | 58,5 % | 75,9 % |
 
-(Con el bootstrap por perfil, que separa mejor las estancias largas de Treatment urgency de las cortas de
-Ambulatorio dentro de cada grupo de edad, el riesgo proyectado sube un poco frente a la primera versión — 58,4 %
-contra 53,2 % en total — porque la versión anterior diluía esa diferencia. Dirección esperada, no un error.)
+(Con el bootstrap suavizado (10-nov), el riesgo proyectado sube frente a la versión sin suavizar — 65,4 %
+contra 58,4 % en total — porque el ruido gaussiano ensancha la cola alta de la estancia simulada. Con el
+bootstrap por perfil (9-nov), que separa mejor las estancias largas de Treatment urgency de las cortas de
+Ambulatorio dentro de cada grupo de edad, ya había subido frente a la primera versión — 58,4 % contra 53,2 % —
+porque la versión original diluía esa diferencia. Las dos mejoras empujan en la misma dirección, no son
+contradictorias.)
 
 Los valores de un día puntual (30/60/90) oscilan más que el promedio del horizonte — dependen de qué día de la
 semana cae esa fecha (el patrón semanal de ingresos se nota en la ocupación); por eso el promedio del horizonte
@@ -102,10 +113,10 @@ es la cifra más estable para citar.
 
 **Dos umbrales para el total, a propósito:** la capacidad que dio el HUN (106) y, de forma independiente, el
 percentil 90 de la ocupación **real** observada en el entrenamiento (109,5 — "lo que el propio hospital ya
-consideraría un día lleno, sin mirar la cifra del HUN"). Ambos dan una probabilidad alta (58,4 % y 47,5 %), lo
+consideraría un día lleno, sin mirar la cifra del HUN"). Ambos dan una probabilidad alta (65,4 % y 55,0 %), lo
 que le da robustez al hallazgo: no depende de confiar en un solo número.
 
-**El riesgo no está repartido parejo:** 64,4 % de probabilidad de saturar las 88 camas de adultos, contra 32,0 %
+**El riesgo no está repartido parejo:** 70,6 % de probabilidad de saturar las 88 camas de adultos, contra 34,5 %
 en las 18 de niños y neonatal — coherente con `CLAUDE.md` 4.8 ("los adultos operan, en promedio, al 100 % de su
 capacidad"), ahora expresado como riesgo proyectado hacia adelante, no solo como hecho ya ocurrido.
 
@@ -121,9 +132,9 @@ volver a correr el Monte Carlo (`curva_capacidad()`, `resultados/tablas/simcamas
 
 | Grupo | Capacidad hoy (HUN) | Mínimo para riesgo ≤ 10 % | Camas adicionales |
 |---|---|---|---|
-| Total | 106 | 124 | +18 |
+| Total | 106 | 126 | +20 |
 | Niños | 18 | 22 | +4 |
-| Adultos | 88 | 106 | +18 |
+| Adultos | 88 | 108 | +20 |
 
 El umbral de riesgo (10 %) es un parámetro (`UMBRAL_RIESGO`), no un número fijo en el código — se puede recalcular
 para cualquier nivel de riesgo que el hospital considere aceptable. La curva es monótona decreciente (más camas,
@@ -132,12 +143,12 @@ menos riesgo, sin saltos) en los tres grupos — es la prueba de que el cálculo
 ## Qué significa para el hospital
 
 - El hospital opera, en el escenario típico de los próximos meses, **al borde o por encima de su capacidad
-  declarada** (ocupación media proyectada: 109 camas contra 106 declaradas) — no por debajo con margen.
+  declarada** (ocupación media proyectada: 111 camas contra 106 declaradas) — no por debajo con margen.
 - El riesgo de saturación se concentra en el lado de **adultos**, no en pediatría/neonatal — si se va a invertir
   en capacidad adicional o en mejorar procesos para bajar el riesgo de saturación, ahí está el mayor margen.
 - La banda de incertidumbre es ancha a propósito: refleja variabilidad real (cuántos ingresan, cuánto se queda
   cada uno), no un defecto del modelo — angostarla artificialmente sería dar una falsa sensación de certeza.
-- **Para bajar el riesgo a un nivel "tranquilo" (≤10 %) con solo capacidad, hacen falta ~18 camas más** — mucho
+- **Para bajar el riesgo a un nivel "tranquilo" (≤10 %) con solo capacidad, hacen falta ~20 camas más** — mucho
   más que un ajuste cosmético. Comparado con el escenario C (−5 % de estancia, `docs/simulacion.md`), que baja
   la ocupación media casi tanto como cuesta +10 camas, la conclusión de toda la ficha se mantiene: **la estancia
   sigue siendo la palanca más barata, antes de pensar en ampliar capacidad física.**
@@ -167,6 +178,15 @@ Todos los ajustes de `simular()` (`ajuste_ingresos`, `ajuste_estancia`, `mezcla_
 parámetros independientes y combinables — el backend ya está listo para conectarse a controles interactivos
 (sliders) sin cambios adicionales. `curva_capacidad()` tampoco necesita volver a simular, así que un control de
 "umbral de riesgo aceptable" también se puede recalcular en vivo sobre la proyección ya hecha.
+
+**Separación con `if __name__ == "__main__":` (10-nov-2026):** el backtest, la proyección con alerta, los
+escenarios B/C, la curva de capacidad y los gráficos solo corren al ejecutar el script directamente
+(`python3 src/simulacion_camas_montecarlo.py`); `import simulacion_camas_montecarlo` (p. ej. desde
+`dashboard/camas.py`, ya hecho) solo paga el costo de cargar los datos y construir el bootstrap (~1-2 s, antes
+~1 min porque recalculaba todo lo anterior). `simular`, `curva_capacidad` y todas las variables que usan
+(`serie_ingresos`, `ULTIMO_CONFIABLE`, `BOOTSTRAP_PERFIL`, `GRUPOS_HIST`, `RUTAS_HIST`, `CAPACIDAD`, etc.) siguen
+disponibles al importar, sin cambiar su comportamiento ni sus cifras (verificado: mismos resultados antes y
+después de la separación).
 
 ## Entregables
 - `src/simulacion_camas_montecarlo.py`.

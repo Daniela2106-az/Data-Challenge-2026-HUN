@@ -11,7 +11,7 @@
    - **Para el paciente:** responde en ventanas del día («esta tarde», «esta noche», «mañana en la tarde») con probabilidades que dicen la verdad.
    - **Para la reunión de camas:** dice cuántos de los que esperan tendrán cama en 12 o 24 h, con un error en el mínimo que permite el azar y un rango que acierta el 87–88 % de los días.
    - **Para actuar antes:** a las 12 h de espera avisa quién seguirá sin cama a las 48 h.
-   - **En el dashboard:** tiene su página (`dashboard/estimador.py`).
+   - **En el dashboard:** tiene su página (`dashboard/pages/paciente.py`, dentro de `dashboard/main.py`).
 6. **Lo que de verdad lo mejoraría es saber, al llegar, la gravedad y el servicio.** Los procedimientos de cada estancia muestran que el hospital da cama rápido a los graves (UCI: mediana 2,7 h) y hace esperar más a cirugía, urología y ortopedia (30–38 h). Si esa información se conociera al llegar, la mejora pasaría de 8,4 % a 16,9 %, y a 20,0 % sumando el diagnóstico (comparando modelos entrenados una sola vez). Es más que cualquier cambio de modelo, y es el argumento para registrar el triage y el servicio en la base.
 
 ---
@@ -84,7 +84,7 @@ estimar_tiempo_restante(edad=67, sexo="Mujer", tipo_visita="Urgencias", horas_es
 - Los modelos se entrenan con todo el periodo confiable, **con más peso en lo reciente** (un dato de hace 6 meses pesa la mitad), y se guardan fuera del proyecto, en `HUN_PROCESADOS/modelos/` (salen de datos clínicos). Si no existen, se entrenan al primer uso (~1 min).
 - **Hay que reentrenarlos cada mes** con los datos nuevos (basta con borrar el archivo `.joblib`). La sección 3.1 muestra por qué.
 - También devuelve `ventanas`: la probabilidad de recibir cama en cada bloque del día (madrugada 0–7 h, mañana 7–14 h, tarde 14–19 h, noche 19–24 h) de hoy, mañana y pasado mañana, y después, con la acumulada. También devuelve `ventana_mas_probable` (entre las que tienen fecha).
-- **Página del dashboard:** `dashboard/estimador.py` (Dash, puerto 8051). Se describe al paciente y muestra las ventanas, el rango y el resumen de qué tan bien funciona.
+- **Página del dashboard:** `dashboard/pages/paciente.py` (dentro de `dashboard/main.py`, un solo proceso en el puerto 8050, ruta `/paciente`; antes era una app aparte en el puerto 8051, retirada el 10-nov). Se describe al paciente y muestra las ventanas, el rango y el resumen de qué tan bien funciona.
 
 **Ejemplos** (miércoles 4-mar-2026, ocupación típica):
 
@@ -190,7 +190,7 @@ Código: `src/utilidad_estimador.py`. La precisión para un paciente tiene un te
 
 **Lectura:** con un corte de 40 %, el estimador da 4,1 alertas diarias a las 12 h y acierta algo más que esperar a las 24 h y alertar a todos (55 % frente a 53 %), pero con **12 horas más de margen** y la mitad de alertas. A cambio, detecta solo a la mitad (54 %) de los que terminarán esperando más de 48 h. Complementa la alerta C de `src/alertas.py` (a las 48 h de espera), que avisa más tarde y acierta más.
 
-**4. En el dashboard.** `dashboard/estimador.py` reúne todo en una página. Se describe al paciente (edad, sexo, tipo de visita, horas de espera y, si se sabe, su hospitalización anterior y sus etapas en urgencias) y muestra:
+**4. En el dashboard.** `dashboard/pages/paciente.py` reúne todo en una página. Se describe al paciente (edad, sexo, tipo de visita, horas de espera y, si se sabe, su hospitalización anterior y sus etapas en urgencias) y muestra:
 - la ventana más probable y el gráfico de ventanas con la acumulada;
 - lo que le falta (mediana y rango) y la probabilidad de cama en 6, 12 y 24 h;
 - el resumen de qué tan bien funciona, leído de las tablas agregadas.
@@ -256,7 +256,7 @@ En todos los casos los percentiles siguen bien calibrados (al llegar, con todo: 
 
 **Otros pendientes:**
 - **Datos con hora durante la espera:** pedir a Daniela los laboratorios y los diagnósticos registrados antes de la cama, con su hora, para usarlos como señales en tiempo real.
-- **Dashboard:** la página ya existe (`dashboard/estimador.py`), pero como una app aparte (puerto 8051). Falta integrarla al menú del dashboard (`docs/estructura_dashboard.md` todavía no la tiene) y decidir con Daniela si los modelos guardados pueden publicarse: contienen los cortes de los árboles, no filas de pacientes, pero salen de datos clínicos.
+- **Dashboard:** la página ya existe y desde el 10-nov vive integrada en `dashboard/main.py` (`dashboard/pages/paciente.py`, puerto 8050, ruta `/paciente`) en vez de ser una app aparte. Sigue pendiente decidir con Daniela si los modelos guardados pueden publicarse: contienen los cortes de los árboles, no filas de pacientes, pero salen de datos clínicos.
 
 ---
 
@@ -333,4 +333,4 @@ export HUN_PROCESADOS="D:/Descargas D/Datos/procesados" HUN_TABLAS="D:/Descargas
 6. **Revisión del 9-nov (sección 7):** `python3 src/revision_estimador.py` (~15–25 min; `RAPIDO=1` omite la prueba hora por hora). Escribe `revision_estimador_*.csv` y `revision_estimador_resumen.txt` en `HUN_TABLAS`.
 7. **Corte y calibración del p90 con un periodo de validación (sección 7.1):** `python3 src/calibracion_y_corte.py` (de 1 a 50 min según la máquina). Escribe `calibracion_corte_*.csv` y `calibracion_corte_resumen.txt` en `HUN_TABLAS`.
 8. **Consulta:** `python3 src/estimador_tiempo_restante.py 67 Mujer Urgencias 6 "2026-03-04 15:00"`. Sin argumentos muestra los ejemplos de la sección 2.
-9. **Página del dashboard:** `python3 dashboard/estimador.py` y abrir http://127.0.0.1:8051.
+9. **Página del dashboard:** `python3 dashboard/main.py` y abrir http://127.0.0.1:8050/paciente.
