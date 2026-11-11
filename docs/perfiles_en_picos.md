@@ -79,4 +79,6 @@ ese día — el propio proyecto ya midió que no es así.
 
 ## Entregables
 `src/perfiles_en_picos.py`, este documento, `resultados/tablas/perfiles_en_picos_llegadas.csv`,
-`perfiles_en_picos_ocupacion.csv`, `dias_alta_demanda.csv`. Página del dashboard: `dashboard/perfiles.py`.
+`perfiles_en_picos_ocupacion.csv`, `dias_alta_demanda.csv`. Página del dashboard: `dashboard/pages/perfiles.py`
+(dentro de `dashboard/main.py`, puerto 8050, ruta `/perfiles`; antes era una app aparte en el puerto 8054,
+retirada el 10-nov).

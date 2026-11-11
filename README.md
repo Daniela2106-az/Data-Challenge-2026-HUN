@@ -133,7 +133,7 @@ columna por columna** a la del proyecto, y de 57 tablas comparadas salen iguales
 
 **Sin esos archivos** no se puede recalcular nada. Alternativa para quien solo quiera consultar resultados: pedir las tablas agregadas
 (`resultados/tablas/`, `resultados/excel/`, `datos/procesados/para_equipo/panel_diario.csv`, `datos/procesados/serie_*.csv`) al equipo y
-dejarlas en esas mismas rutas. El dashboard (`dashboard/app.py`) también las necesita: sin ellas termina con `FileNotFoundError`.
+dejarlas en esas mismas rutas. El dashboard (`python3 dashboard/main.py`, puerto 8050) también las necesita: sin ellas termina con `FileNotFoundError`.
 
 ## Reglas del repositorio
 

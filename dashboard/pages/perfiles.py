@@ -1,13 +1,11 @@
 """
-dashboard/perfiles.py  -  version 1 (10-nov-2026)
-Pagina del dashboard (Dash) para "Perfiles y picos de demanda" (Punto 2 del plan de Anthony, 10-nov-2026).
-Pagina ESTATICA (no tiene controles ni callbacks): muestra la tabla de perfiles x carga de
-src/perfiles_en_picos.py y la lista de dias de alta demanda, con la advertencia de docs/dias_atipicos.md
-siempre visible al lado (nunca se presenta como "cuello de botella").
+dashboard/pages/perfiles.py  -  pagina del dashboard multipagina (10-nov-2026, migrada de dashboard/perfiles.py standalone)
+"Perfiles y picos de demanda": pagina ESTATICA (sin controles ni callbacks) que muestra la tabla de
+perfil x carga de src/perfiles_en_picos.py y la lista de dias de alta demanda, con la advertencia de
+docs/dias_atipicos.md siempre visible al lado (nunca se presenta como "cuello de botella").
 
-COMO CORRERLO
-  python3 dashboard/perfiles.py   y abrir http://127.0.0.1:8054
-  (puerto 8053 choca con FortiSSLVPNdaemon en algunos equipos del equipo; por eso se usa 8054)
+Misma logica que la version standalone (dashboard/perfiles.py, ya retirada); solo cambian los ids de
+componentes (prefijo "perf-") para no chocar con las otras paginas de la misma app.
 
 DATOS  resultados/tablas/perfiles_en_picos_llegadas.csv, perfiles_en_picos_ocupacion.csv,
        dias_alta_demanda.csv (de src/perfiles_en_picos.py; correrlo antes si no existen).
@@ -15,18 +13,18 @@ DATOS  resultados/tablas/perfiles_en_picos_llegadas.csv, perfiles_en_picos_ocupa
 import os
 from pathlib import Path
 
+import dash
 import pandas as pd
-from dash import Dash, dash_table, html
+from dash import dash_table, html
+
+dash.register_page(__name__, path="/perfiles", name="Perfiles y picos", title="Perfiles y picos de demanda - HUN")
 
 GRIS, AZUL, NARANJA = "#6b6b6b", "#2a6fb0", "#eb6834"
-RAIZ = Path(__file__).resolve().parent.parent
+RAIZ = Path(__file__).resolve().parent.parent.parent
 TABLAS = Path(os.environ.get("HUN_TABLAS", RAIZ / "resultados" / "tablas"))
 
-app = Dash(__name__, title="Perfiles y picos de demanda - HUN")
-server = app.server
 
-
-def tabla_dash(df, id_, columnas, formato_pct=()):
+def tabla_dash(df, id_, columnas):
     cols = [{"name": c.replace("_", " "), "id": c} for c in columnas]
     return dash_table.DataTable(
         id=id_, data=df[columnas].to_dict("records"), columns=cols,
@@ -39,7 +37,7 @@ def tabla_dash(df, id_, columnas, formato_pct=()):
     )
 
 
-def bloque_carga(titulo, df, n_grande):
+def bloque_carga(titulo, id_, df, n_grande):
     cols = ["grupo_edad", "sexo", "tipo_visita", "espera_mediana_pico_h", "espera_mediana_resto_h",
             "estancia_mediana_pico_h", "estancia_mediana_resto_h", "espera_contraste", "sobrerrepresentado_en_picos"]
     cols = [c for c in cols if c in df.columns]
@@ -48,11 +46,11 @@ def bloque_carga(titulo, df, n_grande):
         html.P(f"{n_grande} de {len(df)} perfiles con contraste GRANDE en la espera (ver docs/perfiles_en_picos.md "
                "para la lectura completa). Las filas resaltadas son las que sí tienen un contraste grande.",
                style={"color": GRIS, "fontSize": "13px"}),
-        tabla_dash(df, f"tabla-{titulo}", cols),
+        tabla_dash(df, id_, cols),
     ], style={"marginBottom": "28px"})
 
 
-def diseno():
+def layout():
     try:
         d_lleg = pd.read_csv(TABLAS / "perfiles_en_picos_llegadas.csv")
         d_ocup = pd.read_csv(TABLAS / "perfiles_en_picos_ocupacion.csv")
@@ -72,8 +70,8 @@ def diseno():
                "comunes (adultos y niños escolares), con 30–70 % más espera en los picos; no cambia quién llega "
                "más seguido ni cuánto se queda en cama.", style={"fontWeight": 600}),
 
-        bloque_carga("Criterio 1: llegadas en las 6 h previas (decil 10 = pico)", d_lleg, n_g_lleg),
-        bloque_carga("Criterio 2: ocupación del hospital al llegar (decil 10 = pico)", d_ocup, n_g_ocup),
+        bloque_carga("Criterio 1: llegadas en las 6 h previas (decil 10 = pico)", "perf-tabla-llegadas", d_lleg, n_g_lleg),
+        bloque_carga("Criterio 2: ocupación del hospital al llegar (decil 10 = pico)", "perf-tabla-ocupacion", d_ocup, n_g_ocup),
 
         html.H4("Días de alta demanda"),
         html.Div([
@@ -86,15 +84,9 @@ def diseno():
                    "NUNCA debe leerse como \"día de cuello de botella\".",
                    style={"color": NARANJA, "border": f"1px solid {NARANJA}", "borderRadius": "6px", "padding": "8px 12px"}),
         ], style={"marginBottom": "10px"}),
-        tabla_dash(d_dias.sort_values("fecha", ascending=False), "tabla-dias",
+        tabla_dash(d_dias.sort_values("fecha", ascending=False), "perf-tabla-dias",
                    ["fecha", "llegadas", "umbral_p90_mismo_dia_semana", "pct_sobre_umbral"]),
 
         html.P("Asociación, no causa; mismos límites que el resto del proyecto. Periodo confiable: 1-feb-2023 a "
                "9-abr-2026.", style={"fontSize": "11px", "color": GRIS, "marginTop": "16px"}),
     ])
-
-
-app.layout = diseno
-
-if __name__ == "__main__":
-    app.run(debug=False, port=8054)

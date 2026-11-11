@@ -1,42 +1,46 @@
 """
-dashboard/app.py  -  version 4 (2-nov-2026)
-Dashboard en Dash (los organizadores del Data Challenge aceptaron Dash). Primera pagina: PRONOSTICO DE DEMANDA INTERACTIVO.
-El usuario elige solo DOS cosas: hasta cuando quiere ver y que quiere ver (ingresos al hospital o ingresos a cama). El modelo corre en el
-momento (menos de 0,1 s porque trabaja sobre el panel diario ya agregado, sin pacientes) y el grafico muestra como cambian los datos.
+dashboard/pages/pronostico.py  -  pagina del dashboard multipagina (10-nov-2026, migrada de dashboard/app.py v4)
+PRONOSTICO DE DEMANDA INTERACTIVO. El usuario elige solo DOS cosas: hasta cuando quiere ver y que quiere ver
+(ingresos al hospital o ingresos a cama). El modelo corre en el momento (menos de 0,1 s porque trabaja sobre
+el panel diario ya agregado, sin pacientes) y el grafico muestra como cambian los datos.
 
-DECISIONES
-  - Solo vista dia por dia, sin "ajuste extra %" ni elegir un "supuesto" de nivel (1-nov-2026).
-  - El pronostico PARTE DE HOY (el dia en que se abre el dashboard) y el grafico muestra SOLO el pronostico, sin datos anteriores (2-nov-2026). Usa el nivel y el calendario de febrero de 2023 al 9 de abril de 2026: la auditoria en la base
-    (CLAUDE.md 4.9) mostro que desde el 10-abr-2026 el registro de las etapas esta degradado (mas visitas sin etapas, menos visitas con etapa ER), asi que
-    esos dias NO se usan para estimar nivel ni error (y ya no se dibujan).
-  - La banda es la del plazo contado desde el ultimo dato confiable (unos 7 meses): mas ancha que un pronostico a pocos dias.
+Misma logica que la version standalone (dashboard/app.py, ya retirada); solo cambian los ids de componentes
+(prefijo "pron-") para que no choquen con las otras paginas en la misma app, y el registro con
+`dash.register_page` en vez de crear su propio `Dash(__name__)`.
 
-COMO CORRERLO
-  python3 dashboard/app.py    y abrir http://127.0.0.1:8050
-
-DATOS  datos/procesados/para_equipo/panel_diario.csv (una fila por dia; sin ids ni datos de pacientes).
-       NO se conecta a la base del hospital (VPN, solo lectura, datos clinicos). Para publicar la app hay que subir solo ese archivo.
+DATOS  datos/procesados/para_equipo/panel_diario.csv. NO se conecta a la base del hospital.
 MODELO src/modelo_pronostico.py
 """
 import sys
 from pathlib import Path
 
+import dash
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
-from dash import Dash, Input, Output, dcc, html
+from dash import Input, Output, callback, dcc, html
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "src"))
 import modelo_pronostico as mp  # noqa: E402
 
-LIMPIO = mp.cargar_panel()                                  # el modelo se entrena sin los dias atipicos ni los posteriores al 9-abr-2026
-REAL = mp.cargar_panel(limpiar=False)                       # lo que se dibuja como "lo que paso": todos los dias
-SERIES = {obj: LIMPIO[obj] for obj in mp.OBJETIVOS}
-BT = {obj: mp.retroceso(s) for obj, s in SERIES.items()}    # se calcula una vez al abrir la app
-ERR = {obj: mp.tabla_error(BT[obj], sin_caida=True) for obj in mp.OBJETIVOS}
-ULTIMO_CONFIABLE = LIMPIO.dropna(how="all").index.max()     # 9-abr-2026
-ULTIMO_REAL = REAL.dropna(how="all").index.max()
+dash.register_page(__name__, path="/", name="Pronóstico", title="Pronóstico de demanda - HUN")
+
 SUPUESTO = "historico"                                      # nivel de los 12 meses del periodo confiable
+
+# Carga perezosa y defensiva: con `use_pages=True` TODAS las paginas se importan al arrancar `main.py`, asi que
+# si panel_diario.csv no esta disponible en este equipo (vive fuera del repo, CLAUDE.md), no debe tumbar el
+# arranque de las otras 3 paginas -- se muestra un aviso en vez de la pagina (igual patron que perfiles.py).
+try:
+    LIMPIO = mp.cargar_panel()                                  # el modelo se entrena sin los dias atipicos ni los posteriores al 9-abr-2026
+    REAL = mp.cargar_panel(limpiar=False)                       # lo que se dibuja como "lo que paso": todos los dias
+    SERIES = {obj: LIMPIO[obj] for obj in mp.OBJETIVOS}
+    BT = {obj: mp.retroceso(s) for obj, s in SERIES.items()}    # se calcula una vez al abrir la app
+    ERR = {obj: mp.tabla_error(BT[obj], sin_caida=True) for obj in mp.OBJETIVOS}
+    ULTIMO_CONFIABLE = LIMPIO.dropna(how="all").index.max()     # 9-abr-2026
+    ULTIMO_REAL = REAL.dropna(how="all").index.max()
+    DATOS_OK = True
+except (FileNotFoundError, OSError):
+    DATOS_OK = False
 
 GRIS, AZUL, ROJO = "#6b6b6b", "#2a6fb0", "#c0392b"
 PLAZOS = [("7 días", 7), ("30 días", 30), ("6 meses", 182), ("1 año", 365)]
@@ -44,33 +48,9 @@ QUE_VER = {"llegadas_con_atencion": "Ingresos al hospital (pacientes que llegan 
            "ingresos_a_cama": "Ingresos a cama (pacientes que se hospitalizan)"}
 CORTO = {"llegadas_con_atencion": "ingresos al hospital por día", "ingresos_a_cama": "ingresos a cama por día"}
 
-app = Dash(__name__, title="Pronóstico de demanda - HUN")
-server = app.server
 
 def hoy():
     return pd.Timestamp.today().normalize()
-
-
-def diseno():
-    """El diseno se arma cada vez que se abre la pagina, para que "hoy" sea siempre el dia actual."""
-    return html.Div(style={"fontFamily": "system-ui, sans-serif", "maxWidth": "1100px", "margin": "0 auto", "padding": "16px"}, children=[
-    html.H2("¿Cuántos pacientes ingresarán al hospital?"),
-    html.P(f"Estimación para los próximos días a partir de hoy, {hoy():%d-%m-%Y}, según la historia confiable del hospital. "
-           "Elige dos cosas y el gráfico se actualiza.", style={"color": GRIS}),
-    html.Div(style={"display": "flex", "flexWrap": "wrap", "gap": "40px", "alignItems": "flex-start"}, children=[
-        html.Div([html.Label("1. ¿Hasta cuándo quieres ver?", style={"fontWeight": 600}),
-                  dcc.RadioItems(id="plazo", options=[{"label": " " + n, "value": d} for n, d in PLAZOS], value=30)]),
-        html.Div([html.Label("2. ¿Qué quieres ver?", style={"fontWeight": 600}),
-                  dcc.RadioItems(id="objetivo", options=[{"label": " " + n, "value": o} for o, n in QUE_VER.items()],
-                                 value="llegadas_con_atencion")], style={"maxWidth": "420px"}),
-    ]),
-    html.Div(id="tarjetas", style={"display": "flex", "flexWrap": "wrap", "gap": "12px", "margin": "16px 0"}),
-    dcc.Graph(id="grafico", config={"displaylogo": False}),
-    html.Div(id="nota", style={"fontSize": "13px", "color": GRIS, "marginTop": "8px"}),
-    ])
-
-
-app.layout = diseno
 
 
 def tarjeta(titulo, valor, detalle=""):
@@ -80,9 +60,37 @@ def tarjeta(titulo, valor, detalle=""):
                     style={"border": "1px solid #ddd", "borderRadius": "8px", "padding": "10px 14px", "minWidth": "200px"})
 
 
-@app.callback(Output("grafico", "figure"), Output("tarjetas", "children"), Output("nota", "children"),
-              Input("plazo", "value"), Input("objetivo", "value"))
+def layout():
+    """El diseno se arma cada vez que se abre la pagina, para que "hoy" sea siempre el dia actual."""
+    if not DATOS_OK:
+        return html.Div(style={"fontFamily": "system-ui, sans-serif", "maxWidth": "700px", "margin": "40px auto", "padding": "16px"}, children=[
+            html.H2("Pronóstico de demanda"),
+            html.P("Los datos no están disponibles en este equipo (falta datos/procesados/para_equipo/panel_diario.csv, "
+                   "que vive fuera del repositorio). Pedir la tabla al equipo o regenerarla con "
+                   "src/exportar_para_equipo.py.", style={"color": "#c0392b"}),
+        ])
+    return html.Div(style={"fontFamily": "system-ui, sans-serif", "maxWidth": "1100px", "margin": "0 auto", "padding": "16px"}, children=[
+    html.H2("¿Cuántos pacientes ingresarán al hospital?"),
+    html.P(f"Estimación para los próximos días a partir de hoy, {hoy():%d-%m-%Y}, según la historia confiable del hospital. "
+           "Elige dos cosas y el gráfico se actualiza.", style={"color": GRIS}),
+    html.Div(style={"display": "flex", "flexWrap": "wrap", "gap": "40px", "alignItems": "flex-start"}, children=[
+        html.Div([html.Label("1. ¿Hasta cuándo quieres ver?", style={"fontWeight": 600}),
+                  dcc.RadioItems(id="pron-plazo", options=[{"label": " " + n, "value": d} for n, d in PLAZOS], value=30)]),
+        html.Div([html.Label("2. ¿Qué quieres ver?", style={"fontWeight": 600}),
+                  dcc.RadioItems(id="pron-objetivo", options=[{"label": " " + n, "value": o} for o, n in QUE_VER.items()],
+                                 value="llegadas_con_atencion")], style={"maxWidth": "420px"}),
+    ]),
+    html.Div(id="pron-tarjetas", style={"display": "flex", "flexWrap": "wrap", "gap": "12px", "margin": "16px 0"}),
+    dcc.Graph(id="pron-grafico", config={"displaylogo": False}),
+    html.Div(id="pron-nota", style={"fontSize": "13px", "color": GRIS, "marginTop": "8px"}),
+    ])
+
+
+@callback(Output("pron-grafico", "figure"), Output("pron-tarjetas", "children"), Output("pron-nota", "children"),
+          Input("pron-plazo", "value"), Input("pron-objetivo", "value"))
 def actualizar(dias, objetivo):
+    if not DATOS_OK:                                            # no deberia dispararse (sin datos no se renderizan los controles), defensivo
+        return go.Figure(), [], "Datos no disponibles."
     serie, bt = SERIES[objetivo], BT[objetivo]
     desde = hoy()
     f = mp.pronostico_con_banda(serie, bt, dias, SUPUESTO, 0.0, True, False, desde)
@@ -113,7 +121,3 @@ def actualizar(dias, objetivo):
             f"Desde el 10-abr-2026 el registro de las etapas del hospital está incompleto: esos días no se usan para estimar el nivel. "
             "No anticipa brotes ni cortes de sistema, ni lo que haya cambiado en el hospital desde entonces. Es una tendencia, no una predicción precisa.")
     return fig, tarjetas, nota
-
-
-if __name__ == "__main__":
-    app.run(debug=False, port=8050)

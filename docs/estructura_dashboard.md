@@ -4,7 +4,15 @@
 
 Este documento dice **cómo está organizado el dashboard y qué lleva cada sección**. No trae los datos ni los resultados: esos están en los documentos del repositorio y en las tablas (`resultados/tablas/`); aquí se dice **qué va en cada página, qué controles tiene, qué gráficas y de qué archivo salen**. Las cifras que debe mostrar cada gráfica se toman de los documentos fuente (columna «Fuente»), para que haya una sola versión de cada número.
 
-**Herramienta: Dash (Python + Plotly), solo Dash.** Los organizadores lo aceptaron. Ya existe una primera página hecha (`dashboard/app.py`, el pronóstico). El dashboard NO se conecta a la base del hospital: lee tablas agregadas.
+**Herramienta: Dash (Python + Plotly), solo Dash.** Los organizadores lo aceptaron. El dashboard NO se conecta a la base del hospital: lee tablas agregadas.
+
+**Esqueleto técnico del 10-nov (Anthony):** `dashboard/main.py` es ahora el único punto de entrada (un solo
+proceso, un solo puerto 8050, patrón multipágina de Dash `use_pages=True`); cada página vive en
+`dashboard/pages/*.py` con `dash.register_page()` y la barra de navegación se arma sola desde
+`dash.page_registry`. Hoy solo tiene 4 páginas (pronóstico, paciente en espera/A6, planeación de camas/A5,
+perfiles y picos) — es el patrón técnico para que Samuel extienda con el resto de la estructura de abajo
+(0 a 5), no la estructura completa en sí. Las 5 apps sueltas anteriores (`app.py`, `estimador.py`, `camas.py`,
+`perfiles.py`, `menu.py`) se retiraron a favor de este único proceso.
 
 ---
 
@@ -161,7 +169,7 @@ La página más importante del bloque: explica por qué las cifras del proyecto 
 - **Gráfica:** pronóstico desde el día en que se abre el dashboard, con la banda del 80 %. Tarjetas: se espera por día, rango probable, total esperado, error típico.
 - **Contexto:** cómo funciona el modelo en palabras simples; por qué la banda es ancha (el último dato confiable es de abril: una banda ancha no significa un modelo malo); para planear camas conviene el pronóstico semanal; los ingresos diarios son ruido de conteo.
 - **Cómo se eligió el modelo:** enlace a la página 3.6.
-- **Fuente:** `dashboard/app.py`, `src/modelo_pronostico.py`, `panel_diario.csv`.
+- **Fuente:** `dashboard/pages/pronostico.py`, `src/modelo_pronostico.py`, `panel_diario.csv`.
 
 ## 3.2 Alertas
 - **Controles:** tipo de alerta (día congestionado / camas a 24 h / paciente sin cama) · hora o anticipación del aviso.
