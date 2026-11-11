@@ -1,0 +1,100 @@
+"""
+dashboard/perfiles.py  -  version 1 (10-nov-2026)
+Pagina del dashboard (Dash) para "Perfiles y picos de demanda" (Punto 2 del plan de Anthony, 10-nov-2026).
+Pagina ESTATICA (no tiene controles ni callbacks): muestra la tabla de perfiles x carga de
+src/perfiles_en_picos.py y la lista de dias de alta demanda, con la advertencia de docs/dias_atipicos.md
+siempre visible al lado (nunca se presenta como "cuello de botella").
+
+COMO CORRERLO
+  python3 dashboard/perfiles.py   y abrir http://127.0.0.1:8054
+  (puerto 8053 choca con FortiSSLVPNdaemon en algunos equipos del equipo; por eso se usa 8054)
+
+DATOS  resultados/tablas/perfiles_en_picos_llegadas.csv, perfiles_en_picos_ocupacion.csv,
+       dias_alta_demanda.csv (de src/perfiles_en_picos.py; correrlo antes si no existen).
+"""
+import os
+from pathlib import Path
+
+import pandas as pd
+from dash import Dash, dash_table, html
+
+GRIS, AZUL, NARANJA = "#6b6b6b", "#2a6fb0", "#eb6834"
+RAIZ = Path(__file__).resolve().parent.parent
+TABLAS = Path(os.environ.get("HUN_TABLAS", RAIZ / "resultados" / "tablas"))
+
+app = Dash(__name__, title="Perfiles y picos de demanda - HUN")
+server = app.server
+
+
+def tabla_dash(df, id_, columnas, formato_pct=()):
+    cols = [{"name": c.replace("_", " "), "id": c} for c in columnas]
+    return dash_table.DataTable(
+        id=id_, data=df[columnas].to_dict("records"), columns=cols,
+        style_cell={"fontSize": "13px", "padding": "6px", "fontFamily": "system-ui, sans-serif", "textAlign": "center"},
+        style_header={"fontWeight": 700, "backgroundColor": "#f2f2f2"},
+        style_data_conditional=[
+            {"if": {"filter_query": "{espera_contraste} contains 'GRANDE'"}, "backgroundColor": "#fdecdc"},
+        ] if "espera_contraste" in columnas else [],
+        sort_action="native", page_size=15, style_table={"overflowX": "auto"},
+    )
+
+
+def bloque_carga(titulo, df, n_grande):
+    cols = ["grupo_edad", "sexo", "tipo_visita", "espera_mediana_pico_h", "espera_mediana_resto_h",
+            "estancia_mediana_pico_h", "estancia_mediana_resto_h", "espera_contraste", "sobrerrepresentado_en_picos"]
+    cols = [c for c in cols if c in df.columns]
+    return html.Div([
+        html.H4(titulo),
+        html.P(f"{n_grande} de {len(df)} perfiles con contraste GRANDE en la espera (ver docs/perfiles_en_picos.md "
+               "para la lectura completa). Las filas resaltadas son las que sí tienen un contraste grande.",
+               style={"color": GRIS, "fontSize": "13px"}),
+        tabla_dash(df, f"tabla-{titulo}", cols),
+    ], style={"marginBottom": "28px"})
+
+
+def diseno():
+    try:
+        d_lleg = pd.read_csv(TABLAS / "perfiles_en_picos_llegadas.csv")
+        d_ocup = pd.read_csv(TABLAS / "perfiles_en_picos_ocupacion.csv")
+        d_dias = pd.read_csv(TABLAS / "dias_alta_demanda.csv")
+    except (FileNotFoundError, OSError):
+        return html.Div([html.H2("Perfiles y picos de demanda"),
+                          html.P("Las tablas no están disponibles. Correr primero: python3 src/perfiles_en_picos.py",
+                                 style={"color": NARANJA})])
+    n_g_lleg = d_lleg.espera_contraste.str.startswith("GRANDE", na=False).sum()
+    n_g_ocup = d_ocup.espera_contraste.str.startswith("GRANDE", na=False).sum()
+    return html.Div(style={"fontFamily": "system-ui, sans-serif", "maxWidth": "1150px", "margin": "0 auto", "padding": "16px"}, children=[
+        html.H2("Perfiles y picos de demanda"),
+        html.P("¿El mismo perfil de paciente espera o se queda distinto cuando llega en un momento de carga alta? "
+               "Tabla histórica, para leer, sin controles interactivos. Detalle y límites en docs/perfiles_en_picos.md.",
+               style={"color": GRIS}),
+        html.P("Resultado resumido: ni nulo ni generalizado. El efecto se concentra en los perfiles de Urgencias más "
+               "comunes (adultos y niños escolares), con 30–70 % más espera en los picos; no cambia quién llega "
+               "más seguido ni cuánto se queda en cama.", style={"fontWeight": 600}),
+
+        bloque_carga("Criterio 1: llegadas en las 6 h previas (decil 10 = pico)", d_lleg, n_g_lleg),
+        bloque_carga("Criterio 2: ocupación del hospital al llegar (decil 10 = pico)", d_ocup, n_g_ocup),
+
+        html.H4("Días de alta demanda"),
+        html.Div([
+            html.P(f"⚠ {len(d_dias)} días identificados (llegadas > percentil 90 del mismo día de la semana en "
+                   "las 12 semanas anteriores) — 1 de cada 6 días aproximadamente, no es un evento raro.",
+                   style={"fontWeight": 600}),
+            html.P("docs/dias_atipicos.md ya probó que ningún día tuvo una espera más alta de lo esperado: el "
+                   "problema de la espera es crónico y de cola larga, no de días puntuales. Esta lista dice "
+                   "únicamente que ese día llegaron más pacientes de lo normal para ese día de la semana — "
+                   "NUNCA debe leerse como \"día de cuello de botella\".",
+                   style={"color": NARANJA, "border": f"1px solid {NARANJA}", "borderRadius": "6px", "padding": "8px 12px"}),
+        ], style={"marginBottom": "10px"}),
+        tabla_dash(d_dias.sort_values("fecha", ascending=False), "tabla-dias",
+                   ["fecha", "llegadas", "umbral_p90_mismo_dia_semana", "pct_sobre_umbral"]),
+
+        html.P("Asociación, no causa; mismos límites que el resto del proyecto. Periodo confiable: 1-feb-2023 a "
+               "9-abr-2026.", style={"fontSize": "11px", "color": GRIS, "marginTop": "16px"}),
+    ])
+
+
+app.layout = diseno
+
+if __name__ == "__main__":
+    app.run(debug=False, port=8054)
