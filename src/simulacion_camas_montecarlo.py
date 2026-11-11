@@ -11,9 +11,12 @@ QUE HACE
      asi en exportar_para_equipo.py; se reprodujo y coincide con CLAUDE.md 4.8).
   2. Distribucion de estancias (horas_hosp) por grupo_edad, para el bootstrap.
   3. Motor de Monte Carlo: por cada repeticion, ingresos diarios ~ Poisson(pronostico de modelo_pronostico.py),
-     a cada ingreso se le asigna un grupo_edad (mezcla historica reciente) y una estancia (bootstrap empirico de
-     ese grupo); el censo diario sale de acumular eventos de ingreso/alta. Lleva TRES censos en paralelo: total,
-     ninos (grupo_edad 0-4 y 5-14) y adultos (el resto) - proxy de ward, ver limites.
+     a cada ingreso se le asigna un grupo_edad (mezcla historica reciente) y una estancia (bootstrap SUAVIZADO
+     de ese grupo x ruta: cada valor remuestreado se desplaza con ruido gaussiano de ancho de Silverman, que
+     crece cuando la celda tiene pocos casos - evita que una celda chica repita siempre los mismos valores
+     exactos o deje un atipico con una probabilidad fija de 1/n); el censo diario sale de acumular eventos de
+     ingreso/alta. Lleva TRES censos en paralelo: total, ninos (grupo_edad 0-4 y 5-14) y adultos (el resto) -
+     proxy de ward, ver limites.
   4. Backtest: simula enero a 9-abr-2026 entrenando el pronostico de ingresos solo hasta el 31-dic-2025;
      compara contra la ocupacion real de esos dias.
   5. Alerta de saturacion hacia adelante (desde el 9-abr-2026): probabilidad de superar el percentil 90
@@ -99,6 +102,7 @@ print("ocup_hosp_media por anio (reproducido):", ocup_d["mean"].groupby(ocup_d.i
 print("(referencia CLAUDE.md 4.8: ingresos 20.6/20.8/19.8 y ocupacion 94/101/105 para 2023/2024/2025 - coincide)")
 
 serie_ingresos = ingresos_a_cama.asfreq("D").rename("ingresos_a_cama")
+ULTIMO_CONFIABLE = serie_ingresos.dropna().index.max()   # se usa en simular() y en quien importe el modulo (dashboard/camas.py)
 print(f"\nserie_ingresos: {serie_ingresos.index.min().date()} a {serie_ingresos.index.max().date()} "
       f"(ya termina en {mp.FIN_CONFIABLE}, el ultimo dia confiable - CLAUDE.md 4.9; no hace falta blanquear nada mas)")
 
@@ -151,12 +155,42 @@ print(f"bootstrap por perfil: {len(BOOTSTRAP_PERFIL)} de {tam_celda.size} celdas
 print(tam_celda.unstack(fill_value=0).to_string())
 
 
+def ancho_banda_silverman(valores):
+    """Ancho de banda (regla de Silverman) para el bootstrap suavizado: una celda con pocos casos empiricos
+    da un ancho mayor (mas suavizado); una celda grande da un ancho chico (casi no se toca). Evita que un solo
+    valor raro dentro de una celda chica quede fijo con una probabilidad de 1/n en vez de difuminarse con sus
+    vecinos (seccion 3, pregunta sobre atipicos y celdas chicas)."""
+    n = len(valores)
+    if n < 2:
+        return 0.0
+    sigma = np.std(valores, ddof=1)
+    iqr = np.subtract(*np.percentile(valores, [75, 25]))
+    escala = min(sigma, iqr / 1.34) if iqr > 0 else sigma
+    return 0.9 * escala * n ** (-1 / 5) if escala > 0 else 0.0
+
+
+ANCHO_BOOTSTRAP = {g: ancho_banda_silverman(v) for g, v in BOOTSTRAP.items()}
+ANCHO_BOOTSTRAP_PERFIL = {k: ancho_banda_silverman(v) for k, v in BOOTSTRAP_PERFIL.items()}
+_anchos_perfil = pd.Series(ANCHO_BOOTSTRAP_PERFIL).sort_values()
+print(f"\nbootstrap suavizado (kernel gaussiano, ancho de Silverman): ancho por celda entre "
+      f"{_anchos_perfil.min():.1f} h y {_anchos_perfil.max():.1f} h "
+      f"(celdas chicas se suavizan mas; ver tam_celda arriba para el porque de cada ancho)")
+
+
 def horas_para(grupo, ruta, rng, n):
-    """Bootstrap de horas_hosp para `n` pacientes de un (grupo_edad, ruta); respaldo: pool de solo-edad si la celda es chica."""
+    """Bootstrap suavizado de horas_hosp para `n` pacientes de un (grupo_edad, ruta); respaldo: pool de solo-edad
+    si la celda es chica. Cada valor remuestreado se desplaza con ruido gaussiano de ancho Silverman (0 si la
+    celda es demasiado chica o no tiene variacion) para no repetir siempre los mismos valores exactos ni dejar
+    un atipico raro con una probabilidad fija de 1/n; se recorta en 0 porque una estancia no puede ser negativa."""
     pool = BOOTSTRAP_PERFIL.get((grupo, ruta))
+    ancho = ANCHO_BOOTSTRAP_PERFIL.get((grupo, ruta))
     if pool is None:
         pool = BOOTSTRAP[grupo]
-    return rng.choice(pool, size=n, replace=True)
+        ancho = ANCHO_BOOTSTRAP[grupo]
+    base = rng.choice(pool, size=n, replace=True)
+    if ancho:
+        base = base + rng.normal(0, ancho, size=n)
+    return np.clip(base, 0, None)
 
 
 mezcla_perfil_real = est[(est.ingreso_cama >= VENTANA_MEZCLA_EDAD[0]) & (est.ingreso_cama < VENTANA_MEZCLA_EDAD[1])
@@ -276,205 +310,210 @@ def percentiles(censos, pcts=(10, 50, 90)):
     return {k: {p: np.percentile(v, p, axis=0) for p in pcts} for k, v in censos.items()}
 
 
-print(f"motor listo: {N_REP} repeticiones, bootstrap por perfil (edad x ruta), ingresos ~ Poisson(pronostico), "
-      f"mezcla_edad/mezcla_ruta ajustables")
+print(f"motor listo: {N_REP} repeticiones, bootstrap suavizado por perfil (edad x ruta, kernel gaussiano con "
+      f"ancho de Silverman), ingresos ~ Poisson(pronostico), mezcla_edad/mezcla_ruta ajustables")
 
 # ----------------------------------------------------------------------
-# 4) BACKTEST (ficha 3.1, puerta de decision)
+# A PARTIR DE AQUI, SOLO AL CORRER EL SCRIPT (no al importar `simular`/`curva_capacidad`/etc. desde otro modulo,
+# p. ej. dashboard/camas.py): backtest, proyeccion, escenarios B/C, curva de capacidad y los graficos. Separado
+# el 10-nov-2026 para que importar el motor no pague el costo de recalcular todo esto cada vez (~1 min).
 # ----------------------------------------------------------------------
-titulo("4. BACKTEST: enero a 9-abr-2026, entrenado SOLO con datos hasta el 31-dic-2025")
-dias_bt = (pd.Timestamp("2026-04-09") - pd.Timestamp(BACKTEST_CORTE)).days
-fechas_bt, censos_bt = simular(serie_ingresos, BACKTEST_CORTE, dias_bt, escenario="historico")
-pct_bt = percentiles(censos_bt)
-real_bt = ocup_d.reindex(fechas_bt)
-err = pct_bt["total"][50] - real_bt["mean"].values
-cobertura = ((real_bt["mean"].values >= pct_bt["total"][10]) & (real_bt["mean"].values <= pct_bt["total"][90])).mean()
-print(f"dias de backtest: {dias_bt} ({fechas_bt.min().date()} a {fechas_bt.max().date()})")
-print(f"error absoluto medio (mediana simulada vs ocupacion real media): {np.abs(err).mean():.1f} camas")
-print(f"sesgo medio (simulada - real): {err.mean():+.1f} camas")
-print(f"% de dias con la ocupacion real dentro de la banda 10-90 %: {100 * cobertura:.1f} % "
-      f"(meta de la ficha 3.1: entre 70 % y 90 %)")
-bt_tabla = pd.DataFrame({"fecha": fechas_bt, "real_media": real_bt["mean"].values, "real_max": real_bt["max"].values,
-                         "sim_p10": pct_bt["total"][10], "sim_p50": pct_bt["total"][50], "sim_p90": pct_bt["total"][90]})
-bt_tabla.to_csv(TABLAS / "simcamas_backtest.csv", index=False)
-print("guardado: resultados/tablas/simcamas_backtest.csv")
+if __name__ == "__main__":
+    # ----------------------------------------------------------------------
+    # 4) BACKTEST (ficha 3.1, puerta de decision)
+    # ----------------------------------------------------------------------
+    titulo("4. BACKTEST: enero a 9-abr-2026, entrenado SOLO con datos hasta el 31-dic-2025")
+    dias_bt = (pd.Timestamp("2026-04-09") - pd.Timestamp(BACKTEST_CORTE)).days
+    fechas_bt, censos_bt = simular(serie_ingresos, BACKTEST_CORTE, dias_bt, escenario="historico")
+    pct_bt = percentiles(censos_bt)
+    real_bt = ocup_d.reindex(fechas_bt)
+    err = pct_bt["total"][50] - real_bt["mean"].values
+    cobertura = ((real_bt["mean"].values >= pct_bt["total"][10]) & (real_bt["mean"].values <= pct_bt["total"][90])).mean()
+    print(f"dias de backtest: {dias_bt} ({fechas_bt.min().date()} a {fechas_bt.max().date()})")
+    print(f"error absoluto medio (mediana simulada vs ocupacion real media): {np.abs(err).mean():.1f} camas")
+    print(f"sesgo medio (simulada - real): {err.mean():+.1f} camas")
+    print(f"% de dias con la ocupacion real dentro de la banda 10-90 %: {100 * cobertura:.1f} % "
+          f"(meta de la ficha 3.1: entre 70 % y 90 %)")
+    bt_tabla = pd.DataFrame({"fecha": fechas_bt, "real_media": real_bt["mean"].values, "real_max": real_bt["max"].values,
+                             "sim_p10": pct_bt["total"][10], "sim_p50": pct_bt["total"][50], "sim_p90": pct_bt["total"][90]})
+    bt_tabla.to_csv(TABLAS / "simcamas_backtest.csv", index=False)
+    print("guardado: resultados/tablas/simcamas_backtest.csv")
 
-# ----------------------------------------------------------------------
-# 5) PROYECCION HACIA ADELANTE Y ALERTA DE SATURACION
-# ----------------------------------------------------------------------
-titulo("5. PROYECCION HACIA ADELANTE Y ALERTA DE SATURACION (desde el ultimo dato confiable)")
-ULTIMO_CONFIABLE = serie_ingresos.dropna().index.max()
-print(f"ultimo dato confiable: {ULTIMO_CONFIABLE.date()} | horizonte: {HORIZONTE_PROYECCION} dias")
-fechas_f, censos_f = simular(serie_ingresos, ULTIMO_CONFIABLE, HORIZONTE_PROYECCION, escenario="historico")
-pct_f = percentiles(censos_f)
+    # ----------------------------------------------------------------------
+    # 5) PROYECCION HACIA ADELANTE Y ALERTA DE SATURACION
+    # ----------------------------------------------------------------------
+    titulo("5. PROYECCION HACIA ADELANTE Y ALERTA DE SATURACION (desde el ultimo dato confiable)")
+    print(f"ultimo dato confiable: {ULTIMO_CONFIABLE.date()} | horizonte: {HORIZONTE_PROYECCION} dias")
+    fechas_f, censos_f = simular(serie_ingresos, ULTIMO_CONFIABLE, HORIZONTE_PROYECCION, escenario="historico")
+    pct_f = percentiles(censos_f)
 
-p90_historico = ocup_d["mean"].dropna().quantile(.9)
-print(f"percentil 90 de la ocupacion historica de entrenamiento (total, referencia de la ficha 3.1): "
-      f"{p90_historico:.1f} camas")
+    p90_historico = ocup_d["mean"].dropna().quantile(.9)
+    print(f"percentil 90 de la ocupacion historica de entrenamiento (total, referencia de la ficha 3.1): "
+          f"{p90_historico:.1f} camas")
 
-filas_sat = []
-for grupo in ["total", "ninos", "adultos"]:
-    umbrales = {"capacidad_HUN": CAPACIDAD[grupo]}
-    if grupo == "total":
-        umbrales["p90_historico"] = p90_historico
-    for nombre_u, u in umbrales.items():
-        prob = (censos_f[grupo] > u).mean(axis=0)
-        filas_sat.append({"grupo": grupo, "umbral": nombre_u, "valor_umbral": round(float(u), 1),
-                          "prob_saturacion_media_horizonte_%": round(100 * prob.mean(), 1),
-                          "prob_saturacion_dia_30_%": round(100 * prob[29], 1) if len(prob) > 29 else np.nan,
-                          "prob_saturacion_dia_60_%": round(100 * prob[59], 1) if len(prob) > 59 else np.nan,
-                          "prob_saturacion_dia_90_%": round(100 * prob[89], 1) if len(prob) > 89 else np.nan})
-sat = pd.DataFrame(filas_sat)
-print(sat.to_string(index=False))
-sat.to_csv(TABLAS / "simcamas_saturacion.csv", index=False)
-print("\nguardado: resultados/tablas/simcamas_saturacion.csv")
+    filas_sat = []
+    for grupo in ["total", "ninos", "adultos"]:
+        umbrales = {"capacidad_HUN": CAPACIDAD[grupo]}
+        if grupo == "total":
+            umbrales["p90_historico"] = p90_historico
+        for nombre_u, u in umbrales.items():
+            prob = (censos_f[grupo] > u).mean(axis=0)
+            filas_sat.append({"grupo": grupo, "umbral": nombre_u, "valor_umbral": round(float(u), 1),
+                              "prob_saturacion_media_horizonte_%": round(100 * prob.mean(), 1),
+                              "prob_saturacion_dia_30_%": round(100 * prob[29], 1) if len(prob) > 29 else np.nan,
+                              "prob_saturacion_dia_60_%": round(100 * prob[59], 1) if len(prob) > 59 else np.nan,
+                              "prob_saturacion_dia_90_%": round(100 * prob[89], 1) if len(prob) > 89 else np.nan})
+    sat = pd.DataFrame(filas_sat)
+    print(sat.to_string(index=False))
+    sat.to_csv(TABLAS / "simcamas_saturacion.csv", index=False)
+    print("\nguardado: resultados/tablas/simcamas_saturacion.csv")
 
-proy = pd.DataFrame({"fecha": fechas_f})
-for grupo in ("total", "ninos", "adultos"):
-    for p in (10, 50, 90):
-        proy[f"{grupo}_p{p}"] = pct_f[grupo][p]
-proy.to_csv(TABLAS / "simcamas_proyeccion.csv", index=False)
-print("guardado: resultados/tablas/simcamas_proyeccion.csv")
-
-# ----------------------------------------------------------------------
-# 6) ESCENARIOS B y C (A se cita, no se recalcula - src/simulacion_altas.py)
-# ----------------------------------------------------------------------
-titulo("6. ESCENARIOS: B (ingresos +10 %) y C (estancia -5 %)")
-_, censos_B = simular(serie_ingresos, ULTIMO_CONFIABLE, HORIZONTE_PROYECCION, escenario="historico", ajuste_ingresos=1.10)
-_, censos_C = simular(serie_ingresos, ULTIMO_CONFIABLE, HORIZONTE_PROYECCION, escenario="historico", ajuste_estancia=0.95)
-
-filas_esc = []
-for nombre, cs in [("hoy (base)", censos_f), ("B: ingresos +10%", censos_B), ("C: estancia -5%", censos_C)]:
+    proy = pd.DataFrame({"fecha": fechas_f})
     for grupo in ("total", "ninos", "adultos"):
-        c = cs[grupo]
-        filas_esc.append({"escenario": nombre, "grupo": grupo, "ocupacion_media": round(float(c.mean()), 1),
-                          "ocupacion_max_p90": round(float(np.percentile(c.max(axis=1), 90)), 1),
-                          "pct_dia_rep_saturado": round(100 * float((c > CAPACIDAD[grupo]).mean()), 1),
-                          "capacidad_HUN": CAPACIDAD[grupo]})
-esc = pd.DataFrame(filas_esc)
-print(esc.to_string(index=False))
-esc.to_csv(TABLAS / "simcamas_escenarios.csv", index=False)
-print("\nguardado: resultados/tablas/simcamas_escenarios.csv")
-print("\nEscenario A (altas antes del mediodia) NO se recalcula aqui: ya esta en src/simulacion_altas.py")
-print("(resultado ya documentado: max. 8 % del exceso de espera evitado, estimacion ~3 % - CLAUDE.md 6b).")
+        for p in (10, 50, 90):
+            proy[f"{grupo}_p{p}"] = pct_f[grupo][p]
+    proy.to_csv(TABLAS / "simcamas_proyeccion.csv", index=False)
+    print("guardado: resultados/tablas/simcamas_proyeccion.csv")
 
-# ----------------------------------------------------------------------
-# 6b) MEJORA: curva de capacidad (no vuelve a simular - usa el censo de la proyeccion base ya calculada)
-# ----------------------------------------------------------------------
-titulo("6b. CURVA DE CAPACIDAD: minimo de camas adicionales para un riesgo de saturacion aceptable")
-UMBRAL_RIESGO = 0.10
-RANGO_CAPACIDAD = {"total": range(100, 141, 2), "ninos": range(14, 31, 1), "adultos": range(80, 121, 2)}
-curvas, minimos = {}, {}
-for grupo in ("total", "ninos", "adultos"):
-    curvas[grupo], minimos[grupo] = curva_capacidad(censos_f, grupo, RANGO_CAPACIDAD[grupo], UMBRAL_RIESGO)
-    curvas[grupo].insert(0, "grupo", grupo)
-    print(f"\n{grupo} (capacidad HUN = {CAPACIDAD[grupo]}): minimo para riesgo <= {100*UMBRAL_RIESGO:.0f} % "
-          f"= {minimos[grupo]} camas "
-          f"({'+' + str(minimos[grupo]-CAPACIDAD[grupo]) if minimos[grupo] else 'fuera del rango probado'} sobre la capacidad actual)")
-curva_tabla = pd.concat(curvas.values(), ignore_index=True)
-curva_tabla.to_csv(TABLAS / "simcamas_curva_capacidad.csv", index=False)
-print("\nguardado: resultados/tablas/simcamas_curva_capacidad.csv")
-print("\n(No se volvio a simular: la capacidad solo se usa para comparar contra el censo ya proyectado en la seccion 5.)")
+    # ----------------------------------------------------------------------
+    # 6) ESCENARIOS B y C (A se cita, no se recalcula - src/simulacion_altas.py)
+    # ----------------------------------------------------------------------
+    titulo("6. ESCENARIOS: B (ingresos +10 %) y C (estancia -5 %)")
+    _, censos_B = simular(serie_ingresos, ULTIMO_CONFIABLE, HORIZONTE_PROYECCION, escenario="historico", ajuste_ingresos=1.10)
+    _, censos_C = simular(serie_ingresos, ULTIMO_CONFIABLE, HORIZONTE_PROYECCION, escenario="historico", ajuste_estancia=0.95)
 
-# ----------------------------------------------------------------------
-# 7) Graficos
-# ----------------------------------------------------------------------
-try:
-    import matplotlib
-    matplotlib.use("Agg")
-    import matplotlib.pyplot as plt
-except ImportError:
-    print("\nmatplotlib no esta instalado: se omite el grafico")
-else:
-    SUPERFICIE, TINTA, TINTA2, REJILLA = "#fcfcfb", "#0b0b0b", "#52514e", "#e5e4df"
-    AZUL, NARANJA, AQUA = "#2a78d6", "#eb6834", "#1baf7a"
-    fig, axs = plt.subplots(1, 5, figsize=(25, 4.8), facecolor=SUPERFICIE,
-                            gridspec_kw={"width_ratios": [1.05, 1.0, 1.05, .95, 1.0]})
+    filas_esc = []
+    for nombre, cs in [("hoy (base)", censos_f), ("B: ingresos +10%", censos_B), ("C: estancia -5%", censos_C)]:
+        for grupo in ("total", "ninos", "adultos"):
+            c = cs[grupo]
+            filas_esc.append({"escenario": nombre, "grupo": grupo, "ocupacion_media": round(float(c.mean()), 1),
+                              "ocupacion_max_p90": round(float(np.percentile(c.max(axis=1), 90)), 1),
+                              "pct_dia_rep_saturado": round(100 * float((c > CAPACIDAD[grupo]).mean()), 1),
+                              "capacidad_HUN": CAPACIDAD[grupo]})
+    esc = pd.DataFrame(filas_esc)
+    print(esc.to_string(index=False))
+    esc.to_csv(TABLAS / "simcamas_escenarios.csv", index=False)
+    print("\nguardado: resultados/tablas/simcamas_escenarios.csv")
+    print("\nEscenario A (altas antes del mediodia) NO se recalcula aqui: ya esta en src/simulacion_altas.py")
+    print("(resultado ya documentado: max. 8 % del exceso de espera evitado, estimacion ~3 % - CLAUDE.md 6b).")
 
-    def estilo(ax):
-        ax.set_facecolor(SUPERFICIE)
-        for s in ("top", "right"):
-            ax.spines[s].set_visible(False)
-        for s in ("left", "bottom"):
-            ax.spines[s].set_color(REJILLA)
-        ax.tick_params(colors=TINTA2, labelsize=8.5)
-        ax.grid(axis="y", color=REJILLA, linewidth=.8)
-        ax.set_axisbelow(True)
+    # ----------------------------------------------------------------------
+    # 6b) MEJORA: curva de capacidad (no vuelve a simular - usa el censo de la proyeccion base ya calculada)
+    # ----------------------------------------------------------------------
+    titulo("6b. CURVA DE CAPACIDAD: minimo de camas adicionales para un riesgo de saturacion aceptable")
+    UMBRAL_RIESGO = 0.10
+    RANGO_CAPACIDAD = {"total": range(100, 141, 2), "ninos": range(14, 31, 1), "adultos": range(80, 121, 2)}
+    curvas, minimos = {}, {}
+    for grupo in ("total", "ninos", "adultos"):
+        curvas[grupo], minimos[grupo] = curva_capacidad(censos_f, grupo, RANGO_CAPACIDAD[grupo], UMBRAL_RIESGO)
+        curvas[grupo].insert(0, "grupo", grupo)
+        print(f"\n{grupo} (capacidad HUN = {CAPACIDAD[grupo]}): minimo para riesgo <= {100*UMBRAL_RIESGO:.0f} % "
+              f"= {minimos[grupo]} camas "
+              f"({'+' + str(minimos[grupo]-CAPACIDAD[grupo]) if minimos[grupo] else 'fuera del rango probado'} sobre la capacidad actual)")
+    curva_tabla = pd.concat(curvas.values(), ignore_index=True)
+    curva_tabla.to_csv(TABLAS / "simcamas_curva_capacidad.csv", index=False)
+    print("\nguardado: resultados/tablas/simcamas_curva_capacidad.csv")
+    print("\n(No se volvio a simular: la capacidad solo se usa para comparar contra el censo ya proyectado en la seccion 5.)")
 
-    ax = axs[0]
-    ax.fill_between(fechas_bt, pct_bt["total"][10], pct_bt["total"][90], color=AZUL, alpha=.18, label="banda 10-90 %")
-    ax.plot(fechas_bt, pct_bt["total"][50], color=AZUL, linewidth=1.8, label="mediana simulada")
-    ax.plot(fechas_bt, real_bt["mean"].values, color=NARANJA, linewidth=1.8, label="ocupacion real")
-    ax.set_title(f"Backtest ene-9abr 2026 (cobertura {100 * cobertura:.0f} %)", loc="left", color=TINTA,
-                fontsize=10.5, fontweight="bold")
-    ax.set_ylabel("camas ocupadas", color=TINTA2, fontsize=9)
-    ax.legend(frameon=False, fontsize=7.5, labelcolor=TINTA2, loc="lower left")
-    ax.tick_params(axis="x", rotation=30)
-    estilo(ax)
+    # ----------------------------------------------------------------------
+    # 7) Graficos
+    # ----------------------------------------------------------------------
+    try:
+        import matplotlib
+        matplotlib.use("Agg")
+        import matplotlib.pyplot as plt
+    except ImportError:
+        print("\nmatplotlib no esta instalado: se omite el grafico")
+    else:
+        SUPERFICIE, TINTA, TINTA2, REJILLA = "#fcfcfb", "#0b0b0b", "#52514e", "#e5e4df"
+        AZUL, NARANJA, AQUA = "#2a78d6", "#eb6834", "#1baf7a"
+        fig, axs = plt.subplots(1, 5, figsize=(25, 4.8), facecolor=SUPERFICIE,
+                                gridspec_kw={"width_ratios": [1.05, 1.0, 1.05, .95, 1.0]})
 
-    # panel nuevo: zoom de corto plazo (30-60 dias), pensado para decisiones operativas, no solo estrategicas
-    ax = axs[1]
-    corto = slice(0, 60)
-    ax.fill_between(fechas_f[corto], pct_f["total"][10][corto], pct_f["total"][90][corto], color=AZUL, alpha=.18,
-                    label="banda 10-90 %")
-    ax.plot(fechas_f[corto], pct_f["total"][50][corto], color=AZUL, linewidth=1.8, label="mediana simulada")
-    ax.axhline(CAPACIDAD["total"], color=TINTA, linewidth=1, linestyle=(0, (4, 3)), label="106 camas (HUN)")
-    for d, color in [(29, TINTA2), (59, TINTA2)]:
-        ax.axvline(fechas_f[d], color=color, linewidth=.8, linestyle=(0, (1, 2)))
-    prob_30 = sat.loc[(sat.grupo == "total") & (sat.umbral == "capacidad_HUN"), "prob_saturacion_dia_30_%"].iloc[0]
-    prob_60 = sat.loc[(sat.grupo == "total") & (sat.umbral == "capacidad_HUN"), "prob_saturacion_dia_60_%"].iloc[0]
-    ax.text(fechas_f[29], ax.get_ylim()[1] if False else pct_f["total"][90][corto].max() + 1,
-            f"dia 30:\n{prob_30:.0f} %", fontsize=7, color=TINTA2, ha="center", va="bottom")
-    ax.text(fechas_f[59], pct_f["total"][90][corto].max() + 1, f"dia 60:\n{prob_60:.0f} %", fontsize=7,
-            color=TINTA2, ha="center", va="bottom")
-    ax.set_title("Corto plazo (30-60 d) y prob. de saturar 106", loc="left", color=TINTA, fontsize=10.5,
-                fontweight="bold")
-    ax.legend(frameon=False, fontsize=7.5, labelcolor=TINTA2, loc="lower right")
-    ax.tick_params(axis="x", rotation=30)
-    estilo(ax)
+        def estilo(ax):
+            ax.set_facecolor(SUPERFICIE)
+            for s in ("top", "right"):
+                ax.spines[s].set_visible(False)
+            for s in ("left", "bottom"):
+                ax.spines[s].set_color(REJILLA)
+            ax.tick_params(colors=TINTA2, labelsize=8.5)
+            ax.grid(axis="y", color=REJILLA, linewidth=.8)
+            ax.set_axisbelow(True)
 
-    ax = axs[2]
-    ax.fill_between(fechas_f, pct_f["total"][10], pct_f["total"][90], color=AZUL, alpha=.18, label="banda 10-90 %")
-    ax.plot(fechas_f, pct_f["total"][50], color=AZUL, linewidth=1.8, label="mediana simulada")
-    ax.axhline(CAPACIDAD["total"], color=TINTA, linewidth=1, linestyle=(0, (4, 3)), label="106 camas (HUN)")
-    ax.axhline(p90_historico, color=NARANJA, linewidth=1, linestyle=(0, (1, 2)), label="p90 historico")
-    ax.set_title(f"Proyeccion desde {ULTIMO_CONFIABLE.date()} ({HORIZONTE_PROYECCION} d)", loc="left", color=TINTA,
-                fontsize=10.5, fontweight="bold")
-    ax.legend(frameon=False, fontsize=7.5, labelcolor=TINTA2, loc="lower right")
-    ax.tick_params(axis="x", rotation=30)
-    estilo(ax)
+        ax = axs[0]
+        ax.fill_between(fechas_bt, pct_bt["total"][10], pct_bt["total"][90], color=AZUL, alpha=.18, label="banda 10-90 %")
+        ax.plot(fechas_bt, pct_bt["total"][50], color=AZUL, linewidth=1.8, label="mediana simulada")
+        ax.plot(fechas_bt, real_bt["mean"].values, color=NARANJA, linewidth=1.8, label="ocupacion real")
+        ax.set_title(f"Backtest ene-9abr 2026 (cobertura {100 * cobertura:.0f} %)", loc="left", color=TINTA,
+                    fontsize=10.5, fontweight="bold")
+        ax.set_ylabel("camas ocupadas", color=TINTA2, fontsize=9)
+        ax.legend(frameon=False, fontsize=7.5, labelcolor=TINTA2, loc="lower left")
+        ax.tick_params(axis="x", rotation=30)
+        estilo(ax)
 
-    ax = axs[3]
-    nombres_esc = ["hoy (base)", "B: ingresos\n+10%", "C: estancia\n-5%"]
-    valores = esc[esc.grupo == "total"].ocupacion_media.values
-    x = np.arange(3)
-    barras = ax.bar(x, valores, color=[AZUL, NARANJA, AQUA], width=.55)
-    ax.axhline(CAPACIDAD["total"], color=TINTA, linewidth=1, linestyle=(0, (4, 3)))
-    ax.text(2.5, CAPACIDAD["total"] + 1, "106 camas", fontsize=7.5, color=TINTA2, ha="right")
-    for xi, v in zip(x, valores):
-        ax.text(xi, v + 1, f"{v:.0f}", ha="center", fontsize=8.5, color=TINTA)
-    ax.set_xticks(x)
-    ax.set_xticklabels(nombres_esc, fontsize=8)
-    ax.set_title("Ocupacion media por escenario (total)", loc="left", color=TINTA, fontsize=10.5, fontweight="bold")
-    estilo(ax)
+        # panel nuevo: zoom de corto plazo (30-60 dias), pensado para decisiones operativas, no solo estrategicas
+        ax = axs[1]
+        corto = slice(0, 60)
+        ax.fill_between(fechas_f[corto], pct_f["total"][10][corto], pct_f["total"][90][corto], color=AZUL, alpha=.18,
+                        label="banda 10-90 %")
+        ax.plot(fechas_f[corto], pct_f["total"][50][corto], color=AZUL, linewidth=1.8, label="mediana simulada")
+        ax.axhline(CAPACIDAD["total"], color=TINTA, linewidth=1, linestyle=(0, (4, 3)), label="106 camas (HUN)")
+        for d, color in [(29, TINTA2), (59, TINTA2)]:
+            ax.axvline(fechas_f[d], color=color, linewidth=.8, linestyle=(0, (1, 2)))
+        prob_30 = sat.loc[(sat.grupo == "total") & (sat.umbral == "capacidad_HUN"), "prob_saturacion_dia_30_%"].iloc[0]
+        prob_60 = sat.loc[(sat.grupo == "total") & (sat.umbral == "capacidad_HUN"), "prob_saturacion_dia_60_%"].iloc[0]
+        ax.text(fechas_f[29], ax.get_ylim()[1] if False else pct_f["total"][90][corto].max() + 1,
+                f"dia 30:\n{prob_30:.0f} %", fontsize=7, color=TINTA2, ha="center", va="bottom")
+        ax.text(fechas_f[59], pct_f["total"][90][corto].max() + 1, f"dia 60:\n{prob_60:.0f} %", fontsize=7,
+                color=TINTA2, ha="center", va="bottom")
+        ax.set_title("Corto plazo (30-60 d) y prob. de saturar 106", loc="left", color=TINTA, fontsize=10.5,
+                    fontweight="bold")
+        ax.legend(frameon=False, fontsize=7.5, labelcolor=TINTA2, loc="lower right")
+        ax.tick_params(axis="x", rotation=30)
+        estilo(ax)
 
-    # panel nuevo: curva de capacidad (total) - no es la respuesta obvia "mas camas = menos riesgo", es CUANTAS hacen falta
-    ax = axs[4]
-    ct = curvas["total"]
-    ax.plot(ct.capacidad, ct["prob_saturacion_%"], color=AZUL, linewidth=1.8, marker="o", markersize=3)
-    ax.axhline(100 * UMBRAL_RIESGO, color=TINTA2, linewidth=.8, linestyle=(0, (1, 2)))
-    ax.axvline(CAPACIDAD["total"], color=TINTA, linewidth=1, linestyle=(0, (4, 3)), label="106 (hoy)")
-    if minimos["total"]:
-        ax.axvline(minimos["total"], color=NARANJA, linewidth=1, linestyle=(0, (4, 3)),
-                   label=f"{minimos['total']} (riesgo <= {100*UMBRAL_RIESGO:.0f} %)")
-    ax.set_title("Curva de capacidad (total): camas vs. riesgo", loc="left", color=TINTA, fontsize=10.5, fontweight="bold")
-    ax.set_xlabel("camas de capacidad", color=TINTA2, fontsize=9)
-    ax.set_ylabel("prob. de saturacion (%)", color=TINTA2, fontsize=9)
-    ax.legend(frameon=False, fontsize=7.5, labelcolor=TINTA2, loc="upper right")
-    estilo(ax)
+        ax = axs[2]
+        ax.fill_between(fechas_f, pct_f["total"][10], pct_f["total"][90], color=AZUL, alpha=.18, label="banda 10-90 %")
+        ax.plot(fechas_f, pct_f["total"][50], color=AZUL, linewidth=1.8, label="mediana simulada")
+        ax.axhline(CAPACIDAD["total"], color=TINTA, linewidth=1, linestyle=(0, (4, 3)), label="106 camas (HUN)")
+        ax.axhline(p90_historico, color=NARANJA, linewidth=1, linestyle=(0, (1, 2)), label="p90 historico")
+        ax.set_title(f"Proyeccion desde {ULTIMO_CONFIABLE.date()} ({HORIZONTE_PROYECCION} d)", loc="left", color=TINTA,
+                    fontsize=10.5, fontweight="bold")
+        ax.legend(frameon=False, fontsize=7.5, labelcolor=TINTA2, loc="lower right")
+        ax.tick_params(axis="x", rotation=30)
+        estilo(ax)
 
-    fig.tight_layout(rect=(0, .02, 1, 1))
-    fig.text(.01, .01, "Simulacion de Monte Carlo (1.000 repeticiones). Escenario A (altas) citado de "
-             "simulacion_altas.py, no recalculado aqui. Asociacion, no causa.", color=TINTA2, fontsize=7.5)
-    fig.savefig(GRAFICOS / "simcamas_resultados.png", dpi=150, facecolor=SUPERFICIE)
-    print("\nguardado: resultados/graficos/simcamas_resultados.png")
+        ax = axs[3]
+        nombres_esc = ["hoy (base)", "B: ingresos\n+10%", "C: estancia\n-5%"]
+        valores = esc[esc.grupo == "total"].ocupacion_media.values
+        x = np.arange(3)
+        barras = ax.bar(x, valores, color=[AZUL, NARANJA, AQUA], width=.55)
+        ax.axhline(CAPACIDAD["total"], color=TINTA, linewidth=1, linestyle=(0, (4, 3)))
+        ax.text(2.5, CAPACIDAD["total"] + 1, "106 camas", fontsize=7.5, color=TINTA2, ha="right")
+        for xi, v in zip(x, valores):
+            ax.text(xi, v + 1, f"{v:.0f}", ha="center", fontsize=8.5, color=TINTA)
+        ax.set_xticks(x)
+        ax.set_xticklabels(nombres_esc, fontsize=8)
+        ax.set_title("Ocupacion media por escenario (total)", loc="left", color=TINTA, fontsize=10.5, fontweight="bold")
+        estilo(ax)
+
+        # panel nuevo: curva de capacidad (total) - no es la respuesta obvia "mas camas = menos riesgo", es CUANTAS hacen falta
+        ax = axs[4]
+        ct = curvas["total"]
+        ax.plot(ct.capacidad, ct["prob_saturacion_%"], color=AZUL, linewidth=1.8, marker="o", markersize=3)
+        ax.axhline(100 * UMBRAL_RIESGO, color=TINTA2, linewidth=.8, linestyle=(0, (1, 2)))
+        ax.axvline(CAPACIDAD["total"], color=TINTA, linewidth=1, linestyle=(0, (4, 3)), label="106 (hoy)")
+        if minimos["total"]:
+            ax.axvline(minimos["total"], color=NARANJA, linewidth=1, linestyle=(0, (4, 3)),
+                       label=f"{minimos['total']} (riesgo <= {100*UMBRAL_RIESGO:.0f} %)")
+        ax.set_title("Curva de capacidad (total): camas vs. riesgo", loc="left", color=TINTA, fontsize=10.5, fontweight="bold")
+        ax.set_xlabel("camas de capacidad", color=TINTA2, fontsize=9)
+        ax.set_ylabel("prob. de saturacion (%)", color=TINTA2, fontsize=9)
+        ax.legend(frameon=False, fontsize=7.5, labelcolor=TINTA2, loc="upper right")
+        estilo(ax)
+
+        fig.tight_layout(rect=(0, .02, 1, 1))
+        fig.text(.01, .01, "Simulacion de Monte Carlo (1.000 repeticiones). Escenario A (altas) citado de "
+                 "simulacion_altas.py, no recalculado aqui. Asociacion, no causa.", color=TINTA2, fontsize=7.5)
+        fig.savefig(GRAFICOS / "simcamas_resultados.png", dpi=150, facecolor=SUPERFICIE)
+        print("\nguardado: resultados/graficos/simcamas_resultados.png")
