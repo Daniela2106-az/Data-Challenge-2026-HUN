@@ -160,7 +160,7 @@ Dentro de los hospitalizados con diagnóstico traducido (61 %, después de queda
 
 ### 4.6 Ocupación, estancia y escenario de altas
 *Aclaración: lo que aquí se llama "simulación" (`src/simulacion_altas.py`) es un **análisis de escenarios sobre datos históricos** con cotas, no una simulación
-estocástica de pacientes llegando. La simulación Monte Carlo de camas (ficha 3.1) está pendiente.*
+estocástica de pacientes llegando. La simulación Monte Carlo de camas (ficha 3.1) ya está hecha, ver 5.5.*
 | | 2023 | 2024 | 2025 |
 |---|---|---|---|
 | Ingresos por día | 20,6 | 20,8 | 19,8 |
@@ -231,6 +231,14 @@ de las llegadas pronosticadas. *Descartado por falta de datos:* dengue y lluvia 
   - Para la reunión de camas dice cuántos de los que esperan tendrán cama en 12 o 24 h, con un error en el mínimo que permite el azar y un rango que acierta el 87–88 % de los días.
   - A las 12 h de espera avisa quién seguirá sin cama a las 48 h: 4,1 alertas por día que aciertan en el 54 %, igual que esperar a las 24 h pero con 12 h más de margen.
 
+### 5.5 Simulación Monte Carlo de camas (A5, `docs/modelo_camas.md`, `docs/simulacion.md`, 9 y 10-nov)
+- **Primera simulación estocástica del proyecto** (`src/simulacion_camas_montecarlo.py`): a diferencia de `simulacion_altas.py` (análisis de escenarios sobre datos históricos), cada día futuro los ingresos salen de una Poisson alrededor del pronóstico y cada ingreso recibe una estancia por bootstrap empírico de su perfil (grupo de edad × ruta: Urgencias/Treatment urgency/Ambulatorio; suavizado con un kernel gaussiano de ancho de Silverman desde el 10-nov, para que las celdas chicas no repitan siempre los mismos valores). 1.000 repeticiones por defecto.
+- **Backtest** (enero a 9-abr-2026, entrenado solo hasta dic-2025): error absoluto medio **8,6 camas**, sesgo +7,0, **78,8 %** de los días dentro de la banda 10-90 % (meta de la ficha: 70-90 %, cumple).
+- **Proyección 180 días desde el 9-abr-2026 — riesgo de saturación:** probabilidad media de superar la capacidad del HUN: **65,4 % total** (106 camas), **34,5 % niños** (18 camas) y **70,6 % adultos** (88 camas) — el riesgo se concentra en adultos, coherente con 4.6 (los adultos ya operan al 100 % de su capacidad). Con el percentil 90 histórico de ocupación real (109,5) como umbral independiente, el riesgo total da 55,0 %, confirmando el hallazgo con dos referencias distintas.
+- **Curva de capacidad** (camas que harían falta para un riesgo de saturación ≤ 10 %, sin volver a simular): **126 total (+20), 22 niños (+4), 108 adultos (+20)**.
+- **Escenarios B y C:** +10 % de ingresos sube la ocupación media de 111,1 a **121,9** camas (90,9 % de días saturados); −5 % de estancia la baja a **106,2** (48,1 %). La estancia mueve la ocupación casi tanto como los ingresos con un cambio porcentual mucho menor (5 % contra 10 %) — confirma con un método distinto (simulación en vez de ley de Little) que la estancia es la palanca más barata (R7, `docs/recomendaciones.md`).
+- Límites: asociación, no causa; backtest formal solo del censo total (niños/adultos no tienen serie real separada); proxy niños/adultos por `grupo_edad`, no por servicio real (la base no lo distingue).
+
 ---
 
 ## 6. Componente 4: recomendaciones (`docs/recomendaciones.md`, fuentes verificadas el 6-nov)
@@ -255,7 +263,7 @@ otro hospital no halló efecto). Las 12 fuentes se comprobaron el 6-nov, 4 de el
 - **La espera en urgencias mezcla atención y espera de cama**; no se pueden separar con los datos.
 - Las **llegadas** incluyen 4,3 % de réplicas (cota inferior; sin deduplicar a propósito, 4.9); la ocupación de urgencias (`ocup_tu`) y la cobertura por ruta cuentan todos los episodios.
 - Todo son **asociaciones y escenarios**, no causas probadas.
-- **El reparto de lo que falta, con responsable y entrega, está en `docs/pendientes_y_reparto.md`.** Pendiente de ensamblaje (8-nov): documento final, dashboard en Dash (Samuel), modelo explicativo de la espera y simulación Monte Carlo de camas (Anthony). `mapeo_dx.csv` queda como borrador sin validación clínica (limitación declarada).
+- **El reparto de lo que falta, con responsable y entrega, está en `docs/pendientes_y_reparto.md`.** El modelo explicativo de la espera (A4) y la simulación Monte Carlo de camas (A5) ya están hechos (8 y 9-nov; ver 4.5 y 5.5). Pendiente de ensamblaje: documento final y dashboard en Dash (Samuel/B1). `mapeo_dx.csv` queda como borrador sin validación clínica (limitación declarada).
 
 ---
 
@@ -299,6 +307,9 @@ otro hospital no halló efecto). Las 12 fuentes se comprobaron el 6-nov, 4 de el
 | `src/prueba_quincenas.py` | Prueba de quincenas en el pronóstico | `prueba_quincenas.csv` |
 | `src/espera_con_labs.py` (con `sql/espera_labs_y_texto.sql`) | Laboratorios dentro de la espera de cama | `espera_con_labs_por_banda.csv` |
 | `src/severidad_labs.py` (con `sql/severidad_labs_6h.sql`) | Severidad desde el texto de los laboratorios | `severidad_labs_*.csv` |
+| `src/simulacion_camas_montecarlo.py` | A5: simulación Monte Carlo de camas (backtest, proyección, escenarios B/C, curva de capacidad); `simular()`/`curva_capacidad()` solo cargan datos y bootstrap al importar, el resto corre con `if __name__ == "__main__":` | `simcamas_*.csv`, `simcamas_resultados.png` |
+| `src/perfiles_en_picos.py` | Cruza los 42 perfiles de A1 con el momento de carga (llegadas 6h, ocupación al llegar) | `perfiles_en_picos_*.csv`, `dias_alta_demanda.csv` |
+| `src/confianza_perfil.py` | Tamaño de celda de un perfil (mismos mínimos de A1), para avisar en el calculador de A6 cuando es poco común | — (se consulta en vivo desde `dashboard/estimador.py`) |
 | `sql/exportaciones_base.sql`, `sql/consultas_semana1.sql` | Exportan de la base los 8 CSV de entrada | `datos/crudos/*.csv` |
 | `sql/consultas_cuellos_botella.sql` | Q0 a Q5 y Q3b | — |
 
