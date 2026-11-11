@@ -26,6 +26,7 @@ from dash import Dash, Input, Output, State, dcc, html
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 import comparar_estimadores as ce  # noqa: E402
+import confianza_perfil as cp  # noqa: E402
 import estimador_tiempo_restante as etr  # noqa: E402
 import estimador_tiempos as et  # noqa: E402
 
@@ -146,14 +147,25 @@ def actualizar(_, edad, sexo, tipo, horas, ahora, esp_prev, est_prev, dias_prev,
     fig.update_layout(title="¿En qué momento recibirá cama?", yaxis_title="%", yaxis_range=[0, 100], template="simple_white",
                       legend=dict(orientation="h", y=-0.45), margin=dict(l=40, r=20, t=50, b=40))
     fig.update_xaxes(tickangle=-40)
+    perfil = cp.clasificar_perfil(edad, sexo, tipo)
     tarjetas = [
         tarjeta("Lo más probable", r["ventana_mas_probable"], f"{100 * v.probabilidad.max():.0f} % de probabilidad"),
         tarjeta("Le falta (mediana)", f"{r['faltan_p50_h']:.0f} h", f"la mitad de los parecidos ya tendría cama: {r['hora_estimada_mediana'][5:]}"),
         tarjeta("Rango típico", f"{r['faltan_p25_h']:.0f} a {r['faltan_p75_h']:.0f} h", f"1 de cada 10 tarda más de {r['faltan_p90_h']:.0f} h"),
-        tarjeta("Cama en 6 / 12 / 24 h", f"{100 * r['prob_cama_en_6h']:.0f} / {100 * r['prob_cama_en_12h']:.0f} / {100 * r['prob_cama_en_24h']:.0f} %"),
+        tarjeta("Cama en 6 / 12 / 24 h", f"{100 * r['prob_cama_en_6h']:.0f} / {100 * r['prob_cama_en_12h']:.0f} / {100 * r['prob_cama_en_24h']:.0f} %",
+                "En las primeras horas, parte de esta probabilidad puede ser el trámite de registrar al paciente, no una predicción (docs/estimador_tiempos.md, sección 7)."),
     ]
-    nota = (f"Zona: {'niños' if r['zona'] == 'ninos' else 'adultos'}; camas ocupadas usadas: {r['ocupacion_usada']:.0f} (típico de los últimos meses). "
-            "Las etapas en urgencias se aproximan a partir de los conteos. Rango de pacientes parecidos, no una promesa individual.")
+    avisos_html = [html.Li(a) for a in r["avisos"]]
+    if perfil["poco_comun"]:
+        avisos_html.append(html.Li(
+            f"Este perfil (edad {perfil['grupo_edad']}, {sexo}, {tipo}) tiene pocos casos históricos en la base "
+            f"({perfil['n_estancias']} estancias, {perfil['n_episodios_atencion']} episodios atendidos desde feb-2023): "
+            "el rango puede ser menos estable que para un perfil común.", style={"color": NARANJA}))
+    nota = html.Div([
+        html.P(f"Zona: {'niños' if r['zona'] == 'ninos' else 'adultos'}; camas ocupadas usadas: {r['ocupacion_usada']:.0f} (típico de los últimos meses). "
+               "Las etapas en urgencias se aproximan a partir de los conteos.", style={"margin": "0 0 4px 0"}),
+        html.Ul(avisos_html, style={"margin": 0, "paddingLeft": "18px"}),
+    ])
     return fig, tarjetas, nota
 
 
