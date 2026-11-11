@@ -1,5 +1,5 @@
 """
-comparar_estimadores.py  -  version 3 (9-nov-2026)
+comparar_estimadores.py  -  version 5 (11-nov-2026)
 Tarea A6: maneras de estimar la espera de cama, comparadas en la misma prueba. Define tambien el modelo final (M1), que usa
 estimador_tiempo_restante.py.
 (v2: M1 suma el HISTORIAL del paciente y su RECORRIDO en urgencias, con un modelo por momento de la espera ("landmark"); ver abajo.)
@@ -7,6 +7,10 @@ estimador_tiempo_restante.py.
 (v4, 9-nov: correcciones de la revision de A6, docs/estimador_tiempos.md seccion 7: (1) el diagnostico previo se fecha al FIN del episodio anterior, no
  a su inicio (habia fuga); (2) la ocupacion por zona usa la edad corregida de la persona real; (3) opcion retraso_h para probar si el recorrido en
  urgencias es una fuga del tramite de hospitalizacion. Las pruebas de la revision estan en src/revision_estimador.py.)
+(v5, 11-nov: las banderas de laboratorio se cruzan POR PERSONA REAL (sevp_*.csv, sql/severidad_labs_6h_persona.sql) y se buscan tambien en HUN_CRUDOS/consultas.
+ Antes: (a) el cruce por visita mezclaba los laboratorios de las dos personas de una estancia gemela y dejaba sin laboratorio al 60 % de las estancias, cuando el
+ 61,5 % tiene una toma propia en las 6 h; (b) los archivos se buscaban solo en HUN_CRUDOS, asi que en el computador de Daniela (archivos en datos/crudos/consultas)
+ las banderas nunca entraban y el modelo guardado decia con_laboratorio=False. Prueba de que cambia: src/prueba_banderas_persona.py.)
 OJO SOBRE A QUIEN APLICA: se entrena y se prueba solo con pacientes que al final recibieron cama. Sirve para quien ya tiene orden de hospitalizacion,
 no para cualquier paciente que llega a urgencias (solo ~9 % se hospitaliza).
 
@@ -48,11 +52,14 @@ PROCEDIMIENTOS (si existe procedimientos_por_estancia.csv en HUN_CRUDOS; extraid
   Los procedimientos NO tienen fecha: pueden ser de despues de recibir cama. Solo se usan como ESCENARIO (src/procedimientos_escenario.py), no en el
   estimador final.
 
-BANDERAS DE LABORATORIO (si existen sev_hemograma_6h_*.csv y sev_quimica_6h_*.csv en HUN_CRUDOS; consultas de sql/severidad_labs_6h.sql)
+BANDERAS DE LABORATORIO (si existen sevp_hemograma_6h_*.csv y sevp_quimica_6h_*.csv en HUN_CRUDOS o HUN_CRUDOS/consultas; consultas de sql/severidad_labs_6h_persona.sql;
+  si solo estan los sev_* viejos, sin persona, se usan esos y se avisa)
   Valores de las primeras 6 h de la visita (leucocitos, hemoglobina, creatinina, BUN, lactato, potasio, sodio, troponina, PCR) con los mismos puntos de corte de
   src/severidad_labs.py: una bandera por valor anormal, por separado (sumarlas cancela efectos opuestos: troponina y lactato reciben cama antes, PCR alta despues).
-  Por estancia se toma lo mas extremo entre sus registros. Solo se usan para estimar desde las 6 h de espera (antes no se conocen). ~40 % de las estancias tiene
-  algun valor; sin laboratorio, todas las banderas quedan en 0 y con_laboratorio_6h = 0.
+  CRUCE (v5): cada fila de laboratorio trae la persona; las filas de las visitas copia se llevan a su visita raiz (copias.csv, TODAS las copias, no solo las de la
+  misma persona) y de ahi a la estancia; se queda SOLO lo de la persona real de la estancia (persona_real de tabla_episodios, o la del registro conservado) y por
+  estancia se toma lo mas extremo. ~61 % de las estancias tiene algun valor; sin laboratorio, todas las banderas quedan en 0 y con_laboratorio_6h = 0.
+  Solo se usan para estimar desde las 6 h de espera (antes no se conocen).
 
 COLA Y OCUPACION
   Por hora y por zona (adultos de 15 anos o mas, ninos), con estancias unicas: ocupacion = pacientes en cama; cola = pacientes que ya llegaron, se
@@ -173,25 +180,73 @@ def banderas_desde_valores(v):
     return pd.DataFrame(out, index=v.index)
 
 
+VALORES_LAB = ["leuc_max", "leuc_min", "hb_min", "creat_max", "bun_max", "lactato_max", "k_max", "na_max", "na_min", "troponina_max", "pcr_max"]
+AGG_LAB = {c: ("min" if c.endswith("_min") else "max") for c in VALORES_LAB}
+ORIGEN_LAB = None                              # de donde salieron las banderas (se guarda en el paquete del modelo)
+
+
+def _archivos_lab(prefijo):
+    """Los CSV de laboratorio con ese prefijo (sevp o sev), en HUN_CRUDOS o en HUN_CRUDOS/consultas."""
+    for carpeta in (CRUDOS, CRUDOS / "consultas"):
+        hem, qui = sorted(carpeta.glob(f"{prefijo}_hemograma_6h_*.csv")), sorted(carpeta.glob(f"{prefijo}_quimica_6h_*.csv"))
+        if hem and qui:
+            return hem, qui
+    return None, None
+
+
+def visitas_de_estancia(t):
+    """visit_occurrence_id -> estancia_id: los registros hospitalizados de la estancia (primer episodio de la visita, que es donde caen las 6 h de la
+    consulta) y las visitas COPIA de esos registros (copias.csv, todas, no solo las de la misma persona), que es donde cuelga buena parte de la informacion clinica."""
+    e = t.loc[t.hospitalizado & (t.estancia_id >= 0) & (t.episodio == 0), ["visit_occurrence_id", "estancia_id"]].drop_duplicates()
+    cop = pd.read_csv(PROC / "copias.csv", usecols=["visit_occurrence_id", "raiz_id"])
+    cop = cop.merge(e.rename(columns={"visit_occurrence_id": "raiz_id"}), on="raiz_id")[["visit_occurrence_id", "estancia_id"]]
+    return pd.concat([e, cop], ignore_index=True).drop_duplicates()
+
+
+def persona_real_de_estancia(t):
+    """estancia_id -> persona real (persona_real de tabla_episodios; si no se identifico, la del registro conservado)."""
+    u = t[t.hospitalizado & t.estancia_unica & (t.estancia_id >= 0)].drop_duplicates("estancia_id")
+    return pd.Series(u.persona_real.fillna(u.person_id).astype("int64").to_numpy(), index=u.estancia_id.astype("int64").to_numpy())
+
+
+def valores_lab_por_estancia(t, por_persona=True):
+    """Valores de laboratorio de las primeras 6 h por estancia (lo mas extremo), o None si no estan los CSV.
+    por_persona=True : sevp_*.csv (una fila por visita y persona), todas las copias a su raiz, solo la persona real de la estancia (cruce vigente, v5).
+    por_persona=False: sev_*.csv (una fila por visita, personas mezcladas), solo copias de la misma persona (cruce de las versiones 3 y 4, para comparar)."""
+    hem, qui = _archivos_lab("sevp" if por_persona else "sev")
+    if hem is None:
+        return None
+    claves = ["visit_occurrence_id", "person_id"] if por_persona else ["visit_occurrence_id"]
+    s = pd.concat([pd.read_csv(f) for f in hem]).merge(pd.concat([pd.read_csv(f) for f in qui]), on=claves, how="outer")
+    if por_persona:
+        s = s.merge(visitas_de_estancia(t), on="visit_occurrence_id")
+        real = persona_real_de_estancia(t)
+        s = s[s.person_id.to_numpy() == s.estancia_id.map(real).to_numpy()]
+    else:
+        cop = pd.read_csv(PROC / "copias.csv", usecols=["visit_occurrence_id", "raiz_id", "misma_persona"])
+        cop = cop[cop.misma_persona]
+        s["visit_occurrence_id"] = s.visit_occurrence_id.map(cop.set_index("visit_occurrence_id").raiz_id).fillna(s.visit_occurrence_id).astype("int64")
+        s = s.groupby("visit_occurrence_id").agg(AGG_LAB).reset_index()
+        reg = t.loc[t.hospitalizado & (t.estancia_id >= 0) & (t.episodio == 0), ["visit_occurrence_id", "estancia_id"]]
+        s = reg.merge(s, on="visit_occurrence_id")
+    return s.groupby("estancia_id")[VALORES_LAB].agg(AGG_LAB)
+
+
 def laboratorios(t, d):
-    """Banderas de laboratorio de las primeras 6 h por estancia (si estan los CSV de Daniela)."""
-    global HAY_LAB
-    hem, qui = sorted(CRUDOS.glob("sev_hemograma_6h_*.csv")), sorted(CRUDOS.glob("sev_quimica_6h_*.csv"))
-    if not hem or not qui:
+    """Banderas de laboratorio de las primeras 6 h por estancia (si estan los CSV): por persona real (sevp_*) o, si no los hay, por visita (sev_*)."""
+    global HAY_LAB, ORIGEN_LAB
+    for por_persona in (True, False):
+        e = valores_lab_por_estancia(t, por_persona)
+        if e is not None:
+            break
+    if e is None:
         return d
-    agg = {"leuc_max": "max", "leuc_min": "min", "hb_min": "min", "creat_max": "max", "bun_max": "max", "lactato_max": "max", "k_max": "max",
-           "na_max": "max", "na_min": "min", "troponina_max": "max", "pcr_max": "max"}
-    s = pd.concat([pd.read_csv(f) for f in hem]).merge(pd.concat([pd.read_csv(f) for f in qui]), on="visit_occurrence_id", how="outer")
-    cop = pd.read_csv(PROC / "copias.csv", usecols=["visit_occurrence_id", "raiz_id", "misma_persona"])
-    cop = cop[cop.misma_persona]                                                   # como severidad_labs.py: solo copias de la misma persona
-    s["visit_occurrence_id"] = s.visit_occurrence_id.map(cop.set_index("visit_occurrence_id").raiz_id).fillna(s.visit_occurrence_id).astype("int64")
-    s = s.groupby("visit_occurrence_id").agg(agg).reset_index()
-    reg = t.loc[t.hospitalizado & (t.estancia_id >= 0) & (t.episodio == 0), ["visit_occurrence_id", "estancia_id"]]
-    e = reg.merge(s, on="visit_occurrence_id").groupby("estancia_id").agg(agg)     # lo mas extremo entre los registros de la estancia
+    ORIGEN_LAB = "sevp: por visita y persona real" if por_persona else "sev: por visita, SIN persona (cruce viejo; faltan los sevp_*.csv)"
     e = banderas_desde_valores(e).assign(con_laboratorio_6h=1.0)
     d = d.merge(e, left_on="estancia_id", right_index=True, how="left")
     d[LAB] = d[LAB].fillna(0.0)
     HAY_LAB = True
+    print(f"banderas de laboratorio ({ORIGEN_LAB}): {d.con_laboratorio_6h.mean():.1%} de las estancias con algun valor en las primeras 6 h")
     return d
 
 

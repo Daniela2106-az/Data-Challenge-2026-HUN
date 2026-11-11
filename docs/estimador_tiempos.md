@@ -101,23 +101,23 @@ estimar_tiempo_restante(edad=67, sexo="Mujer", tipo_visita="Urgencias", horas_es
 ## 3. Qué tan bien funciona
 **La prueba.** Todo se entrenó con llegadas de feb-2023 a jun-2025 y se probó con las 5.430 estancias de jul-2025 a 9-abr-2026, que ningún modelo había visto. Se mide la **mejora frente al rango general** (darle a todos los mismos percentiles), con la pérdida de cuantiles, que es el error estándar para percentiles. Los intervalos del 95 % salen de un bootstrap por semanas (1.000 repeticiones), porque los pacientes de una misma semana se parecen entre sí.
 
-**Cómo mejora al sumar información** (lo que le falta a quien sigue esperando). Todos los modelos de esta tabla se entrenaron una sola vez, para compararlos en igualdad de condiciones. Reentrenado cada mes con más peso en lo reciente, el estimador final gana hasta 1,3 puntos más en las primeras 6 h (sección 3.1). Desde las 6 h incluye las banderas de laboratorio (sección 3.3).
+**Cómo mejora al sumar información** (lo que le falta a quien sigue esperando). Todos los modelos de esta tabla se entrenaron una sola vez, para compararlos en igualdad de condiciones (corrida del 11-nov, con las banderas de laboratorio cruzadas por persona real, sección 3.3). Reentrenado cada mes con más peso en lo reciente, el estimador final gana hasta 1,3 puntos más en las primeras 6 h (sección 3.1). Desde las 6 h incluye las banderas de laboratorio (sección 3.3).
 
 | Horas esperando | Tabla de perfiles | Modelo sin historial ni recorrido | + historial | **Estimador final** (IC 95 %) |
 |---|---|---|---|---|
-| 0 (al llegar) | 6,4 % | 7,0 % | 8,0 % | **8,4 % (7,5 a 9,3)** |
-| 3 h | 7,1 % | 8,0 % | 8,7 % | **10,4 % (9,4 a 11,3)** |
-| 6 h | 6,2 % | 7,7 % | 8,3 % | **10,6 % (9,6 a 11,6)** |
-| 12 h | 4,1 % | 6,7 % | 7,1 % | **8,0 % (6,4 a 9,5)** |
-| 24 h | 2,6 % | 4,9 % | 5,3 % | **6,1 % (4,5 a 7,8)** |
-| 48 h | −1,3 % | 2,0 % | 1,5 % | **2,9 % (0,9 a 4,7)** |
+| 0 (al llegar) | 6,4 % | 7,0 % | 8,2 % | **8,6 % (7,7 a 9,4)** |
+| 3 h | 7,1 % | 8,0 % | 8,9 % | **10,5 % (9,6 a 11,4)** |
+| 6 h | 6,2 % | 7,7 % | 8,5 % | **10,8 % (9,7 a 12,0)** |
+| 12 h | 4,1 % | 6,7 % | 7,3 % | **7,7 % (6,0 a 9,2)** |
+| 24 h | 2,6 % | 4,9 % | 5,4 % | **6,1 % (4,3 a 7,8)** |
+| 48 h | −1,3 % | 2,0 % | 2,0 % | **2,9 % (1,0 a 4,7)** |
 
-**¿Aciertan los percentiles?** Lo ideal es que el 25 / 50 / 75 / 90 % de los casos nuevos quede por debajo de cada uno. Con el estimador final quedan 26,5 / 51,8 / 74,2 / 87,7 % al llegar y 25,5 / 49,4 / 72,1 / 87,2 % a las 6 h. El p90 queda algo corto (87–88 %) porque los peores casos siguen empeorando (`HALLAZGOS.md` 4.3); conviene leerlo como un piso.
+**¿Aciertan los percentiles?** Lo ideal es que el 25 / 50 / 75 / 90 % de los casos nuevos quede por debajo de cada uno. Con el estimador final quedan 26,7 / 51,6 / 74,3 / 88,0 % al llegar y 25,6 / 49,3 / 72,2 / 87,6 % a las 6 h. El p90 queda algo corto (87–88 %) porque los peores casos siguen empeorando (`HALLAZGOS.md` 4.3); por eso el modelo que se consulta lo calibra al nivel 0,93 (sección 7.1).
 
 **Cómo leerlo:**
-- **Contra la tabla de perfiles, la ventaja es real en todos los momentos:** el intervalo de la diferencia nunca incluye el 0 (+1,4 a +2,8 puntos al llegar; +3,0 a +4,7 a las 6 h).
-- **Contra el modelo de cuantiles al llegar,** que era el segundo mejor, la ventaja también es real: +0,8 a +2,1 puntos.
-- **El historial suma desde la llegada, y el recorrido en las primeras horas** (probado a las 3 y a las 6 h). Desde las 6 h suman las banderas de laboratorio (+0,9 puntos a las 6 h, +0,9 a las 12 h, +0,8 a las 24 h); a las 48 h la mejora es pequeña (2,9 %), aunque ya no incluye el 0.
+- **Contra la tabla de perfiles, la ventaja es real en todos los momentos:** el intervalo de la diferencia nunca incluye el 0 (+1,7 a +2,9 puntos al llegar; +4,1 a +6,1 a las 6 h).
+- **Contra el modelo de cuantiles al llegar,** que era el segundo mejor, la ventaja también es real: +1,1 a +2,2 puntos.
+- **El historial suma desde la llegada, y el recorrido en las primeras horas** (probado a las 3 y a las 6 h). A las 6 h suman las banderas de laboratorio (+1,4 puntos, IC +0,9 a +1,9); desde las 12 h su aporte queda dentro del azar y cambia de signo según el periodo (sección 3.3). A las 48 h la mejora total es pequeña (2,9 %), aunque ya no incluye el 0.
 - **El techo es bajo:** el error de la mediana sigue siendo de unas 24 h al llegar.
 
 **Agosto y septiembre de 2025.** Según el equipo, el HUN tuvo sobredemanda porque los hospitales cercanos fueron intervenidos por el Estado y quedó como la única opción de la zona. En los datos se ve poco: un 6–7 % más de llegadas que en los mismos meses de 2024, con ingresos a cama y espera mediana normales. Evaluado aparte, el estimador mejora 8,4 % en esos meses y 8,4 % en el resto. El resultado se sostiene.
@@ -197,22 +197,31 @@ Código: `src/utilidad_estimador.py`. La precisión para un paciente tiene un te
 
 No usa datos de pacientes. El censo de pacientes en espera necesitaría los datos del hospital en tiempo real, que no tenemos.
 
-### 3.3 Banderas de laboratorio de las primeras 6 h (8-nov) y las dos maneras de entrenar
-Código: `src/comparar_estimadores.py` v3 (`laboratorios()`, `cols_finales()`); datos: `sev_hemograma_6h_*.csv` y `sev_quimica_6h_*.csv` (`sql/severidad_labs_6h.sql`, de Daniela).
-Con los valores de las primeras 6 h de la visita se arma una bandera por cada valor anormal, con los cortes de `src/severidad_labs.py`: leucocitos > 12 o < 4, hemoglobina < 10, creatinina > 1,5, BUN > 40, lactato > 2,2, potasio > 5,5, sodio < 130 o > 150, troponina > 1,0 y PCR > 50. Se usan **por separado**, porque sumarlas cancela efectos opuestos (`docs/espera_con_labs_y_severidad.md`). Las banderas solo entran desde las 6 h de espera, porque antes el resultado no se conoce. El 40 % de las estancias tiene algún valor; las demás quedan con todas las banderas en 0 y `con_laboratorio_6h = 0`. Con los valores numéricos en vez de las banderas el resultado es casi igual; se eligen las banderas porque se explican solas.
+### 3.3 Banderas de laboratorio de las primeras 6 h (8-nov; rehecho el 11-nov con el cruce por persona real) y las dos maneras de entrenar
+Código: `src/comparar_estimadores.py` v5 (`laboratorios()`, `valores_lab_por_estancia()`, `cols_finales()`); prueba: `src/prueba_banderas_persona.py`; datos: `sevp_hemograma_6h_*.csv` y `sevp_quimica_6h_*.csv` (`sql/severidad_labs_6h_persona.sql`, de Daniela), en `HUN_CRUDOS` o en `HUN_CRUDOS/consultas`.
+Con los valores de las primeras 6 h de la visita se arma una bandera por cada valor anormal, con los cortes de `src/severidad_labs.py`: leucocitos > 12 o < 4, hemoglobina < 10, creatinina > 1,5, BUN > 40, lactato > 2,2, potasio > 5,5, sodio < 130 o > 150, troponina > 1,0 y PCR > 50. Se usan **por separado**, porque sumarlas cancela efectos opuestos (`docs/espera_con_labs_y_severidad.md`). Las banderas solo entran desde las 6 h de espera, porque antes el resultado no se conoce. Con los valores numéricos en vez de las banderas el resultado es casi igual; se eligen las banderas porque se explican solas.
 
-**Manera 1: validación honesta** (entrenar hasta jun-2025 y probar con jul-2025 a 9-abr-2026). Mejora frente al rango general:
+**El cruce (11-nov).** Cada valor viene con la persona de la fila de laboratorio; las filas de las visitas copia se llevan a su visita raíz (**todas**, no solo las de la misma persona) y de ahí a la estancia, y se conserva solo lo de la **persona real** de la estancia (CLAUDE.md 4.10). El cruce del 8-nov (por visita, con las dos personas de una estancia gemela mezcladas y solo las copias de la misma persona) dejaba sin laboratorio al 60 % de las estancias. Con la persona real, el **52 %** de las estancias tiene algún valor (40 % antes): 3.130 estancias recuperan sus propios laboratorios y 541 tenían solo los de la otra persona; entre las 8.653 con valor en los dos cruces, solo el 0,4 % cambia alguna bandera. Es decir, el error del cruce viejo era de **cobertura**, no de valores equivocados. Las estancias sin valor quedan con todas las banderas en 0 y `con_laboratorio_6h = 0`.
 
-| Horas esperando | Sin banderas, modelo fijo | **Con banderas, modelo fijo** | Sin banderas, reentreno mensual | **Con banderas, reentreno mensual** |
-|---|---|---|---|---|
-| 6 h | 9,7 % | **10,6 % (9,6 a 11,6)** | 10,8 % | **11,7 % (10,7 a 12,8)** |
-| 12 h | 7,1 % | **8,0 % (6,4 a 9,5)** | 7,6 % | **7,9 % (6,3 a 9,5)** |
-| 24 h | 5,3 % | **6,1 % (4,5 a 7,8)** | 6,3 % | **6,3 % (4,4 a 8,0)** |
-| 48 h | 1,5 % | **2,9 % (0,9 a 4,7)** | — | — |
+> **Aviso sobre las cifras anteriores a este cambio.** Hasta el 11-nov, en el computador donde se corrió el resto del proyecto las banderas **no entraban al estimador**: `comparar_estimadores.py` las buscaba solo en `HUN_CRUDOS` y los archivos estaban en `HUN_CRUDOS/consultas`. La comparación de la sección 3, la calibración de 7.1 y el modelo guardado (versión 8, `con_laboratorio = False`) eran, en la práctica, sin banderas; las cifras «con banderas» del 8-nov venían de la corrida de Samuel con el cruce viejo. El 11-nov se rehízo todo con el cruce nuevo (sección 3, 7.1 y el modelo versión 9, `con_laboratorio = True`).
 
-Antes de las 6 h nada cambia (la tabla de arriba es de la corrida del 8-nov; la comparación principal de la sección 3.1 se rehízo el 9-nov). En la prueba con el modelo fijo, la diferencia por las banderas es real: +1,1 puntos a las 6 h (IC 0,7 a 1,5), +1,1 a las 12 h (0,5 a 1,8) y +1,1 a las 24 h (0,4 a 1,9). Los percentiles siguen calibrados (87–88 % debajo del p90). Con el reentreno mensual, la ganancia se concentra en las 6 h; a las 12 y 24 h el reentreno ya no le suma al modelo fijo (diferencia −0,7 a +0,6 y −0,9 a +1,1).
+**Manera 1: validación honesta, con dos orígenes** (`src/prueba_banderas_persona.py`; modelo fijo, sin peso a lo reciente). Puntos de mejora que suman las banderas frente al mismo modelo sin ellas (diferencia pareada, IC 95 % por bootstrap por semanas):
 
-**Manera 2: el modelo que se consulta, con todos los datos** (feb-2023 a 9-abr-2026, con más peso en lo reciente, vida media de 6 meses). Es el que guarda `src/estimador_tiempo_restante.py` (versión 8 del paquete, en `HUN_PROCESADOS/modelos/`, fuera del repositorio). **No se puede calificar con datos que no vio**, porque usa todos los meses y no queda nada para probar. Su precisión esperada es la de la columna «reentreno mensual» de la manera 1, que imita justamente esto: cada mes se entrena con todo lo conocido hasta ese momento, con más peso en lo reciente. Por eso se recomienda volver a entrenarlo cada mes (borrar el `.joblib`).
+| Horas esperando | **B: entrenar hasta jun-2025, probar jul-2025 a 9-abr-2026, cruce nuevo** | B, cruce viejo | A: entrenar hasta dic-2024, probar ene-jun 2025, cruce nuevo |
+|---|---|---|---|
+| 6 h | **+1,4 (+0,9 a +1,9)** | +1,1 (+0,6 a +1,6) | +0,2 (−0,4 a +0,8) |
+| 12 h | +0,4 (−0,3 a +1,0) | +0,5 (−0,2 a +1,2) | −0,9 (−1,9 a +0,2) |
+| 24 h | +0,8 (−0,1 a +1,7) | +0,9 (−0,1 a +1,9) | −0,8 (−2,0 a +0,5) |
+| 48 h | +0,9 (−0,2 a +2,0) | +1,1 (+0,3 a +1,9) | −1,0 (−2,0 a +0,1) |
+
+Mejora total frente al rango general con el cruce nuevo (origen B): 10,9 % a las 6 h (9,6 % sin banderas), 7,7 % a las 12 h, 6,1 % a las 24 h y 2,9 % a las 48 h. Entre las estancias que **sí** tienen laboratorio, el aporte a las 6 h es +2,4 puntos (B) y +0,7 (A). El p90 queda igual con y sin banderas (87–88 % de los casos por debajo, sin calibrar).
+
+**Lectura:**
+- **La ganancia clara es a las 6 h y en el periodo reciente** (+1,4 puntos en jul-2025 a abr-2026; +0,2 en ene-jun 2025). **Desde las 12 h no es estable:** suma entre +0,4 y +0,9 en el periodo reciente y resta entre 0,8 y 1,0 en ene-jun 2025, siempre con el 0 dentro del intervalo. Lo que se puede prometer es «alrededor de un punto a las 6 h»; después, dentro del azar.
+- **El cruce nuevo y el viejo estiman igual de bien** (diferencia entre −0,6 y +0,3 puntos, siempre con el 0 dentro): el modelo absorbía la falta de cobertura con `con_laboratorio_6h`. Se usa el nuevo porque es el correcto (la persona real de la estancia) y cubre un 28 % más de estancias.
+- **Se mantienen en el estimador final desde las 6 h** (no estorban en el periodo reciente, que es el que más pesa con el reentreno mensual), pero su aporte es modesto y el techo del estimador sigue siendo bajo.
+
+**Manera 2: el modelo que se consulta, con todos los datos** (feb-2023 a 9-abr-2026, con más peso en lo reciente, vida media de 6 meses). Es el que guarda `src/estimador_tiempo_restante.py` (versión 9 del paquete, en `HUN_PROCESADOS/modelos/`, fuera del repositorio; trae `con_laboratorio = True` y `origen_laboratorio`). **No se puede calificar con datos que no vio**, porque usa todos los meses y no queda nada para probar. Su precisión esperada es la de la columna «reentreno mensual» de la sección 3.1, que imita justamente esto: cada mes se entrena con todo lo conocido hasta ese momento, con más peso en lo reciente. Por eso se recomienda volver a entrenarlo cada mes (borrar el `.joblib`).
 
 **Cómo se consulta:** `estimar_tiempo_restante(..., laboratorios_6h={"troponina_max": 2.3, "pcr_max": 80})`. Los valores que falten se toman como normales; sin el argumento se supone que no le tomaron laboratorio.
 
@@ -241,7 +250,7 @@ En todos los casos los percentiles siguen bien calibrados (al llegar, con todo: 
 1. **La gravedad y el servicio son la información que faltaba.** Juntos duplican la mejora al llegar (de 8,4 % a 16,9 %), y con el diagnóstico la llevan a 20,0 %. Ningún cambio de modelo se acercó a eso. El error de la mediana baja de 23,7 h a 20,8 h.
 2. **Gravedad y servicio aportan cosas distintas,** porque juntos suman más que cada uno por separado. La gravedad dice quién recibe cama rápido (UCI); el servicio dice quién espera más (cirugía, urología, ortopedia).
 3. **Un triage real debería servir todavía más,** porque se registra al llegar y no tiene el ruido de los procedimientos sin fecha.
-4. **El número de laboratorios tempranos casi no ayuda** (−0,3 a +0,4 puntos, `src/triage_aproximado.py`), pero **sus valores sí**: las banderas de valores anormales de Daniela suman ~1 punto desde las 6 h y ya están en el estimador (sección 3.3). Esta tabla de escenarios se calculó antes de sumarlas (columna «Sin procedimientos» = estimador sin banderas).
+4. **El número de laboratorios tempranos casi no ayuda** (−0,3 a +0,4 puntos, `src/triage_aproximado.py`), pero **sus valores sí**: las banderas de valores anormales de Daniela suman +1,4 puntos a las 6 h en el periodo reciente (después, dentro del azar) y ya están en el estimador (sección 3.3). Esta tabla de escenarios se calculó antes de sumarlas (columna «Sin procedimientos» = estimador sin banderas).
 
 **Para la recomendación R1** (`docs/recomendaciones.md`): **registrar en la base el nivel de triage y el servicio que recibirá al paciente**, con su hora. Con esos dos datos, la estimación de la espera de cada paciente podría mejorar alrededor del doble.
 
@@ -305,8 +314,9 @@ Al revisar el código aparecieron problemas que la versión del 7-nov no había 
 
 ### 7.1 Corte de 12 h y percentil 90, con un periodo de validación (`src/calibracion_y_corte.py`)
 Entrenamiento hasta dic-2024, validación ene–jun 2025 y prueba jul-2025 a 9-abr-2026, que no se usa para decidir.
-- **Corte.** El modelo por momento (con el recorrido) le gana al modelo único en la validación hasta las 24 h (ventaja +3,5 %, IC95 +0,6 a +6,4) y deja de ganarle claramente a las 36 h (+1,0 %, IC95 −0,7 a +2,8). Por la regla (el corte más bajo sin ventaja clara) saldría 36 h, no 12. Con 36 h, en la prueba la mejora sube solo 0,4 puntos a las 12 h (7,3 % a 7,7 %) y 0,1 a las 24 h, y haría falta guardar 37 modelos en vez de 13. **Se deja el corte en 12 h por costo**, y queda dicho que ya no es «porque el recorrido deje de servir», sino porque ganar más tendría poco efecto.
-- **P90.** Con el nivel 0,90 el p90 deja por debajo al 87,9 % de los casos en la validación; con **0,93 llega al 90,7 %**. Se aplica 0,93 (`NIVEL_P90` en `estimador_tiempo_restante.py` v5). En la prueba, con el nivel ya fijado, el p90 queda en 91–92 % (antes 87–88 %) desde las 0 hasta las 24 h, y la mejora frente al rango general no cambia (8,9 % a 9,0 % al llegar). A las 48 h queda en 92,5 %, algo pasado.
+- **Corte.** *(Corrida del 9-nov, sin banderas de laboratorio por el problema de ruta de 3.3.)* El modelo por momento (con el recorrido) le gana al modelo único en la validación hasta las 24 h (ventaja +3,5 %, IC95 +0,6 a +6,4) y deja de ganarle claramente a las 36 h (+1,0 %, IC95 −0,7 a +2,8). Por la regla (el corte más bajo sin ventaja clara) saldría 36 h, no 12. Con 36 h, en la prueba la mejora sube solo 0,4 puntos a las 12 h (7,3 % a 7,7 %) y 0,1 a las 24 h, y haría falta guardar 37 modelos en vez de 13. **Se deja el corte en 12 h por costo**, y queda dicho que ya no es «porque el recorrido deje de servir», sino porque ganar más tendría poco efecto.
+  *Rehecho el 11-nov con las banderas por persona real:* la ventaja del modelo por momento es +1,9 % a las 6 h, +2,6 % a las 9 h, +2,5 % a las 12 h, +2,3 % a las 18 h (todas con el intervalo por encima de 0) y +1,5 % a las 24 h (IC95 −1,0 a +4,0): por la regla saldría **24 h**. Con 24 h la mejora en la prueba sube 0,5 puntos a las 12 h (7,7 % a 8,2 %) y 0,2 a las 24 h (6,1 % a 6,3 %), y harían falta 25 modelos en vez de 13. La decisión no cambia: **12 h por costo**, con esa ganancia pequeña declarada.
+- **P90.** Con el nivel 0,90 el p90 deja por debajo al 87,9 % de los casos en la validación; con **0,93 llega al 90,7 %** (9-nov; con las banderas, 11-nov: 87,1 % y 90,2 %). Se aplica 0,93 (`NIVEL_P90` en `estimador_tiempo_restante.py`). En la prueba, con el nivel ya fijado, el p90 queda en 90–92 % (antes 87–88 %) desde las 0 hasta las 24 h, y la mejora frente al rango general no cambia (8,9 % a 9,0 % al llegar). A las 48 h queda en 92–92,5 %, algo pasado.
 
 ---
 
@@ -317,10 +327,10 @@ export HUN_PROCESADOS="D:/Descargas D/Datos/procesados" HUN_TABLAS="D:/Descargas
 ```
 1. **Tabla de episodios:** `src/analisis_etapas.py` y `src/preparar_variables.py`, con los CSV de la base en `datos/crudos/` y `P02_persona_de_los_diagnosticos.csv` y `P03_persona_de_los_laboratorios.csv` en `datos/crudos/auditoria_bd/`. Copiarlos ahí solo mientras corren y mover luego `datos/procesados/` a la carpeta externa.
 2. **Utilidad (ventanas, censo y alerta):** `python3 src/utilidad_estimador.py` (~10 min). Escribe `utilidad_*.csv` en `HUN_TABLAS` y `resultados/graficos/utilidad_estimador.png`.
-3. **Construcción y prueba del estimador:** `python3 src/comparar_estimadores.py` (~1,5 min). Escribe `comparacion_estimadores_*.csv` en `HUN_TABLAS` y `resultados/graficos/comparacion_estimadores.png`. Las formas de entrenar (sección 3.1): `python3 src/ventana_entrenamiento.py` (~10 min). Las banderas de laboratorio (sección 3.3) entran solas si `sev_hemograma_6h_*.csv` y `sev_quimica_6h_*.csv` están en `HUN_CRUDOS`; el modelo de consulta con todos los datos se entrena con `python3 src/estimador_tiempo_restante.py` (borrando antes el `.joblib`).
+3. **Construcción y prueba del estimador:** `python3 src/comparar_estimadores.py` (~1,5 min). Escribe `comparacion_estimadores_*.csv` en `HUN_TABLAS` y `resultados/graficos/comparacion_estimadores.png`. Las formas de entrenar (sección 3.1): `python3 src/ventana_entrenamiento.py` (~10 min). Las banderas de laboratorio (sección 3.3) entran solas si `sevp_hemograma_6h_*.csv` y `sevp_quimica_6h_*.csv` (consulta `sql/severidad_labs_6h_persona.sql`) están en `HUN_CRUDOS` o en `HUN_CRUDOS/consultas` (el script imprime una línea «banderas de laboratorio (sevp: por visita y persona real): 52 %...»; si no la imprime, no las encontró; si solo están los `sev_*` viejos los usa y avisa). Su prueba con dos orígenes: `python3 src/prueba_banderas_persona.py` (1–15 min según la máquina). El modelo de consulta con todos los datos se entrena con `python3 src/estimador_tiempo_restante.py` (borrando antes el `.joblib`; el paquete es la versión 9 y debe traer `con_laboratorio = True`).
 4. **Escenarios de gravedad y servicio:** `python3 src/procedimientos_escenario.py` (~4 min; necesita `procedimientos_por_estancia.csv` en `HUN_CRUDOS`) y `python3 src/triage_aproximado.py` (laboratorios).
 5. **Alternativas:** `python3 src/estimador_tiempos.py` (tabla de perfiles), `python3 src/espera_dos_series.py` (dos series) y `python3 src/variables_descartadas.py` (datos que no aportan).
 6. **Revisión del 9-nov (sección 7):** `python3 src/revision_estimador.py` (~15–25 min; `RAPIDO=1` omite la prueba hora por hora). Escribe `revision_estimador_*.csv` y `revision_estimador_resumen.txt` en `HUN_TABLAS`.
-7. **Corte y calibración del p90 con un periodo de validación (sección 7.1):** `python3 src/calibracion_y_corte.py` (~15 min). Escribe `calibracion_corte_*.csv` y `calibracion_corte_resumen.txt` en `HUN_TABLAS`.
+7. **Corte y calibración del p90 con un periodo de validación (sección 7.1):** `python3 src/calibracion_y_corte.py` (de 1 a 50 min según la máquina). Escribe `calibracion_corte_*.csv` y `calibracion_corte_resumen.txt` en `HUN_TABLAS`.
 8. **Consulta:** `python3 src/estimador_tiempo_restante.py 67 Mujer Urgencias 6 "2026-03-04 15:00"`. Sin argumentos muestra los ejemplos de la sección 2.
 9. **Página del dashboard:** `python3 dashboard/estimador.py` y abrir http://127.0.0.1:8051.

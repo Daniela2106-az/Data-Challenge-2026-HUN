@@ -1,5 +1,6 @@
 """
-estimador_tiempo_restante.py  -  version 5 (9-nov-2026)
+estimador_tiempo_restante.py  -  version 6 (11-nov-2026)
+(v6: las banderas de laboratorio se cruzan por persona real y se encuentran en HUN_CRUDOS/consultas (comparar_estimadores.py v5); el paquete pasa a la version 9 y el .joblib anterior se vuelve a entrenar solo.)
 (v5, 9-nov: el p90 se calcula con el nivel 0,93 (calibrado en la validacion, src/calibracion_y_corte.py): cubre ~91 % en la prueba en vez de 87-88 %.)
 (v4: un modelo por cada hora de espera de 0 a 11 h, en vez de 0, 2, 4, 6 y 9 h con el mas cercano por debajo; asi el modelo que se consulta es el mismo
  que se prueba en cada hora (src/revision_estimador.py, prueba 1). Modelo guardado version 8 (con banderas de laboratorio): el .joblib anterior se vuelve a entrenar solo.)
@@ -59,7 +60,7 @@ LANDMARKS = list(range(ce.HORAS_RECORRIDO))    # 0 a 11 h, uno por hora; con 12 
 VIDA_MEDIA_DIAS = 182                          # peso a lo reciente: la mitad cada 6 meses hacia atras
 DIAS_AVISO = 60                                # mas de 60 dias entre el fin del entrenamiento y la fecha consultada: el modelo puede estar viejo
 NIVEL_P90 = 0.93                               # nivel calibrado en la validacion ene-jun 2025 (src/calibracion_y_corte.py): con 0,90 el p90 cubria 87-88 %; con 0,93, ~91 %
-VERSION_MODELO = 8                             # 8: con banderas de laboratorio (a6-utilidad) y un modelo por hora (a6-revision)
+VERSION_MODELO = 9                             # 8: con banderas de laboratorio (a6-utilidad) y un modelo por hora (a6-revision); 9: banderas por persona real (sevp_*, 11-nov)
 MODELO = Path(os.environ.get("HUN_PROCESADOS", ce.PROC)) / "modelos" / "m1_tiempo_restante.joblib"
 _CACHE = {}
 
@@ -73,7 +74,7 @@ def entrenar_paquete(d, rejilla, estado, hasta=None):
     fin = rejilla[(rejilla >= corte - np.timedelta64(90, "D")) & (rejilla < corte)]
     k = np.searchsorted(rejilla, fin)
     return {"modelos": modelos, "ocup_tipica": {z: float(np.median(estado[z]["ocup"][k])) for z in estado}, "grupos_dx": ce.GRUPOS_DX,
-            "entrenado_hasta": str((pd.Timestamp(corte) - pd.Timedelta(days=1)).date()), "vida_media_dias": VIDA_MEDIA_DIAS, "con_laboratorio": ce.HAY_LAB, "version": VERSION_MODELO}
+            "entrenado_hasta": str((pd.Timestamp(corte) - pd.Timedelta(days=1)).date()), "vida_media_dias": VIDA_MEDIA_DIAS, "con_laboratorio": ce.HAY_LAB, "origen_laboratorio": ce.ORIGEN_LAB, "version": VERSION_MODELO}
 
 
 def modelo_para(paq, horas_esperando):
