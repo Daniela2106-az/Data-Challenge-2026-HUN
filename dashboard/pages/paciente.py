@@ -26,21 +26,23 @@ import plotly.graph_objects as go
 from dash import Input, Output, State, callback, dcc, html
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "src"))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))        # dashboard/ para el tema de graficos
 import comparar_estimadores as ce  # noqa: E402
 import confianza_perfil as cp  # noqa: E402
 import estimador_tiempo_restante as etr  # noqa: E402
 import estimador_tiempos as et  # noqa: E402
+import tema_graficos as tg  # noqa: E402
 
-dash.register_page(__name__, path="/paciente", name="Paciente en espera", title="¿Cuándo recibirá cama? - HUN")
+dash.register_page(__name__, path="/paciente", name="Paciente en espera", title="¿Cuándo recibirá cama? - HUN", order=2)
 
 GRIS, AZUL, NARANJA = "#6b6b6b", "#2a6fb0", "#eb6834"
 
 
 def tarjeta(titulo, valor, detalle=""):
-    return html.Div([html.Div(titulo, style={"fontSize": "12px", "color": GRIS}),
-                     html.Div(valor, style={"fontSize": "24px", "fontWeight": 700}),
-                     html.Div(detalle, style={"fontSize": "12px", "color": GRIS})],
-                    style={"border": "1px solid #ddd", "borderRadius": "8px", "padding": "10px 14px", "minWidth": "190px"})
+    return html.Div(className="metric-card", children=[
+        html.Div(titulo, style={"fontSize": "12px"}),
+        html.Div(valor, style={"fontSize": "24px", "fontWeight": 700}),
+        html.Div(detalle, style={"fontSize": "12px", "color": GRIS})])
 
 
 def coma(x, decimales=1):
@@ -75,12 +77,12 @@ def validacion():
 
 def layout():
     ahora = pd.Timestamp.now().floor("h")
-    return html.Div(style={"fontFamily": "system-ui, sans-serif", "maxWidth": "1150px", "margin": "0 auto", "padding": "16px"}, children=[
+    return html.Div(className="page-container", children=[
         html.H2("¿Cuándo recibirá cama este paciente?"),
         html.P("Describe al paciente y el estimador muestra en qué momento del día es más probable que reciba cama. Es el rango de pacientes "
                "parecidos en la historia del hospital, no una promesa para una persona.", style={"color": GRIS}),
         html.Div(style={"display": "flex", "flexWrap": "wrap", "gap": "32px", "alignItems": "flex-start"}, children=[
-            html.Div(style={"flex": "0 0 300px"}, children=[
+            html.Div(className="form-panel", style={"flex": "0 0 300px"}, children=[
                 campo("Edad (años)", dcc.Input(id="pac-edad", type="number", min=0, max=110, value=67, style={"width": "100%"})),
                 campo("Sexo", dcc.RadioItems(id="pac-sexo", options=["Mujer", "Hombre"], value="Mujer", inline=True)),
                 campo("Tipo de visita", dcc.Dropdown(id="pac-tipo", options=et.TIPOS, value="Urgencias", clearable=False)),
@@ -126,8 +128,8 @@ def etapas_desde_conteos(n_cerradas, n_abiertas, horas):
           Input("pac-estimar", "n_clicks"),
           State("pac-edad", "value"), State("pac-sexo", "value"), State("pac-tipo", "value"), State("pac-horas", "value"), State("pac-ahora", "value"),
           State("pac-esp_prev", "value"), State("pac-est_prev", "value"), State("pac-dias_prev", "value"), State("pac-n_prev", "value"),
-          State("pac-n_cerr", "value"), State("pac-n_abie", "value"))
-def actualizar(_, edad, sexo, tipo, horas, ahora, esp_prev, est_prev, dias_prev, n_prev, n_cerr, n_abie):
+          State("pac-n_cerr", "value"), State("pac-n_abie", "value"), State("theme-store", "data"))
+def actualizar(_, edad, sexo, tipo, horas, ahora, esp_prev, est_prev, dias_prev, n_prev, n_cerr, n_abie, tema):
     try:
         horas = float(horas or 0)
         hp = {"espera_h": esp_prev, "estancia_h": est_prev, "dias_desde": dias_prev, "n_previas": n_prev or 1} if esp_prev is not None else None
@@ -163,4 +165,5 @@ def actualizar(_, edad, sexo, tipo, horas, ahora, esp_prev, est_prev, dias_prev,
                "Las etapas en urgencias se aproximan a partir de los conteos.", style={"margin": "0 0 4px 0"}),
         html.Ul(avisos_html, style={"margin": 0, "paddingLeft": "18px"}),
     ])
+    tg.aplicar(fig, tg.es_oscuro(tema))
     return fig, tarjetas, nota

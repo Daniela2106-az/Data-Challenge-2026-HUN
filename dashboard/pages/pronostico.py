@@ -18,12 +18,14 @@ import dash
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
-from dash import Input, Output, callback, dcc, html
+from dash import Input, Output, State, callback, dcc, html
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "src"))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))        # dashboard/ para el tema de graficos
 import modelo_pronostico as mp  # noqa: E402
+import tema_graficos as tg  # noqa: E402
 
-dash.register_page(__name__, path="/", name="Pronóstico", title="Pronóstico de demanda - HUN")
+dash.register_page(__name__, path="/pronostico", name="Pronóstico", title="Pronóstico de demanda - HUN", order=1)
 
 SUPUESTO = "historico"                                      # nivel de los 12 meses del periodo confiable
 
@@ -34,7 +36,9 @@ try:
     LIMPIO = mp.cargar_panel()                                  # el modelo se entrena sin los dias atipicos ni los posteriores al 9-abr-2026
     REAL = mp.cargar_panel(limpiar=False)                       # lo que se dibuja como "lo que paso": todos los dias
     SERIES = {obj: LIMPIO[obj] for obj in mp.OBJETIVOS}
-    BT = {obj: mp.retroceso(s) for obj, s in SERIES.items()}    # se calcula una vez al abrir la app
+    # El backtest de la banda usa el MISMO escenario que el pronostico que se dibuja (SUPUESTO="historico"), para que la banda
+    # incluya la incertidumbre del nivel anclado; paso=7 da mas cortes y estabiliza los tramos largos. Se calcula una vez al abrir la app.
+    BT = {obj: mp.retroceso(s, paso=7, escenario=SUPUESTO) for obj, s in SERIES.items()}
     ERR = {obj: mp.tabla_error(BT[obj], sin_caida=True) for obj in mp.OBJETIVOS}
     ULTIMO_CONFIABLE = LIMPIO.dropna(how="all").index.max()     # 9-abr-2026
     ULTIMO_REAL = REAL.dropna(how="all").index.max()
@@ -54,22 +58,22 @@ def hoy():
 
 
 def tarjeta(titulo, valor, detalle=""):
-    return html.Div([html.Div(titulo, style={"fontSize": "12px", "color": GRIS}),
-                     html.Div(valor, style={"fontSize": "26px", "fontWeight": 700}),
-                     html.Div(detalle, style={"fontSize": "12px", "color": GRIS})],
-                    style={"border": "1px solid #ddd", "borderRadius": "8px", "padding": "10px 14px", "minWidth": "200px"})
+    return html.Div(className="metric-card", children=[
+        html.Div(titulo, style={"fontSize": "12px"}),
+        html.Div(valor, style={"fontSize": "26px", "fontWeight": 700}),
+        html.Div(detalle, style={"fontSize": "12px", "color": GRIS})])
 
 
 def layout():
     """El diseno se arma cada vez que se abre la pagina, para que "hoy" sea siempre el dia actual."""
     if not DATOS_OK:
-        return html.Div(style={"fontFamily": "system-ui, sans-serif", "maxWidth": "700px", "margin": "40px auto", "padding": "16px"}, children=[
+        return html.Div(className="page-container", children=[
             html.H2("Pronóstico de demanda"),
             html.P("Los datos no están disponibles en este equipo (falta datos/procesados/para_equipo/panel_diario.csv, "
                    "que vive fuera del repositorio). Pedir la tabla al equipo o regenerarla con "
                    "src/exportar_para_equipo.py.", style={"color": "#c0392b"}),
         ])
-    return html.Div(style={"fontFamily": "system-ui, sans-serif", "maxWidth": "1100px", "margin": "0 auto", "padding": "16px"}, children=[
+    return html.Div(className="page-container", children=[
     html.H2("¿Cuántos pacientes ingresarán al hospital?"),
     html.P(f"Estimación para los próximos días a partir de hoy, {hoy():%d-%m-%Y}, según la historia confiable del hospital. "
            "Elige dos cosas y el gráfico se actualiza.", style={"color": GRIS}),
@@ -87,8 +91,8 @@ def layout():
 
 
 @callback(Output("pron-grafico", "figure"), Output("pron-tarjetas", "children"), Output("pron-nota", "children"),
-          Input("pron-plazo", "value"), Input("pron-objetivo", "value"))
-def actualizar(dias, objetivo):
+          Input("pron-plazo", "value"), Input("pron-objetivo", "value"), State("theme-store", "data"))
+def actualizar(dias, objetivo, tema):
     if not DATOS_OK:                                            # no deberia dispararse (sin datos no se renderizan los controles), defensivo
         return go.Figure(), [], "Datos no disponibles."
     serie, bt = SERIES[objetivo], BT[objetivo]
@@ -120,4 +124,5 @@ def actualizar(dias, objetivo):
     nota = (f"Cómo se calculó: según el calendario (día de la semana, festivos, semana santa, Carnaval) y el nivel de pacientes de febrero de 2023 a abril de 2026. "
             f"Desde el 10-abr-2026 el registro de las etapas del hospital está incompleto: esos días no se usan para estimar el nivel. "
             "No anticipa brotes ni cortes de sistema, ni lo que haya cambiado en el hospital desde entonces. Es una tendencia, no una predicción precisa.")
+    tg.aplicar(fig, tg.es_oscuro(tema))
     return fig, tarjetas, nota

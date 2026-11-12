@@ -34,9 +34,11 @@ import plotly.graph_objects as go
 from dash import Input, Output, State, callback, dcc, html
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "src"))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))        # dashboard/ para el tema de graficos
 import simulacion_camas_montecarlo as scm  # noqa: E402  (import liviano desde el 10-nov: ~1-2 s, no corre el backtest)
+import tema_graficos as tg  # noqa: E402
 
-dash.register_page(__name__, path="/camas", name="Planeación de camas", title="Planeación de camas - HUN")
+dash.register_page(__name__, path="/camas", name="Planeación de camas", title="Planeación de camas - HUN", order=3)
 
 GRIS, AZUL, NARANJA, VERDE = "#6b6b6b", "#2a6fb0", "#eb6834", "#2e8b57"
 RAIZ = Path(__file__).resolve().parent.parent.parent
@@ -83,14 +85,14 @@ def campo(etiqueta, control, ayuda=""):
 
 
 def tarjeta(titulo, valor, detalle=""):
-    return html.Div([html.Div(titulo, style={"fontSize": "12px", "color": GRIS}),
-                     html.Div(valor, style={"fontSize": "22px", "fontWeight": 700}),
-                     html.Div(detalle, style={"fontSize": "12px", "color": GRIS})],
-                    style={"border": "1px solid #ddd", "borderRadius": "8px", "padding": "10px 14px", "minWidth": "160px"})
+    return html.Div(className="metric-card", style={"minWidth": "160px"}, children=[
+        html.Div(titulo, style={"fontSize": "12px"}),
+        html.Div(valor, style={"fontSize": "22px", "fontWeight": 700}),
+        html.Div(detalle, style={"fontSize": "12px", "color": GRIS})])
 
 
 def layout():
-    return html.Div(style={"fontFamily": "system-ui, sans-serif", "maxWidth": "1200px", "margin": "0 auto", "padding": "16px"}, children=[
+    return html.Div(className="page-container", children=[
         html.H2("Planeación de camas: ¿qué pasaría si...?"),
         html.P("Cambia un supuesto sobre el futuro (más ingresos, menos estancia, otra mezcla de perfiles) y ve cómo "
                "reacciona la ocupación proyectada. Es simulación hacia adelante sobre un escenario hipotético, no la "
@@ -98,7 +100,7 @@ def layout():
                "(eso está en «Paciente en espera»). Detalle y límites del motor en docs/modelo_camas.md y docs/simulacion.md.",
                style={"color": GRIS}),
         html.Div(style={"display": "flex", "flexWrap": "wrap", "gap": "32px", "alignItems": "flex-start"}, children=[
-            html.Div(style={"flex": "0 0 300px"}, children=[
+            html.Div(className="form-panel", style={"flex": "0 0 300px"}, children=[
                 campo("Ingresos a cama (B)", dcc.Slider(id="camas-ajuste_ingresos", min=-30, max=30, step=5, value=0,
                                                          marks={i: f"{i}%" for i in range(-30, 31, 10)}),
                       "Escenario B del plan mínimo = +10 %."),
@@ -156,8 +158,9 @@ def correr_simulacion(_, pct_ingresos, pct_estancia, intensidad_d, corte):
 
 
 @callback(Output("camas-grafico_proyeccion", "figure"), Output("camas-tarjetas", "children"), Output("camas-grafico_curva", "figure"),
-          Input("camas-censos_guardados", "data"), Input("camas-grupo", "value"), Input("camas-capacidad_prueba", "value"))
-def mostrar(data, grupo, capacidad):
+          Input("camas-censos_guardados", "data"), Input("camas-grupo", "value"), Input("camas-capacidad_prueba", "value"),
+          State("theme-store", "data"))
+def mostrar(data, grupo, capacidad, tema):
     if not data:
         return go.Figure(), [], go.Figure()
     fechas = pd.to_datetime(data["fechas"])
@@ -166,28 +169,44 @@ def mostrar(data, grupo, capacidad):
     p10, p50, p90 = np.percentile(c, 10, axis=0), np.percentile(c, 50, axis=0), np.percentile(c, 90, axis=0)
     cap_hun = scm.CAPACIDAD[grupo]
 
+    ROJO = "#c0392b"
+    sobre = p50 > cap_hun                                    # dias (de la mediana simulada) sin camas suficientes
+    y_normal = np.where(~sobre, p50, np.nan)
+    y_sobre = np.where(sobre, p50, np.nan)
+    deficit = np.clip(p50 - cap_hun, 0, None)                # pacientes sin cama ese dia, segun la mediana simulada
+
     fig = go.Figure([
         go.Scatter(x=fechas, y=p90, mode="lines", line=dict(width=0), showlegend=False, hoverinfo="skip"),
         go.Scatter(x=fechas, y=p10, mode="lines", line=dict(width=0), fill="tonexty", fillcolor="rgba(42,111,176,0.15)",
-                   name="Banda 10-90 %"),
-        go.Scatter(x=fechas, y=p50, mode="lines", line=dict(color=AZUL, width=2), name="Mediana simulada"),
+                   name="Banda 10-90 %", hoverinfo="skip"),
+        go.Scatter(x=fechas, y=y_normal, mode="lines", line=dict(color=AZUL, width=2), name="Pacientes en cama",
+                   hovertemplate="%{x|%d-%m-%Y}<br>%{y:.0f} pacientes en cama<extra></extra>"),
+        go.Scatter(x=fechas, y=y_sobre, mode="lines", line=dict(color=ROJO, width=2.5), name="Sin cama suficiente",
+                   customdata=deficit, hovertemplate="%{x|%d-%m-%Y}<br><b>%{customdata:.0f} pacientes sin cama ese día</b><extra></extra>"),
         go.Scatter(x=fechas, y=[cap_hun] * len(fechas), mode="lines", line=dict(color=NARANJA, dash="dash"),
-                   name=f"Capacidad HUN ({cap_hun})"),
+                   name=f"Capacidad HUN ({cap_hun})", hoverinfo="skip"),
     ])
-    fig.update_layout(title=f"Ocupación proyectada — {NOMBRES_GRUPO[grupo]}", yaxis_title="Camas ocupadas",
+    fig.update_layout(title=f"Ocupación proyectada — {NOMBRES_GRUPO[grupo]}", yaxis_title="Pacientes en cama",
                       template="simple_white", legend=dict(orientation="h", y=-0.2), margin=dict(l=40, r=20, t=50, b=40))
 
     pct_sat = round(100 * float((c > cap_hun).mean()), 1)
-    tarjetas = [tarjeta("Ocupación media", f"{c.mean():.0f} camas", f"mediana diaria {np.median(p50):.0f}"),
-                tarjeta("% días-repetición saturados", f"{pct_sat} %", f"sobre la capacidad HUN ({cap_hun})"),
-                tarjeta("p90 de ocupación", f"{p90.max():.0f} camas", "máximo de la banda alta en el horizonte")]
+    dias_sin_cama = int((p50 > cap_hun).sum())
+    tarjetas = [
+        tarjeta("Pacientes en cama, en promedio", f"{c.mean():.0f}", f"la capacidad del HUN es de {cap_hun} camas (línea naranja)"),
+        tarjeta("Qué tan seguido faltan camas", f"{pct_sat} %", f"de cada 100 simulaciones de este día, en {pct_sat:.0f} no alcanzan las {cap_hun} camas"),
+        tarjeta("Días con el tramo en rojo", f"{dias_sin_cama} de {len(fechas)}", "días en los que, según la mediana simulada, faltarían camas"),
+        tarjeta("En el peor 10 % de los casos", f"{p90.max():.0f}", "pacientes en cama el día más cargado del horizonte simulado"),
+    ]
 
     tabla_cap, minima = scm.curva_capacidad(censos, grupo, range(max(10, cap_hun - 40), cap_hun + 41, 2))
     fig_cap = go.Figure([go.Scatter(x=tabla_cap.capacidad, y=tabla_cap["prob_saturacion_%"], mode="lines+markers", line=dict(color=AZUL))])
     fig_cap.add_vline(x=cap_hun, line_dash="dash", line_color=NARANJA, annotation_text="HUN")
     fig_cap.add_vline(x=capacidad, line_dash="dot", line_color=GRIS, annotation_text="a probar")
-    fig_cap.update_layout(title=f"Curva de capacidad — {NOMBRES_GRUPO[grupo]} (mínimo para riesgo ≤10%: "
-                                 f"{minima if minima else 'fuera de rango'} camas)",
-                          xaxis_title="Capacidad (camas)", yaxis_title="% de días-repetición saturados",
+    fig_cap.update_layout(title=f"Si el HUN tuviera esta capacidad — {NOMBRES_GRUPO[grupo]} (camas mínimas para que falte "
+                                 f"menos de 1 de cada 10 veces: {minima if minima else 'fuera de rango'})",
+                          xaxis_title="Capacidad hipotética (número de camas)", yaxis_title="Qué tan seguido no alcanzarían (%)",
                           template="simple_white", margin=dict(l=40, r=20, t=50, b=40))
+    dark = tg.es_oscuro(tema)
+    tg.aplicar(fig, dark)
+    tg.aplicar(fig_cap, dark)
     return fig, tarjetas, fig_cap

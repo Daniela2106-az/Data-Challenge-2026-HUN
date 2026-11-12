@@ -17,7 +17,7 @@ import dash
 import pandas as pd
 from dash import dash_table, html
 
-dash.register_page(__name__, path="/perfiles", name="Perfiles y picos", title="Perfiles y picos de demanda - HUN")
+dash.register_page(__name__, path="/perfiles", name="Perfiles y picos", title="Perfiles y picos de demanda - HUN", order=4)
 
 GRIS, AZUL, NARANJA = "#6b6b6b", "#2a6fb0", "#eb6834"
 RAIZ = Path(__file__).resolve().parent.parent.parent
@@ -56,12 +56,12 @@ def layout():
         d_ocup = pd.read_csv(TABLAS / "perfiles_en_picos_ocupacion.csv")
         d_dias = pd.read_csv(TABLAS / "dias_alta_demanda.csv")
     except (FileNotFoundError, OSError):
-        return html.Div([html.H2("Perfiles y picos de demanda"),
+        return html.Div(className="page-container", children=[html.H2("Perfiles y picos de demanda"),
                           html.P("Las tablas no están disponibles. Correr primero: python3 src/perfiles_en_picos.py",
                                  style={"color": NARANJA})])
     n_g_lleg = d_lleg.espera_contraste.str.startswith("GRANDE", na=False).sum()
     n_g_ocup = d_ocup.espera_contraste.str.startswith("GRANDE", na=False).sum()
-    return html.Div(style={"fontFamily": "system-ui, sans-serif", "maxWidth": "1150px", "margin": "0 auto", "padding": "16px"}, children=[
+    return html.Div(className="page-container", children=[
         html.H2("Perfiles y picos de demanda"),
         html.P("¿El mismo perfil de paciente espera o se queda distinto cuando llega en un momento de carga alta? "
                "Tabla histórica, para leer, sin controles interactivos. Detalle y límites en docs/perfiles_en_picos.md.",
