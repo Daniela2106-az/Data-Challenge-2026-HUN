@@ -73,6 +73,23 @@ ESTACIONALIDAD = {"llegadas_con_atencion": "dengue", "llegadas": False, "ingreso
 _GAM = {}
 
 
+def regresor_estacional(idx, clim=None, lag_sem=0):
+    """Generador de regresores de la ficha A9: para cualquier rango de fechas (pasado o futuro, incluido 2027) devuelve el valor de una climatologia
+    semanal (semanas ISO 1..53) con `lag_sem` semanas de rezago (el valor de hace lag_sem semanas).
+    `clim`: lista o Series de 53 valores, o ruta a un CSV con columnas `semana` y `valor` (o una sola columna de 53 filas). Por defecto, CLIMA_DENGUE."""
+    if clim is None:
+        valores = np.asarray(CLIMA_DENGUE, float)
+    elif isinstance(clim, (str, Path)):
+        t = pd.read_csv(clim)
+        valores = (t.set_index("semana")["valor"].reindex(range(1, 54)).ffill().to_numpy() if {"semana", "valor"} <= set(t.columns)
+                   else t.iloc[:, -1].to_numpy(float))
+    else:
+        valores = np.asarray(clim, float)
+    idx = pd.DatetimeIndex(idx)
+    sem = np.minimum((idx - pd.Timedelta(weeks=lag_sem)).isocalendar().week.to_numpy(), 53)
+    return pd.Series(valores[sem - 1], index=idx, name="regresor_estacional")
+
+
 def _base_gam(dias_del_anio):
     from patsy import build_design_matrices, dmatrix
     if not _GAM:
@@ -138,8 +155,7 @@ def calendario(idx, objetivo=None):
         c.loc[(idx >= e - pd.Timedelta(days=50)) & (idx <= e - pd.Timedelta(days=47)), "carnaval"] = 1.0
     tipo = ESTACIONALIDAD.get(objetivo)
     if tipo == "dengue":
-        sem = np.minimum((idx - pd.Timedelta(weeks=REZAGO_DENGUE_SEMANAS)).isocalendar().week.to_numpy(), 53)
-        c["estacional_dengue"] = np.asarray(CLIMA_DENGUE)[sem - 1]
+        c["estacional_dengue"] = regresor_estacional(idx, CLIMA_DENGUE, REZAGO_DENGUE_SEMANAS).to_numpy()
         return c[COLUMNAS + ["estacional_dengue"]]
     if tipo == "gam":
         b = _base_gam(idx.dayofyear)

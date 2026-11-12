@@ -199,8 +199,7 @@ def diseno(col, h, variante, entr_fin):
     if ms:
         X = pd.concat([X, pd.get_dummies(d.mes, prefix="mes", dtype=float).drop(columns="mes_1")], axis=1)
     if mp.ESTACIONALIDAD.get(col) == "dengue":     # A9 (12-nov): mismas columnas, mismo orden que src/modelo_pronostico.calendario()
-        sem = np.minimum((d.index - pd.Timedelta(weeks=mp.REZAGO_DENGUE_SEMANAS)).isocalendar().week.to_numpy(), 53)
-        X["estacional_dengue"] = np.asarray(mp.CLIMA_DENGUE)[sem - 1]
+        X["estacional_dengue"] = mp.regresor_estacional(d.index, mp.CLIMA_DENGUE, mp.REZAGO_DENGUE_SEMANAS).to_numpy()
     elif mp.ESTACIONALIDAD.get(col) == "gam":
         b = mp._base_gam(d.index.dayofyear)
         for i in range(b.shape[1]):

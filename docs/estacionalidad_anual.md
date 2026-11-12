@@ -123,7 +123,13 @@ prueba (jul-2025 a 9-abr-2026), con factores de todos los destinos anteriores a 
 | Cobertura en la prueba, antes (q = 0,10) | 71 % | 79 % | 76 % | 72 % | 71 % |
 | **Cobertura en la prueba, ahora** | **82 %** | **79 %** | **76 %** | **81 %** | **81 %** |
 
-En los ingresos a cama (q = 0,10 salvo 0,07 a 8–30 días) la cobertura en la prueba queda en 78–88 %. Implementado en `NIVEL_BANDA`
+En los ingresos a cama (q = 0,10 salvo 0,07 a 8–30 días) la cobertura en la prueba queda en 78–88 %.
+
+**¿Por qué no se migró la banda a un modelo estructural (nivel 2)?** La ficha pone una condición: migrar la banda a un modelo estructural (componentes no
+observados o BSTS) **solo si**, después de mejorar la banda actual, la cobertura por tramo sigue mal calibrada. Tras la recalibración, la cobertura en la
+prueba quedó en 76–82 % en llegadas y 78–88 % en ingresos, alrededor del 80 % buscado y sin un tramo claramente por debajo. Con eso se cumple el nivel 0/1
+y la ficha indica quedarse ahí: cambiar de familia de modelo agregaría trabajo y riesgo sin una falla que corregir. Si con datos nuevos la cobertura de algún
+tramo cayera por debajo de ~75 %, ese sería el momento de probarlo. Implementado en `NIVEL_BANDA`
 (`src/modelo_pronostico.py`); el pronóstico a futuro y su gráfico se regeneraron.
 
 ## Cierre (12-nov): población del DANE y GAM (`src/estacionalidad_cierre.py`)
@@ -161,7 +167,7 @@ En los ingresos a cama (q = 0,10 salvo 0,07 a 8–30 días) la cobertura en la p
   exactas, es poco probable que cambie la decisión.
 
 ## Qué cambió en el código
-`src/modelo_pronostico.py` (12-nov): `CLIMA_DENGUE` (53 números públicos), `REZAGO_DENGUE_SEMANAS = 2` y `ESTACIONALIDAD` por objetivo (solo
+`src/modelo_pronostico.py` (12-nov): **`regresor_estacional(idx, clim, lag_sem)`**, el generador que pide la ficha: lleva cualquier fecha (pasada o futura, incluido 2027) a su semana ISO, aplica el rezago y devuelve el valor de la climatología (una lista de 53 valores o un CSV con columnas `semana` y `valor`); `CLIMA_DENGUE` (53 números públicos), `REZAGO_DENGUE_SEMANAS = 2` y `ESTACIONALIDAD` por objetivo (solo
 `llegadas_con_atencion`). `calendario(idx, objetivo)` suma la columna `estacional_dengue` cuando corresponde; `retroceso()` y `pronostico_con_banda()` le
 pasan el nombre de la serie. Sin `objetivo`, `calendario()` se comporta igual que antes, así que los demás scripts (pruebas, Monte Carlo) no cambian.
 El pronóstico del dashboard (página `/`) la usa automáticamente para «ingresos al hospital». `src/pronostico_demanda.py` suma la misma columna, en el
