@@ -356,20 +356,18 @@ camas harían falta** con certeza: primero la estancia y el proceso de asignaci�
 
 ## 8. El dashboard
 
-**Herramienta:** Dash (Python y Plotly), aceptado por los organizadores. **No se conecta a la base:** solo lee tablas agregadas (ninguna con una
-fila por paciente; los grupos con menos de 30 casos se ocultan). Estructura y reglas: `docs/estructura_dashboard.md`.
+**Herramienta:** Dash (Python y Plotly), aceptado por los organizadores. Un solo programa (`dashboard/main.py`, puerto 8050) con una página por tema en
+`dashboard/pages/`. **No se conecta a la base:** solo lee tablas agregadas, ninguna con una fila por paciente.
 
-- **Orden:** 0 Inicio → 1 Contexto (el reto, los datos, su calidad, metodología) → 2 Resultados (demanda, ocupación, espera de cama, hora de
-  llegada y altas, factores, perfiles, estancia, diagnósticos) → 3 Predicción (pronóstico, alertas, días atípicos, simulador de camas,
-  diagnóstico repetible, estimador por paciente) → 4 Recomendaciones → 5 Anexos.
-- **Cada página:** el título es la conclusión; una pregunta debajo; hasta tres controles; gráficas con su n; un panel de contexto con cuatro
-  pestañas (*qué ves, cómo se calculó, qué significa, qué NO dice*); y un pie con la fuente.
-- **Publicación:** Render (*Web Service*); las tablas agregadas se suben como *Secret Files*, no a GitHub.
-- **Enlace:** [pendiente: enlace público de Render]
+| Página | Qué responde | Responsable |
+|---|---|---|
+| Pronóstico de demanda (`/`) | Cuántos pacientes llegarán y cuántos irán a cama, desde hoy hasta un año, con su banda del 80 % y la forma del año | Daniela y Samuel |
+| Paciente en espera (`/paciente`) | Cuándo es más probable que un paciente que ya espera reciba cama (estimador A6), con sus avisos | Samuel |
+| Planeación de camas (`/camas`) | Riesgo de saturar las camas y escenarios de ingresos y estancia (simulación Monte Carlo, A5) | Anthony |
+| Perfiles y picos (`/perfiles`) | Cómo cambian la espera y la estancia según el perfil del paciente y la carga del momento | Anthony |
 
-> **Pendiente de cerrar antes de entregar:** unificar las dos versiones del dashboard (la de `main`, `dashboard/main.py`, con las páginas de
-> pronóstico, paciente, perfiles y camas; y la de la rama `samuel/b1-estimador-b2-revision`, con el tema profesional y las páginas 0.1, 1.3,
-> 2.1–2.4 y 4.1) y actualizar esta sección con la lista final de páginas y capturas.
+- **Cómo correrlo:** `python3 dashboard/main.py` y abrir http://127.0.0.1:8050 (las tablas agregadas deben estar disponibles; ver `README.md`).
+- **Publicación:** [pendiente: enlace público].
 
 ---
 
