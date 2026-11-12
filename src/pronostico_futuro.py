@@ -13,6 +13,7 @@ LECTURA
     antes de la caida. Que escenario es el real no se sabe (pregunta 14 al HUN, sin respuesta): se muestran los dos.
   - El error crece con el horizonte; mas alla de ~3 meses es una tendencia con banda ancha, no una prediccion fina.
 """
+import os
 from pathlib import Path
 
 import matplotlib
@@ -23,7 +24,7 @@ import pandas as pd
 import modelo_pronostico as mp
 
 RAIZ = Path(__file__).resolve().parent.parent
-TABLAS = RAIZ / "resultados" / "tablas"
+TABLAS = Path(os.environ.get("HUN_TABLAS", RAIZ / "resultados" / "tablas"))   # HUN_TABLAS: tablas fuera del proyecto
 GRAFICOS = RAIZ / "resultados" / "graficos"
 for d in (TABLAS, GRAFICOS):
     d.mkdir(parents=True, exist_ok=True)
