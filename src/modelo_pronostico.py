@@ -23,9 +23,11 @@ DIAS ATIPICOS Y CAIDA SIN EXPLICAR (decision del 1-nov-2026)
   sobrestima: por eso el escenario "reciente" sigue disponible.
 
 BANDA DEL 80 %
-  Sale de un RETROCESO (backtest): se pronostica desde muchos cortes del pasado (cada 14 dias) con la regla "reciente" y se mide
-  real / pronostico segun cuantos dias hacia adelante se pronostica. La banda usa los percentiles 10 y 90 de esas razones por tramo
-  (1-7, 8-30, 31-91, 92-182, 183-365 dias), asi que se ensancha con el horizonte. Es empirica y aproximada: hay pocos cortes para
+  Sale de un RETROCESO (backtest): se pronostica desde muchos cortes del pasado (cada 14 dias) con el MISMO escenario que el
+  pronostico que se va a dibujar (el dashboard usa 'historico', asi la banda incluye la incertidumbre del NIVEL anclado, que es la
+  que domina a largo plazo) y se mide real / pronostico segun cuantos dias hacia adelante se pronostica. La banda usa los percentiles
+  10 y 90 de esas razones por tramo (1-7, 8-30, 31-91, 92-182, 183-365 dias) y un guardarrail para que el ancho no se REDUZCA con el
+  horizonte (factores_banda, monotona=True), asi que se ensancha con el horizonte. Es empirica y aproximada: hay pocos cortes para
   los tramos largos.
 
 LIMITES (decirlos siempre junto al grafico)
@@ -170,14 +172,18 @@ def pronosticar_desde(serie, cal, corte, dias, escenario="reciente", ajuste_pct=
     return pd.Series(mu, index=fut)
 
 
-def retroceso(serie, paso=14, minimo_dias=400):
-    """Backtest: pronostica 365 dias desde muchos cortes del pasado con la regla 'reciente' y guarda (dia hacia adelante, real, pronostico)."""
+def retroceso(serie, paso=14, minimo_dias=400, escenario="reciente"):
+    """Backtest: pronostica 365 dias desde muchos cortes del pasado y guarda (dia hacia adelante, real, pronostico).
+    `escenario` DEBE ser el mismo que usa el pronostico que luego se va a dibujar, porque la banda sale de aqui (factores_banda):
+    con 'historico' las razones real/pronostico incluyen la incertidumbre del NIVEL anclado, que crece con el horizonte; 'reciente'
+    (por defecto) es el que mide el error de corto plazo para la evaluacion (evaluacion_modelo.py, elegir_tau.py, prueba_*).
+    `paso` mas chico (p. ej. 7) da mas cortes y estabiliza los percentiles de los tramos largos, a costa de mas computo."""
     cal = calendario(pd.date_range(serie.index.min(), serie.index.max() + pd.Timedelta(days=366)))
     filas = []
     n_valido = serie.index.get_loc(serie.dropna().index.max()) + 1     # los dias sin dato confiable no son destino ni corte
     for pos in range(minimo_dias, n_valido - 7, paso):
         corte = serie.index[pos]
-        f = pronosticar_desde(serie.iloc[:pos + 1], cal, corte, 365, "reciente")
+        f = pronosticar_desde(serie.iloc[:pos + 1], cal, corte, 365, escenario)
         real = serie.reindex(f.index)
         ok = real.notna().values
         lead = np.arange(1, len(f) + 1)[ok]
@@ -186,26 +192,44 @@ def retroceso(serie, paso=14, minimo_dias=400):
     return pd.concat(filas, ignore_index=True)
 
 
-def tabla_error(bt, sin_caida=False):
-    """Error por tramo de horizonte: WAPE diario (suma |real - pron| / suma real), sesgo y cobertura de la banda del 80 %."""
+def tabla_error(bt, sin_caida=False, monotona=True):
+    """Error por tramo de horizonte: WAPE diario (suma |real - pron| / suma real), sesgo, los factores de la banda del 80 %
+    (los MISMOS que dibuja factores_banda, con el guardarrail monotono) y su COBERTURA empirica: la fraccion de dias que
+    cae dentro de la banda. Con el guardarrail, los tramos largos quedan >= 80 % (conservadores) en vez de exactamente 80 %."""
     if sin_caida:
         bt = bt[bt.fecha < INICIO_QUIEBRE]
+    fb = factores_banda(bt, excluir_caida=False, monotona=monotona)   # bt ya viene filtrado arriba; no re-filtrar
     out = []
     for a, b in TRAMOS:
         t = bt[(bt.lead >= a) & (bt.lead <= b)]
         if len(t) < 30:
             continue
         r = t.real / t.pronostico
-        lo, hi = r.quantile(0.1), r.quantile(0.9)
+        lo, hi = fb[(a, b)]
+        dentro = ((r >= lo) & (r <= hi)).mean()
         out.append(dict(tramo_dias=f"{a}-{b}", n=len(t), wape_pct=round(100 * (t.real - t.pronostico).abs().sum() / t.real.sum(), 1),
                         sesgo_pct=round(100 * (t.pronostico.sum() / t.real.sum() - 1), 1), factor_banda_baja=round(lo, 3),
-                        factor_banda_alta=round(hi, 3)))
+                        factor_banda_alta=round(hi, 3), cobertura_80_pct=round(100 * dentro, 1)))
     return pd.DataFrame(out)
 
 
-def factores_banda(bt, excluir_caida=True):
+def _ensanchar_monotona(res):
+    """Guardarrail: el SEMIANCHO de la banda no puede reducirse al crecer el horizonte. Evita que un tramo largo con pocos cortes
+    salga, por azar de muestreo, mas angosto que uno cercano (lo que haria parecer el pronostico a un anio tan fino como el de
+    manana). Conserva el centro de cada tramo y arrastra el mayor semiancho visto hasta ese horizonte."""
+    hw, out = 0.0, {}
+    for k in sorted(res, key=lambda t: t[0]):
+        lo, hi = res[k]
+        centro = (lo + hi) / 2.0
+        hw = max(hw, (hi - lo) / 2.0)
+        out[k] = (centro - hw, centro + hw)
+    return out
+
+
+def factores_banda(bt, excluir_caida=True, monotona=True):
     """(tramo -> (percentil 10, percentil 90)) de real / pronostico, para armar la banda del 80 %.
-    Con excluir_caida=True los dias destino desde mayo de 2026 (caida de datos sin explicar) no cuentan para el ancho de la banda."""
+    Con excluir_caida=True los dias destino desde mayo de 2026 (caida de datos sin explicar) no cuentan para el ancho de la banda.
+    Con monotona=True (por defecto) se aplica el guardarrail de no-angostamiento con el horizonte (ver _ensanchar_monotona)."""
     if excluir_caida:
         bt = bt[bt.fecha < INICIO_QUIEBRE]
     res = {}
@@ -213,13 +237,13 @@ def factores_banda(bt, excluir_caida=True):
         t = bt[(bt.lead >= a) & (bt.lead <= b)]
         r = (t.real / t.pronostico) if len(t) >= 30 else pd.Series([0.8, 1.2])
         res[(a, b)] = (float(r.quantile(0.1)), float(r.quantile(0.9)))
-    return res
+    return _ensanchar_monotona(res) if monotona else res
 
 
-def factores_banda_semanal(bt, excluir_caida=True):
+def factores_banda_semanal(bt, excluir_caida=True, monotona=True):
     """Igual que factores_banda pero para el TOTAL (o promedio) de una semana de 7 dias: percentiles 10 y 90 de
     (suma real de la semana) / (suma pronosticada de la semana), por tramo de dias hacia adelante. Es mas angosta que la diaria porque
-    el ruido de dias sueltos se compensa dentro de la semana."""
+    el ruido de dias sueltos se compensa dentro de la semana. Con monotona=True el ancho no se reduce con el horizonte."""
     if excluir_caida:
         bt = bt[bt.fecha < INICIO_QUIEBRE]
     b = bt.assign(sem=(bt.lead - 1) // 7)
@@ -231,7 +255,7 @@ def factores_banda_semanal(bt, excluir_caida=True):
     for a, z in TRAMOS:
         t = u[(u.lead_med >= a) & (u.lead_med <= z)]
         res[(a, z)] = (float(t.r.quantile(0.1)), float(t.r.quantile(0.9))) if len(t) >= 30 else (0.9, 1.1)
-    return res
+    return _ensanchar_monotona(res) if monotona else res
 
 
 def pronostico_con_banda(serie, bt, dias, escenario="historico", ajuste_pct=0.0, excluir_caida=True, semanal=False, desde=None):

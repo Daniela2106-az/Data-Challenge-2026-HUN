@@ -34,16 +34,17 @@ filas, errores = [], []
 fig, ejes = plt.subplots(1, 3, figsize=(19, 4.5))
 for ax, (obj, nombre) in zip(ejes, mp.OBJETIVOS.items()):
     serie = panel[obj]
-    bt = mp.retroceso(serie)
+    bt_eval = mp.retroceso(serie)                                      # 'reciente': mide el error de corto plazo (tabla de evaluacion)
+    bt_esc = {esc: mp.retroceso(serie, paso=7, escenario=esc) for esc in ("reciente", "historico")}   # banda con el escenario de cada pronostico
     for sin_caida, etiqueta in [(False, "todos los cortes"), (True, "periodo confiable (destino antes del 10-abr-2026)")]:
-        e = mp.tabla_error(bt, sin_caida)
+        e = mp.tabla_error(bt_eval, sin_caida)
         e.insert(0, "objetivo", obj)
         e.insert(1, "evaluacion", etiqueta)
         errores.append(e)
     real = mp.cargar_panel(limpiar=False)[obj]
     ax.plot(real.index, real.rolling(7).mean(), color="#444", lw=1.2, label="histórico (promedio 7 días)")
     for esc, color in [("reciente", "#c0392b"), ("historico", "#2471a3")]:
-        f = mp.pronostico_con_banda(serie, bt, 365, esc, 0.0, True, False, DESDE)
+        f = mp.pronostico_con_banda(serie, bt_esc[esc], 365, esc, 0.0, True, False, DESDE)
         f.insert(0, "escenario", esc)
         f.insert(0, "objetivo", obj)
         filas.append(f)
