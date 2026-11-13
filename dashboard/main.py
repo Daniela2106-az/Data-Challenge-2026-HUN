@@ -17,6 +17,7 @@ PAGINAS (ver docstring de cada una en dashboard/pages/):
   /camas       camas.py       Planeacion de camas (A5, Anthony)
   /perfiles    perfiles.py    Perfiles y picos (Anthony)
   /recomendaciones recomendaciones.py  Las 7 recomendaciones con su evidencia (Samuel)
+  /documentacion   documentacion.py    El documento final completo con descarga en PDF (Samuel)
 
 COMO CORRERLO  python dashboard/main.py   y abrir http://127.0.0.1:8050
   La primera vez que se visita /paciente, el modelo de A6 se entrena si no existe (~1 min). Las demas paginas
@@ -29,9 +30,29 @@ app = Dash(__name__, use_pages=True, pages_folder="pages", title="Dashboard HUN"
            update_title="Actualizando…")
 server = app.server
 
+# Archivos del documento final para la pagina /documentacion: graficos de resultados/graficos/ y el PDF (solo graficos y el documento;
+# nada de datos por paciente).
+from pathlib import Path as _Path  # noqa: E402
+from flask import abort, send_from_directory  # noqa: E402
+
+_RAIZ = _Path(__file__).resolve().parent.parent
+
+
+@server.route("/graficos/<path:archivo>")
+def _grafico(archivo):
+    if not archivo.lower().endswith((".png", ".jpg", ".jpeg", ".svg")):
+        abort(404)
+    return send_from_directory(_RAIZ / "resultados" / "graficos", archivo)
+
+
+@server.route("/documento_final.pdf")
+def _documento_pdf():
+    return send_from_directory(_RAIZ / "docs", "documento_final.pdf")
+
 # Icono (clase CSS de theme.css) para cada ruta. Una ruta sin entrada cae en el icono generico de perfiles.
 ICONOS = {"/": "ico-home", "/pronostico": "ico-forecast", "/paciente": "ico-patient",
-          "/camas": "ico-bed", "/perfiles": "ico-profiles", "/recomendaciones": "ico-recs"}
+          "/camas": "ico-bed", "/perfiles": "ico-profiles", "/recomendaciones": "ico-recs",
+          "/documentacion": "ico-docs"}
 
 
 def _paginas_ordenadas():

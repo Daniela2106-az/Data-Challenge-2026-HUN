@@ -702,3 +702,33 @@ button, .btn-primary {
 @media (max-width: 700px) {
   .rec-card__body, .rec-card__more { margin-left: 0; }
 }
+
+/* ============================================================================
+   PAGINA DE DOCUMENTACION (pages/documentacion.py, 13-nov-2026)
+   ========================================================================= */
+.ico-docs { -webkit-mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z'/></svg>"); mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z'/></svg>"); }
+.doc-pdf { display: inline-block; margin: 6px 0 18px; text-decoration: none; padding: 10px 18px; border-radius: var(--r-pill);
+  background: var(--brand); color: #fff !important; font-weight: 600; font-size: 14px; }
+.doc-pdf:hover { background: var(--brand-strong); }
+.doc-layout { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 24px; align-items: start; }
+.doc-toc { position: sticky; top: 84px; padding: 16px 18px; max-height: calc(100vh - 110px); overflow: auto; }
+.doc-toc ol { margin: 8px 0 0; padding-left: 18px; }
+.doc-toc li { margin: 6px 0; font-size: 13.5px; }
+.doc-toc a { color: var(--ink); text-decoration: none; }
+.doc-toc a:hover { color: var(--brand-strong); }
+.doc-section { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 20px 26px; margin-bottom: 18px;
+  scroll-margin-top: 84px; }
+.doc-section h3 { color: var(--brand-ink); margin: 0 0 8px; font-size: 20px; }
+.doc-md { font-size: 14.5px; line-height: 1.6; color: var(--ink); }
+.doc-md h3 { font-size: 16px; color: var(--brand-strong); margin: 22px 0 8px; }
+.doc-md table { border-collapse: collapse; width: 100%; font-size: 13px; margin: 10px 0 14px; display: block; overflow-x: auto; }
+.doc-md th { background: var(--bg); color: var(--brand-ink); text-align: left; font-weight: 650; }
+.doc-md th, .doc-md td { border: 1px solid var(--line); padding: 6px 9px; vertical-align: top; }
+.doc-md img { max-width: 100%; border-radius: var(--r-sm); border: 1px solid var(--line); background: #fff; margin: 8px 0; }
+.doc-md blockquote { border-left: 4px solid var(--brand); margin: 10px 0; padding: 6px 14px; background: var(--bg); color: var(--muted); }
+.doc-md code { font-size: 12.5px; background: var(--bg); padding: 1px 4px; border-radius: 4px; }
+.doc-md a { color: var(--brand-strong); }
+@media (max-width: 900px) {
+  .doc-layout { grid-template-columns: 1fr; }
+  .doc-toc { position: static; max-height: none; }
+}

@@ -24,6 +24,8 @@ SECCIONES = [
      "¿Qué perfiles de paciente esperan o se quedan distinto cuando el hospital está más cargado? Tabla histórica."),
     ("/recomendaciones", "ico-recs", "Recomendaciones",
      "Siete acciones para el hospital, cada una con lo que dicen nuestros datos y lo que se encontró en otros hospitales."),
+    ("/documentacion", "ico-docs", "Documentación",
+     "El documento completo del proyecto: datos, hallazgos, modelos, recomendaciones y referencias, con descarga en PDF."),
 ]
 
 RESUMEN = [
