@@ -1,11 +1,9 @@
-# Diccionario de tablas del paquete de datos (versión parcial, 23-oct-2026)
+# Diccionario de tablas de datos del dashboard (23-oct-2026)
 
-El paquete (`powerbi.zip`, 46 archivos, ~5 MB) lo genera `python3 src/exportar_para_powerbi.py`. **Es una versión parcial:** cuando terminen los análisis A1, A2, A4 y A5
-(`../docs/pendientes_y_reparto.md`) se regenera y puede haber tablas nuevas. `LEEME.txt` del paquete lista cada archivo con sus filas y columnas, y `cifras_de_control.csv` trae
-los números que el dashboard debe reproducir. Todos los nombres de columna están en minúsculas, sin `%`, paréntesis ni espacios (`WAPE_%` pasó a `wape_pct`).
+Describe las columnas de las tablas que alimentan el dashboard en Dash y las recomendaciones (`../../docs/pendientes_y_reparto.md`). Todos los nombres de columna están en minúsculas, sin `%`, paréntesis ni espacios (`WAPE_%` pasó a `wape_pct`).
 Las columnas `*_pct` están en escala 0 a 100. Las duraciones están en **horas** salvo que el nombre diga días.
 
-## Tablas nuevas pensadas para Power BI
+## Tablas de datos del dashboard
 
 | Archivo | Grano (una fila es...) | Filas | Columnas clave |
 |---|---|---|---|
@@ -57,7 +55,7 @@ Las columnas `*_pct` están en escala 0 a 100. Las duraciones están en **horas*
 
 ## Tablas que se escriben a mano (en esta carpeta del repo)
 - `embudo_datos.csv`: de 3,28 M de etapas a 337 mil episodios (página 10).
-- `recomendaciones_tabla.csv`: las 7 recomendaciones (página 9). Actualizada el 6-nov con B2 (`../docs/recomendaciones.md`); suma las columnas `evidencia_externa` y `fuente_datos`.
+- `recomendaciones_tabla.csv`: las 7 recomendaciones (página 9). Actualizada el 6-nov con B2 (`../../docs/recomendaciones.md`); suma las columnas `evidencia_externa` y `fuente_datos`.
 
 ## Tablas que faltan (dependen de análisis pendientes)
 Perfiles de pacientes (A1), factores de la estancia y estancias que se disparan (A2, A2b), modelo explicativo mejorado (A4) y bandas Monte Carlo de camas (A5). Cada una se agregará al paquete

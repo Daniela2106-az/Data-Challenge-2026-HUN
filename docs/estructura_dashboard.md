@@ -65,7 +65,7 @@ Las páginas de la Parte 1 y la Parte 5 son de **texto, tablas y figuras fijas**
 
 ## 0.1 Portada
 - **Contenido:** nombre del reto y del equipo; la pregunta central del reto; una frase de qué se hizo; tarjetas con las cinco cifras principales (espera de cama, ingresos por día, camas ocupadas frente a las 106 del hospital, estancia media, error del pronóstico); tres o cuatro hallazgos principales en una frase; botones a cada parte.
-- **Fuente:** `docs/HALLAZGOS.md`; `datos/procesados/powerbi/cifras_de_control.csv`.
+- **Fuente:** `docs/HALLAZGOS.md`.
 
 ---
 
@@ -92,17 +92,17 @@ La página más importante del bloque: explica por qué las cifras del proyecto 
 - **Problemas a cubrir:** visitas copia · estancias gemelas (la misma estancia registrada en dos personas distintas) · cuál es la persona real · etapas de urgencias sin hora de fin · etapas abiertas · visitas partidas · diagnósticos sin traducción y sin jerarquía · procedimientos sin fecha · el «hueco sin etapa» antes de la cama (era un artefacto de las estancias duplicadas) · caída total del sistema en dos días de marzo de 2026 · **el registro de etapas que se degrada desde el 10-abr-2026**.
 - **Explicación del periodo confiable (debe estar aquí, con su figura):** hasta el 9-abr-2026 el registro es estable: cerca de dos tercios de las visitas de urgencias tienen etapa de admisión (ER) y alrededor de un diez por ciento no tiene ninguna etapa. Desde el 10-abr las visitas registradas en la tabla de cabecera suben cerca de 40 % por día, pero la proporción de visitas con etapa ER baja y empeora más desde el 29-abr; los diagnósticos con código desaparecen desde mediados de mayo. Las visitas de cabecera no bajaron, por eso **no es que lleguen menos pacientes: falla el registro del detalle**. Como no se sabe la causa y los datos son estructuralmente distintos, esos días no se usan para estimar niveles, errores ni tendencias.
 - **Figuras obligatorias:** (1) embudo de datos de las etapas a las estancias únicas; (2) ocupación de camas antes y después de resolver las estancias gemelas; (3) visitas de urgencias frente a etapas ER por semana, con la línea vertical del 10-abr-2026.
-- **Fuente:** `CLAUDE.md` secciones 4.1 a 4.10; `docs/HALLAZGOS.md` sección 2; `powerbi/embudo_datos.csv`.
+- **Fuente:** `CLAUDE.md` secciones 4.1 a 4.10; `docs/HALLAZGOS.md` sección 2; `datos/tablas_dashboard/embudo_datos.csv`.
 
 ## 1.4 Las variables
 - **Lleva:** un **diccionario de variables** con buscador. Columnas: *nombre · qué significa en palabras simples · cómo se calculó · de qué tabla sale · se conoce al llegar (sí/no) · limitación*.
 - **Grupos de variables:** unidades (visita, episodio, estancia) · tiempos (espera de cama, urgencias antes de la cama, hueco sin etapa —casi inexistente en el periodo confiable, ver 1.3—, estancia) · estado del episodio · ruta · calendario (hora, franja, día, festivos, Carnaval) · paciente (edad, sexo, tipo de visita) · carga del hospital (llegadas previas, ocupación) · clínicas (grupo de diagnóstico, laboratorios, procedimientos) · agregados diarios.
 - **Dos reglas que se explican aquí:** un modelo «al llegar» solo usa lo que se sabe al llegar; los totales de laboratorios y diagnósticos de una visita crecen con la estancia y por eso no se usan como factor.
-- **Fuente:** `CLAUDE.md` secciones 3, 5 y 7; `powerbi/diccionario_tablas.md`.
+- **Fuente:** `CLAUDE.md` secciones 3, 5 y 7; `datos/tablas_dashboard/diccionario_tablas.md`.
 
 ## 1.5 Las tablas del dashboard
 - **Lleva:** una tabla de todos los archivos que alimentan el dashboard: nombre · una fila por… · qué contiene · script que lo genera · en qué página se usa. Una nota de cómo se regeneran.
-- **Fuente:** `resultados/tablas/`, `datos/procesados/para_equipo/panel_diario.csv`, `datos/procesados/powerbi/`.
+- **Fuente:** `resultados/tablas/`, `datos/procesados/para_equipo/panel_diario.csv`.
 
 ## 1.6 Metodología
 - **Lleva:** definición de episodio y estancia; definición de **espera de cama** (llegada hasta asignación de cama; no separa la atención clínica de la espera pura); definición de **cuello de botella** (segmento con exceso sobre una referencia de «cuando funciona bien», alto impacto y que se agrava con la carga); cómo se tratan los atípicos; validación temporal (entrenar con el pasado, probar con el futuro); qué se puede y qué no se puede decir de una asociación.
@@ -208,7 +208,7 @@ La página más importante del bloque: explica por qué las cifras del proyecto 
 ## 4.1 Qué hacemos con esto
 - **Lleva:** tabla con prioridad, recomendación, qué dicen **nuestros datos**, qué dice la **literatura**, impacto estimado, cómo medirla, qué tan firme es y estado. Cada fila enlaza a la página que la respalda.
 - **Estado:** B2 hecha (Samuel, mergeado el 8-nov-2026): las 12 fuentes se verificaron. **Pendiente antes de publicar impactos:** recalcular las ~11 horas-paciente de R6 y la alerta de ocupación de R3.
-- **Fuente:** `docs/recomendaciones.md`, `powerbi/recomendaciones_tabla.csv`.
+- **Fuente:** `docs/recomendaciones.md`, `datos/tablas_dashboard/recomendaciones_tabla.csv`.
 
 ---
 

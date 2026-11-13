@@ -30,3 +30,6 @@ contrasenas*
 
 # Respaldos de resultados (tablas derivadas de la base)
 resultados/respaldo_*/
+
+# Config local de PyCharm (no es del proyecto)
+.idea/

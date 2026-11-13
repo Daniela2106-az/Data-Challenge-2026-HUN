@@ -371,4 +371,4 @@ La cifra baja de R6 y la precisión de la alerta de ocupación de R3 se recalcul
 
 Lo que puede cambiar estas recomendaciones más adelante:
 - **A4 y A5 (Anthony): revisadas el 9-nov.** No cambian las cifras de R4 (el escenario de altas sigue siendo el de `src/simulacion_altas.py`; A5 no lo recalculó) y confirman la de R7 por otro método (−4,7 camas frente a ~5). A4 corrige el AUC de la sección 4 (0,68 en vez de 0,60).
-- Si cambian las cifras, actualizar aquí y en `powerbi/recomendaciones_tabla.csv` (la usará la página 4.1 del dashboard).
+- Si cambian las cifras, actualizar aquí y en `datos/tablas_dashboard/recomendaciones_tabla.csv` (la usará la página 4.1 del dashboard).
