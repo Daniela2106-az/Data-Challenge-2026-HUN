@@ -54,6 +54,10 @@ import numpy as np
 import pandas as pd
 from dateutil.easter import easter
 
+import sys as _sys
+_sys.path.insert(0, str(Path(__file__).resolve().parent))
+import modelo_pronostico as mp  # noqa: E402  (A9: comparte la estacionalidad con el modelo vigente)
+
 RAIZ = Path(__file__).resolve().parent.parent
 PROC = RAIZ / "datos" / "procesados"
 TABLAS = RAIZ / "resultados" / "tablas"
@@ -194,6 +198,9 @@ def diseno(col, h, variante, entr_fin):
         X["sorpresa"] = sorpresa(col, h, entr_fin)
     if ms:
         X = pd.concat([X, pd.get_dummies(d.mes, prefix="mes", dtype=float).drop(columns="mes_1")], axis=1)
+    est = mp.columnas_estacionales(d.index, col)    # A9 (12-nov): mismas columnas, mismo orden que src/modelo_pronostico.calendario()
+    for c in est.columns:
+        X[c] = est[c].to_numpy()
     return X
 
 

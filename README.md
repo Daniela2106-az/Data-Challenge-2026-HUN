@@ -125,7 +125,7 @@ columna por columna** a la del proyecto, y de 57 tablas comparadas salen iguales
    python3 src/dias_atipicos.py
    ```
    Los análisis posteriores (perfiles, factores de la estancia, estancias que se disparan, diagnóstico repetible, estimador A6, exploraciones A8, C4, severidad de laboratorios)
-   cada uno tiene su script y su documento en `docs/` (mapa en `docs/HALLAZGOS.md`, sección 9). Los que usan las consultas de `sql/espera_labs_y_texto.sql`, `sql/severidad_labs_6h.sql`
+   cada uno tiene su script y su documento en `docs/` (mapa en `docs/HALLAZGOS.md`, sección 9). Los que usan las consultas de `sql/espera_labs_y_texto.sql`, `sql/severidad_labs_6h.sql`, `sql/severidad_labs_6h_persona.sql` (banderas por persona real, la vigente)
    y `sql/nombres_*.sql` necesitan correrlas antes con `src/ejecutar_consultas.py` (VPN; `docs/conexion_bd.md`).
 4. Opcional, prueba de sensibilidad al corte de episodios: `python3 src/generar_q3_q4_desde_csv.py --umbral 72` y luego
    `SUFIJO=_u72 python3 src/construir_segmentos.py` y `SUFIJO=_u72 python3 src/ranking_cuellos.py` (igual con 336).
