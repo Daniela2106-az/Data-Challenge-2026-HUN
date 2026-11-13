@@ -15,7 +15,7 @@ señala qué script o consulta la produciría. Distingue siempre *asociación* d
 
 
 1. **El reto** (Hospital Universidad del Norte, HUN + Ciencia de Datos Uninorte): entender, predecir y optimizar el flujo de pacientes
-   del hospital, hallando cuellos de botella y proponiendo acciones. Entregables: documentación, repositorio y dashboard de Power BI.
+   del hospital, hallando cuellos de botella y proponiendo acciones. Entregables: documentación, repositorio y dashboard interactivo en Dash.
 2. **Los datos** (2023-01 a 2026-06, esquema OMOP) traen problemas serios que hubo que resolver: ~30 % de visitas copiadas, 41 % de
    las estancias en cama duplicadas entre dos personas, 36–42 % de las etapas de urgencias sin hora de salida.
 3. **Cuello de botella (definición del proyecto):** un segmento donde el paciente espera un recurso, con exceso sobre una referencia

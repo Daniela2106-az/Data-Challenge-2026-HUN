@@ -2,7 +2,7 @@
 
 Proyecto del **Data Challenge HUN 2026** (Hospital Universidad del Norte + pregrado de Ciencia de Datos, Uninorte). La pregunta central:
 *comprender, predecir y optimizar el flujo de pacientes dentro del hospital, identificando cuellos de botella, patrones operacionales y
-oportunidades de mejora en los tiempos de atención.* Entregables: documentación, este repositorio y un dashboard de Power BI.
+oportunidades de mejora en los tiempos de atención.* Entregables: documentación, este repositorio y un dashboard interactivo en Dash.
 
 ## Empieza aquí
 
@@ -60,7 +60,7 @@ preguntas que puedes hacerle:
 | Perfiles de pacientes y factores de la estancia (instructivo: perfiles y duración de estancias) | **Pendiente (Daniela)** |
 | Explicar mejor los retrasos y simulación Monte Carlo de camas | **Pendiente (Anthony)** |
 | Recomendaciones (componente 4) | Completas; pendientes de la revisión de Daniela |
-| Dashboard de Power BI | Pendiente (Samuel; va de último, guía en `powerbi/`) |
+| Dashboard interactivo (Dash) | En `dashboard/` (multipágina, `dashboard/main.py`); los organizadores aceptaron Dash en vez de Power BI |
 | `mapeo_dx.csv` (grupos de diagnóstico) | Pendiente (Daniela) |
 | Estimar tiempos de atención (componente 3) | **Hecho**: modelo de tiempo restante (`docs/estimador_tiempos.md`; en revisión de Daniela) |
 | Sesión de preguntas con el HUN | Preguntas listas (`docs/hun/`); falta la sesión |
@@ -83,7 +83,7 @@ preguntas que puedes hacerle:
 | `sql/` | Consultas para la base: `exportaciones_base.sql` y `consultas_semana1.sql` (los 8 CSV de entrada) y `consultas_cuellos_botella.sql` (Q0 a Q5 y Q3b) |
 | `src/` | Scripts de Python (ver el orden abajo) |
 | `resultados/graficos/` | Gráficos (sí están en git) |
-| `powerbi/` | Guía, especificación y medidas del dashboard (`powerbi/CLAUDE.md` para el Claude de Samuel) |
+| `dashboard/` | Dashboard interactivo en Dash (multipágina, `dashboard/main.py`); las tablas pequeñas que usa están en `datos/tablas_dashboard/` |
 | `notebooks/` | Carpeta del equipo (pendiente) |
 | `datos/`, `resultados/tablas/`, `resultados/excel/` | **No están en git** (datos clínicos) |
 

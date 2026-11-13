@@ -138,7 +138,7 @@ Carpetas: `powerbi/`, `docs/hun/`.
    4. **Pronóstico y alertas:** llegadas y hospitalizaciones previstas y los días atípicos (modelo de Daniela).
    5. **Camas y escenarios:** ocupación proyectada con su banda y los escenarios de la simulación (Persona 3).
    6. **Recomendaciones:** tabla de acciones con su impacto estimado.
-3. **Repo:** `powerbi/medidas_dax.md`, capturas y la plantilla `.pbit`. El `.pbix` **no se sube**.
+3. **Repo:** el dashboard interactivo en `dashboard/` (Dash, multipágina `dashboard/main.py`).
 4. **Documento:** escribir la sección "Dashboard" (qué pregunta responde cada página).
 **Terminado cuando:** cada página responde una pregunta del hospital en una frase y el enlace abre sin pedir datos.
 

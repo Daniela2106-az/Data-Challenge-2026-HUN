@@ -66,7 +66,7 @@ Se valora: hallazgos estratégicos para el hospital, interpretabilidad, visualiz
 comunicación clara de resultados.
 
 **Entregables (fin de noviembre 2026):** documentación del proyecto, repositorio en GitHub y
-enlace a un dashboard interactivo en Power BI.
+enlace a un dashboard interactivo en Dash (los organizadores aceptaron Dash en lugar de Power BI).
 
 **Decisión de enfoque:** la profundidad va en los componentes 2 (espera de cama) y 3 (modelos);
 el 1 da contexto y el 4 sale de los dos anteriores.
