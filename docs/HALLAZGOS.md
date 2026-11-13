@@ -33,7 +33,7 @@ señala qué script o consulta la produciría. Distingue siempre *asociación* d
    no importan. Todos los factores observables juntos explican solo el 16 % de la variación de la espera.
 10. **Se puede pronosticar la demanda:** llegadas por día con error de **7,5 %** a 1 día (mejora a las referencias simples);
     los ingresos diarios no (es ruido de conteo), pero por semana el error baja a **9,5 %**.
-11. **Alertas probadas sobre días pasados:** la de "día congestionado" a las 12 h detecta 83 % de esos días (precisión 54 %); una alerta
+11. **Alertas probadas sobre días pasados:** la de "día congestionado" a las 12 h detecta el 87 % de esos días (13 de 15 en la prueba; precisión 52 %); una alerta
     por paciente a las 48 h sin cama genera ~4 avisos por día. Carga total recomendada: ~5 alertas por día.
 12. **Desde el 10 de abril de 2026 el registro de las etapas se degrada** (auditoría directa en la base, `CLAUDE.md` 4.9): las visitas de urgencias no bajaron en mayo (+2 % frente a mayo de 2025) mientras las etapas ER bajaron 64 %; más visitas sin etapas, menos visitas con etapa de llegada, diagnósticos sin código desde el 11-may. Esos días no se usan para estimar nivel ni evaluar. El número de camas del hospital no se conoce, así que la capacidad se trabaja con escenarios.
 

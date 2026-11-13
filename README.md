@@ -43,7 +43,7 @@ preguntas que puedes hacerle:
    ingresos estables (~20 por día).
 6. **Se puede pronosticar la demanda:** llegadas por día con error de 7,5 %; los ingresos solo por semana (9,5 %). El Carnaval de
    Barranquilla baja las visitas ~17 %.
-7. **Alertas probadas:** "día congestionado" a las 12 h detecta 83 % de esos días; ~5 alertas por día en total con el diseño recomendado.
+7. **Alertas probadas:** "día congestionado" a las 12 h detecta el 87 % de esos días (13 de 15 en la prueba); ~5 alertas por día en total con el diseño recomendado.
 8. **Problemas de datos clave:** ~30 % de visitas copiadas, **41 % de las estancias en cama duplicadas entre dos personas**, y desde
    el 10 de abril de 2026 el registro de las etapas se degrada (las visitas de urgencias no bajan; baja el detalle registrado): esos días no se usan.
 9. **Qué no se sabe:** el número de camas del hospital, la meta de tiempos y la causa de la caída de 2026. Todo son asociaciones y escenarios,
