@@ -202,14 +202,6 @@ Entrenado hasta 2025-12, probado en ene–abr 2026, método elegido con la valid
   ruido de conteo). **Por semana el error baja a 9,5 %** (frente a 14,7 % de repetir la semana anterior).
 - Limitaciones: las bandas de ingresos cubren ~71 % (angostas); desde el 10-abr-2026 el registro está degradado y el modelo (que se entrena hasta el 9-abr) no lo anticipa; tampoco anticipa brotes ni cortes de sistema.
 
-- **Estacionalidad anual (A9, 12-nov, `docs/estacionalidad_anual.md`):** al modelo vigente (`src/modelo_pronostico.py`) se le sumó la forma típica del año
-  tomada de una climatología pública de dengue en Barranquilla (2007–2022, 2 semanas antes). En llegadas con atención el error del backtest baja de 9,3 a 8,6 %
-  a 1–3 meses, de 11,4 a 9,1 % a 3–6 meses y de 11,6 a 9,6 % a 6–12 meses, sin cambiar a 1–7 días (8,0 %). El coeficiente es negativo: describe «fin de
-  año bajo, mitad de año alto», no un efecto del dengue. En la prueba corta de 2026 queda igual. En ingresos a cama no mejora y no se adopta.
-  Probados y descartados (12-nov): calendario escolar de Barranquilla (empeora), índice de El Niño (sin efecto) y SARIMAX (mucho peor en la prueba de 2026).
-  La banda del 80 % se recalibró por horizonte: en la prueba jul-2025 a abr-2026 cubre 76–82 % en llegadas (antes 71–79 %).
-  En ingresos a cama entra una curva cíclica suave del año (GAM): 17,7 → 17,3 % a 1–6 meses en validación, mejora pequeña. Población del DANE: sin efecto.
-
 ### 5.2 Alertas (`src/alertas.py`, reproduciendo ene–abr 2026; cortes elegidos con la validación de 2025)
 | Alerta | Resultado |
 |---|---|

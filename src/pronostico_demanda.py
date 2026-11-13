@@ -198,12 +198,9 @@ def diseno(col, h, variante, entr_fin):
         X["sorpresa"] = sorpresa(col, h, entr_fin)
     if ms:
         X = pd.concat([X, pd.get_dummies(d.mes, prefix="mes", dtype=float).drop(columns="mes_1")], axis=1)
-    if mp.ESTACIONALIDAD.get(col) == "dengue":     # A9 (12-nov): mismas columnas, mismo orden que src/modelo_pronostico.calendario()
-        X["estacional_dengue"] = mp.regresor_estacional(d.index, mp.CLIMA_DENGUE, mp.REZAGO_DENGUE_SEMANAS).to_numpy()
-    elif mp.ESTACIONALIDAD.get(col) == "gam":
-        b = mp._base_gam(d.index.dayofyear)
-        for i in range(b.shape[1]):
-            X[f"estacional_gam_{i}"] = b[:, i]
+    est = mp.columnas_estacionales(d.index, col)    # A9 (12-nov): mismas columnas, mismo orden que src/modelo_pronostico.calendario()
+    for c in est.columns:
+        X[c] = est[c].to_numpy()
     return X
 
 

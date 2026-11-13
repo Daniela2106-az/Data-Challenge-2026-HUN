@@ -23,9 +23,11 @@ DIAS ATIPICOS Y CAIDA SIN EXPLICAR (decision del 1-nov-2026)
   sobrestima: por eso el escenario "reciente" sigue disponible.
 
 BANDA DEL 80 %
-  Sale de un RETROCESO (backtest): se pronostica desde muchos cortes del pasado (cada 14 dias) con la regla "reciente" y se mide
-  real / pronostico segun cuantos dias hacia adelante se pronostica. La banda usa los percentiles 10 y 90 de esas razones por tramo
-  (1-7, 8-30, 31-91, 92-182, 183-365 dias), asi que se ensancha con el horizonte. Es empirica y aproximada: hay pocos cortes para
+  Sale de un RETROCESO (backtest): se pronostica desde muchos cortes del pasado (cada 14 dias) con el MISMO escenario que el
+  pronostico que se va a dibujar (el dashboard usa 'historico', asi la banda incluye la incertidumbre del NIVEL anclado, que es la
+  que domina a largo plazo) y se mide real / pronostico segun cuantos dias hacia adelante se pronostica. La banda usa los percentiles
+  10 y 90 de esas razones por tramo (1-7, 8-30, 31-91, 92-182, 183-365 dias) y un guardarrail para que el ancho no se REDUZCA con el
+  horizonte (factores_banda, monotona=True), asi que se ensancha con el horizonte. Es empirica y aproximada: hay pocos cortes para
   los tramos largos.
 
 LIMITES (decirlos siempre junto al grafico)
@@ -66,7 +68,18 @@ CLIMA_DENGUE = [1.458, 1.431, 1.154, 0.838, 0.775, 0.369, -0.027, -0.369, -0.355
                 -0.508, -0.389, -0.088, 0.036, 0.038, 0.265, 0.129, 0.442, 0.677, 0.888, 1.145, 1.243, 1.549, 1.633, 1.355, 1.539, 1.804, 1.506,
                 1.344, 1.344]
 REZAGO_DENGUE_SEMANAS = 2
-ESTACIONALIDAD = {"llegadas_con_atencion": "dengue", "llegadas": False, "ingresos_a_cama": "gam"}
+ESTACIONALIDAD = {"llegadas_con_atencion": "dengue", "llegadas": False, "ingresos_a_cama": "gam+ira_eda"}
+# Ingresos a cama, IRA y EDA (12-nov, src/estacionalidad_ira_eda.py): forma tipica del año de las consultas externas y de urgencias por IRA (evento 995)
+# y de los casos de EDA (evento 998) notificados en Barranquilla, microdatos SIVIGILA del INS 2016-2019 (antes de la pandemia y sin solaparse con la
+# evaluacion), por semana epidemiologica, en log relativo a su año y estandarizada; misma semana (sin rezago). Encima del GAM: validacion jul-dic 2025 a
+# 1-6 meses 17,30 -> 16,87 %, 1-7 dias 16,64 -> 16,30 %; prueba ene-abr 2026 a 1-6 meses 19,81 -> 19,32 %; mejora todos los tramos del backtest.
+# En las llegadas con atencion ninguna de estas variables mejora al dengue (todas empeoran la validacion): no se usan ahi.
+CLIMA_IRA = [-0.949, -1.305, -1.43, -1.673, -1.898, -1.677, -0.248, 0.072, 0.583, 0.481, 0.107, -0.417, 0.141, -0.012, -0.526, -1.272, -0.55, -0.368,
+             -0.129, -0.127, 0.261, 0.589, 1.138, 2.112, 1.633, 1.103, 0.246, 0.033, -0.179, 0.583, 0.222, 1.137, 0.372, 0.99, 0.951, 0.84, 0.464, 0.733,
+             1.289, 1.226, 0.981, 0.558, 0.998, 0.192, -0.757, -0.135, 0.492, 0.156, -0.811, -0.052, -1.262, -2.453, -2.453]
+CLIMA_EDA = [-0.253, 0.202, 0.54, 0.768, 0.092, -0.278, 0.438, -0.291, 0.933, 0.36, -0.162, -0.307, 0.118, 0.209, -0.147, -0.322, 0.091, 0.232, -0.048,
+             0.946, 0.976, 1.991, 2.411, 2.675, 1.918, 1.257, 1.561, 1.152, 0.208, -0.059, -1.2, -1.008, -1.732, -1.106, -1.352, -0.937, -1.633, -0.983,
+             -0.796, -0.951, -1.988, -0.855, -0.646, -0.318, 0.065, 0.269, 0.37, 0.486, -0.295, -0.106, -0.647, -0.925, -0.925]
 # Ingresos a cama (12-nov, src/estacionalidad_cierre.py): curva ciclica suave del dia del año (spline ciclico de patsy, 4 grados de libertad) dentro del
 # mismo Poisson, a la manera de un GAM. Validacion jul-dic 2025 a 1-6 meses: 17,7 -> 17,3 %; prueba: 19,9 -> 19,8 %; 1-7 dias sin empeorar.
 # Las bases se fijan una sola vez sobre los dias 1..366 para que no dependan del rango de fechas pedido.
@@ -100,6 +113,9 @@ def _base_gam(dias_del_anio):
 # Banda del 80 % recalibrada (A9, 12-nov, src/estacionalidad_extra.py): percentil bajo q y alto 1-q de real/pronostico por tramo, el mas angosto que
 # cubre >= 80 % en la validacion (destinos ene-jun 2025, factores con destinos anteriores). En la prueba jul-2025 a 9-abr-2026 cubre 76-82 % en llegadas
 # con atencion (antes 71-79 %) y 78-88 % en ingresos a cama. Las series sin entrada usan q = 0,10 (como antes).
+# Con el guardarrail de no-angostamiento (_ensanchar_monotona) y el retroceso del escenario de cada pronostico (12-nov, src/calibrar_banda.py):
+# en la prueba cubre 78-82 % en llegadas con atencion y 85-93 % en ingresos a cama (conservadora). Recalibrar con el guardarrail empeora la prueba
+# (el semestre de validacion fue mas tranquilo que la prueba), asi que estos niveles se quedan.
 NIVEL_BANDA = {"llegadas_con_atencion": {(1, 7): 0.08, (8, 30): 0.10, (31, 91): 0.10, (92, 182): 0.06, (183, 365): 0.06},
                "ingresos_a_cama": {(1, 7): 0.10, (8, 30): 0.07, (31, 91): 0.10, (92, 182): 0.10, (183, 365): 0.10}}
 COLUMNAS = ["const", "dow_1", "dow_2", "dow_3", "dow_4", "dow_5", "dow_6", "fest_habil", "fest_finde", "vispera", "despues",
@@ -153,15 +169,25 @@ def calendario(idx, objetivo=None):
         e = pd.Timestamp(easter(a))
         c.loc[(idx >= e - pd.Timedelta(days=7)) & (idx <= e), "semana_santa"] = 1.0
         c.loc[(idx >= e - pd.Timedelta(days=50)) & (idx <= e - pd.Timedelta(days=47)), "carnaval"] = 1.0
-    tipo = ESTACIONALIDAD.get(objetivo)
-    if tipo == "dengue":
-        c["estacional_dengue"] = regresor_estacional(idx, CLIMA_DENGUE, REZAGO_DENGUE_SEMANAS).to_numpy()
-        return c[COLUMNAS + ["estacional_dengue"]]
-    if tipo == "gam":
-        b = _base_gam(idx.dayofyear)
-        cols = [f"estacional_gam_{i}" for i in range(b.shape[1])]
-        return pd.concat([c[COLUMNAS], pd.DataFrame(b, index=idx, columns=cols)], axis=1)
-    return c[COLUMNAS]
+    return pd.concat([c[COLUMNAS], columnas_estacionales(idx, objetivo)], axis=1)
+
+
+def columnas_estacionales(idx, objetivo):
+    """Columnas de la forma del año segun ESTACIONALIDAD[objetivo] (partes separadas por '+': 'dengue', 'gam', 'ira_eda'). Las usan calendario() y
+    pronostico_demanda.diseno(), asi las dos matrices tienen las mismas columnas en el mismo orden (lo pide la ficha A9)."""
+    idx = pd.DatetimeIndex(idx)
+    out = pd.DataFrame(index=idx)
+    for parte in (ESTACIONALIDAD.get(objetivo) or "").split("+"):
+        if parte == "dengue":
+            out["estacional_dengue"] = regresor_estacional(idx, CLIMA_DENGUE, REZAGO_DENGUE_SEMANAS).to_numpy()
+        elif parte == "gam":
+            b = _base_gam(idx.dayofyear)
+            for i in range(b.shape[1]):
+                out[f"estacional_gam_{i}"] = b[:, i]
+        elif parte == "ira_eda":
+            out["estacional_ira"] = regresor_estacional(idx, CLIMA_IRA, 0).to_numpy()
+            out["estacional_eda"] = regresor_estacional(idx, CLIMA_EDA, 0).to_numpy()
+    return out
 
 
 def poisson_fit(X, y, ridge=1e-4, iters=60):
@@ -224,14 +250,18 @@ def pronosticar_desde(serie, cal, corte, dias, escenario="reciente", ajuste_pct=
     return pd.Series(mu, index=fut)
 
 
-def retroceso(serie, paso=14, minimo_dias=400):
-    """Backtest: pronostica 365 dias desde muchos cortes del pasado con la regla 'reciente' y guarda (dia hacia adelante, real, pronostico)."""
+def retroceso(serie, paso=14, minimo_dias=400, escenario="reciente"):
+    """Backtest: pronostica 365 dias desde muchos cortes del pasado y guarda (dia hacia adelante, real, pronostico).
+    `escenario` DEBE ser el mismo que usa el pronostico que luego se va a dibujar, porque la banda sale de aqui (factores_banda):
+    con 'historico' las razones real/pronostico incluyen la incertidumbre del NIVEL anclado, que crece con el horizonte; 'reciente'
+    (por defecto) es el que mide el error de corto plazo para la evaluacion (evaluacion_modelo.py, elegir_tau.py, prueba_*).
+    `paso` mas chico (p. ej. 7) da mas cortes y estabiliza los percentiles de los tramos largos, a costa de mas computo."""
     cal = calendario(pd.date_range(serie.index.min(), serie.index.max() + pd.Timedelta(days=366)), getattr(serie, "name", None))
     filas = []
     n_valido = serie.index.get_loc(serie.dropna().index.max()) + 1     # los dias sin dato confiable no son destino ni corte
     for pos in range(minimo_dias, n_valido - 7, paso):
         corte = serie.index[pos]
-        f = pronosticar_desde(serie.iloc[:pos + 1], cal, corte, 365, "reciente")
+        f = pronosticar_desde(serie.iloc[:pos + 1], cal, corte, 365, escenario)
         real = serie.reindex(f.index)
         ok = real.notna().values
         lead = np.arange(1, len(f) + 1)[ok]
@@ -240,26 +270,45 @@ def retroceso(serie, paso=14, minimo_dias=400):
     return pd.concat(filas, ignore_index=True)
 
 
-def tabla_error(bt, sin_caida=False):
-    """Error por tramo de horizonte: WAPE diario (suma |real - pron| / suma real), sesgo y cobertura de la banda del 80 %."""
+def tabla_error(bt, sin_caida=False, monotona=True, objetivo=None):
+    """Error por tramo de horizonte: WAPE diario (suma |real - pron| / suma real), sesgo, los factores de la banda del 80 %
+    (los MISMOS que dibuja factores_banda, con el guardarrail monotono) y su COBERTURA empirica: la fraccion de dias que
+    cae dentro de la banda. Con el guardarrail, los tramos largos quedan >= 80 % (conservadores) en vez de exactamente 80 %."""
     if sin_caida:
         bt = bt[bt.fecha < INICIO_QUIEBRE]
+    fb = factores_banda(bt, excluir_caida=False, objetivo=objetivo, monotona=monotona)   # bt ya viene filtrado arriba; no re-filtrar
     out = []
     for a, b in TRAMOS:
         t = bt[(bt.lead >= a) & (bt.lead <= b)]
         if len(t) < 30:
             continue
         r = t.real / t.pronostico
-        lo, hi = r.quantile(0.1), r.quantile(0.9)
+        lo, hi = fb[(a, b)]
+        dentro = ((r >= lo) & (r <= hi)).mean()
         out.append(dict(tramo_dias=f"{a}-{b}", n=len(t), wape_pct=round(100 * (t.real - t.pronostico).abs().sum() / t.real.sum(), 1),
                         sesgo_pct=round(100 * (t.pronostico.sum() / t.real.sum() - 1), 1), factor_banda_baja=round(lo, 3),
-                        factor_banda_alta=round(hi, 3)))
+                        factor_banda_alta=round(hi, 3), cobertura_80_pct=round(100 * dentro, 1)))
     return pd.DataFrame(out)
 
 
-def factores_banda(bt, excluir_caida=True, objetivo=None):
+def _ensanchar_monotona(res):
+    """Guardarrail: el SEMIANCHO de la banda no puede reducirse al crecer el horizonte. Evita que un tramo largo con pocos cortes
+    salga, por azar de muestreo, mas angosto que uno cercano (lo que haria parecer el pronostico a un anio tan fino como el de
+    manana). Conserva el centro de cada tramo y arrastra el mayor semiancho visto hasta ese horizonte."""
+    hw, out = 0.0, {}
+    for k in sorted(res, key=lambda t: t[0]):
+        lo, hi = res[k]
+        centro = (lo + hi) / 2.0
+        hw = max(hw, (hi - lo) / 2.0)
+        out[k] = (centro - hw, centro + hw)
+    return out
+
+
+def factores_banda(bt, excluir_caida=True, objetivo=None, monotona=True):
     """(tramo -> (percentil 10, percentil 90)) de real / pronostico, para armar la banda del 80 %.
-    Con excluir_caida=True los dias destino desde mayo de 2026 (caida de datos sin explicar) no cuentan para el ancho de la banda."""
+    Con excluir_caida=True los dias destino desde mayo de 2026 (caida de datos sin explicar) no cuentan para el ancho de la banda.
+    `objetivo` elige el percentil recalibrado por tramo (NIVEL_BANDA, A9); sin el, q = 0,10.
+    Con monotona=True (por defecto) se aplica el guardarrail de no-angostamiento con el horizonte (ver _ensanchar_monotona)."""
     if excluir_caida:
         bt = bt[bt.fecha < INICIO_QUIEBRE]
     res = {}
@@ -268,13 +317,13 @@ def factores_banda(bt, excluir_caida=True, objetivo=None):
         r = (t.real / t.pronostico) if len(t) >= 30 else pd.Series([0.8, 1.2])
         q = NIVEL_BANDA.get(objetivo, {}).get((a, b), 0.10)
         res[(a, b)] = (float(r.quantile(q)), float(r.quantile(1 - q)))
-    return res
+    return _ensanchar_monotona(res) if monotona else res
 
 
-def factores_banda_semanal(bt, excluir_caida=True):
+def factores_banda_semanal(bt, excluir_caida=True, monotona=True):
     """Igual que factores_banda pero para el TOTAL (o promedio) de una semana de 7 dias: percentiles 10 y 90 de
     (suma real de la semana) / (suma pronosticada de la semana), por tramo de dias hacia adelante. Es mas angosta que la diaria porque
-    el ruido de dias sueltos se compensa dentro de la semana."""
+    el ruido de dias sueltos se compensa dentro de la semana. Con monotona=True el ancho no se reduce con el horizonte."""
     if excluir_caida:
         bt = bt[bt.fecha < INICIO_QUIEBRE]
     b = bt.assign(sem=(bt.lead - 1) // 7)
@@ -286,7 +335,7 @@ def factores_banda_semanal(bt, excluir_caida=True):
     for a, z in TRAMOS:
         t = u[(u.lead_med >= a) & (u.lead_med <= z)]
         res[(a, z)] = (float(t.r.quantile(0.1)), float(t.r.quantile(0.9))) if len(t) >= 30 else (0.9, 1.1)
-    return res
+    return _ensanchar_monotona(res) if monotona else res
 
 
 def pronostico_con_banda(serie, bt, dias, escenario="historico", ajuste_pct=0.0, excluir_caida=True, semanal=False, desde=None):

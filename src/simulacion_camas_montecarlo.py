@@ -47,7 +47,6 @@ LIMITES
   - Asociacion, no causa; todo lo de siempre: duplicados tratados, periodo confiable hasta el 9-abr-2026.
 """
 import sys
-import os
 from pathlib import Path
 
 import numpy as np
@@ -57,8 +56,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import modelo_pronostico as mp
 
 RAIZ = Path(__file__).resolve().parent.parent
-PROC = Path(os.environ.get("HUN_PROCESADOS", RAIZ / "datos" / "procesados"))   # HUN_PROCESADOS: datos fuera del proyecto (12-nov)
-TABLAS = Path(os.environ.get("HUN_TABLAS", RAIZ / "resultados" / "tablas"))
+PROC = RAIZ / "datos" / "procesados"
+TABLAS = RAIZ / "resultados" / "tablas"
 GRAFICOS = RAIZ / "resultados" / "graficos"
 for _d in (TABLAS, GRAFICOS):
     _d.mkdir(parents=True, exist_ok=True)

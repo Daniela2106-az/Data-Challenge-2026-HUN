@@ -147,28 +147,99 @@ tramo cayera por debajo de ~75 %, ese sería el momento de probarlo. Implementad
   backtest del propio modelo (mismas cifras) y en el dashboard del equipo (`dashboard/main.py`, página de pronóstico: a 1 año el pronóstico sube desde abril
   y baja a fin de año; la nota de la página ya menciona la forma del año).
 
+## Tercera ronda (12-nov, noche): IRA, EDA y demanda total de Barranquilla, y calendario escolar oficial (`src/estacionalidad_ira_eda.py`)
+**Datos (públicos, fuera del repositorio, `<datos>/externos/sivigila/` con su README):** microdatos del SIVIGILA del INS (portal SIVIGILA, buscador de
+microdatos, archivos `Datos_<año>_<evento>.xlsx`), eventos **995 (morbilidad por IRA)** y **998 (morbilidad por EDA)**, de notificación colectiva
+(códigos verificados en el anexo de codificación SIVIGILA 2026), 2016–2025, agregados a casos por semana epidemiológica en Barranquilla (municipio de
+notificación) y en el resto del Atlántico. La ficha de IRA trae además las consultas y hospitalizaciones por **todas las causas** de las mismas
+instituciones. 2026 no está publicado. Calendario escolar: las resoluciones oficiales 06040/2022, 06182/2023, 07036/2024 y 07248/2025 (copias de
+MinEducación); corrigen las fechas de prensa de 2025 (inicio 27-ene, fin 7-dic) y el fin del receso de octubre de 2026 (11-oct).
+
+**Cómo:** igual que las rondas anteriores, pero **encima del modelo vigente** (dengue en llegadas, GAM en ingresos). Climatologías con la misma
+construcción que el dengue, con los años **2016–2019** (antes de la pandemia y sin solaparse con la evaluación de 2023–2026). Rezago 0 o 2 semanas.
+
+| Ingresos a cama (WAPE %) | Valid. 1–7 d | Valid. 1–6 m | Prueba 1–6 m | Backtest 183–365 d |
+|---|---|---|---|---|
+| Vigente (GAM) | 16,64 | 17,30 | 19,81 | 19,40 |
+| + IRA consulta (misma semana) | 16,21 | 16,95 | 19,17 | 19,11 |
+| + EDA (misma semana) | 16,49 | 16,96 | 19,70 | 19,14 |
+| **+ IRA + EDA (adoptado)** | **16,30** | **16,87** | **19,32** | **19,04** |
+| + calendario escolar oficial | 16,31 | 17,60 | 20,42 | 19,42 |
+
+- **Ingresos a cama: entra IRA + EDA.** Mejora la validación a 1–6 meses (17,30 → 16,87 %) sin empeorar 1–7 días, y **se confirma en la prueba de
+  2026, que no se usó para elegir** (19,81 → 19,32 %) y en todos los tramos del backtest. Las dos climatologías tienen el pico en la semana 24 (junio,
+  temporada de lluvias) y el valle a fin de año, igual que la demanda de camas.
+- **Llegadas con atención: no entra nada.** Todas las variables nuevas empeoran la validación encima del dengue (la mejor, hospitalizaciones por todas
+  las causas 2 semanas antes, 9,61 → 9,65 %).
+- **Calendario escolar oficial:** con las fechas corregidas sigue empeorando las dos series. Se confirma el descarte.
+- **Banda:** la de ingresos sigue conservadora (cubre 85–92 % en la prueba); recalibrarla no ayuda (`src/calibrar_banda.py`).
+- **Aviso de dengue a corto plazo con casos recientes:** no se puede usar todavía: los microdatos llegan a 2025 y el pronóstico parte de 2026.
+
+## Cuarta ronda (12-nov, noche): lluvia del IDEAM, calendario universitario y contexto del sistema de salud
+Son las tres fuentes de la ficha que faltaban. Ninguna cambia el modelo; quedan documentadas.
+
+**1. Lluvia del IDEAM (`src/estacionalidad_ideam.py`).** Fuente: precipitación del IDEAM en datos.gov.co (conjunto `s54a-sgyg`), estación automática
+0029004520 «Escuela Naval Barranquilla», lecturas cada 10 minutos sumadas por día (`<datos>/externos/ideam/`). Solo 2017–2020 están completos (la
+estación tiene huecos grandes desde 2021 y 2024–2025 no se pudieron descargar: el servidor corta la consulta). Climatología con 2017–2020, igual que
+la de NASA. Se parece a la de NASA (correlación 0,77; semana más lluviosa la 45, en noviembre). Encima del modelo vigente:
+
+| | Valid. 1–7 d | Valid. 1–6 m | Prueba 1–6 m |
+|---|---|---|---|
+| Llegadas, vigente | 8,67 | 9,61 | 10,56 |
+| Llegadas + lluvia IDEAM (4 sem. antes) | 8,66 | 9,59 | 11,16 |
+| Ingresos, vigente | 16,30 | 16,87 | 19,32 |
+| Ingresos + lluvia IDEAM (misma semana) | 16,20 | 16,80 | 19,43 |
+
+Algunos rezagos pasan la regla por 0,01–0,07 puntos (ruido) y **empeoran la prueba de 2026** en las dos series: **se descarta**, igual que la de NASA.
+
+**2. Calendario universitario.** No se pudo armar completo, así que **no se probó**:
+- **Uninorte:** no publica el calendario académico en su sitio (la página de calendario da 404 y Registro Académico no lo enlaza); no hay notas de
+  prensa con las fechas de cada semestre.
+- **Uniatlántico** (resoluciones académicas oficiales): 2024-1 del 5-feb al 25-may-2024 (Res. 000037 de 2023); 2025-1 del 3-feb al 24-may-2025 y
+  2025-2 programado del 4-ago al 22-nov (Res. 000022 del 15-oct-2024), corrido al 25-ago–13-dic (Res. 000018 de 2025); paro de 8 de 10 facultades
+  desde el 30-oct-2025 y reinicio del 15-ene al 7-feb-2026 (Res. 000001 de 2026). Faltan 2023, 2024-2 y 2026-1 (solo hay modificaciones parciales
+  de 2023). Con estos huecos y los paros, el calendario no sirve como variable; además el escolar, que es más regular, ya empeoraba el modelo.
+
+**3. Contexto del sistema de salud (prensa y Supersalud; no entra al modelo, es para el documento).** Ninguno coincide con el 10-abr-2026, y la
+auditoría (CLAUDE.md 4.9) ya mostró que el quiebre está en el registro de etapas, no en la demanda. Lo que pasó alrededor:
+- **11-oct-2023:** entra en funcionamiento el Hospital Juan Domínguez Romero de Soledad (El Heraldo). El HUN también está en Soledad.
+- **27-ene-2025:** abre el Nuevo Hospital de Barranquilla (122 camas de hospitalización y urgencias, 16 UCI); 2.300 atenciones de urgencias el primer mes (Consultor Salud).
+- **19-ago-2025:** la Supersalud interviene la ESE Universitaria del Atlántico (red pública departamental) por 49 hallazgos críticos, entre
+  ellos fallas en urgencias; prorrogada hasta ago-2027.
+- **Abr-2026:** la Supersalud prorroga la intervención de Nueva EPS (Res. 2026100000003814-6). Desde el **22-abr-2026** la Clínica General del
+  Norte (Barranquilla) suspende cirugías programadas por cartera de EPS (urgencias siguen); denuncias de que a afiliados de Nueva EPS solo se les
+  atiende urgencia vital allí; clínicas con deudas de más de 90 días con sus médicos (El Heraldo, 30-abr-2026).
+- **Lectura:** la crisis financiera de abril de 2026 podría haber llevado pacientes a otros hospitales (las visitas de urgencias del HUN suben ~40 %
+  desde el 10-abr, CLAUDE.md 4.9), pero las fechas no calzan exactamente (10-abr frente a 22-abr) y no hay forma de comprobarlo con los datos.
+  Queda como hipótesis, no como causa.
+
 ## Resumen de decisiones por variable
 | Variable | Llegadas con atención | Ingresos a cama | Razón |
 |---|---|---|---|
 | Climatología de dengue (2 semanas antes) | **Entra** | No | Mejor en validación; describe la forma del año (signo negativo) |
 | Curva cíclica (GAM, 4 g. l.) | No (peor que el dengue) | **Entra** | Mejora pequeña confirmada en la prueba |
+| IRA + EDA (SIVIGILA, misma semana) | No (empeora) | **Entra** | Mejora validación y prueba en todos los tramos (tercera ronda) |
+| Consultas / hospitalizaciones por todas las causas | No | No | Sin mejora clara |
 | Fourier (1–3 armónicos) | No | No | Peor que dengue / empeora 1–7 días en la prueba |
-| Lluvia (0–8 semanas) | No | No | Sin mejora |
+| Lluvia NASA y lluvia IDEAM (0–8 semanas) | No | No | Sin mejora; la del IDEAM empeora la prueba de 2026 |
 | Temperatura | No | No | Mejora menor que el dengue y no suma |
-| Calendario escolar | No | No | Empeora corto y largo plazo |
+| Calendario escolar (oficial, resoluciones) | No | No | Empeora corto y largo plazo, también con las fechas oficiales |
+| Calendario universitario | — | — | No se pudo armar: Uninorte no lo publica; Uniatlántico incompleto y con paros |
+| Contexto del sistema de salud | — | — | No es una serie; documentado como contexto del quiebre de abril-2026 |
 | El Niño (ONI, persistencia) | No | No | Efecto nulo |
 | Población DANE | No | No | Efecto nulo |
 | SARIMAX | No | — | Peor a 1–7 días y en la prueba de 2026 |
 | Banda recalibrada por horizonte | **Sí** | **Sí** | Cobertura en la prueba 76–82 % (llegadas) y 78–88 % (ingresos) |
 
 ## Qué datos faltan todavía
-- **IRA y EDA del Atlántico por semana**: pedirlas a la Secretaría de Salud del Atlántico o sacarlas a mano de los boletines del INS.
-- **Calendario escolar oficial** (resoluciones de la Secretaría de Educación): las fechas de prensa de 2025 no coinciden entre sí. Aun con fechas
-  exactas, es poco probable que cambie la decisión.
+- **2026 por semana** (dengue, IRA, EDA): el INS aún no publica los microdatos; solo hay acumulados preliminares en el boletín semanal.
+- **Calendario de Uninorte** y los periodos 2023, 2024-2 y 2026-1 de Uniatlántico: habría que pedirlos a cada universidad.
+- **Lluvia IDEAM 2021–2025** de la estación de Barranquilla: con huecos o sin descargar (el servidor de datos.gov.co corta la consulta).
 
 ## Qué cambió en el código
-`src/modelo_pronostico.py` (12-nov): **`regresor_estacional(idx, clim, lag_sem)`**, el generador que pide la ficha: lleva cualquier fecha (pasada o futura, incluido 2027) a su semana ISO, aplica el rezago y devuelve el valor de la climatología (una lista de 53 valores o un CSV con columnas `semana` y `valor`); `CLIMA_DENGUE` (53 números públicos), `REZAGO_DENGUE_SEMANAS = 2` y `ESTACIONALIDAD` por objetivo (solo
-`llegadas_con_atencion`). `calendario(idx, objetivo)` suma la columna `estacional_dengue` cuando corresponde; `retroceso()` y `pronostico_con_banda()` le
+`src/modelo_pronostico.py` (12-nov): **`regresor_estacional(idx, clim, lag_sem)`**, el generador que pide la ficha: lleva cualquier fecha (pasada o futura, incluido 2027) a su semana ISO, aplica el rezago y devuelve el valor de la climatología (una lista de 53 valores o un CSV con columnas `semana` y `valor`); `CLIMA_DENGUE`, `CLIMA_IRA` y `CLIMA_EDA` (53 números públicos cada una), `REZAGO_DENGUE_SEMANAS = 2` y `ESTACIONALIDAD` por objetivo (dengue en
+`llegadas_con_atencion`; GAM + IRA + EDA en `ingresos_a_cama`). `columnas_estacionales(idx, objetivo)` arma esas columnas y la usan `calendario()` y
+`pronostico_demanda.diseno()`, así las dos matrices quedan sincronizadas. `calendario(idx, objetivo)` suma la columna `estacional_dengue` cuando corresponde; `retroceso()` y `pronostico_con_banda()` le
 pasan el nombre de la serie. Sin `objetivo`, `calendario()` se comporta igual que antes, así que los demás scripts (pruebas, Monte Carlo) no cambian.
 El pronóstico del dashboard (página `/`) la usa automáticamente para «ingresos al hospital». `src/pronostico_demanda.py` suma la misma columna, en el
 mismo orden, para las series que la tengan activa (la ficha pide los dos scripts sincronizados). `modelo_pronostico.py` y `pronostico_futuro.py` leen y
