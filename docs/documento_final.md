@@ -3,7 +3,7 @@
 
 **Data Challenge HUN 2026** · Hospital Universidad del Norte (HUN) y pregrado de Ciencia de Datos, Universidad del Norte
 **Equipo:** Daniela (coordinación, datos y análisis), Samuel (estimador de tiempos, recomendaciones y dashboard), Anthony (modelo explicativo y simulación de camas)
-**Versión:** borrador del 12-nov-2026 (con la estacionalidad anual del pronóstico, ficha A9) · **Entregables:** este documento, el repositorio en GitHub y el dashboard interactivo
+**Versión:** borrador del 13-nov-2026 (estacionalidad anual completa, ficha A9: dengue, IRA y EDA del SIVIGILA; recomendaciones con 35 fuentes verificadas) · **Entregables:** este documento, el repositorio en GitHub y el dashboard interactivo
 
 > **Cómo leer este documento.** Cada cifra lleva al lado el documento del repositorio donde se calcula y el script que la produce. Casi todo
 > son **asociaciones y escenarios**, no causas probadas, y cada hallazgo lleva su limitación junto a él. Los datos clínicos no están en el
@@ -22,7 +22,7 @@
 8. [El dashboard](#8-el-dashboard)
 9. [Limitaciones](#9-limitaciones)
 10. [Trabajo en curso y futuro](#10-trabajo-en-curso-y-futuro)
-11. [Anexos: glosario, reproducibilidad y mapa del repositorio](#11-anexos)
+11. [Anexos: glosario, reproducibilidad, mapa del repositorio y referencias](#11-anexos)
 
 ---
 
@@ -45,7 +45,8 @@ operacionales y oportunidades de mejora en los tiempos de atención. Abordamos l
 5. **La ocupación sube porque los pacientes se quedan más, no porque lleguen más.** Las camas ocupadas pasaron de 94 (2023) a 105 (2025),
    frente a 106 camas del hospital; los ingresos se mantienen en ~20 por día y la estancia media subió 16 % (4,6 a 5,3 días).
 6. **Se puede anticipar el día y el año:** las llegadas se pronostican con ~8 % de error a una semana y ~10 % a un año, ahora con la forma del
-   año (más pacientes a mitad de año, menos en diciembre); una alerta a mediodía detecta 13 de cada 15 días
+   año (más pacientes a mitad de año, menos en diciembre) tomada de datos públicos de vigilancia (dengue para las llegadas; infección
+   respiratoria y diarrea para los ingresos a cama); una alerta a mediodía detecta 13 de cada 15 días
    congestionados; la cola de pacientes sin cama se pronostica a 6–12 h con un tercio menos de error que suponer que todo sigue igual.
 7. **La simulación de camas muestra que la estancia es la palanca más barata:** bajar la estancia 5 % reduce los días saturados casi tanto como
    los aumentaría un 10 % más de ingresos.
@@ -117,6 +118,21 @@ Detalle: `CLAUDE.md` 4.1–4.13; `docs/HALLAZGOS.md` 2; `src/analisis_etapas.py`
 106 camas de hospitalización (88 de adultos y 18 de niños) y 58 camillas de urgencias; la hospitalización se registra al asignar la cama; las
 estancias en dos personas «probablemente son duplicados»; hay horarios y costumbres de alta. No dieron la meta de tiempos ni la causa del cambio
 de registro de abril de 2026. No hubo más sesiones.
+
+### 3.4 El quiebre de abril de 2026 y lo que pasaba en el sistema de salud
+La auditoría en la base (`CLAUDE.md` 4.9) muestra que desde el 10-abr-2026 las visitas de urgencias **suben ~40 %** mientras el registro de etapas se
+degrada: no es menos demanda. El hospital no explicó la causa. Para el contexto se revisaron prensa y actos de la Superintendencia de Salud
+(`docs/estacionalidad_anual.md`, cuarta ronda):
+- **Oct-2023:** abre el Hospital Juan Domínguez Romero en Soledad, el mismo municipio del HUN. **Ene-2025:** abre el Nuevo Hospital de Barranquilla
+  (122 camas de hospitalización y urgencias).
+- **Ago-2025:** la Supersalud interviene la ESE Universitaria del Atlántico (red pública del departamento) por 49 hallazgos críticos, entre ellos
+  fallas en urgencias.
+- **Abr-2026:** la Supersalud prorroga la intervención de Nueva EPS; desde el 22-abr la Clínica General del Norte (Barranquilla) suspende las cirugías
+  programadas por la cartera de las EPS, y varias clínicas acumulan deudas de más de 90 días con sus médicos.
+
+**Lectura:** la crisis financiera de abril de 2026 pudo llevar pacientes de otras clínicas al HUN, lo que encaja con el aumento de visitas, pero las
+fechas no coinciden exactamente (10-abr frente a 22-abr) y no se puede comprobar con los datos. Queda como hipótesis, no como causa; la decisión de
+usar solo el periodo confiable no cambia.
 
 ---
 
@@ -214,7 +230,9 @@ a un paciente concreto no sirve: marcaría al 44 % de los pacientes con 4 de cad
 | Hora de llegada | Madrugada 12–15 h; tarde ~25 h | Sin efecto |
 
 - **Hallazgo abierto:** las mujeres esperan cama +27 % más (IC 23 a 31 %) controlando edad, tipo de visita, franja y año. No es obstetricia (sin
-  embarazo ni ginecología la diferencia crece) ni la saturación del momento. Hipótesis sin comprobar: camas agrupadas por sexo.
+  embarazo ni ginecología la diferencia crece) ni la saturación del momento. Hipótesis sin comprobar: camas agrupadas por sexo. No es una rareza
+  del HUN: en dos hospitales de Boston (38.766 ingresos) las mujeres también tienen más probabilidad de esperar 4 h o más por una cama (OR 1,08;
+  Olson y colegas, *J Hosp Med* 2025), aunque la brecha del HUN es mucho mayor.
 - **Diagnóstico** (`docs/diagnosticos_todos.md`, 69 % de las estancias con diagnóstico de la persona real): esperan menos cardiovascular,
   neurológico y respiratorio (~9–13 h); más musculoesquelético (+64 % ajustado), renal, cáncer y digestivo (29–39 h). El diagnóstico se
   registra tarde: sirve para explicar, no para predecir al llegar.
@@ -244,9 +262,11 @@ Regresión de Poisson con el calendario (día de la semana, festivos, semana san
 llegadas), **la forma del año** (ver abajo) y el nivel del periodo confiable.
 - **Llegadas con atención:** error de **8,0 % a 1–7 días**, 8,6 % a 1–3 meses, 9,1 % a 3–6 meses y **9,6 % a 6–12 meses** (backtest con destinos hasta el
   9-abr-2026).
-- **Ingresos a cama:** a nivel diario son casi ruido de conteo (~18–20 % de error, el piso teórico es ~18 %); **por semana el error baja a ~9,5 %**.
-- **Banda del 80 %** recalibrada por horizonte: en meses que el modelo no vio (jul-2025 a abr-2026) cubre el 76–82 % de los días en llegadas y el 78–88 %
-  en ingresos.
+- **Ingresos a cama:** a nivel diario son casi ruido de conteo (~18–19 % de error, el piso teórico es ~18 %): 18,0 % a 1–7 días, 18,7 % a 1–3 meses y
+  19,0 % a 6–12 meses con la forma del año (ver abajo). **Por semana el error baja a ~9,5 %**, por eso las camas se planean con el pronóstico semanal.
+- **Banda del 80 %:** recalibrada por horizonte y con un límite para que no se angoste al crecer el horizonte. En meses que el
+  modelo no vio (jul-2025 a abr-2026) cubre el 78–82 % de los días en llegadas y el 85–92 % en ingresos (conservadora). Recalibrarla con el límite
+  puesto empeoraba la prueba, así que se dejó así (`src/calibrar_banda.py`).
 - El pronóstico del dashboard parte de hoy con el nivel del último dato confiable (9-abr-2026), por eso su banda es ancha.
 
 **La forma del año (ficha A9, `docs/estacionalidad_anual.md`).** El modelo no sabía que hay épocas del año con más pacientes, y con ~3 años confiables no
@@ -256,11 +276,26 @@ jul–dic 2025, aceptándola solo si mejoraba a 1–6 meses sin empeorar a 1–7
   Uninorte). El error a 3–6 meses baja de 11,4 % a 9,1 % y a 6–12 meses de 11,6 % a 9,6 %, sin cambiar a 1–7 días. Ojo: su efecto es **negativo** (las
   llegadas del HUN suben de mayo a agosto y bajan en diciembre, al revés del dengue); funciona como descripción estable de la forma del año, **no**
   significa que el dengue traiga o quite pacientes.
-- **Entró, en ingresos a cama:** una curva suave del año aprendida de los datos (spline cíclico, a la manera de un GAM); mejora pequeña (17,7 → 17,3 % a
-  1–6 meses en validación) confirmada en la prueba.
-- **Se probaron y descartaron:** lluvia y temperatura (NASA POWER 2005–2025), calendario escolar de Barranquilla, índice de El Niño (NOAA), proyecciones de
-  población del DANE y un modelo SARIMAX (mejor en validación, pero peor a 1–7 días y en la prueba de 2026).
-- **La prueba de 2026 es corta** (99 días) y en ella el error a 1–6 meses queda igual; la mejora se ve en el backtest de 2024–2025.
+- **Entró, en ingresos a cama:** una curva suave del año aprendida de los datos (spline cíclico, a la manera de un GAM) **y la forma típica del año de
+  la infección respiratoria aguda (IRA) y la diarrea aguda (EDA)** en Barranquilla, tomadas de los microdatos oficiales del SIVIGILA del INS
+  (2016–2019, años que no se solapan con la evaluación). Las dos tienen el pico en junio, en la temporada de lluvias, y el valle a fin de año, como la
+  demanda de camas. Con IRA y EDA el error a 1–6 meses en validación baja de 17,3 % a **16,9 %** sin empeorar a 1–7 días, y **se confirma en la prueba de
+  2026, que no se usó para elegir** (19,8 → 19,3 %) y en todos los horizontes del backtest. En las llegadas no mejoran al dengue y no se usan.
+- **Se probaron y descartaron (todas las fuentes que pedía la ficha):** lluvia y temperatura de NASA POWER y lluvia del IDEAM (empeora la prueba de
+  2026), calendario escolar oficial de Barranquilla (con las resoluciones de la Secretaría de Educación; empeora las dos series), índice de El Niño
+  (NOAA), proyecciones de población del DANE, consultas y hospitalizaciones por todas las causas de la ciudad, y un modelo SARIMAX (mejor en
+  validación, pero peor a 1–7 días y en la prueba de 2026). El calendario universitario no se pudo armar (Uninorte no lo publica; Uniatlántico
+  tiene años faltantes y paros).
+- **Por qué seguir con Poisson:** el modelo más complejo que se probó (SARIMAX) fue peor; la mejora estaba en los datos de la forma del año, no en el
+  estimador, y Poisson los admite como columnas interpretables.
+- **La prueba de 2026 es corta** (99 días); en llegadas el error a 1–6 meses queda igual y la mejora se ve en el backtest de 2024–2025.
+
+| Error diario (WAPE) | 1–7 días | 1–3 meses | 3–6 meses | 6–12 meses |
+|---|---|---|---|---|
+| Llegadas con atención, sin forma del año | 8,0 % | 9,3 % | 11,4 % | 11,6 % |
+| **Llegadas con atención, con dengue (vigente)** | **8,0 %** | **8,6 %** | **9,1 %** | **9,6 %** |
+| Ingresos a cama, con curva del año | 18,2 % | 19,3 % | 19,7 % | 19,4 % |
+| **Ingresos a cama, + IRA y EDA (vigente)** | **18,0 %** | **18,7 %** | **19,3 %** | **19,0 %** |
 
 ![Pronóstico de demanda con la forma del año](../resultados/graficos/pronostico_futuro.png)
 
@@ -332,25 +367,73 @@ mediana (empeora la cobertura y engaña a quien más espera). Cada intento está
 
 ## 7. Recomendaciones (componente 4)
 
-Detalle, evidencia externa y nivel de verificación de cada fuente: `docs/recomendaciones.md`. Todas son asociaciones y escenarios con supuestos
-escritos. **Las siete tienen evidencia externa** (27 fuentes), y cada fuente se verificó en su versión original: 12 en texto completo, 14 en el
-resumen oficial de PubMed o de la revista y 1 por prensa especializada porque el documento original ya no está en línea (revisión del 12-nov).
-**Matiz importante en R4:** dos estudios grandes no encuentran beneficio de la meta de altas antes del mediodía por sí sola; lo que respaldan juntos
-nuestros datos y la evidencia es dar el alta cuando el paciente esté listo y **asignar enseguida la cama que se libera**.
+Las recomendaciones salen directamente de los hallazgos: el problema no es solo cuántas camas hay, sino **cuándo se liberan, cuándo se asignan y
+cuánto tiempo se quedan ocupadas**. Por eso proponemos siete acciones, ordenadas de la más básica a la más específica. Cada una se apoya en dos
+cosas: lo que muestran los datos del HUN y lo que se ha encontrado en otros hospitales. En total se revisaron **35 fuentes**, y cada una se leyó en
+su versión original (el detalle, con el nivel de verificación de cada fuente, está en `docs/recomendaciones.md`).
 
-| # | Qué hacer | Qué respaldan nuestros datos | Evidencia externa | Firmeza |
-|---|---|---|---|---|
-| 1 | **Registrar mejor:** hora de salida de urgencias, asignación de cama, triage, servicio y hora de la orden de hospitalización; sin duplicados | Habilita medir todo lo demás; con gravedad y servicio el estimador duplicaría su mejora | Moderada: un hospital que empezó por registrar la hora de la decisión de ingreso redujo luego ese tramo a la mitad (Imhoff 2022); hay definiciones estándar para cada hora (Welch 2011, Yiadom 2020) | Alta |
-| 2 | Seguimiento mensual de 6 indicadores | Espera p50/p90 (18,6 / 73,9 h), % > 48 h (19 %), altas antes del mediodía (14 %), hora de asignación (17–18 h), camas a las 12 h (~103), estancia media (5,31 días) | Norma de acreditación: la Joint Commission exige medir el flujo y fijar metas de *boarding*, con 4 h como guía | Alta |
-| 3 | Reunión diaria de camas a media mañana, con alertas | Alerta de las 12 h: 13 de 15 días; pronóstico de la cola y censo del estimador | Moderada-baja: pase diario multidisciplinario con *boarding* −50 % (Hammer 2022); el umbral de ocupación es propio de cada hospital (Riahi 2026, 25 hospitales) | Media |
-| 4 | Altas antes del mediodía (meta inicial 25–30 %) **y asignar enseguida la cama liberada** | Hasta 5,1 camas libres a las 12 h; como máximo 8 % del exceso de espera (~3 % central); hoy una cama de la mañana tarda 1,8 h en asignarse | Mixta: la meta de altas sola no mejora el flujo en 7 hospitales (Kirubarajan 2021); asignar rápido la cama liberada sí ayuda (Erdmann 2024) | Media-baja |
-| 5 | Alerta por paciente sin cama, con responsable | A las 48 h: ~4 por día, 24 h de margen; con el estimador, a las 12 h | Indirecta: escalar al paciente a la planta cuando urgencias se llena no aumentó la mortalidad (Viccellio 2009); evidencia baja (Tcheroyan 2026) | Media |
-| 6 | Protocolo para quien llega de 13 a 18 h y se hospitaliza | Entre 11 y 49 horas-paciente por día | Protocolos de ingreso rápido: *boarding* de 360 a 270 min (Amarasingham 2010); decisión → solicitud de cama de 75 a 40 min (Imhoff 2022) | Baja |
-| 7 | Revisar cada semana las estancias largas (más de 7 días; foco en más de 14) | −5 % de estancia ≈ 5 camas; en la simulación, días saturados de 65 % a 48 % | Inconsistente en revisiones (Siddique 2021); estancia de 19 a 14,2 días con Red2Green en Brasil (Paiva 2024); −68 % de días de cama innecesarios (Logrono 2026) | Media |
+**Por qué vale la pena actuar.** Esperar mucho por una cama no es solo incómodo: en un estudio de 41.256 ingresos, la mortalidad pasó de 2,5 % en
+quienes esperaron menos de 2 horas a 4,5 % en quienes esperaron 12 horas o más (Singer 2011), y una revisión de 21 estudios asocia las esperas largas
+con más errores de medicación y retrasos en el tratamiento (Dowling 2026). En el HUN, uno de cada cinco pacientes espera más de 48 horas.
 
-**Lo que los datos no respaldan:** más personal según el día de la semana; priorizar a un paciente concreto por su riesgo de esperar al llegar;
-y un centro de comando o tablero como solución en sí misma (el estudio mejor diseñado no halló efecto). **Tampoco permiten calcular cuántas
-camas harían falta** con certeza: primero la estancia y el proceso de asignación.
+| # | Qué proponemos | Por qué, según nuestros datos | Firmeza |
+|---|---|---|---|
+| 1 | Registrar mejor la información | Sin la hora de salida de urgencias ni la de asignación de cama no se puede medir el problema | Alta |
+| 2 | Seguir seis indicadores cada mes | Hoy no hay una meta ni una línea base compartida | Alta |
+| 3 | Reunión diaria de camas a media mañana | La alerta de las 12 h detecta 13 de cada 15 días congestionados | Media |
+| 4 | Asignar enseguida la cama que se libera | Una cama liberada en la mañana tarda 1,8 h en volver a asignarse | Media |
+| 5 | Alerta por paciente que lleva 48 h sin cama | Uno de cada dos de esos pacientes termina esperando más de 72 h | Media |
+| 6 | Pedir antes la cama de quien llega por la tarde | Quien llega entre las 13 y las 18 h espera ~8 h más que quien llega en la mañana | Media |
+| 7 | Revisar cada semana las estancias largas | La ocupación subió porque los pacientes se quedan más, no porque lleguen más | Media |
+
+**1. Registrar mejor la información.** Es la base de todo lo demás. Hoy el 36–42 % de las atenciones de urgencias no tiene hora de salida, no se
+registra cuándo se decide hospitalizar al paciente y el 41 % de las estancias aparecía duplicado en otra persona. Proponemos registrar la hora de
+salida de urgencias, la de la orden de hospitalización, la de asignación de cama, el triage y el servicio. Un hospital de Estados Unidos empezó justo
+por ahí y luego redujo a la mitad el tiempo entre decidir el ingreso y pedir la cama (Imhoff 2022); además, existen definiciones estándar para cada
+una de estas horas (Welch 2011; Yiadom 2020). Con el triage y el servicio, nuestro estimador de espera duplicaría su mejora.
+
+**2. Seguir seis indicadores cada mes.** Lo que no se mide no se puede mejorar. Proponemos seguir la espera de cama (hoy 18,6 h en mediana y 73,9 h
+en el percentil 90), el porcentaje de pacientes con más de 48 h sin cama (19 %), las altas antes del mediodía (14 %), la hora típica de asignación
+(17–18 h), las camas ocupadas a las 12 h (~103) y la estancia media (5,3 días). El principal acreditador de hospitales de Estados Unidos, la Joint
+Commission, exige medir el flujo de pacientes y fijar una meta para la espera de cama, con 4 horas como referencia.
+
+**3. Reunión diaria de camas a media mañana.** Una reunión corta (10–15 minutos) para revisar el censo, las altas previstas y los ingresos esperados,
+apoyada en las alertas que construimos: la de día congestionado a las 12 h acierta 13 de cada 15 días, y el pronóstico de la cola de pacientes sin
+cama se equivoca un tercio menos que suponer que todo sigue igual. En seis hospitales de Arabia Saudita, un paquete de medidas que incluía una
+reunión diaria de camas bajó la espera por cama de 16,6 a 9,5 horas (Alotaibi 2021); en otro hospital, un pase diario multidisciplinario la redujo a
+la mitad (Hammer 2022).
+
+**4. Asignar enseguida la cama que se libera.** Es la recomendación con más matices. Adelantar las altas al mediodía liberaría hasta 5,1 camas a
+esa hora, pero por sí solo no basta: dos estudios grandes, uno de ellos en siete hospitales, no encontraron que la meta de altas antes del mediodía
+mejorara el flujo (Kirubarajan 2021; Rajkomar 2016). Lo que sí coincide en cuatro proyectos independientes es acortar el tiempo entre que una cama
+se libera y que se asigna (Erdmann 2024; Farok 2026, donde el ingreso pasó de 390 a 175 minutos; Alotaibi 2021; Artenstein 2017). En el HUN ese
+tiempo es de 1,8 horas en la mañana, aunque siempre hay unos 26 pacientes esperando. Por eso proponemos dar el alta cuando el paciente esté listo y
+avisar de inmediato cuando una cama queda libre, priorizando su aseo.
+
+**5. Alerta por paciente que lleva 48 h sin cama.** Cuando un paciente cumple 48 horas sin cama, un responsable revisa su caso. Serían unas
+cuatro alertas por día, con 24 horas de margen antes de que la espera supere las 72 horas, que es lo que le pasa a la mitad de ellos. Con nuestro
+estimador se puede alertar antes, a las 12 horas. La alerta solo sirve si dispara una acción clara, como buscar cama en otra zona o escalar a la
+dirección; en otros hospitales, pasar al paciente a la planta cuando urgencias se llena no aumentó la mortalidad (Viccellio 2009).
+
+**6. Pedir antes la cama de quien llega por la tarde.** Quien llega entre las 13 y las 18 horas y se hospitaliza espera una mediana de 24 horas,
+frente a 16 de quien llega en la mañana, porque queda fuera de la ola de asignación de la tarde. Proponemos adelantar la decisión de ingreso y la
+solicitud de cama para esos pacientes. Varios estudios respaldan que adelantar ese paso acorta la espera: un protocolo de ingreso rápido la bajó de
+360 a 270 minutos (Amarasingham 2010) y una simulación estima reducciones de 30 a 70 % al pedir la cama según la probabilidad de ingreso (Cheng
+2026, aún sin revisión por pares). Lo que no sabemos es cuánto ahorraría en el HUN: entre el 2 % y el 11 % del exceso de espera, según cómo se mida.
+
+**7. Revisar cada semana las estancias largas.** La ocupación pasó de 94 a 105 camas entre 2023 y 2025 porque la estancia media subió 16 %, no
+porque lleguen más pacientes; las estancias de más de 14 días ocupan unas 36 camas. Proponemos una revisión semanal de los pacientes con más de 7
+días, con foco en los de más de 14. Bajar la estancia apenas 5 % liberaría unas 5 camas y, según la simulación, bajaría los días saturados de 65 % a
+48 %. En otros hospitales, un equipo que se reúne cada semana bajó la estancia de los pacientes con alta demorada de 15,5 a 9 días (Ibrahim 2022), y
+una herramienta de seguimiento diario la redujo de 19 a 14 días en un hospital universitario de Brasil (Paiva 2024).
+
+**Qué no recomendamos.** Los datos no respaldan reforzar el personal según el día de la semana (casi no cambia la espera), ni ordenar la fila según
+el riesgo de cada paciente al llegar (el mejor modelo marcaría al 44 % de los pacientes, con 4 de cada 10 falsas alarmas), ni un centro de comando
+como solución por sí mismo (el estudio mejor diseñado no encontró efecto). Tampoco permiten calcular cuántas camas más harían falta: antes de
+pensar en camas nuevas, conviene atacar la estancia y el proceso de asignación.
+
+**Cómo leer la firmeza.** «Alta» significa que la acción tiene respaldo claro y bajo riesgo; «media», que el mecanismo está respaldado en otros
+hospitales pero el tamaño del efecto en el HUN es incierto. Ninguna cifra de impacto es una promesa: son escenarios con supuestos escritos.
 
 ---
 
@@ -382,7 +465,10 @@ camas harían falta** con certeza: primero la estancia y el proceso de asignaci�
   sobreocupación o capacidad mayor.
 - **Validación:** solo ~3 ciclos anuales confiables (feb-2023 a abr-2026); algunas decisiones del estimador se tomaron mirando la prueba (se
   corrigió con un periodo de validación aparte para el corte y el p90).
-- **Geografía:** se asume que el HUN está en Barranquilla (Carnaval, calendario).
+- **Geografía:** según los directorios de establecimientos de salud, el HUN está en Soledad, en el área metropolitana de Barranquilla; se usan el
+  Carnaval, el calendario y los datos públicos de Barranquilla como los de la zona. No se sabe de qué municipio viene cada paciente.
+- **Datos externos de 2026:** el INS aún no publica por semana el dengue, la IRA ni la EDA de 2026, así que la forma del año usa climatologías de
+  años anteriores y no hay un aviso de corto plazo con casos recientes.
 - **Diagnósticos:** registrados tarde, en SNOMED y sin jerarquía; el agrupamiento (`mapeo_dx.csv`) es un borrador sin validación clínica.
 - **Causalidad:** casi todo son asociaciones; las cifras de impacto son escenarios y cotas con supuestos escritos.
 
@@ -390,19 +476,32 @@ camas harían falta** con certeza: primero la estancia y el proceso de asignaci�
 
 ## 10. Trabajo en curso y futuro
 
-### 10.1 Estacionalidad anual: lo que falta (ficha A9)
-La ficha quedó implementada (sección 6.1, `docs/estacionalidad_anual.md`). Quedan dos líneas que dependen de datos que no son abiertos:
-- **Infecciones respiratorias y diarreicas (IRA, EDA) del Atlántico por semana:** el INS solo las publica en boletines PDF; habría que pedirlas a la
-  Secretaría de Salud del Atlántico. Podrían explicar mejor la forma del año en niños.
-- **Aviso de dengue a 2–8 semanas:** usar los casos recientes para el corto plazo requiere los casos de 2023 en adelante (los públicos llegan a 2022).
-- La banda no se migró a un modelo estructural porque, tras recalibrarla, ya cubre cerca del 80 % en todos los horizontes (condición de la ficha).
+### 10.1 Pronóstico de demanda
+- **La estacionalidad (ficha A9) quedó terminada:** se probaron todas las fuentes de la ficha; entraron el dengue en las llegadas y la IRA y la EDA
+  en los ingresos a cama (`docs/estacionalidad_anual.md`).
+- **Aviso de dengue a 2–8 semanas con casos recientes:** se podrá probar cuando el INS publique los microdatos de 2026 (hoy llegan a 2025).
+- **Calendario universitario:** habría que pedirlo a Uninorte y a Uniatlántico, que no lo publican completo.
 
-### 10.2 Otras líneas
-- **Laboratorios a las 12 y 24 h para el estimador:** la consulta está lista (`sql/severidad_labs_12_24h.sql`) y su prueba también
-  (`src/laboratorios_12_24h.py`); falta correrla en la base. Ganancia esperada pequeña (~1 punto desde las 12 h).
-- **Que el hospital registre** triage, servicio y hora de la orden de hospitalización: es lo que más subiría la precisión de cualquier modelo.
-- **Validación clínica** del agrupamiento de diagnósticos y de los cortes de las banderas de laboratorio.
-- **Investigar la brecha de espera entre mujeres y hombres** con el dato de servicio o de tipo de cama.
+### 10.2 Estimador de la espera de cada paciente
+- **Laboratorios a las 12 y 24 horas:** la consulta y la prueba están listas (`sql/severidad_labs_12_24h.sql`, `src/laboratorios_12_24h.py`); falta
+  correrlas en la base. Ganancia esperada pequeña, de alrededor de un punto desde las 12 horas.
+
+### 10.3 Simulación de camas y diagnóstico del cuello de botella
+- **Sumar la simulación Monte Carlo al diagnóstico repetible del cuello de botella**, para que el diagnóstico mensual incluya el riesgo de saturar las
+  camas.
+- **Conectar la simulación con el pronóstico estacional:** hoy usa el calendario sin la forma del año, así que sus escenarios todavía no reflejan
+  que los ingresos suben a mitad de año.
+
+### 10.4 Perfiles, diagnósticos y laboratorios
+- **Validación clínica** del agrupamiento de diagnósticos (`mapeo_dx.csv`, hoy un borrador) y de los cortes de las banderas de laboratorio.
+- **Brecha de espera entre mujeres y hombres** (+27 % con todo controlado): investigarla con el dato de servicio o de tipo de cama, que hoy la base
+  no tiene.
+
+### 10.5 Recomendaciones y registro del hospital
+- **Medir el efecto real de las recomendaciones 4 y 6** cuando el hospital registre la hora de la orden de hospitalización y la de asignación de
+  cama; hoy solo se pueden estimar.
+- **Que el hospital registre el triage, el servicio y la hora de la orden de hospitalización:** es lo que más subiría la precisión de cualquier
+  modelo (el estimador duplicaría su mejora) y permitiría separar la atención clínica de la espera pura por una cama.
 
 ---
 
@@ -445,3 +544,90 @@ Los datos y las tablas de resultados **no** están en el repositorio porque son 
 | Recomendaciones y fuentes | `docs/recomendaciones.md` |
 | Dashboard | `docs/estructura_dashboard.md` |
 | Sesión con el hospital | `docs/hun/sesion_de_preguntas.md` |
+
+### 11.4 Referencias
+
+Todas las fuentes que usa el proyecto, en este documento y en el resto del repositorio. Las de evidencia se leyeron en su versión original; su nivel de verificación y
+para qué recomendación se usa cada una están en `docs/recomendaciones.md`, sección 6.
+
+**Evidencia para las recomendaciones (35)**
+
+1. Alotaibi Y, Alnowaiser N, Alamry A. *Improving hospital flow «Ensiab Project».* BMJ Open Qual 2021;10(3):e001505. [PMC8479940](https://pmc.ncbi.nlm.nih.gov/articles/PMC8479940/) (PMID 34583936)
+2. Amarasingham R y colegas. *A rapid admission protocol to reduce emergency department boarding times.* Qual Saf Health Care 2010. [PMID 20142408](https://pubmed.ncbi.nlm.nih.gov/20142408/)
+3. Artenstein AW y colegas. *Decreasing Emergency Department Walkout Rate and Boarding Hours by Improving Inpatient Length of Stay.* West J Emerg Med 2017;18(6):982–992. [PMC5654890](https://pmc.ncbi.nlm.nih.gov/articles/PMC5654890/)
+4. Bailey R y colegas. *Increasing and sustaining discharges by noon – a multi-year process improvement project.* BMC Health Serv Res 2024;24:478. [doi:10.1186/s12913-024-10960-x](https://bmchealthservres.biomedcentral.com/articles/10.1186/s12913-024-10960-x)
+5. Becker's Hospital Review. *The AM Bedside Huddle: What to Cover to Achieve Streamlined Patient Flow.* 2014. [Enlace](https://www.beckershospitalreview.com/capacity-management/the-am-bedside-huddle-what-to-cover-to-achieve-streamlined-patient-flow.html)
+6. Becker's Hospital Review. *The Queen's Health Systems saves $20 million in the first year after opening a command center.* 2025. [Enlace](https://www.beckershospitalreview.com/healthcare-information-technology/the-queens-health-systems-saves-20-million-in-the-first-year-after-opening-a-command-center/)
+7. Boudi Z y colegas. *Association between boarding in the emergency department and in-hospital mortality: A systematic review.* PLoS One 2020;15(4):e0231253. [PMC7159217](https://pmc.ncbi.nlm.nih.gov/articles/PMC7159217/) (PMID 32294111)
+8. Cheng Q, Argon NT, Ganesaraman A, Ziya S. *Proactive Inpatient Bed Requests for Emergency Department Admissions.* arXiv:2607.15432, 2026. [Enlace](https://arxiv.org/abs/2607.15432)
+9. Dowling MK y colegas. *Patient and staff safety implications of emergency department boarding: a systematic review.* Health Aff Scholar 2026;4(5):qxag084. [doi:10.1093/haschl/qxag084](https://doi.org/10.1093/haschl/qxag084)
+10. Erdmann MA y colegas. *Reduced Time to Admit Emergency Department Patients to Inpatient Beds Using Outflow Barrier Analysis and Process Improvement.* West J Emerg Med 2024. [PMID 39319806](https://pubmed.ncbi.nlm.nih.gov/39319806/)
+11. Farok SM y colegas. *Reducing Emergency Department (ED) Boarding Time Through Lean Redesign of the ED-to-Inpatient Admission Pathway: A Single-Center Quality-Improvement Study.* Cureus 2026;18(5):e109766. [PMC13310080](https://pmc.ncbi.nlm.nih.gov/articles/PMC13310080/) (PMID 42367400)
+12. Hammer C y colegas. *Enhancing Hospital-Wide Patient Flow to Reduce Emergency Department Crowding and Boarding.* J Emerg Nurs 2022. [PMID 36084984](https://pubmed.ncbi.nlm.nih.gov/36084984/)
+13. Hoot NR, Aronsky D. *Systematic review of emergency department crowding: causes, effects, and solutions.* Ann Emerg Med 2008;52(2):126–136. [PubMed 18433933](https://pubmed.ncbi.nlm.nih.gov/18433933/)
+14. Ibrahim H y colegas. *Multi-Disciplinary Discharge Coordination Team to Overcome Discharge Barriers and Address the Risk of Delayed Discharges.* Risk Manag Healthc Policy 2022;15:141–149. [doi:10.2147/RMHP.S347693](https://doi.org/10.2147/RMHP.S347693)
+15. Imhoff B y colegas. *Reducing time to admission in emergency department patients: a cross-functional quality improvement project.* BMJ Open Qual 2022;11(3):e001987. [PMC9486293](https://pmc.ncbi.nlm.nih.gov/articles/PMC9486293/)
+16. Kausar K y colegas. *Implementing and evaluating a discharge before noon initiative in a large tertiary care urban hospital.* Jt Comm J Qual Patient Saf 2024;50(2):127–138. Resumen en [The Hospitalist](https://www.the-hospitalist.org/hospitalist/article/38356/critical-care/implementing-and-evaluating-a-dbn-initiative-in-a-large-tertiary-care-urban-hospital/)
+17. Kirubarajan A y colegas. *Morning Discharges and Patient Length of Stay in Inpatient General Internal Medicine.* J Hosp Med 2021. [PMID 34129483](https://pubmed.ncbi.nlm.nih.gov/34129483/)
+18. Logrono KJ y colegas. *Reducing unnecessary bed days to optimise flow and improve demand-capacity mismatch.* BMJ Open Qual 2026. [PMID 42349993](https://pubmed.ncbi.nlm.nih.gov/42349993/)
+19. Mebrahtu TF y colegas. *The impact of hospital command centre on patient flow and data quality: findings from the UK National Health Service.* Int J Qual Health Care 2023;35(4):mzad072. [PDF](https://eprints.whiterose.ac.uk/209410/1/mzad072.pdf)
+20. NHS Dumfries and Galloway, *Balancing capacity with demand* (gobierno de Escocia). [Enlace](https://www.gov.scot/publications/nhs-dumfries-galloway-case-study-balancing-capacity-demand-dumfries-galloway-9781788510479/pages/15/)
+21. Olson RM y colegas. *Waiting for a hospital bed: Disparities in emergency department boarding.* J Hosp Med 2025;21(3):261–272. [PMC12954383](https://pmc.ncbi.nlm.nih.gov/articles/PMC12954383/) (PMID 40753491)
+22. Oskvarek JJ y colegas. *Emergency Department Crowding in the Modern Era: A Systematic Review (2018–2025).* Clin Exp Emerg Med 2026. [Enlace](https://hsrc.himmelfarb.gwu.edu/gwhpubs/8570)
+23. Paiva MBS y colegas. *Reduction of hospital length of stay through the implementation of SAFER patient flow bundle and Red2Green days tool: a pre-post study.* BMJ Open Qual 2024. [PMID 38191217](https://pubmed.ncbi.nlm.nih.gov/38191217/)
+24. Patel H y colegas. *Using a Systematic Framework of Interventions to Improve Early Discharges.* Jt Comm J Qual Patient Saf 2017. [PMID 28325207](https://pubmed.ncbi.nlm.nih.gov/28325207/)
+25. Rajkomar A y colegas. *The association between discharge before noon and length of stay in medical and surgical patients.* J Hosp Med 2016. [PMID 26717556](https://pubmed.ncbi.nlm.nih.gov/26717556/)
+26. Riahi V y colegas. *The Impact of Hospital Bed Occupancy on Patient Flow and Emergency Department Access: A 25-Hospital Cohort Study.* Med J Aust 2026. [PMID 41755541](https://pubmed.ncbi.nlm.nih.gov/41755541/)
+27. Siddique SM y colegas. *Interventions to Reduce Hospital Length of Stay in High-risk Populations: A Systematic Review.* JAMA Netw Open 2021. [PMC8453321](https://pmc.ncbi.nlm.nih.gov/articles/PMC8453321/)
+28. Singer AJ, Thode HC, Viccellio P, Pines JM. *The association between length of emergency department boarding and mortality.* Acad Emerg Med 2011;18:1324–1329. [doi:10.1111/j.1553-2712.2011.01236.x](https://doi.org/10.1111/j.1553-2712.2011.01236.x) (PMID 22168198)
+29. Sunkara P y colegas. *Lightning Huddle: An Innovative Method For Improving Patient Throughput.* Hospital Medicine 2019, resumen 463. [SHM](https://shmabstracts.org/?p=23287)
+30. Tcheroyan R y colegas. *Hospital Floor Hallway Boarding: A Systematic Review of Outcomes.* Am J Manag Care 2026;32(9):e343–e348. [Enlace](https://www.ajmc.com/view/hospital-floor-hallway-boarding-a-systematic-review-of-outcomes)
+31. The Joint Commission, norma LD.04.03.11 («patient flow standard») y R3 Report n.º 4 (19-dic-2012), vía Becker's Hospital Review ([2012](https://www.beckershospitalreview.com/care-coordination/joint-commission-publishes-report-on-updated-patient-flow-standards/), [2013](https://www.beckershospitalreview.com/care-coordination/joint-commission-clarifies-qpatient-flow-standardq/))
+32. Viccellio A y colegas. *The association between transfer of emergency department boarders to inpatient hallways and mortality: a 4-year experience.* Ann Emerg Med 2009;54(4):487–491. [PMID 19345442](https://pubmed.ncbi.nlm.nih.gov/19345442/)
+33. Welch SJ y colegas. *Emergency department operational metrics, measures and definitions: results of the Second Performance Measures and Benchmarking Summit.* Ann Emerg Med 2011;58(1):33–40. [PMID 21067846](https://pubmed.ncbi.nlm.nih.gov/21067846/)
+34. Wertheimer B y colegas. *Discharge Before Noon: An Achievable Hospital Goal.* J Hosp Med 2014;9:210–214. [PDF](https://cdn.mdedge.com/files/s3fs-public/pdfs/journals/jhm2154.pdf)
+35. Yiadom MYAB y colegas. *Managing and Measuring Emergency Department Care: Results of the Fourth Emergency Department Benchmarking Definitions Summit.* Acad Emerg Med 2020. [PMID 32248605](https://pubmed.ncbi.nlm.nih.gov/32248605/)
+
+**Fuentes de datos externos (13)**
+
+36. Instituto Nacional de Salud (INS). Portal SIVIGILA, buscador de microdatos: eventos 995 (morbilidad por IRA), 998 (morbilidad por EDA), 210 (dengue) y 220 (dengue grave), 2016–2025. [portalsivigila.ins.gov.co](https://portalsivigila.ins.gov.co/) (consultado el 12-nov-2026).
+37. Instituto Nacional de Salud (INS). *Anexo 2. Codificación Sivigila 2026*. [PDF](https://www.ins.gov.co/BibliotecaDigital/anexo-2-codificacion-sivigila-2026.pdf).
+38. Instituto Nacional de Salud (INS). *Boletín Epidemiológico Semanal*, semana 42 de 2026. [PDF](https://www.ins.gov.co/BibliotecaDigital/2026-boletin-epidemiologico-semana-42.pdf).
+39. Quistberg A, Sarmiento OL, Hoyos Botero N. *Reported Dengue Cases in Barranquilla, Colombia 2007-2022*. Harvard Dataverse, 2025. [doi:10.7910/DVN/P0KY1D](https://doi.org/10.7910/DVN/P0KY1D) (CC BY 4.0).
+40. IDEAM. *Precipitación* (datos hidrometeorológicos), estación 0029004520 Escuela Naval Barranquilla. Portal de datos abiertos de Colombia. [datos.gov.co/s54a-sgyg](https://www.datos.gov.co/resource/s54a-sgyg).
+41. NASA Langley Research Center. *POWER Project*, datos diarios por punto (lat 10,98, lon −74,80), 2005–2025. [power.larc.nasa.gov](https://power.larc.nasa.gov).
+42. NOAA Climate Prediction Center. *Oceanic Niño Index (ONI)*. [oni.ascii.txt](https://www.cpc.ncep.noaa.gov/data/indices/oni.ascii.txt).
+43. DANE. *Proyecciones de población municipales 2018–2042* (versión ago-2025). [XLSX](https://www.dane.gov.co/files/censo2018/proyecciones-de-poblacion/Municipal/PPED-AreaMun-2018-2042_VP.xlsx).
+44. Secretaría Distrital de Educación de Barranquilla. Resolución 06040 del 25-oct-2022 (calendario académico 2023). [PDF en MinEducación](https://www.mineducacion.gov.co/1780/articles-413526_recurso_08.pdf).
+45. Secretaría Distrital de Educación de Barranquilla. Resolución 06182 del 30-oct-2023 (calendario académico 2024). [PDF en MinEducación](https://www.mineducacion.gov.co/1780/articles-419296_recurso_11.pdf).
+46. Secretaría Distrital de Educación de Barranquilla. Resolución 07036 del 28-oct-2024 (calendario académico 2025). [PDF en MinEducación](https://www.mineducacion.gov.co/1780/articles-423172_recurso_08.pdf).
+47. Secretaría Distrital de Educación de Barranquilla. Resolución 07248 del 24-oct-2025 (calendario académico 2026). [barranquilla.gov.co](https://barranquilla.gov.co/documento/resolucion-no-07248-2025/).
+48. Universidad del Atlántico. Resoluciones académicas 000037 de 2023, 000022 de 2024, 000018 de 2025 y 000001 de 2026 (calendarios de pregrado 2024–2026). [uniatlantico.edu.co](https://www.uniatlantico.edu.co/).
+
+**Contexto del sistema de salud y de las universidades (7)**
+
+49. El Heraldo. *Hospital Juan Domínguez Romero de Soledad entra en funcionamiento*. 11-oct-2023. [Enlace](https://www.elheraldo.co/atlantico/2023/10/11/hospital-juan-dominguez-romero-de-soledad-entra-en-funcionamiento-1040463/).
+50. Consultor Salud. *Nuevo Hospital Barranquilla: más de 2.300 atenciones en urgencias en su primer mes de operación*. 2025. [Enlace](https://consultorsalud.com/nuevo-hospital-barranquilla-2-300-urgencias/).
+51. El Tiempo. *Supersalud interviene la ESE UNA: 49 hallazgos revelan el colapso de la red hospitalaria del Atlántico*. 2025. [Enlace](https://www.eltiempo.com/colombia/barranquilla/supersalud-interviene-la-ese-una-49-hallazgos-revelan-el-colapso-de-la-red-hospitalaria-del-atlantico-3482744).
+52. Superintendencia Nacional de Salud. Resolución 2026100000003814-6 (prórroga de la intervención de Nueva EPS). Abr-2026. [PDF](https://consultorsalud.com/wp-content/uploads/2026/04/Supersalud-oficializo-la-prorroga-de-la-intervencion-de-Nueva-EPS-por-un-ano-conoce-los-detalles-de-la-Resolucion.pdf).
+53. Portafolio. *Clínica General del Norte suspende cirugías programadas por cartera de EPS que supera los 441.000 millones*. Abr-2026. [Enlace](https://www.portafolio.co/negocios/empresas/clinica-general-del-norte-suspende-cirugias-programadas-por-cartera-de-eps-que-supera-los-441-000-millones-492682).
+54. El Heraldo. *Cinco clínicas tendrían deudas de más de 90 días con médicos*. 30-abr-2026. [Enlace](https://www.elheraldo.co/atlantico/barranquilla/2026/04/30/cinco-clinicas-tendrian-deudas-de-mas-de-90-dias-con-medicos/).
+55. El Heraldo. *El camino que debe transitar la Uniatlántico para retomar la normalidad académica*. 5-ene-2026. [Enlace](https://www.elheraldo.co/atlantico/2026/01/05/el-camino-que-debe-transitar-la-uniatlantico-para-retomar-la-normalidad-academica/).
+
+**El reto y la base del hospital (2)**
+
+56. Hospital Universidad del Norte y Universidad del Norte. *Data Challenge HUN 2026: instructivo del reto* (documento entregado a los participantes; `docs/DATA CHALLENGE HUN 2026 (2).pdf`).
+57. OHDSI. *OMOP Common Data Model* (modelo de datos de la base del hospital, esquema `uninorte_omop`). [ohdsi.github.io/CommonDataModel](https://ohdsi.github.io/CommonDataModel/).
+
+**Software (10)**
+
+58. Python Software Foundation. *Python* (versión 3.14). [python.org](https://www.python.org).
+59. The pandas development team. *pandas* (versión 3). [pandas.pydata.org](https://pandas.pydata.org).
+60. Harris CR y colegas. *Array programming with NumPy.* Nature 2020;585:357–362. [doi:10.1038/s41586-020-2649-2](https://doi.org/10.1038/s41586-020-2649-2).
+61. Seabold S, Perktold J. *statsmodels: Econometric and statistical modeling with Python.* Proc. 9th Python in Science Conference, 2010 (regresiones, SARIMAX). [statsmodels.org](https://www.statsmodels.org).
+62. Pedregosa F y colegas. *Scikit-learn: Machine Learning in Python.* J Mach Learn Res 2011;12:2825–2830 (estimador de espera). [scikit-learn.org](https://scikit-learn.org).
+63. Virtanen P y colegas. *SciPy 1.0: fundamental algorithms for scientific computing in Python.* Nat Methods 2020;17:261–272. [doi:10.1038/s41592-019-0686-2](https://doi.org/10.1038/s41592-019-0686-2).
+64. Smith NJ y colegas. *patsy* (bases de splines cíclicos para la curva del año). [patsy.readthedocs.io](https://patsy.readthedocs.io).
+65. *holidays* (festivos de Colombia). [pypi.org/project/holidays](https://pypi.org/project/holidays/).
+66. Hunter JD. *Matplotlib: A 2D graphics environment.* Comput Sci Eng 2007;9(3):90–95 (gráficos).
+67. Plotly Technologies. *Dash* y *Plotly* (dashboard interactivo). [dash.plotly.com](https://dash.plotly.com).

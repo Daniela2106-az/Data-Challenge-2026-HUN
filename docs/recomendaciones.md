@@ -1,4 +1,4 @@
-# Recomendaciones para el HUN (versión verificada, cifras al 12-nov-2026)
+# Recomendaciones para el HUN (versión verificada, cifras al 13-nov-2026)
 
 Tarea B2 (Samuel): fuentes verificadas el 1-nov y comprobadas de nuevo el 6-nov; integrada con las cifras vigentes de `main` el 6-nov. Parte del borrador de Daniela del 22-oct, con las cifras de R2 y R6 que Daniela respaldó con scripts el 25-oct
 (`src/simulacion_altas.py` y `src/impacto_llegada_tarde.py`). Cambios frente al borrador:
@@ -23,6 +23,11 @@ Tarea B2 (Samuel): fuentes verificadas el 1-nov y comprobadas de nuevo el 6-nov;
 9. **Segunda búsqueda del 12-nov para R3, R4, R6 y R7:** 9 fuentes más, todas leídas en el resumen oficial de PubMed (Hammer 2022, Patel 2017,
    Riahi 2026, Kirubarajan 2021, Rajkomar 2016, Erdmann 2024, Amarasingham 2010, Paiva 2024 y Logrono 2026). Cambia el énfasis de R4: dos estudios
    grandes no encuentran beneficio de las altas antes del mediodía por sí solas, así que la acción clave es **asignar enseguida la cama que se libera**.
+10. **Tercera búsqueda (13-nov) para que ninguna recomendación quede por debajo de firmeza media:** 8 fuentes más, cada una abierta en su versión
+    original (Alotaibi 2021, Farok 2026, Olson 2025, Cheng 2026, Ibrahim 2022, Dowling 2026, Boudi 2020 y Singer 2011). Suben R4 (de media-baja a
+    media) y R6 (de baja a media): en las dos, varios estudios independientes respaldan el **mecanismo** (asignar la cama apenas se libera; pedir la cama
+    antes), aunque el tamaño del efecto en el HUN sigue incierto. R5 suma la evidencia de que esperar mucho por una cama se asocia con más mortalidad.
+    Las 35 fuentes están en la sección 6. Una fuente que no se pudo abrir (NHS England, revisiones semanales de estancias largas) **no se cita**.
 
 **Cómo leerlo.** Todo son **asociaciones y escenarios con supuestos escritos**, no causas probadas. El HUN dio su número de camas el 29-oct (106 camas de
 hospitalización y 58 camillas de urgencias), sin decir a qué fecha corresponde; no tenemos el motivo clínico de cada espera. Donde un efecto no se puede calcular, se dice. Cifras propias: `docs/HALLAZGOS.md` y `CLAUDE.md` (secciones 4.8 a 4.11 y 6b).
@@ -56,11 +61,11 @@ cuello de botella sea un patrón conocido, no una rareza del HUN.
 |---|---|---|---|---|
 | 1 | Registrar mejor: hora de salida de urgencias, asignación de cama y sin duplicados | Habilita medir todo lo demás | Moderada: sin la hora de la decisión de ingreso no se puede medir el *boarding*; un hospital que empezó por registrarla redujo luego ese paso a la mitad (Imhoff 2022); hay definiciones estándar para cada hora (Welch 2011, Yiadom 2020) | Alta |
 | 2 | Seguimiento mensual de 6 indicadores | Permite ver si algo mejora | Norma de acreditación: la Joint Commission exige medir el flujo y fijar metas de *boarding*, con 4 h como guía (no obligatoria) | Alta |
-| 3 | Reunión diaria de camas a media mañana, con alertas | No cuantificable; la alerta de las 12 h detecta 87 % de los días congestionados (13 de 15); la cola de pacientes sin cama se pronostica a 6–12 h con un tercio menos de error que «lo mismo que ahora» | Moderada-baja: pase diario multidisciplinario con *boarding* −50 % en una planta (Hammer 2022); reunión de la tarde con más altas tempranas y −0,28 días de estancia (Patel 2017); el umbral de ocupación es propio de cada hospital (Riahi 2026, 25 hospitales); casos únicos | Media |
-| 4 | Meta de altas antes del mediodía (empezar con 25–30 %), y asignar enseguida la cama que se libera | Hasta 5,1 camas libres a las 12 h; evita como máximo 8 % del exceso de espera (estimación central ~3 %). Hoy una cama liberada en la mañana tarda 1,8 h en asignarse | Mixta, con dos estudios grandes en contra de la meta de altas por sí sola (Kirubarajan 2021, 7 hospitales; Rajkomar 2016); a favor de asignar rápido la cama liberada (Erdmann 2024: −12,7 min por paciente) | Media-baja |
-| 5 | Alerta por paciente a las 48 h sin cama, con responsable | ~4 alertas por día; 52 % termina esperando más de 72 h; 24 h de margen. Opción más temprana con el estimador A6: a las 12 h, ~4 alertas por día con 55 % de acierto | Indirecta: los protocolos de escalamiento por capacidad (pasar al paciente a la planta cuando urgencias se llena) no aumentaron la mortalidad (Viccellio 2009); la revisión sistemática dice que la evidencia es baja (Tcheroyan 2026) | Media |
-| 6 | Protocolo para quien llega entre las 13 y las 18 h y se hospitaliza | Entre ~11 y ~49 horas-paciente por día (2–11 % del exceso de 451) si esperaran como quien llega por la mañana | Protocolos de ingreso rápido: *boarding* de 360 a 270 min (Amarasingham 2010, 9.604 ingresos); decisión → solicitud de cama de 75 a 40 min (Imhoff 2022) | Baja (el rango depende de usar promedios o medianas) |
-| 7 | Revisar sistemáticamente las estancias largas | −5 % de estancia ≈ 5 camas (la simulación Monte Carlo da 4,9 y baja los días con más de 106 camas ocupadas de 65 % a 48 %); volver a la de 2023 ≈ 15 camas. Las estancias de más de 14 días ocupan unas 36 camas; las de más de 30 días pasaron de 6 a 13 camas entre 2023 y 2025 | Inconsistente en revisiones (Siddique 2021); proyectos con −4,8 días de estancia mediana en Brasil (Paiva 2024, Red2Green) y −68 % de días de cama innecesarios (Logrono 2026) | Media |
+| 3 | Reunión diaria de camas a media mañana, con alertas | No cuantificable; la alerta de las 12 h detecta 87 % de los días congestionados (13 de 15); la cola de pacientes sin cama se pronostica a 6–12 h con un tercio menos de error que «lo mismo que ahora» | Moderada: reunión diaria de camas dentro de un paquete en **6 hospitales**, con *boarding* de 16,6 a 9,5 h (Alotaibi 2021); pase diario multidisciplinario con *boarding* −50 % en una planta (Hammer 2022); reunión de la tarde con más altas tempranas (Patel 2017); el umbral de ocupación es propio de cada hospital (Riahi 2026, 25 hospitales). Sin grupo de comparación | Media |
+| 4 | **Asignar enseguida la cama que se libera** y dar el alta temprano (meta inicial 25–30 % antes del mediodía) | Hasta 5,1 camas libres a las 12 h; evita como máximo 8 % del exceso de espera (estimación central ~3 %). Hoy una cama liberada en la mañana tarda 1,8 h en asignarse | Consistente para la asignación rápida: −12,7 min por paciente al corregir fallas entre aseo y clínica (Erdmann 2024); ciclo de ingreso de 390 a 175 min con gestión de camas «pull» (Farok 2026); altas antes del mediodía de 16 % a 36 % y *boarding* −7,1 h en 6 hospitales (Alotaibi 2021). Mixta para la meta de altas sola (Kirubarajan 2021, 7 hospitales; Rajkomar 2016) | Media |
+| 5 | Alerta por paciente a las 48 h sin cama, con responsable | ~4 alertas por día; 52 % termina esperando más de 72 h; 24 h de margen. Opción más temprana con el estimador A6: a las 12 h, ~4 alertas por día con 55 % de acierto | Moderada sobre **por qué** actuar: esperar mucho se asocia con más mortalidad (2,5 % con menos de 2 h frente a 4,5 % con 12 h o más, 41.256 ingresos, Singer 2011) y con errores y retrasos de tratamiento (revisión de 21 estudios, Dowling 2026; otra revisión halla solo una tendencia, Boudi 2020). Indirecta sobre **qué** hacer: escalar al paciente a la planta no aumentó la mortalidad (Viccellio 2009; Tcheroyan 2026) | Media |
+| 6 | Protocolo para quien llega entre las 13 y las 18 h y se hospitaliza: pedir la cama antes | Entre ~11 y ~49 horas-paciente por día (2–11 % del exceso de 451) si esperaran como quien llega por la mañana | Consistente para el mecanismo: protocolo de ingreso rápido con *boarding* de 360 a 270 min (Amarasingham 2010, 9.604 ingresos); decisión → solicitud de cama de 75 a 40 min (Imhoff 2022); ciclo de ingreso de 390 a 175 min (Farok 2026); pedir la cama según la probabilidad de ingreso bajaría el *boarding* 30–70 % en una simulación (Cheng 2026, preprint). La hora del día pesa distinto en cada hospital (Olson 2025) | Media (el mecanismo tiene respaldo; el tamaño del efecto en el HUN es incierto) |
+| 7 | Revisar sistemáticamente las estancias largas | −5 % de estancia ≈ 5 camas (la simulación Monte Carlo da 4,9 y baja los días con más de 106 camas ocupadas de 65 % a 48 %); volver a la de 2023 ≈ 15 camas. Las estancias de más de 14 días ocupan unas 36 camas; las de más de 30 días pasaron de 6 a 13 camas entre 2023 y 2025 | Inconsistente en revisiones (Siddique 2021); proyectos con −4,8 días de estancia mediana en Brasil (Paiva 2024, Red2Green), −68 % de días de cama innecesarios (Logrono 2026) y estancia de 15,5 a 9,0 días en pacientes con alta demorada con un equipo que se reúne cada semana (Ibrahim 2022, Emiratos) | Media |
 
 ## 3. Detalle
 
@@ -131,6 +136,12 @@ pacientes, LD.04.03.11: los líderes deben usar datos y métricas para gestionar
   - **Riahi y colegas** (*Med J Aust* 2026, 25 hospitales públicos de Queensland, 5,5 años): cada 10 % más de ocupación alarga la estancia en
     urgencias 19 min (33 min en los que se hospitalizan), y el umbral en que el flujo se rompe **varía por hospital**: el 85 % genérico no sirve. Respalda
     que la reunión mire la ocupación del propio HUN hora a hora, como hace nuestra alerta de ocupación.
+- **Evidencia nueva (13-nov, texto completo en PMC):** **Alotaibi y colegas** (*BMJ Open Qual* 2021, proyecto «Ensiab», **6 hospitales terciarios**
+  de Arabia Saudita con 3.736 camas, cuasi-experimental antes y después, 12 meses): un paquete con equipos de flujo, el bundle SAFER, días
+  Red2Green y una **reunión diaria de camas para los ingresos de urgencias** bajó el *boarding* de 16,6 a 9,5 h en promedio (−7,1 h), subió las
+  altas antes del mediodía de 16 % a 36 % y acortó el tiempo hasta el alta de 265 a 117 min. **La estancia media no cambió** (6,5 a 6,8 días). Es la
+  evidencia multicéntrica más cercana a lo que se propone, pero la reunión no se evaluó por separado y el artículo tiene inconsistencias menores
+  en sus intervalos de confianza.
 - **Cómo medirla:** alertas atendidas, acciones tomadas, ocupación a las 12 h.
 - **Límite:** las alertas se probaron sobre días pasados con pocos días congestionados (15 en la prueba y 18 en la validación); las cifras pueden moverse. **Recalculado el 8-nov** con la regla de estancia única v3.8 (`src/alertas.py`). La evidencia externa es de casos
   únicos sin grupo de comparación, y en ellos la reunión siempre venía junto con otras medidas: no se puede aislar su efecto.
@@ -165,6 +176,16 @@ pacientes, LD.04.03.11: los líderes deben usar datos y métricas para gestionar
   - **Qué significa para el HUN:** la meta de altas antes del mediodía es un medio, no el fin. Lo que respaldan juntos nuestros datos (1,8 h para
     reasignar una cama de la mañana) y esta evidencia es **dar el alta cuando el paciente esté listo y asignar enseguida la cama que se libera**
     (aviso inmediato de cama libre, aseo priorizado), sin retrasar altas para cumplir una hora.
+- **Evidencia nueva (13-nov, texto completo en PMC) que respalda asignar rápido la cama:**
+  - **Farok y colegas** (*Cureus* 2026, hospital de Medina, Arabia Saudita, 435 ingresos, antes y después): con **gestión de camas «pull»** (la planta
+    prepara y ofrece la cama sin esperar a que urgencias la pida), una meta de 120 min de la decisión a la cama, triage rápido y escalamiento del
+    traslado, el ciclo de ingreso bajó de **390 a 175 min** (mediana) y el tiempo sin valor de 290 a 90 min. La causa más frecuente de demora era la
+    **unidad que recibe** (~42 %). Sin grupo de comparación; los autores advierten que no es evidencia causal.
+  - **Alotaibi y colegas** (2021, ver R3): en 6 hospitales, las altas antes del mediodía pasaron de 16 % a 36 % junto con un *boarding* 7,1 h menor,
+    dentro de un paquete que también aceleraba el alta y la asignación.
+  - **Lectura:** cuatro proyectos independientes (Erdmann, Farok, Alotaibi y Artenstein) coinciden en que el *boarding* baja cuando se acorta el
+    tiempo entre que la cama se libera y que se asigna; la meta de altas antes del mediodía sola no tiene ese respaldo (Kirubarajan, Rajkomar y
+    Kausar). Por eso R4 sube a firmeza **media**, centrada en la asignación.
 - **Ojo al comparar:** Baystate mide *órdenes* de alta; el HUN y los demás miden la *salida* del paciente. Una orden antes del mediodía no garantiza que la cama
   quede libre antes del mediodía.
 - **Cómo medirla:** % de altas antes de las 12 h; tiempo entre un alta de la mañana y la siguiente asignación de cama; hora mediana de asignación de cama; espera de quien llega de 12 a 18 h.
@@ -191,6 +212,16 @@ pacientes, LD.04.03.11: los líderes deben usar datos y métricas para gestionar
     urgencias; ningún estudio mostró más mortalidad; pero la calidad de la evidencia es baja o muy baja (GRADE) y los autores dicen que no alcanza para
     conclusiones claras.
   - **Oskvarek y colegas** (2026) incluyen la gestión activa de camas entre las medidas de salida que requieren coordinación de todo el sistema.
+  - **Por qué vale la pena actuar sobre las esperas largas (13-nov):**
+    - **Singer y colegas** (*Acad Emerg Med* 2011;18:1324–1329, 41.256 ingresos, cohorte retrospectiva; resumen oficial vía Europe PMC): la
+      mortalidad sube con el tiempo esperando cama, de **2,5 %** (menos de 2 h) a **4,5 %** (12 h o más), y la estancia de 5,6 a 8,7 días (más de 24 h),
+      aun ajustando por comorbilidades.
+    - **Dowling y colegas** (*Health Aff Scholar* 2026, revisión sistemática de 21 estudios de EE. UU., 2014–2024): las esperas largas por cama se
+      asocian con más mortalidad, morbilidad, estancia, errores de medicación y retrasos de tratamiento; el efecto varía entre UCI y planta.
+    - **Boudi y colegas** (*PLoS One* 2020, revisión sistemática de 12 estudios, 182.991 pacientes): 6 estudios hallan asociación con la mortalidad y 5
+      no; hay una «tendencia» sin evidencia fuerte. Se cita para no exagerar.
+    - Lectura: no hay estudio de una alerta a las 48 h, pero sí evidencia razonable de que las esperas que busca la alerta (más de 48–72 h en el
+      HUN, muy por encima de las 12 h de Singer) son las que más se asocian con daño.
   - Lectura para el HUN: la alerta solo sirve si dispara una acción definida (revisar el caso, buscar cama en otra zona, escalar a la dirección).
 - **Límite:** solo cuenta a quienes luego se hospitalizan, así que en tiempo real habría más alertas; riesgo de fatiga por alertas. Sin una acción definida
   para cada alerta no sirve.
@@ -219,6 +250,16 @@ pacientes, LD.04.03.11: los líderes deben usar datos y métricas para gestionar
   comunicación directa entre médicos, órdenes de espera predefinidas). El *boarding* bajó de 360 a 270 min y el tiempo hasta las órdenes de ingreso de
   210 a 75 min (p < 0,001), unas 27.884 h ahorradas en un año; **no mejoró** para pacientes que iban a telemetría o UCI. Es el tipo de protocolo que R6
   propone para la franja de la tarde.
+- **Evidencia nueva (13-nov):**
+  - **Farok y colegas** (*Cureus* 2026, ver R4): triage rápido y gestión de camas «pull» llevaron el ciclo de ingreso de 390 a 175 min.
+  - **Cheng y colegas** (arXiv 2026, **preprint sin revisión por pares**, simulación con datos de una urgencia grande de EE. UU.): pedir camas de forma
+    anticipada según la probabilidad de ingreso de los pacientes en urgencias bajaría el *boarding* promedio **30–70 %** y la estancia en urgencias
+    6–15 %, con poco tiempo de cama reservada sin usar. Es lo que R6 propone para la tarde, pero es una simulación, no una prueba en un hospital.
+  - **Olson y colegas** (*J Hosp Med* 2025, 38.766 ingresos en 2 hospitales de Boston): la hora del día cambia la probabilidad de esperar 4 h o más,
+    pero allí el peor momento es la madrugada (OR 1,63 frente a la mañana) y la tarde es mejor (OR 0,78). **El patrón es propio de cada hospital**: en
+    el HUN el peor momento es la tarde, por eso el protocolo se enfoca ahí y debe ajustarse con los datos del propio hospital.
+  - **Lectura:** cuatro fuentes (Amarasingham, Imhoff, Farok y la simulación de Cheng) coinciden en que adelantar la decisión y la solicitud de cama
+    acorta la espera. Por eso R6 sube a firmeza **media**; lo que sigue incierto es cuánto ahorraría en el HUN (2–11 % del exceso).
 - **Límite:** asociación por hora de llegada, no causa. La espera va de la llegada a la asignación de cama (así lo confirmó el HUN): mezcla atención clínica con espera de cama y no se pueden separar con los datos. **Recalculado el 8-nov** con `src/impacto_llegada_tarde.py` (regla v3.8): ~49 h con medianas y 11,0 h con promedios; el valor con promedios aparecía como ~9 y ~11 en versiones anteriores. Es cerca del 2 % del exceso, así que la conclusión no cambia.
 
 ### R7. Revisar las estancias largas (prioridad 7)
@@ -237,7 +278,13 @@ pacientes, LD.04.03.11: los líderes deben usar datos y métricas para gestionar
     temprana del alta, una herramienta de seguimiento y trabajo social desde el inicio), estos bajaron **68 %** en un año (de 1.522,7 a 493,4 días), las
     camas libres a las 7 a. m. pasaron de 1,5 a 2,8 y los pacientes de urgencias esperando ingreso bajaron 23 %.
   - **Hammer y colegas** (2022, ver R3): el pase diario multidisciplinario bajó la estancia 0,83 días.
-  - Todos son proyectos de un solo centro, antes y después, sin grupo de comparación.
+  - **Ibrahim y colegas** (*Risk Manag Healthc Policy* 2022;15:141–149, hospital de 586 camas en Abu Dabi, antes y después): un **equipo
+    multidisciplinario que se reúne cada semana** (hospitalistas, gestores de casos, trabajo social, finanzas) para destrabar altas demoradas bajó la
+    estancia de esos pacientes de **15,45 a 9,04 días** (−41,5 %, p < 0,0001) sin más reingresos a 30 días. Es la forma que se propone para la revisión
+    semanal del HUN.
+  - **En contra:** en Alotaibi (2021, 6 hospitales) la estancia media **no** bajó con un paquete parecido (6,5 a 6,8 días); los efectos se ven en los
+    pacientes de estancia larga, no en la media general.
+  - Todos son proyectos de un solo centro (salvo Alotaibi), antes y después, sin grupo de comparación.
 - **Qué dice la simulación Monte Carlo (A5, versión del 10-nov con bootstrap suavizado):** proyectando 180 días desde el 9-abr-2026, bajar la estancia 5 % lleva la ocupación media de 111,1 a 106,2 camas (−4,9, casi lo mismo que la ley de Little)
   y los días con más de 106 camas ocupadas de 65,4 % a 48,1 %. En cambio, 10 % más de ingresos la sube a 121,9 camas y a 90,9 % de días saturados. **La estancia pesa más que el volumen.**
   Es una proyección condicionada a que el patrón siga igual, no una predicción. (`docs/simulacion.md`)
@@ -264,7 +311,9 @@ La sesión del 29-oct fue la última, así que estos puntos se declaran como lim
 2. Por qué se degrada el registro de las etapas desde el 10-abr-2026 (la auditoría del 2-nov descarta que sea menos demanda).
 3. Qué significa cada etapa de urgencias y qué pasa en la última, donde se va la mayor parte de las esperas largas con poca actividad registrada (`docs/caracterizacion_etapas_tu.md`). (La pregunta sobre el «tiempo sin etapa» antes de la cama perdió sentido el 7-nov: era un artefacto de las estancias duplicadas y solo afecta al 1,7 % de las estancias, `CLAUDE.md` 4.12.)
 
-## 6. Fuentes y verificación (25-oct-2026; comprobaciones del 6-nov y del 12-nov)
+## 6. Fuentes y verificación (25-oct-2026; comprobaciones del 6-nov, 12-nov y 13-nov)
+
+**Comprobación del 13-nov:** 8 fuentes nuevas, cada una abierta en su versión original: texto completo en PMC o en la revista (Alotaibi, Farok, Olson, Ibrahim, Boudi y Dowling), el preprint en arXiv (Cheng) y el resumen oficial vía Europe PMC (Singer, porque PubMed bloqueó la lectura automática). Las cifras citadas coinciden con el original; donde el artículo tiene inconsistencias internas se dice. NHS England (revisiones semanales de estancias largas, «hasta 50 %») no se pudo abrir y no se usa.
 
 **Comprobación del 12-nov:** las cuatro fuentes que solo se habían verificado con un resumen secundario se abrieron en su versión original: **Siddique**
 (texto completo en PMC: 19 revisiones, 8 estrategias; rutas clínicas −1,89 días y gestión de casos −1,28 días en insuficiencia cardíaca), **Oskvarek**
@@ -305,10 +354,18 @@ de 5,0 % a 11,4 %, sin asociación con la estancia, *boarding* +41 min). Todas l
 | Amarasingham R y colegas. *A rapid admission protocol to reduce emergency department boarding times.* Qual Saf Health Care 2010. [PMID 20142408](https://pubmed.ncbi.nlm.nih.gov/20142408/) | Serie de tiempo interrumpida, 9.604 ingresos | R6 | **Resumen oficial en PubMed (12-nov)**: 50 → 10 pasos; *boarding* 360 → 270 min; órdenes 210 → 75 min; sin mejora en telemetría ni UCI. **Nueva** |
 | Paiva MBS y colegas. *Reduction of hospital length of stay through the implementation of SAFER patient flow bundle and Red2Green days tool: a pre-post study.* BMJ Open Qual 2024. [PMID 38191217](https://pubmed.ncbi.nlm.nih.gov/38191217/) | Antes y después, hospital universitario de Brasil | R7 | **Resumen oficial en PubMed (12-nov)**: estancia mediana 19 → 14,2 días; 55,8 % de días «rojos», 42,4 % por falta de revisión senior. **Nueva** |
 | Logrono KJ y colegas. *Reducing unnecessary bed days to optimise flow and improve demand-capacity mismatch.* BMJ Open Qual 2026. [PMID 42349993](https://pubmed.ncbi.nlm.nih.gov/42349993/) | Proyecto de mejora en todo el sistema, 1 año | R7 | **Resumen oficial en PubMed (12-nov)**: días de cama innecesarios −68 %; camas libres a las 7 a. m. 1,5 → 2,8; pendientes de ingreso en urgencias −23 %. **Nueva** |
+| Alotaibi Y, Alnowaiser N, Alamry A. *Improving hospital flow «Ensiab Project».* BMJ Open Qual 2021;10(3):e001505. [PMC8479940](https://pmc.ncbi.nlm.nih.gov/articles/PMC8479940/) (PMID 34583936) | Cuasi-experimental antes y después, 6 hospitales terciarios de Arabia Saudita (3.736 camas), 12 meses | R3, R4, R7 | **Texto completo (13-nov)**: *boarding* 16,6 → 9,5 h (−7,1 h); altas antes del mediodía 16 % → 36 %; tiempo al alta 265 → 117 min; estancia media sin cambio (6,5 → 6,8 días). El intervalo de confianza de la tabla es inconsistente con la reducción. **Nueva** |
+| Farok SM y colegas. *Reducing Emergency Department (ED) Boarding Time Through Lean Redesign of the ED-to-Inpatient Admission Pathway: A Single-Center Quality-Improvement Study.* Cureus 2026;18(5):e109766. [PMC13310080](https://pmc.ncbi.nlm.nih.gov/articles/PMC13310080/) (PMID 42367400) | Antes y después, un hospital de Medina, 435 ingresos (2023) | R4, R6 | **Texto completo (13-nov)**: ciclo de ingreso 390 → 175 min (mediana); tiempo sin valor 290 → 90 min; demora más frecuente en la unidad que recibe (~42 %); «no causal». **Nueva** |
+| Olson RM y colegas. *Waiting for a hospital bed: Disparities in emergency department boarding.* J Hosp Med 2025;21(3):261–272. [PMC12954383](https://pmc.ncbi.nlm.nih.gov/articles/PMC12954383/) (PMID 40753491) | Cohorte retrospectiva, 2 hospitales de Boston, 38.766 ingresos (2018–2024) | R6; documento (brecha por sexo) | **Texto completo (13-nov)**: *boarding* ≥ 4 h frente a la mañana: tarde OR 0,78; 17–22 h 0,92; madrugada 1,63 (sin ajustar); mujeres OR 1,08 (1,04–1,13). **Nueva** |
+| Cheng Q, Argon NT, Ganesaraman A, Ziya S. *Proactive Inpatient Bed Requests for Emergency Department Admissions.* arXiv:2607.15432, 2026. [Enlace](https://arxiv.org/abs/2607.15432) | **Preprint sin revisión por pares**; simulación con datos de una urgencia grande de EE. UU. | R6 | **Texto en arXiv (13-nov)**: pedir camas de forma anticipada reduciría el *boarding* 30–70 % y la estancia en urgencias 6–15 %. **Nueva** |
+| Ibrahim H y colegas. *Multi-Disciplinary Discharge Coordination Team to Overcome Discharge Barriers and Address the Risk of Delayed Discharges.* Risk Manag Healthc Policy 2022;15:141–149. [doi:10.2147/RMHP.S347693](https://doi.org/10.2147/RMHP.S347693) | Antes y después, hospital de 586 camas en Abu Dabi (2019 frente a 2020) | R7 | **Texto completo (13-nov)**: estancia de los pacientes con alta demorada 15,45 → 9,04 días (−41,5 %, p < 0,0001), sin más reingresos; un solo centro. **Nueva** |
+| Dowling MK y colegas. *Patient and staff safety implications of emergency department boarding: a systematic review.* Health Aff Scholar 2026;4(5):qxag084. [doi:10.1093/haschl/qxag084](https://doi.org/10.1093/haschl/qxag084) | Revisión sistemática, 21 estudios de EE. UU. (2014–2024) | R5 | **Texto en la revista (13-nov, resumen y puntos clave)**: esperas largas asociadas a más mortalidad, morbilidad, estancia, errores de medicación y retrasos; el efecto varía entre UCI y planta; pide estudios multicéntricos. **Nueva** |
+| Boudi Z y colegas. *Association between boarding in the emergency department and in-hospital mortality: A systematic review.* PLoS One 2020;15(4):e0231253. [PMC7159217](https://pmc.ncbi.nlm.nih.gov/articles/PMC7159217/) (PMID 32294111) | Revisión sistemática, 12 estudios, 182.991 pacientes | R5 | **Texto completo (13-nov)**: 6 estudios con asociación y 5 sin ella; «tendencia» sin evidencia fuerte. **Nueva** |
+| Singer AJ, Thode HC, Viccellio P, Pines JM. *The association between length of emergency department boarding and mortality.* Acad Emerg Med 2011;18:1324–1329. [doi:10.1111/j.1553-2712.2011.01236.x](https://doi.org/10.1111/j.1553-2712.2011.01236.x) (PMID 22168198) | Cohorte retrospectiva, 41.256 ingresos (2005–2008) | R5 | **Resumen oficial (13-nov, vía Europe PMC)**: mortalidad 2,5 % (< 2 h) → 4,5 % (≥ 12 h); estancia 5,6 → 8,7 días (> 24 h); se mantiene al ajustar. **Nueva** |
 
 ## 7. Estado
 
-**B2 completa (mergeada el 8-nov) y revisada el 9-nov con A4, A5, A6 y los análisis de saturación, etapas de urgencias y pronóstico de la cola.** Cada recomendación tiene fuente comprobada, o una razón escrita de por qué no la hay, y una cifra o una razón de por qué no se puede calcular.
+**B2 completa (mergeada el 8-nov), revisada el 9-nov con A4, A5, A6 y los análisis de saturación, etapas de urgencias y pronóstico de la cola, y reforzada el 13-nov con 8 fuentes más (35 en total): todas las recomendaciones quedan con firmeza media o alta.** Cada recomendación tiene fuente comprobada, o una razón escrita de por qué no la hay, y una cifra o una razón de por qué no se puede calcular.
 
 La cifra baja de R6 y la precisión de la alerta de ocupación de R3 se recalcularon el 8-nov con `src/impacto_llegada_tarde.py` y `src/alertas.py` (regla v3.8).
 
