@@ -16,6 +16,7 @@ PAGINAS (ver docstring de cada una en dashboard/pages/):
   /paciente    paciente.py    Paciente en espera (A6, Samuel)
   /camas       camas.py       Planeacion de camas (A5, Anthony)
   /perfiles    perfiles.py    Perfiles y picos (Anthony)
+  /recomendaciones recomendaciones.py  Las 7 recomendaciones con su evidencia (Samuel)
 
 COMO CORRERLO  python dashboard/main.py   y abrir http://127.0.0.1:8050
   La primera vez que se visita /paciente, el modelo de A6 se entrena si no existe (~1 min). Las demas paginas
@@ -30,7 +31,7 @@ server = app.server
 
 # Icono (clase CSS de theme.css) para cada ruta. Una ruta sin entrada cae en el icono generico de perfiles.
 ICONOS = {"/": "ico-home", "/pronostico": "ico-forecast", "/paciente": "ico-patient",
-          "/camas": "ico-bed", "/perfiles": "ico-profiles"}
+          "/camas": "ico-bed", "/perfiles": "ico-profiles", "/recomendaciones": "ico-recs"}
 
 
 def _paginas_ordenadas():

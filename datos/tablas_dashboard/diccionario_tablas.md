@@ -55,7 +55,7 @@ Las columnas `*_pct` están en escala 0 a 100. Las duraciones están en **horas*
 
 ## Tablas que se escriben a mano (en esta carpeta del repo)
 - `embudo_datos.csv`: de 3,28 M de etapas a 337 mil episodios (página 10).
-- `recomendaciones_tabla.csv`: las 7 recomendaciones (página 9). Actualizada el 6-nov con B2 (`../../docs/recomendaciones.md`); suma las columnas `evidencia_externa` y `fuente_datos`.
+- `recomendaciones_tabla.csv`: las 7 recomendaciones (página `/recomendaciones` del dashboard). Actualizada el 13-nov con `../../docs/recomendaciones.md` (35 fuentes verificadas; todas con firmeza media o alta). Columnas: `prioridad`, `recomendacion`, `impacto_estimado` (lo que dicen nuestros datos), `evidencia_externa`, `firmeza`, `limite`, `como_medir` (nueva), `fuente_datos`, `estado`. Tabla escrita a mano, sin datos por paciente.
 
 ## Tablas que faltan (dependen de análisis pendientes)
 Perfiles de pacientes (A1), factores de la estancia y estancias que se disparan (A2, A2b), modelo explicativo mejorado (A4) y bandas Monte Carlo de camas (A5). Cada una se agregará al paquete

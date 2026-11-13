@@ -22,6 +22,8 @@ SECCIONES = [
      "Simula «¿qué pasaría si…?»: más ingresos, menos estancia u otra mezcla de perfiles, y mira la ocupación proyectada."),
     ("/perfiles", "ico-profiles", "Perfiles y picos",
      "¿Qué perfiles de paciente esperan o se quedan distinto cuando el hospital está más cargado? Tabla histórica."),
+    ("/recomendaciones", "ico-recs", "Recomendaciones",
+     "Siete acciones para el hospital, cada una con lo que dicen nuestros datos y lo que se encontró en otros hospitales."),
 ]
 
 RESUMEN = [
