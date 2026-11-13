@@ -2,16 +2,20 @@
 dashboard/pages/recomendaciones.py  -  pagina 4.1 «Qué hacemos con esto» (13-nov-2026)
 Las 7 recomendaciones del proyecto, cada una con lo que dicen nuestros datos, la evidencia externa verificada, su firmeza,
 su limite y como medirla. Sigue la plantilla de docs/estructura_dashboard.md (titulo = conclusion, pregunta, control,
-tarjetas, pie con la fuente).
+tarjetas, pie con la fuente), con el encabezado en formato de presentacion de dashboard/componentes.py.
 
 DATOS  datos/tablas_dashboard/recomendaciones_tabla.csv (tabla escrita a mano a partir de docs/recomendaciones.md; sin datos
        por paciente). Si falta, la pagina muestra un aviso en vez de tumbar el arranque del dashboard.
 """
+import sys
 from pathlib import Path
 
 import dash
 import pandas as pd
-from dash import Input, Output, callback, dcc, html
+from dash import Input, Output, callback, html
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from componentes import bloque as titulo_bloque, cifra, filtro, mensaje, portada  # noqa: E402
 
 dash.register_page(__name__, path="/recomendaciones", name="Recomendaciones", title="Recomendaciones - HUN", order=5)
 
@@ -69,30 +73,19 @@ def layout():
         ])
     n_alta = int((RECS.firmeza == "Alta").sum())
     return html.Div(className="page-container", children=[
-        html.H2("Más que faltar camas, falta liberarlas, asignarlas y desocuparlas a tiempo"),
-        html.P("¿Qué puede hacer el hospital con lo que encontramos? Siete acciones, de la más básica a la más específica, cada una "
-               "respaldada por los datos del HUN y por lo que se ha encontrado en otros hospitales.", className="rec-lead"),
-        html.Div(className="stat-row rec-stats", children=[
-            html.Div(className="metric-card", children=[html.Div("Recomendaciones"), html.Div(str(len(RECS))),
-                                                         html.Div(f"{n_alta} con firmeza alta y {len(RECS) - n_alta} media")]),
-            html.Div(className="metric-card", children=[html.Div("Fuentes externas"), html.Div("38"),
-                                                         html.Div("cada una leída en su versión original")]),
-            html.Div(className="metric-card", children=[html.Div("Pacientes con más de 48 h sin cama"), html.Div("1 de cada 5"),
-                                                         html.Div("periodo confiable, feb-2023 a abr-2026")]),
-        ]),
-        html.Div(className="card rec-why", children=[
-            html.Div("Por qué vale la pena actuar", className="rec-block__label"),
-            html.P("Esperar mucho por una cama no es solo incómodo: en un estudio de 41.256 ingresos la mortalidad pasó de 2,5 % en "
-                   "quienes esperaron menos de 2 horas a 4,5 % en quienes esperaron 12 horas o más (Singer 2011), y una revisión de 21 "
-                   "estudios asocia las esperas largas con más errores de medicación y retrasos en el tratamiento (Dowling 2026)."),
-        ]),
-        html.Div(className="rec-filter", children=[
-            html.Label("Mostrar", style={"fontWeight": 600}),
-            dcc.RadioItems(id="rec-filtro", options=[{"label": " " + n, "value": v} for n, v in FILTROS], value="todas",
-                           inline=True, inputStyle={"marginLeft": "14px"}),
-        ]),
+        portada("Propuestas · Recomendaciones", "Más que faltar camas, falta liberarlas, asignarlas y desocuparlas a tiempo",
+                "Siete acciones para el hospital, de la más básica a la más específica, cada una respaldada por los datos del HUN y por "
+                "lo que se ha encontrado en otros hospitales.",
+                [cifra(str(len(RECS)), f"recomendaciones: {n_alta} con firmeza alta y {len(RECS) - n_alta} con firmeza media"),
+                 cifra("38", "fuentes externas, cada una leída en su versión original"),
+                 cifra("1 de cada 5", "pacientes espera más de 48 horas por una cama")]),
+        mensaje("Esperar mucho por una cama no es solo incómodo: en un estudio de 41.256 ingresos la mortalidad pasó de **2,5 %** en "
+                "quienes esperaron menos de 2 horas a **4,5 %** en quienes esperaron 12 horas o más (Singer 2011), y una revisión de 21 "
+                "estudios asocia las esperas largas con más errores de medicación y retrasos en el tratamiento (Dowling 2026).",
+                titulo="Por qué vale la pena actuar"),
+        html.Div(className="filtros", children=[filtro("rec-filtro", "Mostrar", [(v, n) for n, v in FILTROS], "todas")]),
         html.Div(id="rec-lista", className="rec-list"),
-        html.H4("Lo que no recomendamos", className="section-title"),
+        titulo_bloque("Lo que no recomendamos", "Ideas que se evaluaron y que los datos no respaldan"),
         html.Div(className="rec-no", children=[
             html.Div(className="card rec-no__item", children=[html.Div(t, className="rec-card__title"), html.P(d)])
             for t, d in NO_RECOMENDAMOS]),

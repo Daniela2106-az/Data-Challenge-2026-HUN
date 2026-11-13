@@ -16,15 +16,31 @@ PAGINAS (ver docstring de cada una en dashboard/pages/):
   /paciente    paciente.py    Paciente en espera (A6, Samuel)
   /camas       camas.py       Planeacion de camas (A5, Anthony)
   /perfiles    perfiles.py    Perfiles y picos (Anthony)
+  /datos           datos.py            Datos y calidad: de la base a los episodios analizados (Samuel)
+  /demanda         demanda.py          Cuando llegan los pacientes (Samuel)
+  /ocupacion       ocupacion.py        Camas ocupadas frente a las 106 del hospital (Samuel)
+  /espera          espera.py           Espera de cama: el cuello de botella (Samuel)
+  /altas           altas.py            Hora de llegada, altas y asignacion de camas (Samuel)
+  /estacionalidad  estacionalidad.py   La forma del año del pronostico (A9, Samuel)
   /recomendaciones recomendaciones.py  Las 7 recomendaciones con su evidencia (Samuel)
   /documentacion   documentacion.py    El documento final completo con descarga en PDF (Samuel)
+
+MENU (13-nov-2026): la barra lateral agrupa las paginas por seccion (contexto, resultados, prediccion y propuestas) con la
+lista de `dashboard/navegacion.py`, la misma que usa el inicio. Una pagina que no este en esa lista aparece al final, bajo "Más".
+Al pie de cada pagina hay botones «anterior» y «siguiente» en ese mismo orden: el dashboard se puede recorrer como una presentacion.
 
 COMO CORRERLO  python dashboard/main.py   y abrir http://127.0.0.1:8050
   La primera vez que se visita /paciente, el modelo de A6 se entrena si no existe (~1 min). Las demas paginas
   cargan sus datos al arrancar el proceso, por eso el arranque tarda unos segundos.
 """
+import sys
+from pathlib import Path
+
 import dash
 from dash import Dash, Input, Output, State, callback, dcc, html
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from navegacion import ICONOS, agrupar, recorrido  # noqa: E402
 
 app = Dash(__name__, use_pages=True, pages_folder="pages", title="Dashboard HUN",
            update_title="Actualizando…")
@@ -49,10 +65,7 @@ def _grafico(archivo):
 def _documento_pdf():
     return send_from_directory(_RAIZ / "docs", "documento_final.pdf")
 
-# Icono (clase CSS de theme.css) para cada ruta. Una ruta sin entrada cae en el icono generico de perfiles.
-ICONOS = {"/": "ico-home", "/pronostico": "ico-forecast", "/paciente": "ico-patient",
-          "/camas": "ico-bed", "/perfiles": "ico-profiles", "/recomendaciones": "ico-recs",
-          "/documentacion": "ico-docs"}
+# Los iconos (ICONOS) y las secciones del menu viven en dashboard/navegacion.py, que tambien usa la pantalla de inicio.
 
 
 def _paginas_ordenadas():
@@ -69,18 +82,46 @@ def enlace_nav(pagina, ruta_activa):
     ])
 
 
+def enlaces_nav(ruta_activa):
+    """Enlaces del menu: el inicio y luego cada seccion con su titulo (las secciones estan en navegacion.py)."""
+    paginas = _paginas_ordenadas()
+    hijos = [enlace_nav(p, ruta_activa) for p in paginas if p["path"] == "/"]
+    for titulo, _descripcion, grupo in agrupar(paginas):
+        hijos.append(html.Div(titulo, className="nav__label"))
+        hijos += [enlace_nav(p, ruta_activa) for p in grupo]
+    return hijos
+
+
 def barra_lateral(ruta_activa="/"):
     return html.Aside(className="sidebar", children=[
         dcc.Link(href="/", className="sidebar__brand", children=html.Img(
             src=dash.get_asset_url("logo_hun.png"), alt="Hospital Universidad del Norte")),
         html.Div("Analítica de flujo", className="nav__label"),
         html.Nav(id="nav-principal", className="nav",
-                 children=[enlace_nav(p, ruta_activa) for p in _paginas_ordenadas()]),
+                 children=enlaces_nav(ruta_activa)),
         html.Div(className="sidebar__foot", children=[
             html.Div("Data Challenge HUN 2026"),
             html.Div("Flujo de pacientes · Uninorte", style={"marginTop": "2px"}),
         ]),
     ])
+
+
+def pasos(ruta):
+    """Botones «anterior» y «siguiente» al pie de cada pagina: el dashboard se recorre en orden, como una presentacion."""
+    orden = recorrido(_paginas_ordenadas())
+    rutas = [p["path"] for p in orden]
+    if ruta not in rutas:
+        return []
+    i = rutas.index(ruta)
+
+    def boton(j, direccion, clase):
+        if not 0 <= j < len(orden):
+            return html.Span()
+        return dcc.Link(href=orden[j]["path"], className="paso__btn " + clase, children=[
+            html.Span(direccion, className="paso__dir"), html.Span(orden[j]["name"], className="paso__nombre")])
+
+    return [boton(i - 1, "← Anterior", "paso__btn--ant"), html.Span(f"{i + 1} de {len(orden)}", className="paso__pos"),
+            boton(i + 1, "Siguiente →", "paso__btn--sig")]
 
 
 def barra_superior():
@@ -102,7 +143,7 @@ def servir_layout():
         barra_lateral(),
         html.Div(className="main", children=[
             barra_superior(),
-            html.Main(className="content", children=dash.page_container),
+            html.Main(className="content", children=[dash.page_container, html.Nav(id="paso-nav", className="paso")]),
         ]),
     ])
 
@@ -110,14 +151,14 @@ def servir_layout():
 app.layout = servir_layout
 
 
-@callback(Output("nav-principal", "children"), Output("topbar-titulo", "children"),
+@callback(Output("nav-principal", "children"), Output("topbar-titulo", "children"), Output("paso-nav", "children"),
           Input("url", "pathname"))
 def sincronizar_navegacion(ruta):
-    """Resalta el enlace activo en la barra lateral y pone el nombre de la pagina en la barra superior."""
+    """Resalta el enlace activo en la barra lateral, pone el nombre de la pagina en la barra superior y arma los botones del pie."""
     ruta = ruta or "/"
-    enlaces = [enlace_nav(p, ruta) for p in _paginas_ordenadas()]
+    enlaces = enlaces_nav(ruta)
     actual = next((p["name"] for p in dash.page_registry.values() if p["path"] == ruta), "Inicio")
-    return enlaces, actual
+    return enlaces, actual, pasos(ruta)
 
 
 # Modo claro/oscuro: todo del lado del cliente para que sea instantaneo y no necesite al servidor.

@@ -53,6 +53,22 @@ Las columnas `*_pct` están en escala 0 a 100. Las duraciones están en **horas*
 | `dias_atipicos.csv`, `dias_atipicos_resumen.csv` | días fuera del patrón (`variable`, `real`, `esperado`, `z`, `causa_calendario`) y su resumen | 30, 3 |
 | `cobertura_por_ruta.csv`, `resumen_por_ruta.csv` | rutas de los episodios, `total`, `pct_medida` y percentiles de duración (`confiable`) | 36, 28 |
 
+## Tablas agregadas de las páginas de contexto y resultados (13-nov-2026)
+
+Las genera `python dashboard/preparar_datos.py` en `datos/procesados/dashboard/` (fuera de git; ~2 min). Ninguna tiene una fila por paciente y
+los grupos con menos de 30 estancias salen vacíos. Periodo: 1-feb-2023 a 9-abr-2026. Si falta alguna, su página muestra un aviso en vez de fallar.
+
+| Archivo | Grano (una fila es...) | Filas | Columnas | Página |
+|---|---|---|---|---|
+| `espera_cubo.csv` | año × tipo de visita × grupo de edad (cada uno con «Todos») | 80 | `n`, `mediana`, `p25`, `p75`, `p90`, `pct_24`, `pct_48`, `tramo_0` a `tramo_6` (% en 0–6, 6–12, 12–24, 24–48, 48–72, 72–120 y > 120 h) | `/espera` |
+| `espera_por_mes.csv` | un mes de llegada | 39 | `mes`, `n`, `mediana`, `p90` | `/espera` |
+| `espera_por_hora.csv` | año × hora de llegada | 116 | `hora`, `n`, `mediana`, `p90`, `anio` | `/altas` |
+| `camas_por_hora.csv` | año × hora del día | 120 | `pct_ingresos_a_cama`, `pct_altas` (% del total del día), `n_ingresos`, `n_altas` | `/altas` |
+| `llegadas_calor.csv` | un día de la semana (columnas `0` a `23`: llegadas promedio en esa hora) | 7 | `dia`, `0` … `23` | `/demanda` |
+| `panel_diario.csv` | un día (copia del panel diario) | 1.164 | `llegadas`, `ingresos_a_cama`, `altas`, `ocup_hosp_media`, `dia_semana_num`, … | `/demanda`, `/ocupacion` |
+| `estacionalidad_efecto.csv` | serie × día de un año típico | 730 | `objetivo`, `dia_del_anio`, `mes`, `dia`, `efecto_pct` (cuánto sube o baja el pronóstico frente al promedio del año) | `/estacionalidad` |
+| `estacionalidad_error.csv` | serie × horizonte | 10 | `objetivo`, `tramo_dias`, `wape_con`, `wape_sin` (error del backtest con y sin la forma del año), `orden` | `/estacionalidad` |
+
 ## Tablas que se escriben a mano (en esta carpeta del repo)
 - `embudo_datos.csv`: de 3,28 M de etapas a 337 mil episodios (página 10).
 - `recomendaciones_tabla.csv`: las 7 recomendaciones (página `/recomendaciones` del dashboard). Actualizada el 13-nov con `../../docs/recomendaciones.md` (35 fuentes verificadas; todas con firmeza media o alta). Columnas: `prioridad`, `recomendacion`, `impacto_estimado` (lo que dicen nuestros datos), `evidencia_externa`, `firmeza`, `limite`, `como_medir` (nueva), `fuente_datos`, `estado`. Tabla escrita a mano, sin datos por paciente.

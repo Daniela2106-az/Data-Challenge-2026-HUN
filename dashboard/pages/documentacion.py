@@ -7,10 +7,14 @@ Las imagenes del documento apuntan a ../resultados/graficos/; aqui se sirven des
 /documento_final.pdf (rutas registradas en dashboard/main.py). Solo se publican graficos y el documento: nada de datos por paciente.
 """
 import re
+import sys
 from pathlib import Path
 
 import dash
 from dash import dcc, html
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from componentes import cifra, portada  # noqa: E402
 
 dash.register_page(__name__, path="/documentacion", name="Documentación", title="Documentación del proyecto - HUN", order=6)
 
@@ -38,6 +42,12 @@ def _secciones():
     return secciones
 
 
+def _referencias():
+    """Cuantas referencias lista el anexo 11.4 (las numeradas)."""
+    texto = DOC.read_text(encoding="utf-8")
+    return len(re.findall(r"^\d+\. ", texto[texto.find("### 11.4"):], flags=re.M))
+
+
 def layout():
     if not DOC.exists():
         return html.Div(className="page-container", children=[
@@ -52,9 +62,12 @@ def layout():
         dcc.Markdown(c, className="doc-md", link_target="_blank"),
     ]) for t, c in secciones]
     return html.Div(className="page-container", children=[
-        html.H2("¿Por qué se espera tanto por una cama?"),
-        html.P("El documento completo del proyecto: los datos y su calidad, cómo fluye el paciente, el cuello de botella, los modelos de "
-               "predicción y simulación, las recomendaciones, las limitaciones y las referencias.", className="rec-lead"),
-        html.A("Descargar el documento en PDF", href="/documento_final.pdf", className="btn-primary doc-pdf", download="documento_final_HUN.pdf"),
+        portada("Propuestas · Documentación", "¿Por qué se espera tanto por una cama?",
+                "El documento completo del proyecto: los datos y su calidad, cómo fluye el paciente, el cuello de botella, los modelos "
+                "de predicción y simulación, las recomendaciones, las limitaciones y las referencias.",
+                [cifra(str(len(secciones)), "secciones, del reto a los anexos"), cifra("7", "recomendaciones para el hospital"),
+                 cifra(str(_referencias()), "referencias, listadas en los anexos")],
+                accion=html.A("Descargar el documento en PDF", href="/documento_final.pdf", className="doc-pdf",
+                              download="documento_final_HUN.pdf")),
         html.Div(className="doc-layout", children=[indice, html.Div(cuerpo, className="doc-body")]),
     ])

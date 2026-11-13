@@ -121,7 +121,7 @@ def actualizar(dias, objetivo, tema):
         tarjeta("Total esperado", f"{f.pronostico.sum():,.0f}".replace(",", "."), f"ingresos en los próximos {dias} días"),
         tarjeta("Error típico", f"{fila.wape_pct:.0f} %", f"por día; el último dato confiable es de hace unos {meses:.0f} meses"),
     ]
-    nota = (f"Cómo se calculó: según el calendario (día de la semana, festivos, semana santa, Carnaval) y el nivel de pacientes de febrero de 2023 a abril de 2026. "
+    nota = (f"Cómo se calculó: según el calendario (día de la semana, festivos, semana santa, Carnaval), la época del año (página «Forma del año») y el nivel de pacientes de febrero de 2023 a abril de 2026. "
             f"Desde el 10-abr-2026 el registro de las etapas del hospital está incompleto: esos días no se usan para estimar el nivel. "
             "No anticipa brotes ni cortes de sistema, ni lo que haya cambiado en el hospital desde entonces. Es una tendencia, no una predicción precisa.")
     tg.aplicar(fig, tg.es_oscuro(tema))

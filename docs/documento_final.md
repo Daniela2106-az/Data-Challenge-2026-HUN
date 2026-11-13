@@ -595,14 +595,23 @@ externos son de antes y después, sin grupo de comparación.
 ## 8. El dashboard
 
 **Herramienta:** Dash (Python y Plotly), aceptado por los organizadores. Un solo programa (`dashboard/main.py`, puerto 8050) con una página por tema en
-`dashboard/pages/`. **No se conecta a la base:** solo lee tablas agregadas, ninguna con una fila por paciente.
+`dashboard/pages/`, organizadas en cuatro secciones que siguen el orden del reto: contexto, resultados, predicción y propuestas. **No se conecta a la base:** solo lee tablas agregadas, ninguna con una fila por paciente.
 
 | Página | Qué responde | Responsable |
 |---|---|---|
-| Pronóstico de demanda (`/`) | Cuántos pacientes llegarán y cuántos irán a cama, desde hoy hasta un año, con su banda del 80 % y la forma del año | Daniela y Samuel |
+| Inicio (`/`) | Portada con las cifras clave del hospital y el menú por secciones | Anthony |
+| Datos y calidad (`/datos`) | Qué había en la base, qué se corrigió y hasta qué fecha son confiables los datos | Samuel |
+| Demanda (`/demanda`) | A qué hora y qué día llegan los pacientes, y si la demanda crece entre años | Samuel |
+| Ocupación de camas (`/ocupacion`) | Camas ocupadas frente a las 106 del hospital, y por qué sube la ocupación | Samuel |
+| Espera de cama (`/espera`) | Cuánto se espera por una cama, quién espera más y si los peores casos empeoran | Samuel |
+| Llegada y altas (`/altas`) | A qué hora salen las altas, a qué hora se asignan las camas y cuánto espera quien llega a cada hora | Samuel |
+| Perfiles y picos (`/perfiles`) | Cómo cambian la espera y la estancia según el perfil del paciente y la carga del momento | Anthony |
+| Pronóstico de demanda (`/pronostico`) | Cuántos pacientes llegarán y cuántos irán a cama, desde hoy hasta un año, con su banda del 80 % y la forma del año | Daniela y Samuel |
+| Forma del año (`/estacionalidad`) | Qué épocas del año traen más pacientes y cuánto mejora el pronóstico al saberlo | Samuel |
 | Paciente en espera (`/paciente`) | Cuándo es más probable que un paciente que ya espera reciba cama (estimador A6), con sus avisos | Samuel |
 | Planeación de camas (`/camas`) | Riesgo de saturar las camas y escenarios de ingresos y estancia (simulación Monte Carlo, A5) | Anthony |
-| Perfiles y picos (`/perfiles`) | Cómo cambian la espera y la estancia según el perfil del paciente y la carga del momento | Anthony |
+| Recomendaciones (`/recomendaciones`) | Las siete recomendaciones, cada una con la evidencia propia, la evidencia de otros hospitales y su firmeza | Samuel |
+| Documentación (`/documentacion`) | Este documento completo, con sus tablas y figuras, y la descarga en PDF | Samuel |
 
 - **Cómo correrlo:** `python3 dashboard/main.py` y abrir http://127.0.0.1:8050 (las tablas agregadas deben estar disponibles; ver `README.md`).
 - **Publicación:** [pendiente: enlace público].
