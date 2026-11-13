@@ -134,6 +134,78 @@ degrada: no es menos demanda. El hospital no explicó la causa. Para el contexto
 fechas no coinciden exactamente (10-abr frente a 22-abr) y no se puede comprobar con los datos. Queda como hipótesis, no como causa; la decisión de
 usar solo el periodo confiable no cambia.
 
+### 3.5 Las tablas y las columnas que usamos
+El esquema real tiene 8 tablas (no las 20 del instructivo). Esta es la lectura de cada una después de explorarla: qué es, qué columnas usamos y qué representan,
+y lo que hay que saber antes de confiar en ella. Detalle completo en `CLAUDE.md` 3 y 4.
+
+| Tabla (filas) | Qué es | Columnas que usamos y qué representan | Lo que hay que saber |
+|---|---|---|---|
+| `person` (912 mil) | Una fila por paciente | `person_id` (identificador anónimo); `gender_concept_id` (sexo: 53 % mujeres); `year_of_birth` (año de nacimiento, de donde sale la **edad**) | Raza y etnia no sirven (95 % sin dato). 608 mil personas no tienen ninguna visita. |
+| `visit_occurrence` (1,7 M) | Una fila por visita | `visit_occurrence_id`; `person_id`; `visit_concept_id` (**tipo de visita**: urgencias 9203, «Treatment urgency» 3045729, ambulatoria 581479, hospitalización 9201); `visit_start_datetime` | Inicio = fin en el 100 %: la visita no tiene duración. El tipo no dice por dónde pasó el paciente (hay visitas «ambulatorias» con hospitalización), por eso se usan todos los tipos. No existen `visit_type_concept_id` ni `preceding_visit_occurrence_id`; `provider_id` es siempre 0. |
+| `visit_detail` (3,28 M) | Una fila por **etapa** dentro de la visita | `visit_detail_concept_id` (tipo de etapa: llegada, urgencias, cama, ambulatorio); `visit_detail_start_datetime` y `visit_detail_end_datetime` (**de aquí salen todos los tiempos del proyecto**) | No trae `person_id` (se llega por la visita), ni servicio, piso o cama. Las etapas de urgencias se repiten seguidas (2,5 por estancia) sin información extra; entre el 36 y el 42 % no tiene hora de fin. |
+| `condition_occurrence` (38,6 M) | Una fila por diagnóstico registrado | `condition_concept_id` (código **SNOMED**; 37 % sin traducir, concepto 0); `condition_start_datetime` (hora de registro); `person_id` | No hay CIE-10 ni diagnóstico principal (`condition_type_concept_id` siempre 0): se toma el primero con código. Un mismo diagnóstico se repite cientos de veces en una visita: siempre se cuentan conceptos distintos. Se registra tarde (88 % después de las 2 h de llegar): sirve para explicar, no para predecir al llegar. |
+| `procedure_occurrence` (47 M) | Una fila por orden: laboratorios, imágenes, cirugías, notas | `procedure_concept_id` (158 conceptos frecuentes) | `procedure_date` está vacía en toda la tabla y no existe `procedure_datetime`: solo conteos por visita, sin poder ubicarlos en el tiempo. «Admission to adult intensive care unit» es la única señal de UCI. |
+| `measurement` (16,6 M) | Una fila por componente de laboratorio | `measurement_concept_id` (53 % sin traducir); `measurement_datetime` (**hora de la toma**, válida en el 95 %); `measurement_source_value_extended` (el informe en texto, de donde se extraen valores como troponina o creatinina); `person_id` | La única tabla clínica con hora útil. Cada examen aparece dos veces (SNOMED y LOINC). `value_as_number` casi siempre es 0. No hay signos vitales. |
+| `concept` (10 M) | Diccionario de códigos | `concept_id`, `concept_name`, `domain_id`, `vocabulary_id` | Sin índices y sin `concept_code`; no hay `concept_ancestor`, así que los diagnósticos se agruparon a mano en 19 grupos (`datos/referencia/mapeo_dx.csv`). |
+| `cups` (94 mil) | Catálogo nacional de procedimientos | — | No enlaza con `procedure_occurrence` (sus códigos son SNOMED, LOINC o ICD9Proc). |
+
+### 3.6 Cómo exploramos y limpiamos la base, paso a paso
+1. **Exploración por agregados.** La base es lenta (consultas de 10 a 30 minutos, solo índices de llave primaria), así que nunca se bajaron tablas enteras: cada
+   pregunta se resolvió con una consulta agregada por visita en SQL (`sql/`), exportada a CSV y analizada en Python. Antes de usar cada tabla se contaron sus filas,
+   sus conceptos, sus fechas nulas y sus rangos; así aparecieron, por ejemplo, el 100 % de procedimientos sin fecha y los 80 diagnósticos con fecha futura. Desde
+   noviembre las consultas se lanzan desde Python en segundo plano (la VPN apaga el internet mientras está conectada; `docs/conexion_bd.md`).
+2. **Visitas copia (30 %).** Una visita cuyo id es otro id más un desfase fijo (1.746.478 y otros) y con las mismas etapas al segundo. Las de la misma persona se
+   borran y su información clínica pasa a la visita original; las de otra persona se conservan como visitas, quitando las etapas que repiten.
+3. **Etapas.** Se descartan las ambulatorias (duración cero) y las abiertas en la extracción (fin con milisegundos). Las etapas de urgencias seguidas se juntan en
+   un bloque para medir; las que tienen inicio = fin se marcan sin duración, no como cero.
+4. **Episodios.** Una atención continua de un paciente; se corta un episodio nuevo cuando pasan más de 168 h sin etapas. Con esto desaparece el «desfase de 16 días»
+   que vivía en las copias. Resultado: 337.194 episodios.
+5. **Estancias gemelas (41 % de los hospitalizados).** La misma estancia en cama registrada en dos personas. Regla v3.8: los registros que comparten el inicio y el fin
+   de cama, o algún intervalo de cama idéntico al segundo, son una sola estancia (25.777 estancias únicas). Sin esta regla el hospital parecía tener 146 camas ocupadas.
+6. **Persona real (regla v4.0).** De cada estancia gemela se conserva el registro de la persona que domina en sus diagnósticos y laboratorios (identificada en el
+   97,6 %); así la edad y el sexo son los correctos. Los diagnósticos y laboratorios se filtran siempre por esa persona.
+7. **Periodo confiable.** Del 1-feb-2023 al 9-abr-2026, sin el 28 y 29 de marzo de 2026 (caída del registro). Después del 10-abr el registro de etapas se degrada y
+   no se usa para estimar niveles ni errores.
+8. **Verificación.** Una auditoría de 29 consultas directas en la base (altas por hora, ingresos, copias, camas ocupadas) reproduce las cifras del pipeline con otro
+   método, y el pipeline completo se regeneró desde cero en un clon limpio del repositorio.
+
+### 3.7 Las variables que construimos y qué representa cada una
+Todo sale de `src/analisis_etapas.py` y `src/preparar_variables.py` en una tabla con una fila por episodio (`tabla_episodios`). Las columnas que más se usan:
+
+| Variable (columna) | Cómo se calcula | Qué representa | Qué peso tiene en los resultados |
+|---|---|---|---|
+| `espera_cama_h` | `ini_hosp_est − ini_est`: inicio de la primera etapa de cama de la **estancia** menos la llegada más temprana | Horas desde que el paciente llega hasta que se le asigna cama. Es la variable central del proyecto | Mediana 18,6 h, p90 73,9 h; el 98 % de ese tiempo transcurre en urgencias |
+| `estancia_h` (`fin_hosp_est − ini_hosp_est`) | Fin menos inicio de la cama, de toda la estancia | Horas en cama | Media de 4,6 a 5,3 días entre 2023 y 2025: explica el aumento de la ocupación |
+| `estancia_unica`, `estancia_id`, `n_registros_estancia`, `persona_real` | Marcas de las reglas v3.8 y v4.0 | Si el registro es el que cuenta la estancia y quién es la persona real | Para espera, camas e ingresos se filtra `estancia_unica`; sin filtrar, todo sale inflado |
+| `ruta`, `ruta_simple`, `hospitalizado`, `estado` | Secuencia de bloques (llegada > urgencias > cama) y si la duración es confiable (`medida`, `minimo_conocido`, `minimo_dx`, `sin_duracion`, `sin_actividad`) | Por dónde pasó el paciente y qué tan completo está su registro | Solo los episodios `medida` entran a los tiempos; la espera de cama está medida en el 100 % de los hospitalizados |
+| `hora`, `franja`, `dia_semana`, `festivo`, `fin_de_semana`, `anio`, `mes` | Calendario de la llegada (festivos de Colombia con `holidays`) | Cuándo llegó | La hora de llegada manda (madrugada 12–15 h, tarde ~25 h); el día de la semana y los festivos casi nada |
+| `edad`, `grupo_edad`, `sexo` | De `person`, con la persona real | Quién es el paciente | 4,1 puntos de R² de la espera; las mujeres esperan +27 %; la estancia sube con la edad |
+| `tipo_visita` | `visit_concept_id` | Por dónde entró al sistema | Ambulatoria −31 % y «Treatment urgency» −39 % de espera frente a urgencias |
+| `dx_concept_id`, `dx_nombre`, `categoria_dx`, `n_dx_distintos` | Primer diagnóstico con código por fecha; grupo de `mapeo_dx.csv` | De qué se le atiende | 7,2 puntos de R²; registrado tarde, explica pero no predice |
+| `n_proc_distintos`, `n_lab`, `n_lab_6h`, `n_lab_antes_hosp` | Conteos de procedimientos y laboratorios (total y primeras 6 h) | Cuánta actividad clínica tuvo | El total crece con la estancia (causalidad inversa): como factor solo vale `n_lab_6h` |
+| `ocup_hosp`, `ocup_tu`, `ocupacion_confiable` | Pacientes en cama y en urgencias en el momento de llegar, con estancias únicas | Qué tan lleno estaba el hospital | +7 % de espera por cada 10 camas más; mueve el p90, no la mediana |
+| `llegadas_6h_previas`, `llegadas_24h_previas` | Llegadas en las 6 y 24 h anteriores | Carga reciente de urgencias | Mediana de 14 h en el decil más tranquilo a 26 h en el más cargado |
+| `reingreso_72h`, `reingreso_30d`, `n_episodios_previos`, `dias_desde_anterior` | Vuelve en 72 h o 30 días tras una atención con actividad | Reingresos y historial | 5,3 % y 14,1 % depurados; la espera anterior predice la siguiente (Spearman 0,34) |
+| `hueco_antes_hosp_h` | Tiempo sin ninguna etapa justo antes de la cama | Posible registro faltante | 1,1 % de las horas (lo que parecía 21 % era un artefacto de las gemelas) |
+
+Además de la tabla hay variables que se calculan **en el momento**, para los modelos: el **recorrido en urgencias** (etapas iniciadas y cerradas, horas desde la
+última), el **historial** de la persona (espera y estancia de su hospitalización anterior), la **cola** y la **ocupación por zona** hora a hora, las **banderas de
+laboratorio** de las primeras 6 h (11 valores con punto de corte clínico) y, para el pronóstico, las series diarias de llegadas, llegadas con atención e ingresos a
+cama con su calendario y su forma del año. El diccionario de las tablas pequeñas que alimentan el dashboard está en `datos/tablas_dashboard/diccionario_tablas.md`.
+
+### 3.8 Herramientas y por qué estas
+| Herramienta | Para qué | Por qué esta |
+|---|---|---|
+| PostgreSQL con SQL (CTE), DBeaver al inicio y después SQLAlchemy + psycopg desde Python | Consultas agregadas de solo lectura, en segundo plano por la VPN | La base no permite tablas temporales y es lenta: agregar en SQL y exportar lo mínimo evita bajar tablas de 15 GB |
+| Python 3.14 con pandas, numpy y pyarrow | Todo el pipeline de limpieza y análisis | Reproducible: la tabla de episodios se regenera idéntica en menos de un minuto; parquet guarda 300 mil episodios con tipos correctos |
+| statsmodels | Regresiones explicativas: OLS sobre el logaritmo de la espera, logística para «esperar más de 24 h», Poisson para las llegadas | Coeficientes interpretables con intervalos y errores robustos; es lo que un hospital puede leer |
+| scikit-learn (`HistGradientBoosting`) | El estimador de tiempo restante por paciente | Maneja valores faltantes y categorías, entrena en segundos con 700 mil filas paciente-hora, y da probabilidades calibradas; LightGBM, XGBoost y 13 variantes más llegaron al mismo nivel (6.8) |
+| scipy y numpy | Bootstrap por semanas, Poisson, Kaplan-Meier, Monte Carlo de camas | Los intervalos de confianza de todo el proyecto salen de bootstrap, no de supuestos de normalidad |
+| holidays | Festivos de Colombia | El calendario entra en el pronóstico y en los factores |
+| Dash y Plotly | El dashboard | Mismo lenguaje que los modelos: el estimador y la simulación corren en vivo sobre tablas agregadas, sin conexión a la base ni filas por paciente. Los organizadores aceptaron Dash en lugar de Power BI el 1-nov; Power BI no podía correr el modelo ni actualizarse sin exportar tablas |
+| matplotlib | Gráficos estáticos del repositorio | Se versionan en GitHub como evidencia de cada análisis |
+| Git y GitHub | Trabajo del equipo con una rama por persona y tarea | Cada análisis queda con su script, su documento y su commit; los datos clínicos nunca se suben |
+
 ---
 
 ## 4. Cómo fluye el paciente (componente 1)
@@ -257,6 +329,18 @@ puntuales; `docs/dias_atipicos.md`); las camas de baja actividad clínica son ~6
 Construimos un conjunto de herramientas que permiten **anticipar** lo que va a pasar en el hospital: cuántos pacientes llegarán, qué días se
 congestionará urgencias, cuándo recibirá cama cada paciente y qué pasaría con las camas en distintos escenarios. Todas se validaron con el método más
 exigente: entrenar con el pasado y probar con meses que el modelo nunca vio, y siempre frente a una referencia simple para demostrar que aportan.
+
+**Por qué estos modelos y no otros.** Para cada pregunta se eligió el método más simple que diera el mejor resultado en datos que no había visto, y que un
+hospital pudiera leer:
+
+| Pregunta | Modelo elegido | Por qué | Lo que se descartó (6.8) |
+|---|---|---|---|
+| ¿Cuántos pacientes llegan y cuántos van a cama cada día? | Regresión de Poisson con día de la semana, festivos, Carnaval, nivel reciente y forma del año | Son conteos; cada efecto se lee como un porcentaje; error de 7,9 % a 1–7 días | SARIMAX y otros modelos de series (peor a corto plazo), quincenas, deduplicar llegadas |
+| ¿Hoy será un día congestionado? | Clasificador logístico sobre lo que ya llegó hasta las 12 h, mezclado con el pronóstico | Simple y con AUC de 0,94; avisa a media jornada | Alerta un día antes (AUC 0,61) |
+| ¿Cuándo recibirá cama este paciente? | Supervivencia hora a hora con árboles de gradiente (un modelo por hora de espera) | Da la distribución completa del tiempo que falta y se actualiza con lo que pasa; percentiles calibrados | Fila «primero en llegar» (el orden no se cumple), cuantiles al llegar, modelo de cola, LightGBM y XGBoost (mismo nivel) |
+| ¿Qué perfiles esperan más y por qué? | Regresión logística y regresión sobre el logaritmo de la espera | Coeficientes interpretables con intervalos; explica, no reemplaza al estimador | Alertar por riesgo al llegar (marcaría al 44 % con 4 de cada 10 falsas alarmas) |
+| ¿Se van a saturar las camas? | Simulación Monte Carlo con estancias reales por perfil (edad y ruta) sobre los ingresos pronosticados | Respeta la cola larga de las estancias y da probabilidades de superar las 106 camas; cobertura 86 % en el backtest | Predecir la estancia de cada paciente (R² ≈ 0), proyección con altas esperadas (peor que «lo mismo que ahora») |
+| ¿Cuántos esperarán cama en 6–12 h? | Modelo de flujo (entradas y salidas de la cola) | Un tercio menos de error que suponer que todo sigue igual | Persistencia y tasa típica |
 
 ### 6.1 Pronóstico de demanda (`src/modelo_pronostico.py`; página de pronóstico del dashboard)
 Un modelo de Poisson que combina el calendario (día de la semana, festivos, semana santa, fin de año y el **Carnaval de Barranquilla**, que reduce las
