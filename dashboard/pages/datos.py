@@ -42,6 +42,8 @@ FALTA = [
 ]
 # (año, % de las etapas de atencion en urgencias sin hora de salida) - conteo directo en la base (CLAUDE.md 4.3)
 SIN_FIN = [("2023", 41.6), ("2024", 38.4), ("2025", 35.8), ("2026", 36.6)]
+# (mes de 2026, % de las visitas de urgencias con su etapa de llegada registrada) - auditoria en la base (CLAUDE.md 4.9, lote 2)
+REGISTRO = [("Enero", 65.7), ("Febrero", 64.7), ("Marzo", 64.6), ("Abril", 54.0), ("Mayo", 28.4), ("Junio", 29.6)]
 HOSPITAL = [
     ("106", "Camas de hospitalización", "88 de adultos y 18 de niños y neonatos."),
     ("58", "Camillas de urgencias", "Observación de adultos y pediátrica."),
@@ -63,6 +65,10 @@ def layout():
                "Porcentaje de etapas de atención en urgencias que no registran cuándo terminaron, por año. **No son atenciones "
                "cortas: falta el dato.** Mejora un poco cada año, pero sigue siendo el mayor vacío de la base.",
                grafico("dat-sinfin", alto=300), dato=("100 %", "de las hospitalizaciones sí tiene sus tiempos completos"), invertida=True),
+        lamina(3, "En abril de 2026 el registro se rompe: la etapa de llegada cae de 65 % a 30 %",
+               "Porcentaje de las visitas de urgencias de 2026 que tienen registrada su etapa de llegada. **Las visitas no bajan; lo "
+               "que baja es el detalle.** Por eso todo el análisis usa los datos hasta el 9 de abril: en gris, los meses que no se usan.",
+               grafico("dat-registro", alto=300), dato=("+2 %", "de visitas de urgencias en mayo de 2026 frente a mayo de 2025: no es menos demanda")),
         bloque("Qué hay en la base", "Una base clínica en formato OMOP, de solo lectura"),
         html.Div(className="hechos", children=[hecho(*b) for b in BASE]),
         bloque("Qué se corrigió", "Cuatro problemas de calidad y la regla con que se resolvió cada uno"),
@@ -90,6 +96,16 @@ def layout():
             "La persona real de las estancias duplicadas se deduce de los datos; el hospital dijo que «lo más probable» es que sean "
             "duplicados, pero no confirmó cuál es. Tampoco explicó por qué cambia el registro desde abril de 2026.",
             "Fuente: datos/tablas_dashboard/embudo_datos.csv · CLAUDE.md 4.1, 4.3, 4.6, 4.9 y 4.10 · sesión con el HUN del 29-oct-2026."))
+
+
+@callback(Output("dat-registro", "figure"), Input("theme-store", "data"))
+def registro(tema):
+    fig = go.Figure(go.Bar(x=[m for m, _ in REGISTRO], y=[v for _, v in REGISTRO], marker_color=[AZUL] * 3 + [TENUE] * 3,
+                           text=[f"{v:.0f} %" for _, v in REGISTRO], textposition="outside", cliponaxis=False,
+                           hovertemplate="%{x} de 2026: %{y:.1f} % de las visitas con etapa de llegada<extra></extra>"))
+    estilo(fig, tema).update_yaxes(ticksuffix=" %", range=[0, 78])
+    fig.update_layout(bargap=0.4)
+    return fig
 
 
 @callback(Output("dat-sinfin", "figure"), Input("theme-store", "data"))
