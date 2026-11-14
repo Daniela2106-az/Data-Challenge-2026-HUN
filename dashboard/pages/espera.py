@@ -55,7 +55,7 @@ def layout():
                "tras año. Esta gráfica muestra a todos los pacientes: no cambia con los filtros.",
                grafico("esp-mes", alto=340), dato=("+20 h", "en la espera de los peores casos, de 2023 a 2026"), invertida=True),
         lamina(3, html.Span(id="esp-titular-quien"),
-               "Espera mediana de cada grupo de edad según el tipo de visita por el que entró: entre más oscuro, más espera. "
+               "Espera mediana de cada grupo de edad según el tipo de visita por el que entró: entre más intenso el azul, más espera. "
                "**Cambia con el año de arriba**, no con los otros dos filtros. Los grupos con menos de 30 casos quedan en blanco.",
                grafico("esp-matriz", alto=300), id_dato="esp-dato-quien"),
         bloque("Dónde se va el tiempo", "Cuatro cifras que explican por qué la espera es el cuello de botella"),
@@ -99,10 +99,11 @@ def figura_quien(c, anio, tema):
     """Espera mediana por grupo de edad y tipo de visita, del año elegido: titular, figura y dato."""
     m = c[(c.anio == anio) & (c.tipo_visita != "Todos") & (c.grupo_edad != "Todos") & (c.n >= 30)]
     m = m.pivot_table(index="grupo_edad", columns="tipo_visita", values="mediana").reindex(index=EDADES, columns=TIPOS)
-    escala = [[0, "#1d2b38"], [1, "#58c0ec"]] if tg.es_oscuro(tema) else [[0, "#eaf3fb"], [1, "#0a4f8f"]]
+    oscuro = tg.es_oscuro(tema)
+    escala = [[0, "#22384c"], [1, "#1f7fc0"]] if oscuro else [[0, "#eaf3fb"], [1, "#0a4f8f"]]
     fig = go.Figure(go.Heatmap(z=m.values, x=TIPOS, y=EDADES, colorscale=escala, xgap=5, ygap=5, showscale=False,
                                text=[[f"{coma(v, 0)} h" if pd.notna(v) else "" for v in fila] for fila in m.values],
-                               texttemplate="%{text}", textfont=dict(size=16),
+                               texttemplate="%{text}", textfont=dict(size=16, **({"color": "#ffffff"} if oscuro else {})),
                                hovertemplate="%{y}, %{x}: espera mediana de %{z:.1f} h<extra></extra>"))
     estilo(fig, tema)
     fig.update_layout(margin=dict(l=110, r=10, t=10, b=36))

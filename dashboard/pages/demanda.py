@@ -40,7 +40,7 @@ def layout():
         html.Div(className="filtros", children=[
             filtro("dem-serie", "Qué contar", [("llegadas", "Todas las llegadas"), ("ingresos_a_cama", "Ingresos a cama")], "llegadas")]),
         lamina(1, "El pico es de 9 a 11 de la mañana, y el lunes es el día más cargado",
-               "Cada cuadro es una hora de un día de la semana: entre más oscuro, más llegadas. De noche y en fin de semana el "
+               "Cada cuadro es una hora de un día de la semana: entre más intenso el azul, más llegadas. De noche y en fin de semana el "
                "hospital recibe mucho menos.",
                grafico("dem-calor", alto=330), dato=("9 a 11 a. m.", "la franja con más llegadas, todos los días")),
         lamina(2, html.Span(id="dem-titular"),

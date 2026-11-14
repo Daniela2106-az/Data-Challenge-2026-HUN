@@ -9,10 +9,11 @@ import sys
 from pathlib import Path
 
 import dash
-from dash import dcc, html
+import plotly.graph_objects as go
+from dash import Input, Output, callback, dcc, html
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from componentes import bloque, cifra, hecho, mensaje, metodo, pagina, portada  # noqa: E402
+from componentes import AZUL, PIZARRA, bloque, cifra, coma, estilo, grafico, hecho, lamina, leer, mensaje, metodo, pagina, portada  # noqa: E402
 
 dash.register_page(__name__, path="/resumen", name="Resumen", title="Resumen de hallazgos - HUN", order=5)
 
@@ -64,6 +65,11 @@ def layout():
                 "El proyecto completo en una pantalla: ocho hallazgos, cada uno con su página, y lo que proponemos al hospital.",
                 [cifra("18,6 h", "de espera mediana por una cama"), cifra("105 de 106", "camas ocupadas en promedio en 2025"),
                  cifra("7", "recomendaciones, cuatro con firmeza alta")]),
+        lamina(1, "El problema en una gráfica: la espera típica no cambia, la de los peores casos sube cada año",
+               "Horas desde que el paciente llega hasta que se le asigna cama, por año. **La barra gris es el paciente típico; la azul, "
+               "el que espera más que 9 de cada 10.**",
+               grafico("res-espera", alto=320), dato=("61 → 81 h", "esperan los peores casos, de 2023 a 2026"))
+        if leer("espera_cubo.csv") is not None else None,
         bloque("Lo que encontramos, en ocho puntos", "Toca un hallazgo para ver su página con las gráficas y el detalle"),
         html.Div(className="hechos hechos--2", children=[_hallazgo(i, *h) for i, h in enumerate(HALLAZGOS, 1)]),
         bloque("Lo que proponemos", "Cinco líneas de acción; el detalle y la evidencia están en la página de Recomendaciones"),
@@ -75,3 +81,21 @@ def layout():
             "Casi todo son **asociaciones y escenarios** con supuestos escritos, no causas ni promesas. La meta de tiempos del hospital y "
             "la causa del cambio de registro desde abril de 2026 no se conocen.",
             "Fuente: docs/documento_final.md, sección 1 (resumen ejecutivo)."))
+
+
+@callback(Output("res-espera", "figure"), Input("theme-store", "data"))
+def espera(tema):
+    c = leer("espera_cubo.csv", dtype={"anio": str})
+    fig = go.Figure()
+    if c is not None:
+        t = c[(c.tipo_visita == "Todos") & (c.grupo_edad == "Todos") & (c.anio != "Todos")].sort_values("anio")
+        x = [a if a != "2026" else "2026 (ene–abr)" for a in t.anio]
+        fig.add_trace(go.Bar(x=x, y=t.mediana, name="Paciente típico (mediana)", marker_color=PIZARRA, text=[f"{coma(v, 0)} h" for v in t.mediana],
+                             textposition="outside", cliponaxis=False, hovertemplate="%{x}: %{y:.1f} h de espera mediana<extra></extra>"))
+        fig.add_trace(go.Bar(x=x, y=t.p90, name="Peores casos (1 de cada 10)", marker_color=AZUL, text=[f"{coma(v, 0)} h" for v in t.p90],
+                             textposition="outside", cliponaxis=False, hovertemplate="%{x}: %{y:.1f} h en los peores casos<extra></extra>"))
+        fig.update_yaxes(range=[0, t.p90.max() * 1.2])
+    estilo(fig, tema, leyenda=True).update_yaxes(ticksuffix=" h")
+    fig.update_xaxes(type="category")
+    fig.update_layout(barmode="group", bargap=0.34, bargroupgap=0.06)
+    return fig
