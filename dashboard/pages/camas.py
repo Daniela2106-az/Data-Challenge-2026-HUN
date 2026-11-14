@@ -37,6 +37,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "src"))
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))        # dashboard/ para el tema de graficos
 import simulacion_camas_montecarlo as scm  # noqa: E402  (import liviano desde el 10-nov: ~1-2 s, no corre el backtest)
 import tema_graficos as tg  # noqa: E402
+from componentes import mensaje, metodo  # noqa: E402
 
 dash.register_page(__name__, path="/camas", name="Planeación de camas", title="Planeación de camas - HUN", order=3)
 
@@ -135,6 +136,17 @@ def layout():
         html.P("Supuestos: B y C se aplican de forma uniforme en todo el horizonte; D es un caso de estrés explícito "
                "(no un pronóstico); ningún escenario cambia la capacidad física (106/18/88, dato del HUN). Asociación, "
                "no causa.", style={"fontSize": "11px", "color": GRIS, "marginTop": "10px"}),
+        mensaje("**La estancia es la palanca más barata.** Bajar la estancia 5 % libera unas 5 camas y reduce los días saturados casi tanto como los "
+                "aumentaría un 10 % más de ingresos. Sin cambios, el hospital supera sus 106 camas en 2 de cada 3 días simulados; la presión está en "
+                "los adultos, que ya operan al 100 % de sus 88 camas."),
+        metodo("Se simulan los próximos 180 días muchas veces (300 aquí; 1.000 en el documento). Cada día, los ingresos salen al azar alrededor del "
+               "pronóstico de demanda; a cada paciente se le asigna un perfil real (grupo de edad y por dónde llegó) y una estancia tomada de pacientes "
+               "reales de ese perfil (2024–2025). Sumando quién sigue en cama cada día sale la ocupación, con su banda del 10 al 90 %. Probado con "
+               "enero a abril de 2026 sin haberlos visto: la ocupación real cayó dentro de la banda el 79 % de los días, con un error de ~7 %.",
+               "Es un escenario con supuestos escritos, no una predicción: los cambios de ingresos y de estancia se aplican parejos en todo el "
+               "horizonte, y la mezcla de estrés (D) es un caso extremo a propósito. No dice qué pasará con la espera de cada paciente ni distingue "
+               "camas de camillas. Las 106 camas son el dato del hospital, sin fecha: pasar de ahí puede ser sobreocupación o una capacidad real mayor.",
+               "Fuente: src/simulacion_camas_montecarlo.py (motor de A5). Detalle: documentación, sección 6.5, y docs/modelo_camas.md y docs/simulacion.md."),
     ])
 
 

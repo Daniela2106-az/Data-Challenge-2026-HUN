@@ -11,11 +11,15 @@ DATOS  resultados/tablas/perfiles_en_picos_llegadas.csv, perfiles_en_picos_ocupa
        dias_alta_demanda.csv (de src/perfiles_en_picos.py; correrlo antes si no existen).
 """
 import os
+import sys
 from pathlib import Path
 
 import dash
 import pandas as pd
 from dash import dash_table, html
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))        # dashboard/ para las piezas comunes
+from componentes import mensaje, metodo  # noqa: E402
 
 dash.register_page(__name__, path="/perfiles", name="Perfiles y picos", title="Perfiles y picos de demanda - HUN", order=4)
 
@@ -89,4 +93,14 @@ def layout():
 
         html.P("Asociación, no causa; mismos límites que el resto del proyecto. Periodo confiable: 1-feb-2023 a "
                "9-abr-2026.", style={"fontSize": "11px", "color": GRIS, "marginTop": "16px"}),
+        mensaje("**Los picos de llegadas golpean sobre todo a los perfiles más comunes de urgencias** (adultos y niños escolares), que esperan entre "
+                "30 y 70 % más cuando llegan en un momento de carga alta; no cambia quién llega ni cuánto se queda en cama. Un día de alta demanda no "
+                "es un «día de cuello de botella»: la espera larga es crónica, y por eso las acciones de fondo valen todos los días."),
+        metodo("Se cruzan los 42 perfiles de paciente (grupo de edad, sexo y tipo de visita) con el momento de carga en que llegaron, medido de dos "
+               "formas: las llegadas de las 6 horas previas o la ocupación del hospital, tomando el 10 % más alto como «pico». Para cada perfil se "
+               "compara la espera y la estancia medianas en los picos frente al resto, y la diferencia se clasifica como grande, pequeña o ruido según "
+               "el tamaño de los grupos (los de menos de 30 estancias no se muestran).",
+               "Asociación, no causa: un perfil que espera más en los picos no necesariamente espera por el pico. Los días de alta demanda son solo "
+               "días con más llegadas de lo normal para ese día de la semana (1 de cada 6); ningún día del periodo tuvo una espera fuera de lo esperado.",
+               "Fuente: src/perfiles_en_picos.py (tablas agregadas por perfil). Detalle: documentación, sección 5.7, y docs/perfiles_en_picos.md y docs/perfiles_pacientes.md."),
     ])

@@ -31,7 +31,7 @@ import comparar_estimadores as ce  # noqa: E402
 import confianza_perfil as cp  # noqa: E402
 import estimador_tiempo_restante as etr  # noqa: E402
 import estimador_tiempos as et  # noqa: E402
-from componentes import bloque, cifra, portada  # noqa: E402
+from componentes import bloque, cifra, mensaje, metodo, portada  # noqa: E402
 import tema_graficos as tg  # noqa: E402
 
 dash.register_page(__name__, path="/paciente", name="Paciente en espera", title="¿Cuándo recibirá cama? - HUN", order=2)
@@ -112,9 +112,19 @@ def layout():
         ]),
         bloque("¿Qué tan bien funciona?", "Probado con julio de 2025 al 9 de abril de 2026, meses que el modelo no había visto"),
         validacion(),
-        html.P("Límites: la base no registra el triage, el servicio ni el tipo de cama, que es de lo que más depende la espera; la «cama» es la asignación "
-               "administrativa, que puede ser una silla o camilla de apoyo; probado con jul-2025 a 9-abr-2026. Detalle en docs/estimador_tiempos.md.",
-               style={"fontSize": "12px", "color": GRIS}),
+        mensaje("**Es el rango de pacientes parecidos, no una promesa para una persona.** Sirve para responder al paciente y a su familia en qué "
+                "momento del día es más probable la cama, para el censo de la reunión de camas (cuántos de los que esperan tendrán cama en 12 o 24 h) "
+                "y para avisar a las 12 h quién seguirá sin cama a las 48. Solo aplica a pacientes que ya tienen orden de hospitalización."),
+        metodo("Para cada hora de espera, el modelo estima la probabilidad de recibir cama en la hora siguiente según la hora del reloj, el día, la "
+               "ocupación, la edad, el sexo, el tipo de visita, el historial del paciente, su recorrido en urgencias y, desde las 6 h, sus "
+               "laboratorios. Encadenando esas probabilidades sale el rango completo de lo que falta. Se entrena con las estancias de feb-2023 a "
+               "abr-2026 dando más peso a lo reciente, y conviene reentrenarlo cada mes. Probado con 5.430 estancias que no había visto: mejora el "
+               "rango cerca de 9 % al llegar y 11 % a las pocas horas frente a darle a todos el mismo rango, y su percentil 90 cubre el 91 %.",
+               "No separa la atención clínica de la espera pura por una cama, porque la base no registra la hora de la orden de hospitalización. No "
+               "conoce el triage, el servicio ni el tipo de cama, que es de lo que más depende la espera: con esos datos la mejora se duplicaría. La "
+               "«cama» es la asignación administrativa, que puede ser una camilla de apoyo. En las primeras horas, parte de la probabilidad refleja "
+               "el trámite de registro, no una predicción.",
+               "Fuente: src/estimador_tiempo_restante.py (modelo guardado, versión 9) y las tablas de src/utilidad_estimador.py. Detalle: documentación, sección 6.4, y docs/estimador_tiempos.md."),
     ])
 
 

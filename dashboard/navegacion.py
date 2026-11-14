@@ -5,6 +5,8 @@ docs/estructura_dashboard.md: contexto, resultados, prediccion y propuestas.
 
 Una pagina nueva que no este en SECCIONES aparece sola al final, bajo "Más": para agregarla basta con crear su archivo en pages/.
 """
+import re
+
 # Icono (clase CSS de theme.css) de cada ruta. Una ruta sin entrada usa el icono generico de perfiles.
 ICONOS = {"/": "ico-home", "/pronostico": "ico-forecast", "/paciente": "ico-patient", "/camas": "ico-bed",
           "/perfiles": "ico-profiles", "/recomendaciones": "ico-recs", "/documentacion": "ico-docs", "/datos": "ico-data",
@@ -43,3 +45,47 @@ def recorrido(paginas):
     """Las paginas en el orden en que se recorre el dashboard, como una presentacion: el inicio y luego cada seccion."""
     inicio = [p for p in paginas if p["path"] == "/"]
     return inicio + [p for _titulo, _descripcion, grupo in agrupar(paginas) for p in grupo]
+
+
+# ---------------------------------------------------------------- documentacion que respalda cada pagina (14-nov-2026)
+# Cada pagina del dashboard es la version resumida, para el hospital, de una parte de docs/documento_final.md (la pagina
+# /documentacion lo muestra completo). main.py pone al pie de cada pagina el enlace a su seccion.
+CAPITULOS = {1: "1. Resumen ejecutivo", 3: "3. Los datos y su calidad", 4: "4. Cómo fluye el paciente (componente 1)",
+             5: "5. El cuello de botella y sus factores (componente 2)", 6: "6. Modelos, predicción y simulación (componente 3)",
+             7: "7. Recomendaciones (componente 4)"}
+# ruta -> (capitulo, subseccion o tema, que se encuentra alli)
+DOCUMENTACION = {
+    "/resumen": (1, "Resumen ejecutivo", "los ocho hallazgos y lo que se propone, con sus cifras"),
+    "/datos": (3, "3.1 a 3.7", "la base tabla por tabla, la exploración y la limpieza paso a paso, las variables construidas y las herramientas"),
+    "/demanda": (4, "Cómo fluye el paciente", "llegadas por hora y por día, el recorrido, la estancia y los reingresos"),
+    "/ocupacion": (5, "5.5 La saturación y la ocupación", "por qué sube la ocupación, la ley de Little y el exceso sobre las 106 camas"),
+    "/espera": (5, "5.1 a 5.3 La espera de cama", "la definición de cuello de botella, el exceso y por qué empeoran los peores casos"),
+    "/comparar": (6, "6.7 Diagnóstico repetible del cuello de botella", "cómo se compara el cuello de botella entre periodos"),
+    "/altas": (5, "5.4 La hora del día", "las altas tardías, las dos olas de asignación y el límite de proceso"),
+    "/factores": (5, "5.7 Factores de la espera", "cuánto explica cada factor y el modelo explicativo"),
+    "/estancia": (5, "5.7 Estancia larga", "por qué subió la estancia y qué comparten las estancias largas"),
+    "/diagnosticos": (5, "5.7 Diagnóstico", "espera y estancia por grupo de diagnóstico y sus límites"),
+    "/perfiles": (5, "5.7 Quién es el paciente", "los perfiles, la brecha por sexo y la carga del momento"),
+    "/pronostico": (6, "6.1 Pronóstico de demanda", "el modelo, su error por horizonte y la forma del año"),
+    "/estacionalidad": (6, "6.1 La forma del año", "de dónde salen las curvas del año y cuánto mejoran el pronóstico"),
+    "/alertas": (6, "6.2 Alertas", "las tres alertas, cómo se probaron y qué tanto aciertan"),
+    "/atipicos": (6, "6.3 Días atípicos", "cómo se detectan y qué dicen del problema de la espera"),
+    "/paciente": (6, "6.4 Estimador de la espera de cada paciente", "qué usa, cómo se validó y sus límites"),
+    "/camas": (6, "6.5 Simulación Monte Carlo de camas", "cómo funciona, su validación, los escenarios y la curva de capacidad"),
+    "/modelos": (6, "«Por qué estos modelos» y 6.8", "la elección de cada modelo y las alternativas evaluadas"),
+    "/recomendaciones": (7, "Recomendaciones", "las siete acciones con su evidencia, su firmeza y lo que no recomendamos"),
+}
+
+
+def slug_seccion(titulo):
+    """El mismo ancla que pages/documentacion.py da a cada seccion de nivel 2 del documento final."""
+    t = re.sub(r"[^\w\s-]", "", titulo.lower(), flags=re.UNICODE)
+    return "sec-" + re.sub(r"\s+", "-", t.strip())[:60]
+
+
+def documentacion_de(ruta):
+    """(capitulo, subseccion, descripcion, href) de la parte del documento final que respalda la pagina, o None."""
+    if ruta not in DOCUMENTACION:
+        return None
+    cap, sub, desc = DOCUMENTACION[ruta]
+    return cap, sub, desc, "/documentacion#" + slug_seccion(CAPITULOS[cap])

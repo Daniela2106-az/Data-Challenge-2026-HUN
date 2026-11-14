@@ -50,7 +50,7 @@ import dash
 from dash import Dash, Input, Output, State, callback, dcc, html
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from navegacion import ICONOS, agrupar, recorrido  # noqa: E402
+from navegacion import ICONOS, agrupar, documentacion_de, recorrido  # noqa: E402
 
 app = Dash(__name__, use_pages=True, pages_folder="pages", title="Dashboard HUN",
            update_title="Actualizando…")
@@ -134,6 +134,18 @@ def pasos(ruta):
             boton(i + 1, "Siguiente →", "paso__btn--sig")]
 
 
+def enlace_documentacion(ruta):
+    """Pie de cada pagina (14-nov-2026): la pagina es el resumen para el hospital; aqui se enlaza la seccion del documento final que la respalda."""
+    d = documentacion_de(ruta)
+    if d is None:
+        return []
+    cap, sub, desc, href = d
+    return [html.Span(className="nav__ico ico-docs doc-rel__ico"),
+            html.Span([html.B("Esta página resume la documentación: "), f"capítulo {cap}, {sub}. ",
+                       html.Span(desc[0].upper() + desc[1:] + ".", className="doc-rel__desc")]),
+            dcc.Link("Leer la sección completa →", href=href, className="doc-rel__link")]
+
+
 def barra_superior():
     return html.Header(className="topbar", children=[
         html.Div("Inicio", id="topbar-titulo", className="topbar__title"),
@@ -153,10 +165,11 @@ def servir_layout():
         dcc.Store(id="theme-store", storage_type="local"),   # recuerda el tema entre visitas
         html.Div(id="grafico-tema-dummy", style={"display": "none"}),
         html.Div(id="nav-visible-dummy", style={"display": "none"}),
+        html.Div(id="ancla-dummy", style={"display": "none"}),
         barra_lateral(),
         html.Div(className="main", children=[
             barra_superior(),
-            html.Main(className="content", children=[dash.page_container, html.Nav(id="paso-nav", className="paso")]),
+            html.Main(className="content", children=[dash.page_container, html.Div(id="doc-rel", className="doc-rel"), html.Nav(id="paso-nav", className="paso")]),
         ]),
     ])
 
@@ -165,7 +178,7 @@ app.layout = servir_layout
 
 
 @callback(Output("nav-principal", "children"), Output("topbar-titulo", "children"), Output("paso-nav", "children"),
-          Input("url", "pathname"))
+          Output("doc-rel", "children"), Input("url", "pathname"))
 def sincronizar_navegacion(ruta):
     """Resalta el enlace activo en la barra lateral, pone el nombre de la pagina en la barra superior y arma los botones del pie."""
     ruta = ruta or "/"
@@ -173,7 +186,7 @@ def sincronizar_navegacion(ruta):
     actual = next((p["name"] for p in dash.page_registry.values() if p["path"] == ruta), "Inicio")
     seccion = next((t for t, _d, grupo in agrupar(_paginas_ordenadas()) if any(p["path"] == ruta for p in grupo)), "")
     titulo = [html.Span(seccion + " · ", className="topbar__seccion"), actual] if seccion else actual
-    return enlaces, titulo, pasos(ruta)
+    return enlaces, titulo, pasos(ruta), enlace_documentacion(ruta)
 
 
 # Modo claro/oscuro: todo del lado del cliente para que sea instantaneo y no necesite al servidor.
@@ -243,3 +256,39 @@ app.clientside_callback(
 
 if __name__ == "__main__":
     app.run(debug=False, port=8050)
+
+
+# Al llegar con un ancla (#sec-...), por ejemplo desde el pie «Leer la sección completa», espera a que la pagina termine de dibujarse y
+# desplaza hasta esa seccion (el navegador solo no lo hace, porque Dash dibuja el contenido despues de cargar).
+app.clientside_callback(
+    """
+    function(hash, pathname) {
+        if (!hash) { return ''; }
+        var id = decodeURIComponent(hash.replace('#', ''));
+        var hecho = false;
+        function ir(el) { el.scrollIntoView({block: 'start'}); }
+        function intentar() {
+            var el = document.getElementById(id);
+            if (el && !hecho) {
+                hecho = true;
+                // Se desplaza varias veces: dcc.Link vuelve al tope al navegar y las imagenes que cargan despues mueven el contenido.
+                [60, 400, 1200, 2500].forEach(function(ms) { setTimeout(function() { ir(el); }, ms); });
+                return true;
+            }
+            return false;
+        }
+        // Con dcc.Link el contenido de la pagina anterior sigue en pantalla un momento: se espera al siguiente ciclo.
+        setTimeout(function() {
+            if (intentar()) { return; }
+            // La pagina de documentacion tarda varios segundos en dibujarse: se espera a que aparezca la seccion (hasta 30 s).
+            var obs = new MutationObserver(function() { if (intentar()) { obs.disconnect(); } });
+            obs.observe(document.body, {childList: true, subtree: true});
+            setTimeout(function() { obs.disconnect(); }, 30000);
+        }, 50);
+        return '';
+    }
+    """,
+    Output("ancla-dummy", "children"),
+    Input("url", "hash"),
+    Input("url", "pathname"),
+)

@@ -24,6 +24,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "src"))
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))        # dashboard/ para el tema de graficos
 import modelo_pronostico as mp  # noqa: E402
 import tema_graficos as tg  # noqa: E402
+from componentes import mensaje, metodo  # noqa: E402
 
 dash.register_page(__name__, path="/pronostico", name="Pronóstico", title="Pronóstico de demanda - HUN", order=1)
 
@@ -87,6 +88,17 @@ def layout():
     html.Div(id="pron-tarjetas", style={"display": "flex", "flexWrap": "wrap", "gap": "12px", "margin": "16px 0"}),
     dcc.Graph(id="pron-grafico", config={"displaylogo": False}),
     html.Div(id="pron-nota", style={"fontSize": "13px", "color": GRIS, "marginTop": "8px"}),
+    mensaje("**Sirve para planear la semana, no para adivinar un día.** A una semana el pronóstico de llegadas se equivoca cerca de 8 % y a un "
+            "año cerca de 10 %. Los ingresos a cama de un día son más ruidosos (~18 %), pero por semana el error baja a ~9,5 %, que es como se "
+            "planean las camas. Úselo para dimensionar turnos y camas por semana y para anticipar la temporada alta de mitad de año."),
+    metodo("Un modelo de conteos (regresión de Poisson) que combina el calendario (día de la semana, festivos, Semana Santa, fin de año y "
+           "Carnaval, que baja las llegadas ~17 %), el nivel reciente del hospital y la **forma del año**, tomada de datos públicos de vigilancia "
+           "(dengue para las llegadas; infección respiratoria y diarrea para los ingresos a cama). Se entrenó con feb-2023 a jun-2025 y se probó "
+           "con meses que no había visto; el rango probable del 80 % sale de los errores de esa prueba y en las llegadas cubre el 78–82 % de los días.",
+           "No anticipa brotes, cortes de sistema ni lo que haya cambiado en el hospital después del 9-abr-2026, el último dato confiable. No dice "
+           "cuántos pacientes quedarán sin atender ni cuánto esperará cada uno (eso está en «Paciente en espera»). Las llegadas incluyen ~4 % de "
+           "registros replicados, estables en el tiempo.",
+           "Fuente: src/modelo_pronostico.py sobre panel_diario.csv (agregado por día, sin pacientes). Detalle: documentación, sección 6.1, y docs/estacionalidad_anual.md."),
     ])
 
 

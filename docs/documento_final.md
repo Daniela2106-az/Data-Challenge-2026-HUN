@@ -3,11 +3,13 @@
 
 **Data Challenge HUN 2026** · Hospital Universidad del Norte (HUN) y pregrado de Ciencia de Datos, Universidad del Norte
 **Equipo:** Daniela (coordinación, datos y análisis), Samuel (estimador de tiempos, recomendaciones y dashboard), Anthony (modelo explicativo y simulación de camas)
-**Versión:** borrador del 13-nov-2026 (estacionalidad anual completa, ficha A9: dengue, IRA y EDA del SIVIGILA; recomendaciones con 38 fuentes verificadas) · **Entregables:** este documento, el repositorio en GitHub y el dashboard interactivo
+**Versión:** borrador del 14-nov-2026 (estacionalidad anual completa, ficha A9: dengue, IRA y EDA del SIVIGILA; recomendaciones con 38 fuentes verificadas; capítulo 3 reorganizado: tablas y columnas de la base, exploración y limpieza paso a paso, variables y herramientas) · **Entregables:** este documento, el repositorio en GitHub y el dashboard interactivo
 
 > **Cómo leer este documento.** Cada cifra lleva al lado el documento del repositorio donde se calcula y el script que la produce. Casi todo
 > son **asociaciones y escenarios**, no causas probadas, y cada hallazgo lleva su limitación junto a él. Los datos clínicos no están en el
 > repositorio: solo el código, las consultas, los documentos y los gráficos.
+> **Este documento es la versión completa**, pensada para quien quiera revisar el método. El dashboard cuenta lo mismo resumido para el
+> hospital: cada página lleva al pie el enlace a la sección de aquí que la respalda.
 
 ---
 
@@ -80,6 +82,8 @@ el 4 sale de los dos anteriores.
 
 ## 3. Los datos y su calidad
 
+Este capítulo describe la base tal como es, qué columnas usamos y qué representa cada una, cómo se exploró y se limpió paso a paso, qué variables se construyeron y con qué herramientas. Es la parte **previa a cualquier resultado**: sin ella, las cifras del hospital salían infladas cerca de 40 %.
+
 ### 3.1 La base
 Base PostgreSQL en el esquema estándar **OMOP** (`uninorte_omop`), de solo lectura y detrás de VPN. Tablas: `visit_occurrence` (1,7 millones de
 visitas), `visit_detail` (3,28 millones de etapas), `person` (912 mil personas), `condition_occurrence` (38,6 millones de filas de
@@ -96,45 +100,9 @@ procedimientos (la columna está vacía en toda la tabla); diagnóstico principa
 | 9201 | Cama (HOSP) | Hospitalización; según el HUN, se registra **al asignar la cama** |
 | 581479 | Ambulatorio (AMB) | Evento administrativo de duración cero; se descarta |
 
-### 3.2 Problemas encontrados y cómo se resolvieron
+El detalle de cada tabla y de sus columnas está en 3.2; cómo se limpió, en 3.3.
 
-| Problema | Tamaño | Qué se hizo |
-|---|---|---|
-| Visitas copia (mismo contenido con otro id) | ~30 % de las visitas | Se borran las de la misma persona y su información pasa a la visita original |
-| **Estancias en cama duplicadas en dos personas** | 41 % de los hospitalizados | Cada estancia se cuenta una vez (regla v3.8: 25.777 estancias únicas) y se conserva la **persona real**, identificada por quién domina los diagnósticos y laboratorios en el 97,6 % de los casos |
-| Etapas de urgencias sin hora de salida | 36–42 % | Se marcan sin duración (no como 0 h); la duración de urgencias de quien se va de alta solo se describe, con métodos de supervivencia |
-| Etapas abiertas al momento de la extracción | 2.053 | Se descartan |
-| **Registro de etapas degradado desde el 10-abr-2026** | La etapa de llegada cae de 65 % a 30 % de las visitas mientras las visitas no bajan | Se usa solo el **periodo confiable: 1-feb-2023 a 9-abr-2026** |
-| Caída de todo el registro el 28 y 29 de marzo de 2026 | 14 y 118 visitas (lo normal: 400–600) | Se excluyen |
-
-**Por qué importa:** sin esta limpieza el hospital parecía tener ~146 camas ocupadas y 27,7 ingresos por día; los valores reales son ~100 camas y
-~20 ingresos. La auditoría directa en la base (2-nov) y la reproducción del pipeline en un clon limpio confirmaron las cifras.
-Detalle: `CLAUDE.md` 4.1–4.13; `docs/HALLAZGOS.md` 2; `src/analisis_etapas.py`, `src/preparar_variables.py`, `src/auditoria_bd.py`.
-
-**Resultado:** 337.194 episodios (atención continua de un paciente; se corta tras 168 h sin etapas). En el periodo confiable, 22.819 estancias
-únicas con espera de cama medida.
-
-### 3.3 Lo que dijo el hospital (sesión del 29-oct-2026)
-106 camas de hospitalización (88 de adultos y 18 de niños) y 58 camillas de urgencias; la hospitalización se registra al asignar la cama; las
-estancias en dos personas «probablemente son duplicados»; hay horarios y costumbres de alta. No dieron la meta de tiempos ni la causa del cambio
-de registro de abril de 2026. No hubo más sesiones.
-
-### 3.4 El quiebre de abril de 2026 y lo que pasaba en el sistema de salud
-La auditoría en la base (`CLAUDE.md` 4.9) muestra que desde el 10-abr-2026 las visitas de urgencias **suben ~40 %** mientras el registro de etapas se
-degrada: no es menos demanda. El hospital no explicó la causa. Para el contexto se revisaron prensa y actos de la Superintendencia de Salud
-(`docs/estacionalidad_anual.md`, cuarta ronda):
-- **Oct-2023:** abre el Hospital Juan Domínguez Romero en Soledad, el mismo municipio del HUN. **Ene-2025:** abre el Nuevo Hospital de Barranquilla
-  (122 camas de hospitalización y urgencias).
-- **Ago-2025:** la Supersalud interviene la ESE Universitaria del Atlántico (red pública del departamento) por 49 hallazgos críticos, entre ellos
-  fallas en urgencias.
-- **Abr-2026:** la Supersalud prorroga la intervención de Nueva EPS; desde el 22-abr la Clínica General del Norte (Barranquilla) suspende las cirugías
-  programadas por la cartera de las EPS, y varias clínicas acumulan deudas de más de 90 días con sus médicos.
-
-**Lectura:** la crisis financiera de abril de 2026 pudo llevar pacientes de otras clínicas al HUN, lo que encaja con el aumento de visitas, pero las
-fechas no coinciden exactamente (10-abr frente a 22-abr) y no se puede comprobar con los datos. Queda como hipótesis, no como causa; la decisión de
-usar solo el periodo confiable no cambia.
-
-### 3.5 Las tablas y las columnas que usamos
+### 3.2 Las tablas y las columnas que usamos
 El esquema real tiene 8 tablas (no las 20 del instructivo). Esta es la lectura de cada una después de explorarla: qué es, qué columnas usamos y qué representan,
 y lo que hay que saber antes de confiar en ella. Detalle completo en `CLAUDE.md` 3 y 4.
 
@@ -149,7 +117,7 @@ y lo que hay que saber antes de confiar en ella. Detalle completo en `CLAUDE.md`
 | `concept` (10 M) | Diccionario de códigos | `concept_id`, `concept_name`, `domain_id`, `vocabulary_id` | Sin índices y sin `concept_code`; no hay `concept_ancestor`, así que los diagnósticos se agruparon a mano en 19 grupos (`datos/referencia/mapeo_dx.csv`). |
 | `cups` (94 mil) | Catálogo nacional de procedimientos | — | No enlaza con `procedure_occurrence` (sus códigos son SNOMED, LOINC o ICD9Proc). |
 
-### 3.6 Cómo exploramos y limpiamos la base, paso a paso
+### 3.3 Cómo exploramos y limpiamos la base, paso a paso
 1. **Exploración por agregados.** La base es lenta (consultas de 10 a 30 minutos, solo índices de llave primaria), así que nunca se bajaron tablas enteras: cada
    pregunta se resolvió con una consulta agregada por visita en SQL (`sql/`), exportada a CSV y analizada en Python. Antes de usar cada tabla se contaron sus filas,
    sus conceptos, sus fechas nulas y sus rangos; así aparecieron, por ejemplo, el 100 % de procedimientos sin fecha y los 80 diagnósticos con fecha futura. Desde
@@ -169,7 +137,45 @@ y lo que hay que saber antes de confiar en ella. Detalle completo en `CLAUDE.md`
 8. **Verificación.** Una auditoría de 29 consultas directas en la base (altas por hora, ingresos, copias, camas ocupadas) reproduce las cifras del pipeline con otro
    método, y el pipeline completo se regeneró desde cero en un clon limpio del repositorio.
 
-### 3.7 Las variables que construimos y qué representa cada una
+**Los problemas, en resumen:**
+
+| Problema | Tamaño | Qué se hizo |
+|---|---|---|
+| Visitas copia (mismo contenido con otro id) | ~30 % de las visitas | Se borran las de la misma persona y su información pasa a la visita original |
+| **Estancias en cama duplicadas en dos personas** | 41 % de los hospitalizados | Cada estancia se cuenta una vez (regla v3.8: 25.777 estancias únicas) y se conserva la **persona real**, identificada por quién domina los diagnósticos y laboratorios en el 97,6 % de los casos |
+| Etapas de urgencias sin hora de salida | 36–42 % | Se marcan sin duración (no como 0 h); la duración de urgencias de quien se va de alta solo se describe, con métodos de supervivencia |
+| Etapas abiertas al momento de la extracción | 2.053 | Se descartan |
+| **Registro de etapas degradado desde el 10-abr-2026** | La etapa de llegada cae de 65 % a 30 % de las visitas mientras las visitas no bajan | Se usa solo el **periodo confiable: 1-feb-2023 a 9-abr-2026** |
+| Caída de todo el registro el 28 y 29 de marzo de 2026 | 14 y 118 visitas (lo normal: 400–600) | Se excluyen |
+
+**Por qué importa:** sin esta limpieza el hospital parecía tener ~146 camas ocupadas y 27,7 ingresos por día; los valores reales son ~100 camas y
+~20 ingresos. La auditoría directa en la base (2-nov) y la reproducción del pipeline en un clon limpio confirmaron las cifras.
+Detalle: `CLAUDE.md` 4.1–4.13; `docs/HALLAZGOS.md` 2; `src/analisis_etapas.py`, `src/preparar_variables.py`, `src/auditoria_bd.py`.
+
+**Resultado:** 337.194 episodios (atención continua de un paciente; se corta tras 168 h sin etapas). En el periodo confiable, 22.819 estancias
+únicas con espera de cama medida.
+
+### 3.4 El quiebre de abril de 2026 y lo que pasaba en el sistema de salud
+La auditoría en la base (`CLAUDE.md` 4.9) muestra que desde el 10-abr-2026 las visitas de urgencias **suben ~40 %** mientras el registro de etapas se
+degrada: no es menos demanda. El hospital no explicó la causa. Para el contexto se revisaron prensa y actos de la Superintendencia de Salud
+(`docs/estacionalidad_anual.md`, cuarta ronda):
+- **Oct-2023:** abre el Hospital Juan Domínguez Romero en Soledad, el mismo municipio del HUN. **Ene-2025:** abre el Nuevo Hospital de Barranquilla
+  (122 camas de hospitalización y urgencias).
+- **Ago-2025:** la Supersalud interviene la ESE Universitaria del Atlántico (red pública del departamento) por 49 hallazgos críticos, entre ellos
+  fallas en urgencias.
+- **Abr-2026:** la Supersalud prorroga la intervención de Nueva EPS; desde el 22-abr la Clínica General del Norte (Barranquilla) suspende las cirugías
+  programadas por la cartera de las EPS, y varias clínicas acumulan deudas de más de 90 días con sus médicos.
+
+**Lectura:** la crisis financiera de abril de 2026 pudo llevar pacientes de otras clínicas al HUN, lo que encaja con el aumento de visitas, pero las
+fechas no coinciden exactamente (10-abr frente a 22-abr) y no se puede comprobar con los datos. Queda como hipótesis, no como causa; la decisión de
+usar solo el periodo confiable no cambia.
+
+### 3.5 Lo que dijo el hospital (sesión del 29-oct-2026)
+106 camas de hospitalización (88 de adultos y 18 de niños) y 58 camillas de urgencias; la hospitalización se registra al asignar la cama; las
+estancias en dos personas «probablemente son duplicados»; hay horarios y costumbres de alta. No dieron la meta de tiempos ni la causa del cambio
+de registro de abril de 2026. No hubo más sesiones.
+
+### 3.6 Las variables que construimos y qué representa cada una
 Todo sale de `src/analisis_etapas.py` y `src/preparar_variables.py` en una tabla con una fila por episodio (`tabla_episodios`). Las columnas que más se usan:
 
 | Variable (columna) | Cómo se calcula | Qué representa | Qué peso tiene en los resultados |
@@ -193,7 +199,7 @@ Además de la tabla hay variables que se calculan **en el momento**, para los mo
 laboratorio** de las primeras 6 h (11 valores con punto de corte clínico) y, para el pronóstico, las series diarias de llegadas, llegadas con atención e ingresos a
 cama con su calendario y su forma del año. El diccionario de las tablas pequeñas que alimentan el dashboard está en `datos/tablas_dashboard/diccionario_tablas.md`.
 
-### 3.8 Herramientas y por qué estas
+### 3.7 Herramientas y por qué estas
 | Herramienta | Para qué | Por qué esta |
 |---|---|---|
 | PostgreSQL con SQL (CTE), DBeaver al inicio y después SQLAlchemy + psycopg desde Python | Consultas agregadas de solo lectura, en segundo plano por la VPN | La base no permite tablas temporales y es lenta: agregar en SQL y exportar lo mínimo evita bajar tablas de 15 GB |

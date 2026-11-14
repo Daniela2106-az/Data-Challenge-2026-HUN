@@ -921,3 +921,13 @@ button, .btn-primary {
 .home-group__head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; margin-bottom: 14px; }
 .home-group__head .section-title { margin: 0; }
 .home-group__sub { font-size: 13.5px; color: var(--muted); }
+
+/* ---- Pie «Esta página resume la documentación» (lo arma main.py según la ruta; 14-nov-2026) ---- */
+.doc-rel { display: flex; align-items: center; gap: 12px; margin: 22px 0 4px; padding: 12px 16px; border: 1px solid var(--line);
+           border-left: 4px solid var(--accent); border-radius: 10px; font-size: 13px; line-height: 1.45; }
+.doc-rel:empty { display: none; }
+.doc-rel__ico { flex: 0 0 auto; }
+.doc-rel__desc { color: var(--muted); }
+.doc-rel__link { margin-left: auto; white-space: nowrap; font-weight: 600; color: var(--accent); text-decoration: none; }
+.doc-rel__link:hover { text-decoration: underline; }
+@media (max-width: 720px) { .doc-rel { flex-wrap: wrap; } .doc-rel__link { margin-left: 0; } }
