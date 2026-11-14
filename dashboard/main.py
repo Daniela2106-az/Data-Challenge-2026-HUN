@@ -35,6 +35,7 @@ PAGINAS (ver docstring de cada una en dashboard/pages/):
 MENU (13-nov-2026): la barra lateral agrupa las paginas por seccion (contexto, resultados, prediccion y propuestas) con la
 lista de `dashboard/navegacion.py`, la misma que usa el inicio. Una pagina que no este en esa lista aparece al final, bajo "Más".
 Al pie de cada pagina hay botones «anterior» y «siguiente» en ese mismo orden: el dashboard se puede recorrer como una presentacion.
+Las flechas izquierda y derecha del teclado hacen lo mismo (assets/recorrido.js).
 
 COMO CORRERLO  python dashboard/main.py   y abrir http://127.0.0.1:8050
   La primera vez que se visita /paciente, el modelo de A6 se entrena si no existe (~1 min). Las demas paginas
@@ -127,7 +128,7 @@ def pasos(ruta):
         return dcc.Link(href=orden[j]["path"], className="paso__btn " + clase, children=[
             html.Span(direccion, className="paso__dir"), html.Span(orden[j]["name"], className="paso__nombre")])
 
-    return [boton(i - 1, "← Anterior", "paso__btn--ant"), html.Span(f"{i + 1} de {len(orden)}", className="paso__pos"),
+    return [boton(i - 1, "← Anterior", "paso__btn--ant"), html.Span([f"{i + 1} de {len(orden)}", html.Br(), "también con las flechas ← → del teclado"], className="paso__pos"),
             boton(i + 1, "Siguiente →", "paso__btn--sig")]
 
 
