@@ -55,6 +55,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "src"))
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))        # dashboard/ para el tema de graficos
 import simulacion_camas_montecarlo as scm  # noqa: E402  (import liviano desde el 10-nov: ~1-2 s, no corre el backtest)
 import tema_graficos as tg  # noqa: E402
+from componentes import mensaje, metodo  # noqa: E402
 
 dash.register_page(__name__, path="/camas", name="Planeación de camas", title="Planeación de camas - HUN", order=3)
 
@@ -218,28 +219,28 @@ def panel_metricas_animado(medias, cap, pct_sat, dias_sin_cama, total_dias):
 
 
 def panel_interpretacion():
-    return html.Details(className="page-section", children=[
-        html.Summary("¿Cómo se interpreta?"),
-        html.Div(style={"padding": "10px 4px 2px", "display": "grid", "gap": "14px", "fontSize": "13.5px", "lineHeight": "1.6"}, children=[
-            html.Div([html.Div("Qué estás viendo", style={"fontWeight": 700, "color": AZUL, "marginBottom": "3px"}),
+    return html.Details(className="metodo metodo--panel", children=[
+        html.Summary([html.Span("¿Cómo se interpreta?", className="metodo__titulo"), html.Span("qué ves, cómo se calculó y qué no dice", className="metodo__sub")]),
+        html.Div(className="metodo__apilado", children=[
+            html.Div([html.Div("Qué estás viendo", className="metodo__rotulo"),
                       html.Div("Cuántos pacientes habría en cama cada día, de aquí al plazo elegido, en tres "
                                "escenarios (mejor caso, caso base y peor caso), y cuántos de ellos se quedarían "
                                "esperando porque ya no quedan de las 106 camas reales.")]),
-            html.Div([html.Div("Cómo se calculó", style={"fontWeight": 700, "color": AZUL, "marginBottom": "3px"}),
+            html.Div([html.Div("Cómo se calculó", className="metodo__rotulo"),
                       html.Div("Con una simulación de Monte Carlo: cada día, los ingresos a cama salen de una "
                                "distribución de Poisson alrededor del pronóstico, y a cada paciente se le asigna "
                                "una duración de estancia sacada al azar de pacientes reales parecidos (misma "
                                "edad y misma ruta de llegada). Se repite 300 veces (los documentos oficiales "
                                "citan la cifra con 1.000) para ver el rango de lo que podría pasar, no solo un "
                                "número.")]),
-            html.Div([html.Div("Qué significa para el hospital", style={"fontWeight": 700, "color": AZUL, "marginBottom": "3px"}),
+            html.Div([html.Div("Qué significa para el hospital", className="metodo__rotulo"),
                       html.Div("El hospital opera, en el escenario típico, al borde o por encima de su capacidad "
                                "declarada — no por debajo con margen. El riesgo se concentra en adultos (70,6 % "
                                "de probabilidad de saturar sus 88 camas) mucho más que en niños (34,5 % de 18). "
                                "Moviendo los sliders se ve qué pesa más: bajar la estancia 5 % mueve la ocupación "
                                "casi tanto como +10 camas físicas — la estancia es la palanca más barata antes de "
                                "pensar en ampliar capacidad.")]),
-            html.Div([html.Div("Qué NO dice", style={"fontWeight": 700, "color": NARANJA, "marginBottom": "3px"}),
+            html.Div([html.Div("Qué NO dice", className="metodo__rotulo"),
                       html.Div("No es una predicción exacta para un día puntual (la banda de incertidumbre es "
                                "ancha a propósito). No separa por sexo ni por servicio/piso exacto (se probó "
                                "sexo y no mejoró lo suficiente para justificar la inestabilidad que añade — "
@@ -257,15 +258,15 @@ def panel_tecnico():
     filas_decision = [html.Tr([html.Th("Qué se probó"), html.Th("Resultado"), html.Th("Por qué")])] + [
         html.Tr([html.Td(v), html.Td(r, style={"fontWeight": 700, "color": VERDE if r == "Entra" else GRIS}), html.Td(por_que)])
         for v, r, por_que in TABLA_DECISIONES_CAMAS]
-    return html.Details(className="page-section", children=[
-        html.Summary("Ficha técnica del planeador"),
-        html.Div(style={"padding": "14px 4px 4px", "display": "grid", "gap": "22px"}, children=[
+    return html.Details(className="metodo metodo--panel", children=[
+        html.Summary([html.Span("Ficha técnica del planeador", className="metodo__titulo"), html.Span("cómo se construyó y qué se probó", className="metodo__sub")]),
+        html.Div(className="metodo__apilado", children=[
             html.Div([
-                html.Div("Etapas de construcción (pasa el mouse sobre cada una)", style={"fontWeight": 700, "marginBottom": "4px"}),
+                html.Div("Etapas de construcción (pasa el mouse sobre cada una)", className="metodo__rotulo"),
                 html.Div(className="pipeline", children=pasos),
             ]),
             html.Div([
-                html.Div("Qué hace cada control", style={"fontWeight": 700, "marginBottom": "6px"}),
+                html.Div("Qué hace cada control", className="metodo__rotulo"),
                 html.Div(f"El botón «Simular» corre el motor de Monte Carlo con n = {N_REP_INTERACTIVO} repeticiones: "
                          "es una aproximación rápida pensada para moverse con los sliders sin esperar — los documentos "
                          "oficiales (docs/modelo_camas.md, docs/simulacion.md) citan la cifra final con 1.000 "
@@ -280,7 +281,7 @@ def panel_tecnico():
                 ]),
             ]),
             html.Div([
-                html.Div("Backtest (puerta de decisión): enero a 9-abr-2026, entrenado solo hasta dic-2025", style={"fontWeight": 700, "marginBottom": "4px"}),
+                html.Div("Backtest (puerta de decisión): enero a 9-abr-2026, entrenado solo hasta dic-2025", className="metodo__rotulo"),
                 html.Table(className="tech-table", children=[
                     html.Thead(html.Tr([html.Th("Métrica"), html.Th("Resultado"), html.Th("Meta")])),
                     html.Tbody([
@@ -294,11 +295,11 @@ def panel_tecnico():
                          style={"fontSize": "12px", "color": GRIS}),
             ], className="tech-table-wrap"),
             html.Div([
-                html.Div("Qué se probó y qué se descartó", style={"fontWeight": 700, "marginBottom": "6px"}),
-                html.Table(filas_decision, style={"width": "100%", "fontSize": "12.5px", "borderCollapse": "collapse"}),
+                html.Div("Qué se probó y qué se descartó", className="metodo__rotulo"),
+                html.Div(html.Table(filas_decision, className="metodo__tabla"), className="metodo__scroll"),
             ]),
             html.Div([
-                html.Div("Cuántas camas harían falta", style={"fontWeight": 700, "marginBottom": "4px"}),
+                html.Div("Cuántas camas harían falta", className="metodo__rotulo"),
                 html.Div("Sobre la MISMA proyección ya calculada, se barre un rango de "
                          "capacidades hipotéticas y se mide qué tan seguido no alcanzarían. Con el umbral de "
                          "riesgo del 10 %, el total necesitaría ~126 camas (+20 sobre las 106 actuales), "
@@ -306,7 +307,7 @@ def panel_tecnico():
                          style={"fontSize": "13px", "lineHeight": "1.6"}),
             ]),
             html.Div([
-                html.Div("Límites", style={"fontWeight": 700, "color": NARANJA, "marginBottom": "4px"}),
+                html.Div("Límites", className="metodo__rotulo"),
                 html.Ul(style={"fontSize": "12.5px", "color": GRIS, "lineHeight": "1.6", "paddingLeft": "18px"}, children=[
                     html.Li("El proxy niños/adultos usa los bins de grupo_edad disponibles (0-4/5-14 vs. 15-29+), "
                             "más grueso que el corte \"menor de 1 año\" que el equipo usó una vez a mano."),
@@ -369,7 +370,15 @@ def layout():
         html.P("Supuestos: B y C se aplican de forma uniforme en todo el horizonte; D es un caso de estrés explícito "
                "(no un pronóstico); ningún escenario cambia la capacidad física (106/18/88, dato del HUN). Asociación, "
                "no causa.", style={"fontSize": "11px", "color": GRIS, "marginTop": "10px"}),
+        mensaje("**Es un «qué pasa si», no un pronóstico del censo de hoy.** Sirve para ver cuántos días del próximo semestre podrían quedar por encima de las 106 camas "
+                "y cuánto cambiaría eso con más ingresos, estancias más cortas o una mezcla distinta de pacientes. La mayor presión está en los adultos."),
         panel_interpretacion(),
+        metodo("Para cada día futuro se toman los ingresos pronosticados y estancias reales por perfil (niños y adultos), y se cuenta cuántos pacientes siguen en cama. "
+               "Con miles de repeticiones sale la probabilidad de superar las 106 camas. Se validó con un backtest (enero a 9-abr-2026, entrenando solo hasta 2025): la banda "
+               "del 80 % cubre ~79 % de los días reales.",
+               "No predice la estancia de ningún paciente concreto (R² cerca de 0). Arranca del último censo confiable (9-abr-2026), no del de hoy, porque después el registro "
+               "de etapas está incompleto. Las camas totales (106) son lo que informó el HUN; el exceso observado puede ser camas de apoyo o camillas.",
+               "Fuente: src/simulacion_camas_montecarlo.py. Detalle: documentación, sección 6.5, y docs/modelo_camas.md.", ruta="/camas"),
         panel_tecnico(),
     ])
 

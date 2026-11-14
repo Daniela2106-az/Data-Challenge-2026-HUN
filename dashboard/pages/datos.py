@@ -95,7 +95,7 @@ def layout():
             "julio de 2026.",
             "La persona real de las estancias duplicadas se deduce de los datos; el hospital dijo que «lo más probable» es que sean "
             "duplicados, pero no confirmó cuál es. Tampoco explicó por qué cambia el registro desde abril de 2026.",
-            "Fuente: datos/tablas_dashboard/embudo_datos.csv · CLAUDE.md 4.1, 4.3, 4.6, 4.9 y 4.10 · sesión con el HUN del 29-oct-2026."))
+            "Fuente: datos/tablas_dashboard/embudo_datos.csv · CLAUDE.md 4.1, 4.3, 4.6, 4.9 y 4.10 · sesión con el HUN del 29-oct-2026.", ruta="/datos"))
 
 
 @callback(Output("dat-registro", "figure"), Input("theme-store", "data"))

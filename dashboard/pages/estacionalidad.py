@@ -78,7 +78,7 @@ def layout():
             "El dengue funciona como **marcador de la temporada**, no como causa: no significa que traiga o quite pacientes. El modelo no "
             "anticipa brotes, y los datos públicos de 2026 todavía no están publicados.",
             "Fuente: estacionalidad_efecto.csv y estacionalidad_error.csv (dashboard/preparar_datos.py) · docs/estacionalidad_anual.md · "
-            "datos públicos: SIVIGILA del Instituto Nacional de Salud y Harvard Dataverse."))
+            "datos públicos: SIVIGILA del Instituto Nacional de Salud y Harvard Dataverse.", ruta="/estacionalidad"))
 
 
 @callback(Output("est-cifras", "children"), Output("est-titular", "children"), Output("est-efecto", "figure"),

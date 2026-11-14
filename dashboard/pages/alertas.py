@@ -14,7 +14,7 @@ import plotly.graph_objects as go
 from dash import Input, Output, callback, html
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from componentes import AZUL, PIZARRA, TENUE, bloque, cifra, coma, estilo, grafico, hecho, lamina, mensaje, metodo, pagina, portada  # noqa: E402
+from componentes import AZUL, PIZARRA, TENUE, bloque, cifra, coma, estilo, grafico, hecho, lamina, ficha_de, interpretacion_de, mensaje, metodo, pagina, portada  # noqa: E402
 
 dash.register_page(__name__, path="/alertas", name="Alertas", title="Alertas - HUN", order=33)
 
@@ -61,13 +61,16 @@ def layout():
         html.Div(className="hechos", children=[hecho(*u) for u in USO]),
         mensaje("Con las tres alertas el hospital recibiría **unas 4,6 alertas por día**, casi todas de pacientes que llevan 48 horas sin "
                 "cama: una lista corta y accionable, no una alarma constante."),
+        interpretacion_de("/alertas"),
         metodo(
             "Prueba de enero al 9 de abril de 2026 reproduciendo cada día con lo que se sabía en ese momento; los cortes se eligieron con "
             "julio a diciembre de 2025. Día congestionado: llegadas por encima del percentil 90 del mismo día de la semana en las últimas "
             "12 semanas. Ocupación alta: por encima del percentil 80 de las 12 h.",
             "No se probaron en tiempo real. En la prueba solo hubo **15 días congestionados**, así que los porcentajes pueden moverse. La "
             "alerta de paciente sin cama solo cuenta a quienes después se hospitalizan: la carga real es mayor.",
-            "Fuente: src/alertas.py · CLAUDE.md 6b · docs/HALLAZGOS.md · docs/documento_final.md, sección 6."))
+            "Fuente: src/alertas.py · CLAUDE.md 6b · docs/HALLAZGOS.md · docs/documento_final.md, sección 6.", ruta="/alertas"),
+        ficha_de("/alertas"),
+    )
 
 
 @callback(Output("ale-dia", "figure"), Output("ale-paciente", "figure"), Input("theme-store", "data"))

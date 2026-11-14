@@ -13,7 +13,7 @@ import plotly.graph_objects as go
 from dash import Input, Output, callback, html
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from componentes import AZUL, MESES, PIZARRA, TENUE, bloque, cifra, estilo, grafico, hecho, lamina, mensaje, metodo, pagina, portada  # noqa: E402
+from componentes import AZUL, MESES, PIZARRA, TENUE, bloque, cifra, estilo, grafico, hecho, lamina, ficha_de, interpretacion_de, mensaje, metodo, pagina, portada  # noqa: E402
 
 dash.register_page(__name__, path="/atipicos", name="Días atípicos", title="Días atípicos - HUN", order=34)
 
@@ -74,12 +74,15 @@ def layout():
         html.Div(className="hechos", children=[hecho(*c) for c in CALENDARIO]),
         mensaje("**El problema de la espera es crónico, no de días malos.** Reaccionar a los picos no lo resuelve: hay que cambiar el "
                 "proceso diario de altas y de asignación de camas."),
+        interpretacion_de("/atipicos"),
         metodo(
             "Un día es atípico si se aparta más de 3 desviaciones de lo que esperaba el pronóstico, que ya conoce el día de la semana, los "
             "festivos y el Carnaval. Con ese umbral se esperan unos 3 días por azar en cada serie.",
             "Que dos días parezcan cortes del sistema es una **hipótesis sin comprobar**: los datos no dicen qué pasó. La caída desde "
             "abril de 2026 no es un día atípico sino un cambio del registro, y se trata aparte. Se asume que el hospital está en Barranquilla.",
-            "Fuente: docs/dias_atipicos.md · src/dias_atipicos.py."))
+            "Fuente: docs/dias_atipicos.md · src/dias_atipicos.py.", ruta="/atipicos"),
+        ficha_de("/atipicos"),
+    )
 
 
 @callback(Output("ati-dias", "figure"), Output("ati-resumen", "figure"), Input("theme-store", "data"))

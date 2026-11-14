@@ -66,7 +66,7 @@ def layout():
             "registro, una proporción estable en el tiempo que no cambia la forma de las curvas. El mapa de calor cuenta todas las "
             "llegadas.",
             "No anticipa brotes ni cortes del sistema. Para ver lo que se espera hacia adelante está la página de Pronóstico.",
-            "Fuente: llegadas_calor.csv y panel_diario.csv (dashboard/preparar_datos.py) · docs/HALLAZGOS.md 3 · CLAUDE.md 4.13."))
+            "Fuente: llegadas_calor.csv y panel_diario.csv (dashboard/preparar_datos.py) · docs/HALLAZGOS.md 3 · CLAUDE.md 4.13.", ruta="/demanda"))
 
 
 @callback(Output("dem-cifras", "children"), Output("dem-calor", "figure"), Output("dem-titular", "children"), Output("dem-dato", "children"),

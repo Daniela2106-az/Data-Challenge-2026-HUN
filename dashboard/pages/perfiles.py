@@ -103,7 +103,7 @@ def layout():
                "Es una asociación, no una causa: que un perfil espere más en los picos no prueba que espere por el pico. No distingue qué parte "
                "de la espera es atención clínica y cuál es espera pura. Treatment urgency y ambulatoria casi nunca tienen veredicto por falta de "
                "datos. Periodo confiable: 1-feb-2023 a 9-abr-2026.",
-               "Fuente: src/perfiles_en_picos.py · docs/perfiles_en_picos.md y docs/perfiles_pacientes.md."))
+               "Fuente: src/perfiles_en_picos.py · docs/perfiles_en_picos.md y docs/perfiles_pacientes.md.", ruta="/perfiles"))
 
 
 def _barras(df, tema):

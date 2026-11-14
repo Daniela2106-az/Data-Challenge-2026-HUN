@@ -69,7 +69,7 @@ def layout():
             "2026 solo llega hasta el 9 de abril, así que no es un año completo. Las diferencias son **asociaciones**: un grupo puede "
             "empeorar porque cambiaron sus pacientes y no el proceso. «Treatment urgency» es una etiqueta de la base, no un servicio "
             "confirmado por el hospital.",
-            "Fuente: espera_cubo.csv (dashboard/preparar_datos.py) · docs/diagnostico_cuello_botella.md · docs/HALLAZGOS.md 4.2."))
+            "Fuente: espera_cubo.csv (dashboard/preparar_datos.py) · docs/diagnostico_cuello_botella.md · docs/HALLAZGOS.md 4.2.", ruta="/comparar"))
 
 
 @callback(Output("com-cifras", "children"), Output("com-titular-1", "children"), Output("com-tramos", "figure"), Output("com-dato-1", "children"),

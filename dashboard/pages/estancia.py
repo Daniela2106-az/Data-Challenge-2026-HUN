@@ -68,7 +68,7 @@ def layout():
             "predice una estancia individual.",
             "Los procedimientos tienen **sesgo de duración**: quien se queda más tiempo acumula más procedimientos, así que no son causas. "
             "Un cultivo temprano indica sospecha, no confirma una infección. El diagnóstico se registra tarde.",
-            "Fuente: docs/factores_estancia.md · docs/estancias_disparadas.md · CLAUDE.md 4.8 · asociación, no causa."))
+            "Fuente: docs/factores_estancia.md · docs/estancias_disparadas.md · CLAUDE.md 4.8 · asociación, no causa.", ruta="/estancia"))
 
 
 @callback(Output("lar-camas", "figure"), Output("lar-anio", "figure"), Output("lar-edad", "figure"), Output("lar-dx", "figure"),

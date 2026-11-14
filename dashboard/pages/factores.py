@@ -71,7 +71,7 @@ def layout():
             "de `espera_cubo.csv`.",
             "Que un factor pese no significa que cause la espera. El **diagnóstico es un dato administrativo**, se registra tarde y puede "
             "venir del registro duplicado. El grupo «treatment urgency» es una etiqueta de la base, no un servicio confirmado por el hospital.",
-            "Fuente: CLAUDE.md 6b y 4.10 · docs/HALLAZGOS.md 4.5 · docs/modelo_espera.md · espera_cubo.csv (dashboard/preparar_datos.py)."))
+            "Fuente: CLAUDE.md 6b y 4.10 · docs/HALLAZGOS.md 4.5 · docs/modelo_espera.md · espera_cubo.csv (dashboard/preparar_datos.py).", ruta="/factores"))
 
 
 @callback(Output("fac-peso", "figure"), Output("fac-grupos", "figure"), Output("fac-dato", "children"), Output("fac-efectos", "figure"),

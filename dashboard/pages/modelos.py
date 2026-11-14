@@ -12,7 +12,7 @@ import plotly.graph_objects as go
 from dash import Input, Output, callback, html
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from componentes import AZUL, PIZARRA, bloque, cifra, coma, estilo, grafico, hecho, lamina, leer, mensaje, metodo, pagina, portada  # noqa: E402
+from componentes import AZUL, PIZARRA, bloque, cifra, coma, estilo, grafico, hecho, lamina, leer, ficha_de, interpretacion_de, mensaje, metodo, pagina, portada  # noqa: E402
 
 dash.register_page(__name__, path="/modelos", name="Elección de modelos", title="Cómo se eligieron los modelos - HUN", order=36)
 
@@ -82,13 +82,16 @@ def layout():
         html.Div(className="hechos", children=[hecho(*v) for v in VALIDACION]),
         mensaje("Todos los modelos se probaron **entrenando con el pasado y evaluando en meses que no habían visto**, siempre contra una "
                 "referencia simple. Donde un modelo complejo no ganó, se dejó el simple, que el hospital puede leer y mantener."),
+        interpretacion_de("/modelos"),
         metodo(
             "Validación temporal: se entrena hasta una fecha y se evalúa después, nunca al azar. Las variables se eligieron con julio a "
             "diciembre de 2025 y se confirmaron en 2026. El periodo de evaluación termina el 9 de abril de 2026.",
             "Que un modelo acierte en el pasado no garantiza que acierte si cambia el hospital o el registro. Ninguno anticipa brotes ni "
             "cortes del sistema, y casi todos describen **asociaciones**, no causas.",
             "Fuente: docs/documento_final.md, sección 6 · src/modelo_pronostico.py · src/alertas.py · docs/estimador_tiempos.md · "
-            "docs/modelo_camas.md."))
+            "docs/modelo_camas.md.", ruta="/modelos"),
+        ficha_de("/modelos"),
+    )
 
 
 @callback(Output("mod-error", "figure"), Input("theme-store", "data"))

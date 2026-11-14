@@ -258,17 +258,17 @@ def panel_interpretacion():
     """Panel corto para el personal del hospital: que se ve en el grafico, como se calculo, que significa
     cada elemento y que NO dice -- mismo patron y mismo titulo que /pronostico. La parte "Que NO dice" incluye
     los avisos dinamicos (pac-nota), que cambian con cada estimacion."""
-    return html.Details(className="page-section", children=[
-        html.Summary("¿Cómo se interpreta?"),
-        html.Div(style={"padding": "10px 4px 2px", "display": "grid", "gap": "14px", "fontSize": "13.5px", "lineHeight": "1.6"}, children=[
-            html.Div([html.Div("Qué estás viendo", style={"fontWeight": 700, "color": AZUL, "marginBottom": "3px"}),
+    return html.Details(className="metodo metodo--panel", children=[
+        html.Summary([html.Span("¿Cómo se interpreta?", className="metodo__titulo"), html.Span("qué ves, cómo se calculó y qué no dice", className="metodo__sub")]),
+        html.Div(className="metodo__apilado", children=[
+            html.Div([html.Div("Qué estás viendo", className="metodo__rotulo"),
                       html.Div("La probabilidad de recibir cama en cada bloque del día (madrugada, mañana, tarde, "
                                "noche), agrupada por hoy, mañana y pasado mañana.")]),
-            html.Div([html.Div("Cómo se calculó", style={"fontWeight": 700, "color": AZUL, "marginBottom": "3px"}),
+            html.Div([html.Div("Cómo se calculó", className="metodo__rotulo"),
                       html.Div("Con un modelo entrenado en la historia del hospital que, a partir del paciente y su "
                                "situación actual, calcula qué tan probable es cada ventana (detalle técnico completo "
                                "más abajo, en la ficha técnica).")]),
-            html.Div([html.Div("Qué significa cada cosa del gráfico", style={"fontWeight": 700, "color": AZUL, "marginBottom": "3px"}),
+            html.Div([html.Div("Qué significa cada cosa del gráfico", className="metodo__rotulo"),
                       html.Ul([
                           html.Li("La barra naranja es la ventana con mayor probabilidad de que le entreguen la cama."),
                           html.Li("Cada ícono de la leyenda (🌙🌅☀️🌆) es una jornada del día; haz clic en uno para ver "
@@ -281,14 +281,14 @@ def panel_interpretacion():
                                   "ni algo que se quitó, es que compara un rango de tiempo mucho más ancho contra "
                                   "bloques angostos; no significa que «después» sea la opción más probable en sí."),
                       ], style={"marginTop": "4px"})]),
-            html.Div([html.Div("El switch «Normal / Acumulada»", style={"fontWeight": 700, "color": AZUL, "marginBottom": "3px"}),
+            html.Div([html.Div("El switch «Normal / Acumulada»", className="metodo__rotulo"),
                       html.Div("Arriba a la derecha del gráfico puedes alternar entre dos formas de ver lo mismo. "
                                "«Normal» (barras) responde «¿en qué momento?». «Acumulada» responde «¿para cuándo ya "
                                "habría cama?»: es la misma información, sumada paso a paso, y por construcción esa línea "
                                "siempre sube — por sí sola solo confirma algo obvio (mientras más se espera, más probable "
                                "es que ya haya cama). Lo que de verdad importa no es que la curva suba, sino dónde se "
                                "empina (abajo se explica cómo leer eso en el color de cada tramo).")]),
-            html.Div([html.Div("Qué significa el color de cada tramo", style={"fontWeight": 700, "color": AZUL, "marginBottom": "3px"}),
+            html.Div([html.Div("Qué significa el color de cada tramo", className="metodo__rotulo"),
                       html.Div(style={"height": "10px", "borderRadius": "6px", "margin": "6px 0",
                                      "background": f"linear-gradient(to right, {AZUL_PALIDO}, {NARANJA})"}),
                       html.Div(style={"display": "flex", "justifyContent": "space-between", "fontSize": "11.5px",
@@ -302,7 +302,7 @@ def panel_interpretacion():
                                "El tramo que llega a la ventana con mayor probabilidad siempre queda en el extremo "
                                "naranja, con una flecha que dice «mayor probabilidad aquí» — es el mismo bloque del "
                                "día que ya se marca en naranja en la vista Normal.")]),
-            html.Div([html.Div("Por qué el salto importa más que el nivel", style={"fontWeight": 700, "color": AZUL, "marginBottom": "3px"}),
+            html.Div([html.Div("Por qué el salto importa más que el nivel", className="metodo__rotulo"),
                       html.Div("La cama no depende tanto de cuánto lleva esperando el paciente sino de a qué hora del día "
                                "está esperando, porque las altas se concentran entre las 14:00 y las 18:59 (62,7 %, "
                                "CLAUDE.md 4.8). Dos pacientes con las mismas 10 horas de espera pueden tener probabilidades "
@@ -310,7 +310,7 @@ def panel_interpretacion():
                                "gruesos de la vista acumulada son justamente esos saltos — la misma información de las "
                                "probabilidades a 6/12/24/48 h que usa el estimador por dentro (ver la tabla de alertas en "
                                "la ficha técnica), mostrada como cambios de pendiente en vez de números sueltos.")]),
-            html.Div([html.Div("Qué NO dice", style={"fontWeight": 700, "color": NARANJA, "marginBottom": "3px"}),
+            html.Div([html.Div("Qué NO dice", className="metodo__rotulo"),
                       html.Div(id="pac-nota")]),
         ]),
     ])
@@ -325,11 +325,11 @@ def panel_tecnico():
                 html.Div(className="pipeline__dot"), html.Div(titulo, className="pipeline__label"),
                 html.Span(detalle, className="tooltip-content")])
              for titulo, detalle in ETAPAS_PIPELINE_A6]
-    return html.Details(className="page-section", children=[
-        html.Summary("Ficha técnica del estimador"),
-        html.Div(style={"padding": "14px 4px 4px", "display": "grid", "gap": "22px"}, children=[
+    return html.Details(className="metodo metodo--panel", children=[
+        html.Summary([html.Span("Ficha técnica del estimador", className="metodo__titulo"), html.Span("cómo funciona por dentro", className="metodo__sub")]),
+        html.Div(className="metodo__apilado", children=[
             html.Div([
-                html.Div("Cómo funciona por dentro", style={"fontWeight": 700, "color": AZUL, "marginBottom": "6px"}),
+                html.Div("Cómo funciona por dentro", className="metodo__rotulo"),
                 html.Div("Hay un modelo de árboles de gradiente distinto para cada hora de espera ya transcurrida "
                          "(0 a 11 h; desde las 12 h, uno combinado). Cada uno responde una sola pregunta: «dado que "
                          "el paciente sigue esperando ahora, ¿cuál es la probabilidad de que reciba cama en la "
@@ -342,7 +342,7 @@ def panel_tecnico():
                          "nuevo.", style={"fontSize": "12px", "color": GRIS, "marginTop": "4px"}),
             ]),
             html.Div([
-                html.Div("La vista «Acumulada» del gráfico", style={"fontWeight": 700, "color": AZUL, "marginBottom": "6px"}),
+                html.Div("La vista «Acumulada» del gráfico", className="metodo__rotulo"),
                 html.Div("Es 1 − S(j): la curva de supervivencia S(j) (probabilidad de seguir esperando j horas más, la "
                          "misma que da los percentiles del rango) leída al revés, acumulada por bloque del día en vez de "
                          "por hora. Cada TRAMO (no solo el de mayor probabilidad) está codificado por color y grosor "
@@ -357,11 +357,11 @@ def panel_tecnico():
                          "curva completa.", style={"fontSize": "13px", "lineHeight": "1.6"}),
             ]),
             html.Div([
-                html.Div("Etapas de construcción (pasa el mouse sobre cada una)", style={"fontWeight": 700, "marginBottom": "4px"}),
+                html.Div("Etapas de construcción (pasa el mouse sobre cada una)", className="metodo__rotulo"),
                 html.Div(className="pipeline", children=pasos),
             ]),
             html.Div([
-                html.Div("Comparativo contra las alternativas", style={"fontWeight": 700, "marginBottom": "4px"}),
+                html.Div("Comparativo contra las alternativas", className="metodo__rotulo"),
                 html.Div("Mejora frente a dar el mismo rango a todos (pérdida de cuantiles), probado con 5.430 "
                          "estancias de jul-2025 a 9-abr-2026 que ningún modelo vio.", style={"fontSize": "12px", "color": GRIS, "marginBottom": "4px"}),
                 dcc.Graph(figure=grafico_mejora(), config={"displaylogo": False}),
@@ -401,7 +401,7 @@ def panel_tecnico():
                 ], resaltar_fila=3),
             ]),
             html.Div([
-                html.Div("Límites", style={"fontWeight": 700, "color": NARANJA, "marginBottom": "3px"}),
+                html.Div("Límites", className="metodo__rotulo"),
                 html.Div("La base no registra el triage, el servicio ni el tipo de cama, que es de lo que más "
                          "depende la espera; la «cama» es la asignación administrativa, que puede ser una silla o "
                          "camilla de apoyo; probado con jul-2025 a 9-abr-2026. El techo de precisión es bajo: el "
@@ -483,11 +483,10 @@ def layout():
                 dcc.Store(id="pac-ventanas-datos"),
             ]),
         ]),
-        panel_interpretacion(),
-        panel_tecnico(),
         mensaje("**Es el rango de pacientes parecidos, no una promesa para una persona.** Sirve para responder al paciente y a su familia en qué "
                 "momento del día es más probable la cama, para el censo de la reunión de camas (cuántos de los que esperan tendrán cama en 12 o 24 h) "
                 "y para avisar a las 12 h quién seguirá sin cama a las 48. Solo aplica a pacientes que ya tienen orden de hospitalización."),
+        panel_interpretacion(),
         metodo("Para cada hora de espera, el modelo estima la probabilidad de recibir cama en la hora siguiente según la hora del reloj, el día, la "
                "ocupación, la edad, el sexo, el tipo de visita, el historial del paciente, su recorrido en urgencias y, desde las 6 h, sus "
                "laboratorios. Encadenando esas probabilidades sale el rango completo de lo que falta. Se entrena con las estancias de feb-2023 a "
@@ -497,7 +496,8 @@ def layout():
                "conoce el triage, el servicio ni el tipo de cama, que es de lo que más depende la espera: con esos datos la mejora se duplicaría. La "
                "«cama» es la asignación administrativa, que puede ser una camilla de apoyo. En las primeras horas, parte de la probabilidad refleja "
                "el trámite de registro, no una predicción.",
-               "Fuente: src/estimador_tiempo_restante.py (modelo guardado, versión 9) y las tablas de src/utilidad_estimador.py. Detalle: documentación, sección 6.4, y docs/estimador_tiempos.md."),
+               "Fuente: src/estimador_tiempo_restante.py (modelo guardado, versión 9) y las tablas de src/utilidad_estimador.py. Detalle: documentación, sección 6.4, y docs/estimador_tiempos.md.", ruta="/paciente"),
+        panel_tecnico(),
     ])
 
 

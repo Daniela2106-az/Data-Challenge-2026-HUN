@@ -55,7 +55,7 @@ def layout():
             "**El agrupamiento no tiene validación clínica.** El diagnóstico es un dato administrativo: se registra tarde, no se conoce al "
             "llegar y puede venir del registro duplicado. Que la cola esté en cirugía y urología es una **hipótesis sin comprobar**. El "
             "accidente cerebrovascular está agrupado en Cardiovascular.",
-            "Fuente: docs/diagnosticos_y_tiempos.md, sección 3 · docs/revision_mapeo_dx.md · asociación, no causa."))
+            "Fuente: docs/diagnosticos_y_tiempos.md, sección 3 · docs/revision_mapeo_dx.md · asociación, no causa.", ruta="/diagnosticos"))
 
 
 @callback(Output("dx-dispersion", "figure"), Input("theme-store", "data"))

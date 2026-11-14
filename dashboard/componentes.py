@@ -140,14 +140,64 @@ def mensaje(texto, titulo="Qué significa para el hospital"):
     return html.Section(className="mensaje", children=[html.Div(titulo, className="mensaje__label"), dcc.Markdown(texto, className="mensaje__texto")])
 
 
-def metodo(como, no_dice, fuente=""):
-    """Detalle plegado al final: como se calculo, que NO dice y de donde sale."""
+def metodo(como, no_dice, fuente="", ruta=None):
+    """Documentacion de la pagina, plegada al final (14-nov-2026): como se calculo, que NO dice, el paso a paso, la eleccion del modelo
+    (solo en las paginas de Prediccion) y a que otra pagina se conecta. `ruta` busca el detalle en documentacion_paginas.py."""
+    from documentacion_paginas import DETALLE
+    det = DETALLE.get(ruta, {}) if ruta else {}
+
+    bloques = [html.Div(className="metodo__grid", children=[
+        html.Div(className="metodo__caja", children=[html.Div("Cómo se calculó", className="metodo__rotulo"), dcc.Markdown(como, className="ctx__text")]),
+        html.Div(className="metodo__caja metodo__caja--no", children=[html.Div("Qué NO dice", className="metodo__rotulo"), dcc.Markdown(no_dice, className="ctx__text")])])]
+    if det.get("pasos"):
+        bloques.append(html.Div(className="metodo__fila", children=[
+            html.Div("Paso a paso", className="metodo__rotulo"),
+            html.Ol([html.Li(dcc.Markdown(p, className="ctx__text")) for p in det["pasos"]], className="metodo__pasos")]))
+    if det.get("modelo"):
+        filas = [html.Tr([html.Th("Qué se evaluó"), html.Th("Qué mostró"), html.Th("Por qué")])] + [
+            html.Tr([html.Td(a, className="mt__elegido" if "(elegido)" in a else None), html.Td(b), html.Td(c)]) for a, b, c in det["modelo"]]
+        bloques.append(html.Div(className="metodo__fila", children=[
+            html.Div("Por qué este modelo y no otro", className="metodo__rotulo"),
+            html.P("Cada alternativa se probó con el mismo método: entrenar con el pasado y medir en meses que el modelo no había visto.", className="metodo__nota"),
+            html.Div(html.Table(filas, className="metodo__tabla"), className="metodo__scroll")]))
+    pie = []
+    if fuente:
+        pie.append(html.P(fuente, className="page-foot"))
     return html.Details(className="metodo", children=[
-        html.Summary("Cómo se calculó y qué no dice"),
-        html.Div(className="metodo__grid", children=[
-            html.Div([html.Div("Cómo se calculó", className="rec-block__label"), dcc.Markdown(como, className="ctx__text")]),
-            html.Div([html.Div("Qué NO dice", className="rec-block__label"), dcc.Markdown(no_dice, className="ctx__text")])]),
-        html.P(fuente, className="page-foot") if fuente else None])
+        html.Summary([html.Span("Documentación de esta sección", className="metodo__titulo"),
+                      html.Span("cómo se calculó, qué no dice" + (", por qué este modelo" if det.get("modelo") else ""), className="metodo__sub")]),
+        *bloques, html.Div(pie, className="metodo__pie") if pie else None])
+
+
+def interpretacion_de(ruta):
+    """«¿Cómo se interpreta?» de una pagina de Prediccion, con el contenido de fichas_prediccion.py."""
+    from fichas_prediccion import FICHAS
+    f = FICHAS.get(ruta)
+    if not f:
+        return None
+    return html.Details(className="metodo metodo--panel", children=[
+        html.Summary([html.Span("¿Cómo se interpreta?", className="metodo__titulo"), html.Span("qué ves, cómo se calculó y qué no dice", className="metodo__sub")]),
+        html.Div(className="metodo__apilado", children=[
+            html.Div([html.Div(r, className="metodo__rotulo"), dcc.Markdown(t, className="ctx__text")]) for r, t in f["interpretacion"]])])
+
+
+def ficha_de(ruta):
+    """«Ficha técnica» de una pagina de Prediccion: etapas de construccion (con el detalle al pasar el mouse) y tabla de lo que se probó."""
+    from fichas_prediccion import FICHAS
+    f = FICHAS.get(ruta, {}).get("ficha")
+    if not f:
+        return None
+    pasos = [html.Div(className="pipeline__step tooltip-trigger", children=[
+        html.Div(className="pipeline__dot"), html.Div(t, className="pipeline__label"), html.Span(d, className="tooltip-content")]) for t, d in f["etapas"]]
+    cab, *filas = f["tabla"]
+    tabla = html.Table([html.Tr([html.Th(x) for x in cab])] + [
+        html.Tr([html.Td(a), html.Td(b, className="mt__elegido" if b == "Entra" else None), html.Td(c_)]) for a, b, c_ in filas], className="metodo__tabla")
+    return html.Details(className="metodo metodo--panel", children=[
+        html.Summary([html.Span("Ficha técnica", className="metodo__titulo"), html.Span(f["sub"], className="metodo__sub")]),
+        html.Div(className="metodo__apilado", children=[
+            html.Div([html.Div("Etapas de construcción (pasa el mouse sobre cada una)", className="metodo__rotulo"), html.Div(className="pipeline", children=pasos)]),
+            html.Div([html.Div("Qué se probó y qué se descartó", className="metodo__rotulo"), html.Div(tabla, className="metodo__scroll"),
+                      dcc.Markdown(f["nota"], className="metodo__nota") if f.get("nota") else None])])])
 
 
 def pagina(*hijos):

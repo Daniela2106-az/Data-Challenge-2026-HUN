@@ -142,7 +142,7 @@ def tabla_error_popup(e, lead0):
             html.Td(f"{r.tramo_dias} d" + (" ←" if vigente else "")), html.Td(f"{r.wape_pct:.0f} %"),
             html.Td(f"{r.sesgo_pct:+.0f} %"), html.Td(f"{r.cobertura_80_pct:.0f} %")]))
     return html.Div([
-        html.Div("Error validado contra el pasado, por qué tan lejos se pronostica:", style={"fontWeight": 700, "marginBottom": "4px"}),
+        html.Div("Error validado contra el pasado, por qué tan lejos se pronostica:", className="metodo__rotulo"),
         html.Table(filas),
         html.Div("Cobertura 80 %: de los días ya conocidos, qué % cayó dentro del rango probable que se dibujó para ese plazo.",
                  style={"color": GRIS, "marginTop": "6px", "fontSize": "11px"}),
@@ -164,25 +164,25 @@ def posiciones_rango(mean_val, low, high):
 def panel_contexto():
     """Panel de 4 partes que ya define docs/estructura_dashboard.md (seccion 2): que se ve, como se calculo,
     que significa para el hospital y que NO dice. Para el personal del hospital, en palabras simples."""
-    return html.Details(className="page-section", children=[
-        html.Summary("¿Cómo se interpreta?"),
-        html.Div(style={"padding": "10px 4px 2px", "display": "grid", "gap": "14px"}, children=[
-            html.Div([html.Div("Qué estás viendo", style={"fontWeight": 700, "color": AZUL, "marginBottom": "3px"}),
+    return html.Details(className="metodo metodo--panel", children=[
+        html.Summary([html.Span("¿Cómo se interpreta?", className="metodo__titulo"), html.Span("qué ves, cómo se calculó y qué no dice", className="metodo__sub")]),
+        html.Div(className="metodo__apilado", style={"display": "grid"}, children=[
+            html.Div([html.Div("Qué estás viendo", className="metodo__rotulo"),
                       html.Div("Cuántos pacientes se espera que lleguen (o se hospitalicen) cada día desde hoy, "
                                "con una zona sombreada que muestra el rango dentro del cual probablemente va a "
                                "caer el valor real.")]),
-            html.Div([html.Div("Cómo se calculó", style={"fontWeight": 700, "color": AZUL, "marginBottom": "3px"}),
+            html.Div([html.Div("Cómo se calculó", className="metodo__rotulo"),
                       html.Div("Con el calendario del hospital (día de la semana, festivos, Semana Santa, Carnaval) "
                                "y el nivel de pacientes de los meses confiables (febrero de 2023 a abril de 2026). "
                                "El ancho de la zona sombreada se calibró revisando, muchas veces en el pasado, qué "
                                "tan lejos estuvo este mismo método de la realidad (pasa el mouse sobre «Error "
                                "típico» para ver el detalle por plazo).")]),
-            html.Div([html.Div("Qué significa para el hospital", style={"fontWeight": 700, "color": AZUL, "marginBottom": "3px"}),
+            html.Div([html.Div("Qué significa para el hospital", className="metodo__rotulo"),
                       html.Div("Sirve para anticipar la carga de los próximos días o meses y planear personal y "
                                "camas con tiempo. Para decisiones de corto plazo (días) es más preciso; para "
                                "decisiones de largo plazo (meses) hay que mirar todo el rango, no solo la línea "
                                "central.")]),
-            html.Div([html.Div("Qué NO dice", style={"fontWeight": 700, "color": ROJO, "marginBottom": "3px"}),
+            html.Div([html.Div("Qué NO dice", className="metodo__rotulo"),
                       html.Div("No anticipa brotes, cortes del sistema de registro, ni cambios del hospital después "
                                "del 9 de abril de 2026 (el registro de ese momento en adelante está incompleto y no "
                                "se usa para calcular el nivel). Es una tendencia con incertidumbre, no una promesa "
@@ -202,11 +202,11 @@ def panel_tecnico():
     filas_decision = [html.Tr([html.Th("Variable probada"), html.Th("Resultado"), html.Th("Por qué")])] + [
         html.Tr([html.Td(v), html.Td(r, style={"fontWeight": 700, "color": VERDE if "Entra" in r else GRIS}), html.Td(por_que)])
         for v, r, por_que in TABLA_DECISIONES]
-    return html.Details(className="page-section", children=[
-        html.Summary("Ficha técnica del pronóstico"),
-        html.Div(style={"padding": "14px 4px 4px", "display": "grid", "gap": "22px"}, children=[
+    return html.Details(className="metodo metodo--panel", children=[
+        html.Summary([html.Span("Ficha técnica del pronóstico", className="metodo__titulo"), html.Span("cómo se construyó y qué se probó", className="metodo__sub")]),
+        html.Div(className="metodo__apilado", children=[
             html.Div([
-                html.Div("Etapas de construcción (pasa el mouse sobre cada una)", style={"fontWeight": 700, "marginBottom": "4px"}),
+                html.Div("Etapas de construcción (pasa el mouse sobre cada una)", className="metodo__rotulo"),
                 html.Div(className="pipeline", children=pasos),
             ]),
             html.Div([
@@ -217,11 +217,12 @@ def panel_tecnico():
                           "aceptando solo lo que mejoraba la validación de jul-dic 2025 sin empeorar el corto plazo, y "
                           "confirmándolo después en la prueba de 2026 (datos que no se usaron para elegir)."],
                          style={"marginBottom": "10px", "lineHeight": "1.6"}),
-                dcc.Graph(id="pron-wape-chart", config={"displaylogo": False}),
+                html.Div(["El error con y sin la forma del año, por horizonte, está en ", dcc.Link("Resultados · Forma del año", href="/estacionalidad"), "."],
+                         style={"fontSize": "13px", "color": GRIS}),
             ]),
             html.Div([
-                html.Div("Qué se probó y qué se descartó", style={"fontWeight": 700, "marginBottom": "6px"}),
-                html.Table(filas_decision, style={"width": "100%", "fontSize": "12.5px", "borderCollapse": "collapse"}),
+                html.Div("Qué se probó y qué se descartó", className="metodo__rotulo"),
+                html.Div(html.Table(filas_decision, className="metodo__tabla"), className="metodo__scroll"),
                 html.Div("Detalle completo de cada ronda de prueba (datos, fuentes y por qué se descartó cada una): "
                          "docs/estacionalidad_anual.md. Documento final del equipo con las 7 recomendaciones y sus "
                          "fuentes: docs/documento_final.pdf.", style={"color": GRIS, "fontSize": "11.5px", "marginTop": "8px"}),
@@ -296,11 +297,10 @@ def layout():
         ]),
 
         html.Div(className="page-section", children=[dcc.Graph(id="pron-grafico", config={"displaylogo": False})]),
-        panel_contexto(),
-        panel_tecnico(),
         mensaje("**Sirve para planear la semana, no para adivinar un día.** A una semana el pronóstico de llegadas se equivoca cerca de 8 % y a un "
                 "año cerca de 10 %. Los ingresos a cama de un día son más ruidosos (~18 %), pero por semana el error baja a ~9,5 %, que es como se "
                 "planean las camas. Úselo para dimensionar turnos y camas por semana y para anticipar la temporada alta de mitad de año."),
+        panel_contexto(),
         metodo("Un modelo de conteos (regresión de Poisson) que combina el calendario (día de la semana, festivos, Semana Santa, fin de año y "
                "Carnaval, que baja las llegadas ~17 %), el nivel reciente del hospital y la **forma del año**, tomada de datos públicos de vigilancia "
                "(dengue para las llegadas; infección respiratoria y diarrea para los ingresos a cama). Se entrenó con feb-2023 a jun-2025 y se probó "
@@ -308,7 +308,8 @@ def layout():
                "No anticipa brotes, cortes de sistema ni lo que haya cambiado en el hospital después del 9-abr-2026, el último dato confiable. No dice "
                "cuántos pacientes quedarán sin atender ni cuánto esperará cada uno (eso está en «Paciente en espera»). Las llegadas incluyen ~4 % de "
                "registros replicados, estables en el tiempo.",
-               "Fuente: src/modelo_pronostico.py sobre panel_diario.csv (agregado por día, sin pacientes). Detalle: documentación, sección 6.1, y docs/estacionalidad_anual.md."),
+               "Fuente: src/modelo_pronostico.py sobre panel_diario.csv (agregado por día, sin pacientes). Detalle: documentación, sección 6.1, y docs/estacionalidad_anual.md.", ruta="/pronostico"),
+        panel_tecnico(),
     ])
 
 
@@ -319,14 +320,13 @@ def layout():
     Output("pron-range-fill", "style"), Output("pron-range-low", "style"), Output("pron-range-low", "children"),
     Output("pron-range-high", "style"), Output("pron-range-high", "children"),
     Output("pron-range-marker", "style"), Output("pron-range-marker-value", "children"),
-    Output("pron-wape-chart", "figure"),
     Input("pron-plazo", "value"), Input("pron-objetivo", "value"), State("theme-store", "data"),
 )
 def actualizar(dias, objetivo, tema):
     dark = tg.es_oscuro(tema)
     if not DATOS_OK:                                            # no deberia dispararse (sin datos no se renderizan los controles), defensivo
         vacio = go.Figure()
-        return (vacio, "", "", "", "", "", {}, {}, "", {}, "", {}, "", vacio)
+        return (vacio, "", "", "", "", "", {}, {}, "", {}, "", {}, "")
     serie, bt = SERIES[objetivo], BT[objetivo]
     desde = hoy()
     f = mp.pronostico_con_banda(serie, bt, dias, SUPUESTO, 0.0, True, False, desde)
@@ -361,18 +361,7 @@ def actualizar(dias, objetivo, tema):
     estilo_high = {"left": f"{p_high}%"}
     estilo_marker = {"left": f"{p_mean}%"}
 
-    cmp = COMPARATIVO_WAPE[objetivo]
-    fig_wape = go.Figure([
-        go.Bar(x=TRAMOS_WAPE, y=cmp["sin"], name=cmp["nombre_sin"], marker_color=GRIS,
-               hovertemplate="%{x}<br>%{y:.1f} %% de error<extra></extra>"),
-        go.Bar(x=TRAMOS_WAPE, y=cmp["con"], name=cmp["nombre_con"], marker_color=AZUL,
-               hovertemplate="%{x}<br>%{y:.1f} %% de error<extra></extra>"),
-    ])
-    fig_wape.update_layout(title="Error del pronóstico (WAPE), con y sin la forma del año", barmode="group",
-                           yaxis_title="Error diario (%)", legend=dict(orientation="h", y=-0.22),
-                           template="simple_white", margin=dict(l=40, r=20, t=50, b=40))
-    tg.aplicar(fig_wape, dark)
 
     return (fig, lead_a_val, lead_a_det, lead_b_val, lead_b_det, lead_b_popup,
             estilo_fill, estilo_low, f"{f.banda_baja.mean():.0f}", estilo_high, f"{f.banda_alta.mean():.0f}",
-            estilo_marker, f"{f.pronostico.mean():.0f}", fig_wape)
+            estilo_marker, f"{f.pronostico.mean():.0f}")

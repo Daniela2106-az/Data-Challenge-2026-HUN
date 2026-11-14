@@ -69,7 +69,7 @@ def layout():
             "Es una **asociación**: la hora de llegada también cambia el tipo de paciente y la carga del momento, que explica unos dos "
             "quintos del efecto. Parte de la ola de la noche podría ser la hora en que se registra en el sistema.",
             "Fuente: camas_por_hora.csv y espera_por_hora.csv (dashboard/preparar_datos.py) · docs/saturacion_y_espera.md 3 y 4 · "
-            "docs/HALLAZGOS.md 4.4 · asociación, no causa."))
+            "docs/HALLAZGOS.md 4.4 · asociación, no causa.", ruta="/altas"))
 
 
 @callback(Output("alt-cifras", "children"), Output("alt-camas", "figure"), Output("alt-dato-olas", "children"),

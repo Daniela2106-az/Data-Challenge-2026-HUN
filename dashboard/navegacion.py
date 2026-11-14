@@ -18,9 +18,9 @@ ICONOS = {"/": "ico-home", "/pronostico": "ico-forecast", "/paciente": "ico-pati
 SECCIONES = [
     ("Contexto", "El proyecto en una pantalla, y qué datos hay detrás", ["/resumen", "/datos"]),
     ("Resultados", "Qué pasa hoy en el hospital y dónde se pierde el tiempo",
-     ["/demanda", "/ocupacion", "/espera", "/comparar", "/altas", "/factores", "/estancia", "/diagnosticos", "/perfiles"]),
+     ["/demanda", "/estacionalidad", "/ocupacion", "/espera", "/comparar", "/altas", "/factores", "/estancia", "/diagnosticos", "/perfiles"]),
     ("Predicción", "Qué se espera y qué pasaría si algo cambia",
-     ["/pronostico", "/estacionalidad", "/alertas", "/atipicos", "/paciente", "/camas", "/modelos"]),
+     ["/pronostico", "/alertas", "/atipicos", "/paciente", "/camas", "/modelos"]),
     ("Propuestas", "Qué hacer con lo que se encontró", ["/recomendaciones", "/documentacion"]),
 ]
 
@@ -28,6 +28,7 @@ SECCIONES = [
 def agrupar(paginas):
     """Reparte las paginas registradas (dicts de dash.page_registry, ya ordenadas) en las secciones.
     Devuelve [(titulo, descripcion, [paginas])]; el inicio queda fuera y lo que no este en SECCIONES va a "Más"."""
+    paginas = [p for p in paginas if "<" not in p["path"] and not p.get("path_template")]      # las rutas con plantilla (/documentacion/<cap>) no van en el menu
     por_ruta = {p["path"]: p for p in paginas}
     grupos, usadas = [], {"/"}
     for titulo, descripcion, rutas in SECCIONES:
@@ -50,9 +51,9 @@ def recorrido(paginas):
 # ---------------------------------------------------------------- documentacion que respalda cada pagina (14-nov-2026)
 # Cada pagina del dashboard es la version resumida, para el hospital, de una parte de docs/documento_final.md (la pagina
 # /documentacion lo muestra completo). main.py pone al pie de cada pagina el enlace a su seccion.
-CAPITULOS = {1: "1. Resumen ejecutivo", 3: "3. Los datos y su calidad", 4: "4. Cómo fluye el paciente (componente 1)",
-             5: "5. El cuello de botella y sus factores (componente 2)", 6: "6. Modelos, predicción y simulación (componente 3)",
-             7: "7. Recomendaciones (componente 4)"}
+CAPITULOS = {1: "Resumen ejecutivo", 2: "El reto y qué abordamos", 3: "Los datos y su calidad", 4: "Cómo fluye el paciente (componente 1)",
+             5: "El cuello de botella y sus factores (componente 2)", 6: "Modelos, predicción y simulación (componente 3)",
+             7: "Recomendaciones (componente 4)", 8: "El dashboard", 9: "Limitaciones", 10: "Trabajo en curso y futuro", 11: "Anexos"}
 # ruta -> (capitulo, subseccion o tema, que se encuentra alli)
 DOCUMENTACION = {
     "/resumen": (1, "Resumen ejecutivo", "los ocho hallazgos y lo que se propone, con sus cifras"),
@@ -78,14 +79,36 @@ DOCUMENTACION = {
 
 
 def slug_seccion(titulo):
-    """El mismo ancla que pages/documentacion.py da a cada seccion de nivel 2 del documento final."""
+    """El mismo ancla que pages/documentacion_cap.py da a cada subseccion del documento final."""
     t = re.sub(r"[^\w\s-]", "", titulo.lower(), flags=re.UNICODE)
     return "sec-" + re.sub(r"\s+", "-", t.strip())[:60]
 
 
+def _titulos_h3():
+    """Titulos de nivel 3 (### ...) del documento final, para apuntar el pie de cada pagina a su subseccion."""
+    from pathlib import Path
+    doc = Path(__file__).resolve().parent.parent / "docs" / "documento_final.md"
+    try:
+        return re.findall(r"^### (.+)$", doc.read_text(encoding="utf-8"), flags=re.M)
+    except OSError:
+        return []
+
+
 def documentacion_de(ruta):
-    """(capitulo, subseccion, descripcion, href) de la parte del documento final que respalda la pagina, o None."""
+    """(capitulo, subseccion, descripcion, href) de la parte del documento final que respalda la pagina, o None.
+    El enlace abre el capitulo (/documentacion/6) y baja a la subseccion cuyo numero empieza el texto de DOCUMENTACION (p. ej. «6.1»)."""
     if ruta not in DOCUMENTACION:
         return None
     cap, sub, desc = DOCUMENTACION[ruta]
-    return cap, sub, desc, "/documentacion#" + slug_seccion(CAPITULOS[cap])
+    href = f"/documentacion/{cap}"
+    m = re.match(r"(\d+\.\d+)", sub)
+    if m:
+        t = next((t for t in _titulos_h3() if t.startswith(m.group(1) + " ")), None)
+        if t:
+            href += "#" + slug_seccion(t)
+    return cap, sub, desc, href
+
+
+def capitulos_documento():
+    """[(numero, titulo)] de los capitulos, para el menu lateral."""
+    return sorted(CAPITULOS.items())

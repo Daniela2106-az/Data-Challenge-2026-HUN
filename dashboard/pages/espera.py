@@ -69,7 +69,7 @@ def layout():
             "el periodo confiable; el documento final cita 18,6 h, con todas las estancias medidas.",
             "No separa la atención clínica en urgencias de la espera pura por una cama, porque la base no registra la hora de la orden "
             "de hospitalización. Los filtros muestran **asociaciones**, no causas.",
-            "Fuente: espera_cubo.csv y espera_por_mes.csv (dashboard/preparar_datos.py) · docs/HALLAZGOS.md 4.2 y 4.3 · asociación, no causa."))
+            "Fuente: espera_cubo.csv y espera_por_mes.csv (dashboard/preparar_datos.py) · docs/HALLAZGOS.md 4.2 y 4.3 · asociación, no causa.", ruta="/espera"))
 
 
 @callback(Output("esp-cifras", "children"), Output("esp-hist", "figure"), Output("esp-titular", "children"), Output("esp-dato", "children"),

@@ -76,7 +76,7 @@ def layout():
             "Pasar de 106 no es un error de los datos: puede ser sobreocupación con camas adicionales o una capacidad real mayor, y los "
             "datos no las distinguen. La base no separa piso, UCI ni servicio.",
             "Fuente: panel_diario.csv (src/exportar_para_equipo.py) · capacidad: sesión con el HUN del 29-oct-2026 · "
-            "docs/HALLAZGOS.md 4.6 · CLAUDE.md 4.8."))
+            "docs/HALLAZGOS.md 4.6 · CLAUDE.md 4.8.", ruta="/ocupacion"))
 
 
 @callback(Output("ocu-camas", "figure"), Output("ocu-flujo", "figure"), Output("ocu-sobre", "figure"), Output("ocu-semana", "figure"),

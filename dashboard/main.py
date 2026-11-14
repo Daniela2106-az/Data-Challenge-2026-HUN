@@ -50,7 +50,8 @@ import dash
 from dash import Dash, Input, Output, State, callback, dcc, html
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from navegacion import ICONOS, agrupar, documentacion_de, recorrido  # noqa: E402
+from documentacion_paginas import conexiones  # noqa: E402
+from navegacion import ICONOS, SECCIONES, agrupar, capitulos_documento, documentacion_de, recorrido  # noqa: E402
 
 app = Dash(__name__, use_pages=True, pages_folder="pages", title="Dashboard HUN",
            update_title="Actualizando…")
@@ -98,7 +99,12 @@ def enlaces_nav(ruta_activa):
     hijos = [enlace_nav(p, ruta_activa) for p in paginas if p["path"] == "/"]
     for titulo, _descripcion, grupo in agrupar(paginas):
         hijos.append(html.Div(titulo, className="nav__label"))
-        hijos += [enlace_nav(p, ruta_activa) for p in grupo]
+        for p in grupo:
+            hijos.append(enlace_nav(p, ruta_activa))
+            if p["path"] == "/documentacion" and ruta_activa.startswith("/documentacion"):   # los capitulos solo se despliegan dentro de la documentacion
+                hijos.append(html.Div(className="nav__subgrupo", children=[
+                    dcc.Link(t, href=f"/documentacion/{n}", className="nav__subitem" + (" is-active" if ruta_activa == f"/documentacion/{n}" else ""))
+                    for n, t in capitulos_documento()]))
     return hijos
 
 
@@ -135,15 +141,27 @@ def pasos(ruta):
 
 
 def enlace_documentacion(ruta):
-    """Pie de cada pagina (14-nov-2026): la pagina es el resumen para el hospital; aqui se enlaza la seccion del documento final que la respalda."""
+    """Pie de cada pagina: con que otra pagina se conecta (cada resultado con su prediccion y al reves) y el capitulo del documento final que la respalda."""
+    nombres = {p["path"]: p["name"] for p in dash.page_registry.values()}
+    prediccion = {r for t, _d, rs in SECCIONES if t == "Predicción" for r in rs}
+    con = [(r, mot) for r, mot in conexiones(ruta) if r in nombres]
     d = documentacion_de(ruta)
-    if d is None:
+    if not con and d is None:
         return []
-    cap, sub, desc, href = d
-    return [html.Span(className="nav__ico ico-docs doc-rel__ico"),
-            html.Span([html.B("Esta página resume la documentación: "), f"capítulo {cap}, {sub}. ",
-                       html.Span(desc[0].upper() + desc[1:] + ".", className="doc-rel__desc")]),
-            dcc.Link("Leer la sección completa →", href=href, className="doc-rel__link", refresh=True)]
+    hijos = []
+    if con:
+        rotulo = "Resultado relacionado" if ruta in prediccion else "Predicción relacionada"
+        hijos.append(html.Div(className="doc-rel__fila", children=[
+            html.Span(rotulo + (" (qué pasa)" if ruta in prediccion else " (qué se espera)"), className="doc-rel__rotulo"),
+            html.Div(className="doc-rel__chips", children=[
+                dcc.Link([html.B(nombres[r]), html.Span(mot, className="doc-rel__motivo") if mot else None], href=r, className="doc-rel__chip") for r, mot in con])]))
+    if d:
+        cap, sub, desc, href = d
+        hijos.append(html.Div(className="doc-rel__fila", children=[
+            html.Span("Documentación", className="doc-rel__rotulo"),
+            html.Span([f"Capítulo {cap}, {sub}. ", html.Span(desc[0].upper() + desc[1:] + ".", className="doc-rel__desc")], className="doc-rel__texto"),
+            dcc.Link("Leer la sección completa →", href=href, className="doc-rel__link", refresh=True)]))
+    return hijos
 
 
 def barra_superior():
@@ -183,8 +201,8 @@ def sincronizar_navegacion(ruta):
     """Resalta el enlace activo en la barra lateral, pone el nombre de la pagina en la barra superior y arma los botones del pie."""
     ruta = ruta or "/"
     enlaces = enlaces_nav(ruta)
-    actual = next((p["name"] for p in dash.page_registry.values() if p["path"] == ruta), "Inicio")
-    seccion = next((t for t, _d, grupo in agrupar(_paginas_ordenadas()) if any(p["path"] == ruta for p in grupo)), "")
+    actual = next((p["name"] for p in dash.page_registry.values() if p["path"] == ruta), "Documentación" if ruta.startswith("/documentacion") else "Inicio")
+    seccion = next((t for t, _d, grupo in agrupar(_paginas_ordenadas()) if any(p["path"] == ruta for p in grupo)), "Propuestas" if ruta.startswith("/documentacion") else "")
     titulo = [html.Span(seccion + " · ", className="topbar__seccion"), actual] if seccion else actual
     return enlaces, titulo, pasos(ruta), enlace_documentacion(ruta)
 

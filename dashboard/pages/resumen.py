@@ -80,7 +80,7 @@ def layout():
             "página o del documento que se enlaza; aquí solo se resumen.",
             "Casi todo son **asociaciones y escenarios** con supuestos escritos, no causas ni promesas. La meta de tiempos del hospital y "
             "la causa del cambio de registro desde abril de 2026 no se conocen.",
-            "Fuente: docs/documento_final.md, sección 1 (resumen ejecutivo)."))
+            "Fuente: docs/documento_final.md, sección 1 (resumen ejecutivo).", ruta="/resumen"))
 
 
 @callback(Output("res-espera", "figure"), Input("theme-store", "data"))
