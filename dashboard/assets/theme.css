@@ -211,6 +211,12 @@ a { color: inherit; }
 .ico-patient  { -webkit-mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/></svg>"); mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/></svg>"); }
 .ico-bed      { -webkit-mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M7 13c1.66 0 3-1.34 3-3S8.66 7 7 7s-3 1.34-3 3 1.34 3 3 3zm12-6h-8v7H3V5H1v15h2v-3h18v3h2v-9c0-2.21-1.79-4-4-4z'/></svg>"); mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M7 13c1.66 0 3-1.34 3-3S8.66 7 7 7s-3 1.34-3 3 1.34 3 3 3zm12-6h-8v7H3V5H1v15h2v-3h18v3h2v-9c0-2.21-1.79-4-4-4z'/></svg>"); }
 .ico-profiles { -webkit-mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M3.5 18.5l6-6 4 4L22 6.92 20.59 5.5l-7.09 7.09-4-4L2 16z'/></svg>"); mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M3.5 18.5l6-6 4 4L22 6.92 20.59 5.5l-7.09 7.09-4-4L2 16z'/></svg>"); }
+/* "Total" (grupo): dos personas superpuestas, para /camas. "Niños" reusa la silueta de ico-patient mas chica
+   (mask-size menor) en vez de dibujar un icono infantil nuevo -- evita el riesgo de un SVG mal formado. */
+.ico-group    { -webkit-mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z'/></svg>"); mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z'/></svg>"); }
+/* "Niños": cabeza grande + cuerpo redondeado (proporciones de bebe/infante), bien distinta de ico-patient
+   (silueta de adulto estandar) -- antes era la misma figura solo achicada y las dos se confundian. */
+.ico-child    { -webkit-mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><circle cx='12' cy='7.3' r='4.3'/><path d='M12 13c-3.3 0-6.3 2.1-6.3 4.6V20h12.6v-2.4c0-2.5-3-4.6-6.3-4.6z'/></svg>"); mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><circle cx='12' cy='7.3' r='4.3'/><path d='M12 13c-3.3 0-6.3 2.1-6.3 4.6V20h12.6v-2.4c0-2.5-3-4.6-6.3-4.6z'/></svg>"); }
 
 .sidebar__foot {
   margin-top: auto;
@@ -1413,114 +1419,163 @@ button, .btn-primary {
    /camas: sliders con el mismo lenguaje visual que .range-metric (linea + punto),
    en vez del control nativo de rc-slider sin estilo.
    ========================================================================= */
-.page-container .rc-slider { margin: 10px 0 6px; }
-.page-container .rc-slider-rail { background: var(--line); height: 4px; border-radius: 2px; }
-.page-container .rc-slider-track { background: var(--brand); height: 4px; border-radius: 2px; }
+.page-container .rc-slider { margin: 10px 0 10px; }
+.page-container .rc-slider-rail { background: var(--line) !important; height: 4px; border-radius: 2px; }
+.page-container .rc-slider-track { background: #2a6fb0 !important; height: 4px; border-radius: 2px; }
+.page-container .rc-slider-step { background: transparent !important; }
 .page-container .rc-slider-handle {
   width: 16px; height: 16px; margin-top: -6px;
-  border: 2px solid var(--brand); background: var(--surface);
-  box-shadow: 0 0 0 4px rgba(0,147,208,.18); opacity: 1;
+  border: 2px solid #2a6fb0 !important; background: var(--surface) !important;
+  box-shadow: 0 0 0 4px rgba(42,111,176,.18) !important; opacity: 1;
 }
 .page-container .rc-slider-handle:hover, .page-container .rc-slider-handle:focus,
-.page-container .rc-slider-handle:active, .page-container .rc-slider-handle-click-focused:focus {
-  border-color: var(--brand-strong); box-shadow: 0 0 0 6px rgba(0,147,208,.24);
+.page-container .rc-slider-handle:active, .page-container .rc-slider-handle-click-focused:focus,
+.page-container .rc-slider-handle-dragging {
+  border-color: #1d5a94 !important; box-shadow: 0 0 0 6px rgba(42,111,176,.24) !important;
 }
-.page-container .rc-slider-dot { border-color: var(--line); background: var(--surface); bottom: -2px; }
-.page-container .rc-slider-dot-active { border-color: var(--brand); }
+.page-container .rc-slider-dot { border-color: var(--line) !important; background: var(--surface) !important; bottom: -2px; }
+.page-container .rc-slider-dot-active { border-color: #2a6fb0 !important; background: #2a6fb0 !important; }
 .page-container .rc-slider-mark-text { color: var(--muted); font-size: 11px; }
 .page-container .rc-slider-mark-text-active { color: var(--ink); font-weight: 600; }
-.camas-slider-group { display: flex; flex-direction: column; gap: 4px; min-width: 200px; flex: 1 1 200px; }
+.camas-slider-group { display: flex; flex-direction: column; gap: 4px; margin-bottom: 20px; }
 .camas-slider-group__label { font-weight: 600; font-size: 13.5px; color: var(--muted); display: flex; align-items: center; gap: 5px; }
 
 /* ============================================================================
-   /camas: metrica animada en bucle, 4 fases de IGUAL duracion (25% cada una del
-   ciclo de 32 s = 8 s para leer cada una): (1) 3 casos muestran camas ocupadas,
-   (2) el mismo cuadro cruza a "en espera", (3) los 3 cuadros convergen (se
-   encogen y se desplazan) hacia el centro y ahi aparece el % de dias sin cama,
-   (4) ese cuadro pasa al numero de dias sin cama -> vuelve a empezar. Los dos
-   bloques ('casos' y 'compartida') estan superpuestos en '.camas-loop__stage'
-   para que la convergencia y la metrica que la reemplaza queden en el MISMO
-   lugar de la pantalla, no una debajo de la otra.
+   /camas: metrica animada en bucle (ciclo de 15 s), centrada. Secuencia completa:
+   (1) 0-16 %   3 casos (mejor/base/peor) muestran las CAMAS OCUPADAS;
+   (2) 16-32 %  en el mismo cuadro cruzan a los PACIENTES SIN CAMA (numero coloreado);
+   (3) 32-40 %  las tarjetas y etiquetas se desvanecen -> quedan solo los numeros;
+   (4) 40-50 %  los numeros se convierten en PUNTOS (verde si 0, rojo si hay excedente);
+   (5) 50-54 %  una linea roja une los puntos;
+   (6) 54-64 %  los puntos convergen hacia el centro y se funden en uno;
+   (7) 64-82 %  ese punto se vuelve el % de dias sin cama (centrado, mas grande, con su tarjeta);
+   (8) 82-96 %  el % se convierte en el # de dias sin cama; luego fundido y vuelve a empezar.
+   Los bloques 'casos' y 'final' estan superpuestos en '.camas-loop__stage' (ambos centrados)
+   para que todo ocurra en el MISMO lugar.
    ========================================================================= */
-.camas-loop { margin: 6px 0 18px; }
-.camas-loop__stage { position: relative; min-height: 112px; }
-.camas-loop__casos {
-  position: absolute; inset: 0; display: flex; gap: 14px; justify-content: center; flex-wrap: wrap;
-}
-.camas-loop__caso {
-  position: relative; flex: 1 1 160px; max-width: 220px; min-height: 92px;
+.camas-loop { margin: 10px 0 22px; }
+.camas-loop__stage { position: relative; min-height: 160px; max-width: 580px; margin: 0 auto; }
+
+/* --- Los tres casos --- */
+.camas-loop__casos { position: absolute; inset: 0; display: flex; gap: 24px; justify-content: center; align-items: center; }
+.camas-loop__caso { position: relative; flex: 1 1 0; max-width: 168px; min-height: 118px; }
+.camas-loop__caso-card {
+  position: absolute; inset: 0; border-radius: var(--r-lg);
   background: linear-gradient(180deg, var(--surface-2), var(--surface));
-  border: 1px solid var(--line); border-radius: var(--r-lg); box-shadow: var(--sh-1);
-  padding: 12px 14px; text-align: center; overflow: hidden;
-  animation-duration: 32s; animation-iteration-count: infinite; animation-timing-function: ease-in-out;
+  border: 1px solid var(--line); box-shadow: var(--sh-1);
+  animation: clCard 15s ease-in-out infinite;
 }
-.camas-loop__caso:nth-child(1) { animation-name: clConvergeIzq; }
-.camas-loop__caso:nth-child(2) { animation-name: clConvergeCentro; }
-.camas-loop__caso:nth-child(3) { animation-name: clConvergeDer; }
-.camas-loop__caso-nombre { font-size: 11.5px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .03em; }
-.camas-loop__slide {
-  position: absolute; left: 0; right: 0; top: 30px; display: flex; flex-direction: column;
-  align-items: center; gap: 2px; animation-duration: 32s; animation-iteration-count: infinite; animation-timing-function: ease-in-out;
+.camas-loop__caso-nombre {
+  position: absolute; top: 14px; left: 0; right: 0; text-align: center;
+  font-size: 11.5px; font-weight: 700; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .03em; animation: clNombre 15s ease-in-out infinite;
 }
-.camas-loop__slide--ocupadas { animation-name: clOcupadas; }
-.camas-loop__slide--espera { animation-name: clEspera; }
-.camas-loop__valor { font-size: 24px; font-weight: 800; letter-spacing: -.02em; display: flex; align-items: center; gap: 6px; }
-.camas-loop__valor .nav__ico { width: 18px; height: 18px; flex: 0 0 18px; }
-.camas-loop__caption { font-size: 11px; color: var(--muted); }
-/* fase 1 (0-25 %): "ocupadas"; fase 2 (25-50 %): "en espera", crossfade en el mismo cuadro */
-@keyframes clOcupadas {
-  0%, 21%   { opacity: 1; }
-  25%, 100% { opacity: 0; }
+/* fase 1: camas ocupadas (bloque centrado, se funde con la fase 2) */
+.camas-loop__ocupadas {
+  position: absolute; top: 52%; left: 0; right: 0; transform: translateY(-50%);
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  animation: clOcupadas 15s ease-in-out infinite;
 }
-@keyframes clEspera {
-  0%, 21%  { opacity: 0; }
-  25%, 47% { opacity: 1; }
-  50%, 100% { opacity: 0; }
+.camas-loop__ocupadas-valor { font-size: 26px; font-weight: 800; letter-spacing: -.02em; }
+.camas-loop__ocupadas-cap { font-size: 11px; color: var(--muted); }
+/* fase 2-3: el numero "sin cama" (centrado exacto, para coincidir con el punto) y su etiqueta */
+.camas-loop__num {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  font-size: 28px; font-weight: 800; letter-spacing: -.02em;
+  animation: clNumero 15s ease-in-out infinite;
 }
-/* fase 3 (50-75 %): los 3 cuadros se encogen y se desplazan hacia el centro (convergen en un punto) */
-@keyframes clConvergeIzq {
-  0%, 47%   { transform: translateX(0) scale(1); opacity: 1; }
-  58%, 100% { transform: translateX(65px) scale(0.08); opacity: 0; }
+.camas-loop__sincama-cap {
+  position: absolute; top: 50%; left: 0; right: 0; text-align: center;
+  transform: translateY(18px); font-size: 11px; color: var(--muted);
+  animation: clSinCamaCap 15s ease-in-out infinite;
 }
-@keyframes clConvergeCentro {
-  0%, 47%   { transform: scale(1); opacity: 1; }
-  58%, 100% { transform: scale(0.08); opacity: 0; }
+/* fase 4-6: el punto (color del numero) aparece donde estaba el numero y converge al centro */
+.camas-loop__dot {
+  position: absolute; left: 50%; top: 50%; width: 16px; height: 16px; border-radius: 50%;
+  background: #c0392b; transform: translate(-50%, -50%) scale(.3); opacity: 0;
 }
-@keyframes clConvergeDer {
-  0%, 47%   { transform: translateX(0) scale(1); opacity: 1; }
-  58%, 100% { transform: translateX(-65px) scale(0.08); opacity: 0; }
+.camas-loop__caso:nth-child(1) .camas-loop__dot { animation: clDotIzq 15s ease-in-out infinite; }
+.camas-loop__caso:nth-child(2) .camas-loop__dot { animation: clDotCen 15s ease-in-out infinite; }
+.camas-loop__caso:nth-child(3) .camas-loop__dot { animation: clDotDer 15s ease-in-out infinite; }
+/* la linea roja que une los puntos (del centro del primer caso al del ultimo) */
+.camas-loop__linea {
+  position: absolute; top: 50%; left: 16%; right: 16%; height: 3px; border-radius: 2px;
+  background: #c0392b; transform: translateY(-50%) scaleX(0); transform-origin: center;
+  opacity: 0; animation: clLinea 15s ease-in-out infinite;
 }
-.camas-loop__compartida {
-  position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
-  text-align: center; opacity: 0; animation: clCompartidaShow 32s ease-in-out infinite;
+
+/* fase 1 -> 2 -> 3: ocupadas se funde; la tarjeta, el nombre y la etiqueta se van dejando solo el numero */
+@keyframes clOcupadas  { 0%, 12% { opacity: 1; } 18%, 100% { opacity: 0; } }
+@keyframes clCard      { 0%, 32% { opacity: 1; } 40%, 100% { opacity: 0; } }
+@keyframes clNombre    { 0%, 32% { opacity: 1; } 40%, 100% { opacity: 0; } }
+@keyframes clSinCamaCap{ 0%, 14% { opacity: 0; } 20%, 30% { opacity: 1; } 37%, 100% { opacity: 0; } }
+@keyframes clNumero {
+  0%, 14%   { opacity: 0; transform: translate(-50%, -50%) scale(.9); }
+  20%, 32%  { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  42%, 100% { opacity: 0; transform: translate(-50%, -50%) scale(.3); }
 }
-@keyframes clCompartidaShow {
-  0%, 53%   { opacity: 0; }
-  58%, 100% { opacity: 1; }
+/* el punto aparece en el sitio del numero, se queda unido por la linea y converge al centro */
+@keyframes clDotIzq {
+  0%, 34%   { opacity: 0; transform: translate(-50%, -50%) translateX(0) scale(.3); }
+  42%, 54%  { opacity: 1; transform: translate(-50%, -50%) translateX(0) scale(1); }
+  64%, 100% { opacity: 0; transform: translate(-50%, -50%) translateX(190px) scale(.5); }
 }
-.camas-loop__compartida-slide {
-  position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
-  animation-duration: 32s; animation-iteration-count: infinite; animation-timing-function: ease-in-out;
+@keyframes clDotCen {
+  0%, 34%   { opacity: 0; transform: translate(-50%, -50%) scale(.3); }
+  42%, 54%  { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  64%, 100% { opacity: 0; transform: translate(-50%, -50%) scale(.5); }
 }
-.camas-loop__compartida-slide--pct { animation-name: clPctSlide; }
-.camas-loop__compartida-slide--dias { animation-name: clDiasSlide; }
-.camas-loop__compartida-valor { font-size: 22px; font-weight: 800; color: #c0392b; }
-.camas-loop__compartida-caption { font-size: 11px; color: var(--muted); }
-/* fase 3, segunda mitad (58-75 %): aparece "% de dias sin cama" donde convergieron los 3 cuadros */
-@keyframes clPctSlide {
-  0%, 56%   { opacity: 0; transform: translateX(14px); }
-  60%, 72%  { opacity: 1; transform: translateX(0); }
-  76%, 100% { opacity: 0; transform: translateX(-14px); }
+@keyframes clDotDer {
+  0%, 34%   { opacity: 0; transform: translate(-50%, -50%) translateX(0) scale(.3); }
+  42%, 54%  { opacity: 1; transform: translate(-50%, -50%) translateX(0) scale(1); }
+  64%, 100% { opacity: 0; transform: translate(-50%, -50%) translateX(-190px) scale(.5); }
 }
-/* fase 4 (75-100 %): pasa a "numero de dias sin cama", misma mecanica de deslizamiento */
-@keyframes clDiasSlide {
-  0%, 74%  { opacity: 0; transform: translateX(14px); }
-  78%, 97% { opacity: 1; transform: translateX(0); }
-  100%     { opacity: 0; transform: translateX(-14px); }
+@keyframes clLinea {
+  0%, 42%   { opacity: 0; transform: translateY(-50%) scaleX(0); }
+  50%, 54%  { opacity: 1; transform: translateY(-50%) scaleX(1); }
+  64%, 100% { opacity: 0; transform: translateY(-50%) scaleX(0); }
 }
+
+/* --- Fase 7-8: del punto fundido emerge el % y luego el # (crossfade en el MISMO centro) --- */
+.camas-loop__final { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+.camas-loop__final-card {
+  position: relative; min-width: 250px; min-height: 92px;
+  display: flex; align-items: center; justify-content: center;
+  padding: 16px 28px; border-radius: var(--r-lg);
+  background: linear-gradient(180deg, var(--surface-2), var(--surface));
+  border: 1px solid var(--line); box-shadow: var(--sh-2);
+  opacity: 0; transform: scale(.4); animation: clTarjetaFinal 15s ease-in-out infinite;
+}
+.camas-loop__final-item {
+  position: absolute; inset: 0; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; text-align: center; gap: 3px;
+}
+.camas-loop__final-item--pct  { animation: clPct 15s ease-in-out infinite; }
+.camas-loop__final-item--dias { animation: clDias 15s ease-in-out infinite; }
+.camas-loop__final-valor { font-weight: 800; color: #c0392b; letter-spacing: -.02em; }
+.camas-loop__final-item--pct  .camas-loop__final-valor { font-size: 36px; }
+.camas-loop__final-item--dias .camas-loop__final-valor { font-size: 22px; }
+.camas-loop__final-caption { font-size: 11px; color: var(--muted); max-width: 220px; }
+@keyframes clTarjetaFinal {
+  0%, 58%   { opacity: 0; transform: scale(.4); }
+  66%, 94%  { opacity: 1; transform: scale(1); }
+  100%      { opacity: 0; transform: scale(.4); }
+}
+@keyframes clPct {
+  0%, 62%   { opacity: 0; }
+  69%, 80%  { opacity: 1; }
+  85%, 100% { opacity: 0; }
+}
+@keyframes clDias {
+  0%, 83%   { opacity: 0; }
+  88%, 95%  { opacity: 1; }
+  100%      { opacity: 0; }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .camas-loop__casos, .camas-loop__caso, .camas-loop__slide--ocupadas {
-    animation: none !important; opacity: 1 !important; transform: none !important;
+  /* sin animacion: se muestran estaticamente los tres numeros "sin cama" (con su nombre); el resto oculto */
+  .camas-loop__caso-card, .camas-loop__caso-nombre, .camas-loop__num, .camas-loop__sincama-cap {
+    animation: none !important; opacity: 1 !important;
   }
-  .camas-loop__slide--espera, .camas-loop__compartida { animation: none !important; opacity: 0 !important; }
+  .camas-loop__ocupadas, .camas-loop__dot, .camas-loop__linea, .camas-loop__final { animation: none !important; opacity: 0 !important; }
 }
