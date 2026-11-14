@@ -23,6 +23,9 @@ CAMAS = [("Hasta 7 días", -2.5), ("De 7 a 14 días", 2.9), ("De 14 a 30 días",
 POR_ANIO = [(2023, 4.57, 5.5), (2024, 4.90, 6.6), (2025, 5.31, 7.3)]
 # (grupo de edad, cuantas veces mas probable es una estancia larga frente a los de 15 a 29 años)
 EDAD = [("15 a 29 años", 1.0), ("45 a 59 años", 2.0), ("60 a 74 años", 2.5), ("75 años o más", 3.0)]
+# (grupo de diagnostico, cuantas veces mas probable es una estancia larga frente al resto)
+POR_DX = [("Cáncer y tumores", 2.8), ("Infecciosas", 2.7), ("Salud mental", 2.6), ("Musculoesquelético", 2.3), ("Neurológico", 2.1),
+          ("Renal y urinario", 0.5), ("Embarazo y parto", 0.4)]
 COMPARTEN = [
     ("21 veces", "Catéter central (PICC)", "Más frecuente en las estancias largas que en el resto: 11,6 % frente a 0,6 %."),
     ("8 veces", "Nutrición hospitalaria", "El 23 % de las estancias largas la recibe, frente al 3 % de las demás."),
@@ -50,6 +53,11 @@ def layout():
                "Cuántas veces más probable es una estancia larga frente a los pacientes de 15 a 29 años. También pesa la ruta: las visitas "
                "de tipo «treatment urgency» tienen 2,4 veces más estancias largas.",
                grafico("lar-edad", alto=320), dato=("3 veces", "más probable desde los 75 años")),
+        lamina(4, "Cáncer, infecciones y salud mental casi triplican el riesgo",
+               "Cuántas veces más probable es una estancia larga en cada grupo de diagnóstico frente al resto. **En gris, los grupos "
+               "con menos riesgo**: los partos y los problemas renales casi nunca se alargan.",
+               grafico("lar-dx", alto=330), dato=("12,7 %", "de las visitas «treatment urgency» termina en una estancia larga, el doble que el resto"),
+               invertida=True),
         bloque("Qué comparten las estancias largas", "Procedimientos y exámenes mucho más frecuentes en ellas que en el resto"),
         html.Div(className="hechos", children=[hecho(*c) for c in COMPARTEN]),
         mensaje("**Revisar cada semana las estancias largas es la forma más directa de liberar camas** (recomendación 7): son el 7 % de "
@@ -63,7 +71,8 @@ def layout():
             "Fuente: docs/factores_estancia.md · docs/estancias_disparadas.md · CLAUDE.md 4.8 · asociación, no causa."))
 
 
-@callback(Output("lar-camas", "figure"), Output("lar-anio", "figure"), Output("lar-edad", "figure"), Input("theme-store", "data"))
+@callback(Output("lar-camas", "figure"), Output("lar-anio", "figure"), Output("lar-edad", "figure"), Output("lar-dx", "figure"),
+          Input("theme-store", "data"))
 def figuras(tema):
     def barras(x, y, colores, textos, flotante):
         fig = go.Figure(go.Bar(x=x, y=y, marker_color=colores, text=textos, textposition="outside", cliponaxis=False, hovertemplate=flotante))
@@ -85,4 +94,14 @@ def figuras(tema):
     edad = barras([e for e, _ in EDAD], [m for _, m in EDAD], [TENUE, TENUE, TENUE, AZUL], [f"{coma(m)} ×" for _, m in EDAD],
                   "%{x}: %{y:.1f} veces la probabilidad de una estancia larga<extra></extra>")
     edad.update_yaxes(range=[0, 3.6], ticksuffix=" ×")
-    return camas, anio, edad
+
+    dx = go.Figure(go.Bar(y=[g for g, _ in POR_DX], x=[v for _, v in POR_DX], orientation="h",
+                          marker_color=[AZUL if v > 1 else TENUE for _, v in POR_DX], text=[f"{coma(v)} ×" for _, v in POR_DX],
+                          textposition="outside", cliponaxis=False,
+                          hovertemplate="<b>%{y}</b><br>%{x:.1f} veces la probabilidad de una estancia larga<extra></extra>"))
+    estilo(dx, tema)
+    dx.add_vline(x=1, line=dict(color="rgba(127,140,155,0.7)", width=1, dash="dot"))
+    dx.update_layout(margin=dict(l=10, r=44, t=6, b=6), bargap=0.36)
+    dx.update_yaxes(autorange="reversed", automargin=True, showgrid=False)
+    dx.update_xaxes(showticklabels=False, showline=False, range=[0, 3.3])
+    return camas, anio, edad, dx

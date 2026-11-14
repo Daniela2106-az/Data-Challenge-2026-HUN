@@ -56,6 +56,10 @@ def layout():
                "Reparto de las hospitalizaciones según el tipo de visita por el que entró el paciente. Un cambio aquí significa que "
                "cambió **quién llega**, no solo cuánto espera.",
                grafico("com-mezcla", alto=320), id_dato="com-dato-3"),
+        lamina(4, "Año por año: la espera típica no se mueve, los peores casos sí",
+               "Espera mediana y espera de los peores casos (percentil 90) en cada año, sin importar los dos que elijas arriba. "
+               "**La barra gris casi no cambia; la azul sube cada año.**",
+               grafico("com-anios", alto=320), id_dato="com-dato-4", invertida=True),
         mensaje("El cuello de botella no cambia de sitio: es la espera en urgencias antes de la cama. Lo que cambia es **quién paga el "
                 "costo**: cada año, más pacientes esperan varios días, sobre todo los mayores que entran por urgencias."),
         metodo(
@@ -71,6 +75,7 @@ def layout():
 @callback(Output("com-cifras", "children"), Output("com-titular-1", "children"), Output("com-tramos", "figure"), Output("com-dato-1", "children"),
           Output("com-titular-2", "children"), Output("com-grupos", "figure"), Output("com-dato-2", "children"),
           Output("com-titular-3", "children"), Output("com-mezcla", "figure"), Output("com-dato-3", "children"),
+          Output("com-anios", "figure"), Output("com-dato-4", "children"),
           Input("com-anio", "value"), Input("com-ref", "value"), Input("theme-store", "data"))
 def actualizar(anio, ref, tema):
     c = leer("espera_cubo.csv", dtype={"anio": str})
@@ -138,4 +143,20 @@ def actualizar(anio, ref, tema):
     else:
         t3 = f"Las hospitalizaciones por «{tipo.lower()}» pasaron de {coma(m[ref][tipo], 0)} % a {coma(m[anio][tipo], 0)} %"
         d3 = dato(_signo(m[anio][tipo] - m[ref][tipo], 0, " puntos"), f"en la proporción que entra por «{tipo.lower()}»")
-    return cifras, t1, tramos, d1, t2, grupos, d2, t3, mezcla, d3
+
+    # 4. Año por año
+    por_anio = total.loc[[x for x in ("2023", "2024", "2025", "2026") if x in total.index]]
+    etiquetas = [x if x != "2026" else "2026 (ene–abr)" for x in por_anio.index]
+    anios = go.Figure()
+    anios.add_trace(go.Bar(x=etiquetas, y=por_anio.mediana, name="Espera típica (mediana)", marker_color=PIZARRA,
+                           text=[f"{coma(v, 0)} h" for v in por_anio.mediana], textposition="outside", cliponaxis=False,
+                           hovertemplate="%{x}: %{y:.1f} h de espera mediana<extra></extra>"))
+    anios.add_trace(go.Bar(x=etiquetas, y=por_anio.p90, name="Peores casos (percentil 90)", marker_color=AZUL,
+                           text=[f"{coma(v, 0)} h" for v in por_anio.p90], textposition="outside", cliponaxis=False,
+                           hovertemplate="%{x}: %{y:.1f} h en los peores casos<extra></extra>"))
+    estilo(anios, tema, leyenda=True).update_yaxes(ticksuffix=" h", range=[0, por_anio.p90.max() * 1.2])
+    anios.update_xaxes(type="category")
+    anios.update_layout(barmode="group", bargap=0.34, bargroupgap=0.06)
+    d4 = dato(f"{coma(por_anio.p90.iloc[0], 0)} → {coma(por_anio.p90.iloc[-1], 0)} h",
+              f"en los peores casos, de {por_anio.index[0]} a {por_anio.index[-1]}")
+    return cifras, t1, tramos, d1, t2, grupos, d2, t3, mezcla, d3, anios, d4

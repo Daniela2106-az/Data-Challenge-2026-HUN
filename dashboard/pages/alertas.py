@@ -31,6 +31,14 @@ CAMAS = [
 ]
 
 
+# Para que sirve cada alerta (docs/recomendaciones.md: reunion diaria de camas, alerta por paciente con responsable, adelantar altas)
+USO = [
+    ("A las 12 h", "Día congestionado", "Entra a la reunión diaria de camas: ese día se priorizan las altas pendientes de la tarde."),
+    ("A las 48 h", "Paciente sin cama", "Cada aviso lleva una persona responsable de resolver el caso antes de que llegue a las 72 horas."),
+    ("Cada mañana", "Ocupación alta", "Si hoy la ocupación es alta, mañana también lo será: conviene adelantar altas desde temprano."),
+]
+
+
 def layout():
     return pagina(
         portada("Predicción · Alertas", "Tres alertas para actuar a tiempo: a mediodía ya se sabe si el día será congestionado",
@@ -49,6 +57,8 @@ def layout():
                invertida=True),
         bloque("Camas de mañana", "Para saber si mañana habrá ocupación alta, lo simple le gana a lo complejo"),
         html.Div(className="hechos", children=[hecho(*c) for c in CAMAS]),
+        bloque("Para qué sirve cada alerta", "Una alerta solo ayuda si alguien sabe qué hacer cuando suena"),
+        html.Div(className="hechos", children=[hecho(*u) for u in USO]),
         mensaje("Con las tres alertas el hospital recibiría **unas 4,6 alertas por día**, casi todas de pacientes que llevan 48 horas sin "
                 "cama: una lista corta y accionable, no una alarma constante."),
         metodo(

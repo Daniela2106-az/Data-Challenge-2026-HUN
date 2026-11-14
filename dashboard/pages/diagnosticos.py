@@ -13,7 +13,7 @@ import plotly.graph_objects as go
 from dash import Input, Output, callback, html
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from componentes import AZUL, TENUE, cifra, coma, dato, estilo, filtro, grafico, lamina, mensaje, metodo, miles, pagina, portada  # noqa: E402
+from componentes import AZUL, PIZARRA, TENUE, cifra, coma, dato, estilo, filtro, grafico, lamina, mensaje, metodo, miles, pagina, portada  # noqa: E402
 
 dash.register_page(__name__, path="/diagnosticos", name="Diagnósticos", title="Diagnósticos y tiempos - HUN", order=27)
 
@@ -42,6 +42,11 @@ def layout():
                grafico("dx-barras", alto=430), id_dato="dx-dato",
                controles=filtro("dx-indicador", "Qué medir", [("espera", "Espera de cama"), ("p90", "Peores casos"), ("estancia", "Estancia")],
                                 "espera")),
+        lamina(2, "Musculoesquelético y cáncer esperan mucho y además se quedan más tiempo",
+               "Cada punto es un grupo de diagnóstico: hacia la derecha, más espera por una cama; hacia arriba, más días "
+               "hospitalizado. **Renal y urinario espera mucho pero se queda poco**: su problema es conseguir la cama, no ocuparla.",
+               grafico("dx-dispersion", alto=400), dato=("4,8 días", "de estancia mediana en musculoesquelético y en cáncer, los que más se quedan"),
+               invertida=True),
         mensaje("La cola larga está en **cirugía, urología y ortopedia**: pacientes estables que esperan turno o una cama especializada. "
                 "Vale la pena revisar ese flujo aparte, porque no compite con las urgencias vitales."),
         metodo(
@@ -51,6 +56,25 @@ def layout():
             "llegar y puede venir del registro duplicado. Que la cola esté en cirugía y urología es una **hipótesis sin comprobar**. El "
             "accidente cerebrovascular está agrupado en Cardiovascular.",
             "Fuente: docs/diagnosticos_y_tiempos.md, sección 3 · docs/revision_mapeo_dx.md · asociación, no causa."))
+
+
+@callback(Output("dx-dispersion", "figure"), Input("theme-store", "data"))
+def dispersion(tema):
+    lado = {"Musculoesquelético y dolor": "top center", "Cáncer y tumores": "middle left", "Renal y urinario": "bottom center",
+            "Digestivo": "bottom center", "Trauma y lesiones": "middle right", "Infecciosas": "top center",
+            "Embarazo, parto y ginecología": "bottom center", "Neurológico": "top center", "Salud mental": "middle right",
+            "Respiratorio": "bottom center", "Cardiovascular": "middle left"}
+    fig = go.Figure(go.Scatter(
+        x=[g[2] for g in GRUPOS], y=[g[4] / 24 for g in GRUPOS], mode="markers+text", text=[g[0] for g in GRUPOS],
+        textposition=[lado[g[0]] for g in GRUPOS], textfont=dict(size=11),
+        marker=dict(size=13, color=[AZUL if g[0] in LENTOS else PIZARRA for g in GRUPOS], line=dict(width=2, color="rgba(255,255,255,0.7)")),
+        customdata=[miles(g[1]) for g in GRUPOS], cliponaxis=False,
+        hovertemplate="<b>%{text}</b><br>espera mediana: %{x:.1f} h<br>estancia mediana: %{y:.1f} días<br>%{customdata} hospitalizados<extra></extra>"))
+    estilo(fig, tema)
+    fig.update_xaxes(title_text="espera mediana por una cama (horas)", range=[-3, 46], showgrid=True, gridwidth=1)
+    fig.update_yaxes(title_text="estancia mediana (días)", range=[1.2, 5.6])
+    fig.update_layout(margin=dict(l=56, r=20, t=10, b=52))
+    return fig
 
 
 @callback(Output("dx-barras", "figure"), Output("dx-titular", "children"), Output("dx-dato", "children"),

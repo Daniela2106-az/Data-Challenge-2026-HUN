@@ -61,6 +61,10 @@ def layout():
                "Porcentaje de los días de cada año con más camas ocupadas, en promedio, que las 106 del hospital. **El exceso es "
                "reciente**: aparece en 2024 y se duplica en 2025.",
                grafico("ocu-sobre", alto=320), dato=(f"{coma(p.ocup_hosp_max.max(), 0)} camas", "ocupadas en el momento de mayor ocupación")),
+        lamina(4, "Las camas están igual de llenas todos los días de la semana",
+               "Camas ocupadas en promedio según el día de la semana. Aunque el fin de semana llegan menos pacientes y se dan menos "
+               "altas, **la ocupación no baja**: el hospital no tiene un día para ponerse al día.",
+               grafico("ocu-semana", alto=300), dato=("100 camas", "ocupadas en promedio cualquier día de la semana"), invertida=True),
         bloque("Dónde está el exceso", "No todas las camas están igual de llenas"),
         html.Div(className="hechos", children=[hecho(*e) for e in EXCESO]),
         mensaje("**Bajar la estancia libera camas.** Volver a la estancia de 2023 equivale a unas 15 camas; la página de Planeación de "
@@ -75,7 +79,7 @@ def layout():
             "docs/HALLAZGOS.md 4.6 · CLAUDE.md 4.8."))
 
 
-@callback(Output("ocu-camas", "figure"), Output("ocu-flujo", "figure"), Output("ocu-sobre", "figure"),
+@callback(Output("ocu-camas", "figure"), Output("ocu-flujo", "figure"), Output("ocu-sobre", "figure"), Output("ocu-semana", "figure"),
           Input("ocu-vista", "value"), Input("theme-store", "data"))
 def actualizar(vista, tema):
     p = _panel()
@@ -103,4 +107,12 @@ def actualizar(vista, tema):
     estilo(sobre, tema).update_yaxes(ticksuffix=" %", range=[0, max(pct.max() * 1.2, 10)])
     sobre.update_xaxes(type="category")
     sobre.update_layout(bargap=0.45)
-    return camas, flujo, sobre
+
+    d = p.groupby("dia_semana_num").ocup_hosp_media.mean().reindex(range(7))
+    semana = go.Figure(go.Bar(x=["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"], y=d.values,
+                              marker_color=[AZUL] * 5 + [TENUE] * 2, text=[coma(v, 0) for v in d.values], textposition="outside",
+                              cliponaxis=False, hovertemplate="%{x}: %{y:.1f} camas ocupadas<extra></extra>"))
+    semana.add_hline(y=CAMAS, line=dict(color=NARANJA, width=1.5))
+    estilo(semana, tema).update_yaxes(range=[0, 125])
+    semana.update_layout(bargap=0.4)
+    return camas, flujo, sobre, semana

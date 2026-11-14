@@ -37,6 +37,22 @@ CALENDARIO = [
 ]
 
 
+def _fecha(f):
+    a, m, d = f.split("-")
+    return f"{int(d)} {MESES[int(m) - 1]} {a}"
+
+
+def _tabla():
+    """Los 14 dias atipicos de llegadas, uno por uno (los dos posibles cortes del sistema, resaltados)."""
+    cabecera = html.Thead(html.Tr([html.Th("Fecha"), html.Th("Llegadas", className="num"), html.Th("Se esperaban", className="num"),
+                                   html.Th("Diferencia", className="num"), html.Th("Observación")]))
+    filas = [html.Tr(className="destacada" if f in CORTES else None, children=[
+        html.Td(_fecha(f)), html.Td(str(r), className="num"), html.Td(str(e), className="num"),
+        html.Td(f"{'+' if r > e else '−'}{abs(round(100 * (r / e - 1)))} %", className="num"), html.Td(o.capitalize())])
+        for f, r, e, o in DIAS]
+    return html.Div(className="card tabla-wrap", children=html.Table(className="tabla", children=[cabecera, html.Tbody(filas)]))
+
+
 def layout():
     return pagina(
         portada("Predicción · Días atípicos", "Ningún día tuvo una espera más alta de lo esperado: el problema es de todos los días",
@@ -52,6 +68,8 @@ def layout():
                "Días con más y con menos de lo esperado en cada serie. **Los 7 días atípicos de espera son de espera más corta**, casi "
                "todos domingos, festivos o Semana Santa.",
                grafico("ati-resumen", alto=320), dato=("0 días", "con una espera más alta de lo esperado"), invertida=True),
+        bloque("Los 14 días, uno por uno", "Llegadas reales frente a las que esperaba el pronóstico; resaltados, los dos posibles cortes del sistema"),
+        _tabla(),
         bloque("Lo que explica el calendario", "Revisar los días raros sirvió para mejorar el pronóstico"),
         html.Div(className="hechos", children=[hecho(*c) for c in CALENDARIO]),
         mensaje("**El problema de la espera es crónico, no de días malos.** Reaccionar a los picos no lo resuelve: hay que cambiar el "

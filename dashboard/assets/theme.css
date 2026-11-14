@@ -884,6 +884,25 @@ button, .btn-primary {
 :root[data-theme="dark"].presentando #modo-presentacion { color: #0f141a; }
 @media (max-width: 880px) { .topbar__seccion, #modo-presentacion { display: none; } }
 
+/* Tabla sencilla dentro de una tarjeta (pagina de dias atipicos) */
+.tabla-wrap { padding: 8px 20px 12px; margin-bottom: 14px; overflow-x: auto; }
+.tabla { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.tabla th { text-align: left; font-size: 11.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted);
+  padding: 10px 10px 8px; border-bottom: 1px solid var(--line); }
+.tabla td { padding: 8px 10px; border-bottom: 1px solid var(--line); color: var(--ink); }
+.tabla tr:last-child td { border-bottom: none; }
+.tabla .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tabla tr.destacada td { font-weight: 700; color: var(--brand-strong); }
+
+/* Imprimir o guardar como PDF una pagina (para llevarla a diapositivas): sin menu, barra superior ni botones */
+@media print {
+  .sidebar, .topbar, .paso, .filtros, details.metodo { display: none !important; }
+  .content { padding: 0; }
+  .page-container { max-width: none; padding: 0; animation: none; }
+  .portada, .lamina, .hecho, .mensaje, .card { break-inside: avoid; box-shadow: none; animation: none; }
+  .portada, .pildoras label.selected { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+
 /* Restos comunes: texto del metodo, pie con la fuente, aviso y bloque de la pagina de estacionalidad */
 .chart-card__title { font-size: 16px; font-weight: 700; color: var(--brand-ink); line-height: 1.3; }
 .chart-card__sub { font-size: 13px; color: var(--muted); margin: 3px 0 6px; line-height: 1.45; }

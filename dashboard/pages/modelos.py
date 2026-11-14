@@ -11,7 +11,7 @@ import dash
 from dash import html
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from componentes import bloque, cifra, mensaje, metodo, pagina, portada  # noqa: E402
+from componentes import bloque, cifra, hecho, mensaje, metodo, pagina, portada  # noqa: E402
 
 dash.register_page(__name__, path="/modelos", name="Elección de modelos", title="Cómo se eligieron los modelos - HUN", order=36)
 
@@ -43,6 +43,13 @@ MODELOS = [
      "Suponer que la cola no cambia y usar la tasa típica."),
 ]
 
+VALIDACION = [
+    ("Hasta jun 2025", "Entrenamiento", "Con estos meses aprende cada modelo. Nunca se mezclan con los de después."),
+    ("Jul a dic 2025", "Validación", "Aquí se eligió cada variable y cada corte: lo que no mejoró en estos meses se descartó."),
+    ("Ene a abr 2026", "Prueba", "Meses que el modelo nunca vio. Solo se reportan: no se usaron para decidir nada."),
+    ("Regla simple", "Referencia", "Cada modelo se compara con la opción más sencilla; si no la supera, no se usa."),
+]
+
 
 def _parte(titulo, texto):
     return html.Div(className="rec-block", children=[html.Div(titulo, className="rec-block__label"), html.P(texto)])
@@ -63,6 +70,8 @@ def layout():
                  cifra("87 %", "de los días congestionados se detecta a mediodía")]),
         bloque("Una pregunta, un modelo", "Qué se eligió, por qué y qué alternativas se descartaron"),
         html.Div(className="hechos hechos--2", children=[_tarjeta(i, *m) for i, m in enumerate(MODELOS, 1)]),
+        bloque("Cómo se validó cada uno", "Siempre con el pasado para entrenar y con meses posteriores para comprobar"),
+        html.Div(className="hechos", children=[hecho(*v) for v in VALIDACION]),
         mensaje("Todos los modelos se probaron **entrenando con el pasado y evaluando en meses que no habían visto**, siempre contra una "
                 "referencia simple. Donde un modelo complejo no ganó, se dejó el simple, que el hospital puede leer y mantener."),
         metodo(

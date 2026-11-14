@@ -31,6 +31,9 @@ OTROS = [
     ("4 de cada 10", "Falsas alarmas al predecir por paciente", "Un modelo que avise al llegar quién esperará más de un día marcaría al "
                                                                "44 % de los pacientes."),
 ]
+# (comparacion, cambio en la espera con todo lo demas igual, en %) - efectos del modelo (CLAUDE.md 6b y 4.10)
+EFECTOS = [("Mujer, frente a hombre", 27), ("Cada escalón más de carga al llegar", 2.5), ("Visita ambulatoria, frente a urgencias", -31),
+           ("«Treatment urgency», frente a urgencias", -39)]
 TIPOS = ["Urgencias", "Ambulatorio", "Treatment urgency"]
 EDADES = ["Niños (< 15)", "Adultos (15–59)", "Mayores (60+)"]
 
@@ -53,6 +56,10 @@ def layout():
                "Espera mediana por tipo de visita y por grupo de edad. Las visitas ambulatorias y las de «treatment urgency» consiguen "
                "cama antes, y los niños esperan menos de la mitad que los mayores de 60. Son **asociaciones**: cada grupo trae pacientes distintos.",
                grafico("fac-grupos", alto=350), id_dato="fac-dato", invertida=True),
+        lamina(3, "Con todo lo demás igual, ser mujer y entrar por urgencias suma espera",
+               "Cuánto cambia la espera por cada característica cuando las demás se mantienen iguales (edad, hora, año y tipo de "
+               "visita). **En azul, lo que alarga la espera; en gris, lo que la acorta.**",
+               grafico("fac-efectos", alto=300), dato=("+27 %", "esperan las mujeres frente a los hombres, sin causa conocida")),
         bloque("Lo demás que se probó", "Cuatro resultados que cambian qué vale la pena hacer"),
         html.Div(className="hechos", children=[hecho(*o) for o in OTROS]),
         mensaje("**La espera depende del sistema, no del paciente.** No hay un tipo de paciente al que culpar: lo que decide la espera es "
@@ -67,7 +74,8 @@ def layout():
             "Fuente: CLAUDE.md 6b y 4.10 · docs/HALLAZGOS.md 4.5 · docs/modelo_espera.md · espera_cubo.csv (dashboard/preparar_datos.py)."))
 
 
-@callback(Output("fac-peso", "figure"), Output("fac-grupos", "figure"), Output("fac-dato", "children"), Input("theme-store", "data"))
+@callback(Output("fac-peso", "figure"), Output("fac-grupos", "figure"), Output("fac-dato", "children"), Output("fac-efectos", "figure"),
+          Input("theme-store", "data"))
 def figuras(tema):
     nombres, puntos = [f for f, _ in FACTORES], [p for _, p in FACTORES]
     peso = go.Figure(go.Bar(y=nombres, x=puntos, orientation="h", marker_color=[AZUL] * 3 + [TENUE] * 5,
@@ -90,4 +98,14 @@ def figuras(tema):
     estilo(grupos, tema, leyenda=True).update_yaxes(ticksuffix=" h", rangemode="tozero", range=[0, max(tipo.max(), edad.max()) * 1.2])
     grupos.update_layout(bargap=0.4, barmode="overlay", margin_b=54)
     grupos.update_xaxes(tickangle=0)
-    return peso, grupos, dato(f"{coma(tipo['Urgencias'], 0)} h", "de espera mediana al entrar por urgencias")
+
+    valores = [v for _, v in EFECTOS]
+    efectos = go.Figure(go.Bar(y=[n for n, _ in EFECTOS], x=valores, orientation="h", marker_color=[AZUL if v > 0 else TENUE for v in valores],
+                               text=[("+" if v > 0 else "−") + coma(abs(v), 0 if abs(v) >= 10 else 1) + " %" for v in valores],
+                               textposition="outside", cliponaxis=False,
+                               hovertemplate="<b>%{y}</b><br>%{x:+.1f} % de espera, con lo demás igual<extra></extra>"))
+    estilo(efectos, tema)
+    efectos.update_layout(margin=dict(l=10, r=30, t=6, b=6), bargap=0.4)
+    efectos.update_yaxes(autorange="reversed", automargin=True, showgrid=False)
+    efectos.update_xaxes(showticklabels=False, showline=False, range=[-55, 45], zeroline=True, zerolinewidth=1)
+    return peso, grupos, dato(f"{coma(tipo['Urgencias'], 0)} h", "de espera mediana al entrar por urgencias"), efectos

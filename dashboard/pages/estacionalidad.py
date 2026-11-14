@@ -15,7 +15,7 @@ import plotly.graph_objects as go
 from dash import Input, Output, callback, html
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from componentes import (AZUL, MESES, PIZARRA, aviso_datos, bloque, cifra, coma, dato, estilo, filtro, grafico, lamina, leer, mensaje,  # noqa: E402
+from componentes import (AZUL, MESES, PIZARRA, aviso_datos, bloque, cifra, coma, dato, estilo, filtro, grafico, hecho, lamina, leer, mensaje,  # noqa: E402
                          metodo, pagina, portada)
 
 dash.register_page(__name__, path="/estacionalidad", name="Forma del año", title="La forma del año del pronóstico - HUN", order=32)
@@ -30,6 +30,12 @@ MES_LARGO = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "ag
 ENTRO = [("Dengue en Barranquilla (2007–2022)", "en las llegadas"),
          ("Infección respiratoria y diarrea (SIVIGILA, 2016–2019)", "en los ingresos a cama"),
          ("Curva suave del año", "en los ingresos a cama")]
+ORIGEN = [
+    ("3 años", "Tiene el hospital", "No alcanzan para distinguir una temporada real de una casualidad: por eso la forma se toma de afuera."),
+    ("16 años", "De dengue en Barranquilla", "De 2007 a 2022. Marca la temporada de más consultas; se usa para las llegadas."),
+    ("4 años", "De infección respiratoria y diarrea", "Vigilancia nacional de 2016 a 2019, antes de la pandemia; se usa para los ingresos a cama."),
+    ("2026", "Todavía sin publicar", "Los datos públicos del año en curso no están: el modelo usa el patrón típico, no un brote actual."),
+]
 DESCARTADO = ["Lluvia (NASA e IDEAM)", "Temperatura", "Calendario escolar oficial", "Fenómeno de El Niño", "Población (DANE)",
               "Consultas y hospitalizaciones de la ciudad", "Modelo SARIMAX"]
 
@@ -50,6 +56,12 @@ def layout():
                "Error diario del pronóstico según el horizonte, sin y con la forma del año. A una semana casi no cambia; a varios meses, "
                "el error baja.",
                grafico("est-error", alto=340), id_dato="est-dato-error", invertida=True),
+        lamina(3, "Las llegadas y los ingresos a cama no tienen la misma temporada",
+               "Cambio esperado en cada mes frente al promedio del año, para las dos series. **Las llegadas suben de abril a junio, "
+               "con la temporada de dengue; los ingresos a cama, en julio y agosto.** Esta gráfica no cambia con el filtro.",
+               grafico("est-meses", alto=320), dato=("2 temporadas", "distintas: por eso cada serie lleva su propia forma del año")),
+        bloque("De dónde sale la forma del año", "Datos públicos de salud de muchos años, no los tres del hospital"),
+        html.Div(className="hechos", children=[hecho(*o) for o in ORIGEN]),
         bloque("Todo lo que se probó", "Solo entró al modelo lo que mejoró el pronóstico en datos que el modelo no había visto"),
         html.Div(className="card est-prueba", children=[html.Div(className="est-prueba__grid", children=[
             html.Div([html.Div("Entró al modelo", className="rec-block__label"),
@@ -71,9 +83,11 @@ def layout():
 
 @callback(Output("est-cifras", "children"), Output("est-titular", "children"), Output("est-efecto", "figure"),
           Output("est-dato-fuente", "children"), Output("est-error", "figure"), Output("est-dato-error", "children"),
+          Output("est-meses", "figure"),
           Input("est-serie", "value"), Input("theme-store", "data"))
 def actualizar(obj, tema):
     ef, er = leer("estacionalidad_efecto.csv"), leer("estacionalidad_error.csv")
+    todo = ef
     ef, er = ef[ef.objetivo == obj].sort_values("dia_del_anio"), er[er.objetivo == obj].sort_values("orden")
     por_mes = ef.groupby("mes").efecto_pct.mean()
     alto, bajo = por_mes.idxmax(), por_mes.idxmin()
@@ -104,4 +118,12 @@ def actualizar(obj, tema):
     estilo(error, tema, leyenda=True).update_yaxes(ticksuffix=" %", rangemode="tozero", range=[0, max(er.wape_sin.max(), er.wape_con.max()) * 1.2])
     error.update_layout(barmode="group", bargap=0.38, bargroupgap=0.08)
     mejora = dato(f"−{coma(largo.wape_sin - largo.wape_con)} puntos", "de error al pronosticar a 6–12 meses")
-    return cifras, titular, efecto, dato(*FUENTE[obj]), error, mejora
+
+    por_serie = todo.groupby(["objetivo", "mes"]).efecto_pct.mean().unstack(0)
+    meses = go.Figure()
+    for clave, nombre in SERIES:
+        meses.add_trace(go.Bar(x=MESES, y=por_serie[clave].values, name=nombre, marker_color=AZUL if clave == SERIES[0][0] else PIZARRA,
+                               hovertemplate=nombre + ", %{x}: %{y:+.1f} %<extra></extra>"))
+    estilo(meses, tema, leyenda=True).update_yaxes(ticksuffix=" %", zeroline=True, zerolinewidth=1)
+    meses.update_layout(barmode="group", bargap=0.3, bargroupgap=0.05)
+    return cifras, titular, efecto, dato(*FUENTE[obj]), error, mejora, meses
