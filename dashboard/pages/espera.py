@@ -15,13 +15,20 @@ import plotly.graph_objects as go
 from dash import Input, Output, callback, html
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from componentes import (AZUL, PIZARRA, TENUE, aviso_datos, cifra, coma, dato, eje_fechas, estilo, etiqueta_final, fecha_es, filtro,  # noqa: E402
-                         grafico, lamina, leer, mensaje, metodo, miles, pagina, portada)
+from componentes import (AZUL, PIZARRA, TENUE, aviso_datos, bloque, cifra, coma, dato, eje_fechas, estilo, etiqueta_final, fecha_es, filtro,  # noqa: E402
+                         grafico, hecho, lamina, leer, mensaje, metodo, miles, pagina, portada)
 
 dash.register_page(__name__, path="/espera", name="Espera de cama", title="Espera de cama - HUN", order=23)
 
 TITULO = "La mitad de los pacientes espera más de 18 horas por una cama, y los peores casos empeoran"
 ULTIMO_MES = "2026-03"                                      # ultimo mes completo del periodo confiable (abril llega solo hasta el dia 9)
+# Donde se va el tiempo (CLAUDE.md 6b, 4.11 y 4.12): cifras ya publicadas
+TIEMPO = [
+    ("98 %", "De la espera ocurre en urgencias", "Antes de que se asigne la cama. El tiempo sin ningún registro es apenas el 1 %."),
+    ("83 %", "De las horas de espera", "Vienen de pacientes que esperan más de un día; el 57 %, de quienes esperan más de dos."),
+    ("26", "Pacientes esperando cama", "Es el promedio a cualquier hora. La cola nunca llega a cero, ni de madrugada."),
+    ("+38 %", "De exceso de espera por paciente", "De 17 horas en 2023 a 24 en 2025, frente a cuando el hospital funciona bien."),
+]
 TRAMOS = ["0–6 h", "6–12 h", "12–24 h", "24–48 h", "48–72 h", "72–120 h", "> 120 h"]
 
 
@@ -44,12 +51,15 @@ def layout():
                "La mediana se mantiene entre 17 y 20 horas. El **percentil 90**, el paciente que espera más que 9 de cada 10, sube año "
                "tras año. Esta gráfica muestra a todos los pacientes: no cambia con los filtros.",
                grafico("esp-mes", alto=340), dato=("+20 h", "en la espera de los peores casos, de 2023 a 2026"), invertida=True),
+        bloque("Dónde se va el tiempo", "Cuatro cifras que explican por qué la espera es el cuello de botella"),
+        html.Div(className="hechos", children=[hecho(*t) for t in TIEMPO]),
         mensaje("El problema no es la espera típica sino **las esperas de varios días**: el 83 % de las horas de espera viene de "
                 "pacientes que esperan más de un día. Ahí apuntan las alertas y las recomendaciones."),
         metodo(
             "Espera desde que el paciente llega hasta que **se le asigna una cama**, para quienes se hospitalizan. Estancias únicas del "
             "periodo confiable (1-feb-2023 a 9-abr-2026): cada hospitalización se cuenta una vez, con la persona real. Los grupos con "
-            "menos de 30 estancias no se muestran, y la tendencia solo usa meses completos.",
+            "menos de 30 estancias no se muestran, y la tendencia solo usa meses completos. Aquí la mediana es 18,5 h porque solo cuenta "
+            "el periodo confiable; el documento final cita 18,6 h, con todas las estancias medidas.",
             "No separa la atención clínica en urgencias de la espera pura por una cama, porque la base no registra la hora de la orden "
             "de hospitalización. Los filtros muestran **asociaciones**, no causas.",
             "Fuente: espera_cubo.csv y espera_por_mes.csv (dashboard/preparar_datos.py) · docs/HALLAZGOS.md 4.2 y 4.3 · asociación, no causa."))

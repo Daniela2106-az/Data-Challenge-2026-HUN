@@ -597,30 +597,34 @@ externos son de antes y después, sin grupo de comparación.
 **Herramienta:** Dash (Python y Plotly), aceptado por los organizadores. Un solo programa (`dashboard/main.py`, puerto 8050) con una página por tema en
 `dashboard/pages/`, organizadas en cuatro secciones que siguen el orden del reto: contexto, resultados, predicción y propuestas. **No se conecta a la base:** solo lee tablas agregadas, ninguna con una fila por paciente.
 
-| Página | Qué responde | Responsable |
-|---|---|---|
-| Inicio (`/`) | Portada con las cifras clave del hospital y el menú por secciones | Anthony |
-| Resumen (`/resumen`) | El proyecto en una pantalla: los ocho hallazgos, cada uno con su página, y lo que se propone | Samuel |
-| Datos y calidad (`/datos`) | Qué había en la base, qué se corrigió y hasta qué fecha son confiables los datos | Samuel |
-| Demanda (`/demanda`) | A qué hora y qué día llegan los pacientes, y si la demanda crece entre años | Samuel |
-| Ocupación de camas (`/ocupacion`) | Camas ocupadas frente a las 106 del hospital, y por qué sube la ocupación | Samuel |
-| Espera de cama (`/espera`) | Cuánto se espera por una cama, quién espera más y si los peores casos empeoran | Samuel |
-| Llegada y altas (`/altas`) | A qué hora salen las altas, a qué hora se asignan las camas y cuánto espera quien llega a cada hora | Samuel |
-| Qué influye en la espera (`/factores`) | Cuánto de la espera se explica con lo que se sabe del paciente y qué factores pesan | Samuel |
-| Estancias largas (`/estancia`) | Por qué subió la estancia media y qué comparten las estancias de semanas | Samuel |
-| Diagnósticos (`/diagnosticos`) | Qué grupos de diagnóstico esperan más cama y cuáles se quedan más | Samuel |
-| Perfiles y picos (`/perfiles`) | Cómo cambian la espera y la estancia según el perfil del paciente y la carga del momento | Anthony |
-| Pronóstico de demanda (`/pronostico`) | Cuántos pacientes llegarán y cuántos irán a cama, desde hoy hasta un año, con su banda del 80 % y la forma del año | Daniela y Samuel |
-| Forma del año (`/estacionalidad`) | Qué épocas del año traen más pacientes y cuánto mejora el pronóstico al saberlo | Samuel |
-| Alertas (`/alertas`) | Las tres alertas (día congestionado, paciente sin cama y camas de mañana): cuándo avisar y qué tanto aciertan | Samuel |
-| Días atípicos (`/atipicos`) | Los días que se salen del patrón y qué dicen del problema de la espera | Samuel |
-| Paciente en espera (`/paciente`) | Cuándo es más probable que un paciente que ya espera reciba cama (estimador A6), con sus avisos | Samuel |
-| Planeación de camas (`/camas`) | Riesgo de saturar las camas y escenarios de ingresos y estancia (simulación Monte Carlo, A5) | Anthony |
-| Cómo se eligieron los modelos (`/modelos`) | Para cada pregunta: el modelo elegido, por qué y qué se descartó | Samuel |
-| Recomendaciones (`/recomendaciones`) | Las siete recomendaciones, cada una con la evidencia propia, la evidencia de otros hospitales y su firmeza | Samuel |
-| Documentación (`/documentacion`) | Este documento completo, con sus tablas y figuras, y la descarga en PDF | Samuel |
+| Página | Qué responde |
+|---|---|
+| Inicio (`/`) | Portada con las cifras clave del hospital y el menú por secciones |
+| Resumen (`/resumen`) | El proyecto en una pantalla: los ocho hallazgos, cada uno con su página, y lo que se propone |
+| Datos y calidad (`/datos`) | Qué había en la base, qué se corrigió y hasta qué fecha son confiables los datos |
+| Demanda (`/demanda`) | A qué hora y qué día llegan los pacientes, y si la demanda crece entre años |
+| Ocupación de camas (`/ocupacion`) | Camas ocupadas frente a las 106 del hospital, y por qué sube la ocupación |
+| Espera de cama (`/espera`) | Cuánto se espera por una cama, quién espera más y si los peores casos empeoran |
+| Comparar años (`/comparar`) | Qué cambió en la espera entre dos años: en qué tramos, en qué grupos de pacientes y por dónde entran |
+| Llegada y altas (`/altas`) | A qué hora salen las altas, a qué hora se asignan las camas y cuánto espera quien llega a cada hora |
+| Qué influye en la espera (`/factores`) | Cuánto de la espera se explica con lo que se sabe del paciente y qué factores pesan |
+| Estancias largas (`/estancia`) | Por qué subió la estancia media y qué comparten las estancias de semanas |
+| Diagnósticos (`/diagnosticos`) | Qué grupos de diagnóstico esperan más cama y cuáles se quedan más |
+| Perfiles y picos (`/perfiles`) | Cómo cambian la espera y la estancia según el perfil del paciente y la carga del momento |
+| Pronóstico de demanda (`/pronostico`) | Cuántos pacientes llegarán y cuántos irán a cama, desde hoy hasta un año, con su banda del 80 % y la forma del año |
+| Forma del año (`/estacionalidad`) | Qué épocas del año traen más pacientes y cuánto mejora el pronóstico al saberlo |
+| Alertas (`/alertas`) | Las tres alertas (día congestionado, paciente sin cama y camas de mañana): cuándo avisar y qué tanto aciertan |
+| Días atípicos (`/atipicos`) | Los días que se salen del patrón y qué dicen del problema de la espera |
+| Paciente en espera (`/paciente`) | Cuándo es más probable que un paciente que ya espera reciba cama (estimador A6), con sus avisos |
+| Planeación de camas (`/camas`) | Riesgo de saturar las camas y escenarios de ingresos y estancia (simulación Monte Carlo, A5) |
+| Cómo se eligieron los modelos (`/modelos`) | Para cada pregunta: el modelo elegido, por qué y qué se descartó |
+| Recomendaciones (`/recomendaciones`) | Las siete recomendaciones, cada una con la evidencia propia, la evidencia de otros hospitales y su firmeza |
+| Documentación (`/documentacion`) | Este documento completo, con sus tablas y figuras, y la descarga en PDF |
 
 - **Cómo correrlo:** `python3 dashboard/main.py` y abrir http://127.0.0.1:8050 (las tablas agregadas deben estar disponibles; ver `README.md`).
+- **Cómo recorrerlo:** el menú agrupa las páginas por sección y el inicio tiene el botón «Empezar el recorrido». Cada página lleva al
+  pie los botones de anterior y siguiente, que también responden a las flechas del teclado; el botón de modo presentación de la barra
+  superior oculta el menú y agranda la página para exponer.
 - **Publicación:** [pendiente: enlace público].
 
 ---

@@ -10,16 +10,25 @@ from pathlib import Path
 
 import dash
 import plotly.graph_objects as go
-from dash import Input, Output, callback
+from dash import Input, Output, callback, html
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from componentes import (AZUL, NARANJA, aviso_datos, cifra, coma, eje_fechas, estilo, etiqueta_final, fecha_es, filtro, grafico, lamina,  # noqa: E402
-                         leer, mensaje, metodo, pagina, por_mes, portada)
+from componentes import (AZUL, NARANJA, TENUE, aviso_datos, bloque, cifra, coma, eje_fechas, estilo, etiqueta_final, fecha_es, filtro, grafico, lamina,  # noqa: E402
+                         hecho, leer, mensaje, metodo, pagina, por_mes, portada)
 
 dash.register_page(__name__, path="/ocupacion", name="Ocupación de camas", title="Ocupación de camas - HUN", order=22)
 
 TITULO = "La ocupación roza las 106 camas porque los pacientes se quedan más, no porque lleguen más"
 CAMAS = 106
+# Donde esta el exceso (CLAUDE.md 4.11 y la revision final de la ocupacion): cifras ya publicadas
+EXCESO = [
+    ("100 %", "Camas de adultos, en 2025", "88 camas de adultos y 88 ocupadas en promedio: los adultos operan al tope, y más de la mitad "
+                                           "de las horas, por encima."),
+    ("83–99 %", "Camas de niños y neonatos", "Las 18 camas pediátricas y neonatales no están saturadas: el exceso es de adultos."),
+    ("36 camas", "Estancias de más de 14 días", "Un tercio de la ocupación de 2025. Es lo que más creció; ver la página de Estancias largas."),
+    ("6 camas", "Con poca actividad clínica", "Entre 6 % y 8 % de los días-cama, sin crecer: el aumento es de pacientes activos, no de "
+                                           "camas ocupadas sin motivo."),
+]
 
 
 def _panel():
@@ -48,6 +57,12 @@ def layout():
         lamina(2, f"Pero entran los mismos pacientes: unos {coma(p.ingresos_a_cama.mean(), 0)} ingresos a cama por día",
                "Lo que creció no es la demanda sino la **estancia**: cada paciente se queda en promedio 5,3 días, frente a 4,6 en 2023.",
                grafico("ocu-flujo", alto=320), dato=("+16 %", "de estancia media entre 2023 y 2025"), invertida=True),
+        lamina(3, f"En 2023 casi ningún día superó las 106 camas; en 2025, el {coma(sobre, 0)} %",
+               "Porcentaje de los días de cada año con más camas ocupadas, en promedio, que las 106 del hospital. **El exceso es "
+               "reciente**: aparece en 2024 y se duplica en 2025.",
+               grafico("ocu-sobre", alto=320), dato=(f"{coma(p.ocup_hosp_max.max(), 0)} camas", "ocupadas en el momento de mayor ocupación")),
+        bloque("Dónde está el exceso", "No todas las camas están igual de llenas"),
+        html.Div(className="hechos", children=[hecho(*e) for e in EXCESO]),
         mensaje("**Bajar la estancia libera camas.** Volver a la estancia de 2023 equivale a unas 15 camas; la página de Planeación de "
                 "camas simula cuánto cambia el riesgo de saturación."),
         metodo(
@@ -60,7 +75,8 @@ def layout():
             "docs/HALLAZGOS.md 4.6 · CLAUDE.md 4.8."))
 
 
-@callback(Output("ocu-camas", "figure"), Output("ocu-flujo", "figure"), Input("ocu-vista", "value"), Input("theme-store", "data"))
+@callback(Output("ocu-camas", "figure"), Output("ocu-flujo", "figure"), Output("ocu-sobre", "figure"),
+          Input("ocu-vista", "value"), Input("theme-store", "data"))
 def actualizar(vista, tema):
     p = _panel()
     s = p.set_index("fecha").ocup_hosp_media
@@ -78,4 +94,13 @@ def actualizar(vista, tema):
                                  hovertemplate="%{customdata}: %{y:.1f} ingresos a cama por día<extra></extra>"))
     estilo(flujo, tema).update_yaxes(rangemode="tozero")
     etiqueta_final(eje_fechas(flujo, m.index), m.index[-1], m.values[-1], coma(m.values[-1], 0))
-    return camas, flujo
+
+    pct = 100 * (p.ocup_hosp_media > CAMAS).groupby(p.fecha.dt.year).mean()
+    sobre = go.Figure(go.Bar(x=[str(a) if a != 2026 else "2026 (ene–abr)" for a in pct.index], y=pct.values,
+                             marker_color=[AZUL if a == 2025 else TENUE for a in pct.index], text=[f"{coma(v, 0)} %" for v in pct.values],
+                             textposition="outside", cliponaxis=False,
+                             hovertemplate="%{x}: %{y:.1f} % de los días por encima de 106 camas<extra></extra>"))
+    estilo(sobre, tema).update_yaxes(ticksuffix=" %", range=[0, max(pct.max() * 1.2, 10)])
+    sobre.update_xaxes(type="category")
+    sobre.update_layout(bargap=0.45)
+    return camas, flujo, sobre

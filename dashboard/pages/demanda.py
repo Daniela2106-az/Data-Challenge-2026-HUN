@@ -14,13 +14,14 @@ from dash import Input, Output, callback, html
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import tema_graficos as tg  # noqa: E402
-from componentes import (AZUL, aviso_datos, cifra, coma, dato, eje_fechas, estilo, etiqueta_final, fecha_es, filtro, grafico, lamina,  # noqa: E402
+from componentes import (AZUL, TENUE, aviso_datos, cifra, coma, dato, eje_fechas, estilo, etiqueta_final, fecha_es, filtro, grafico, lamina,  # noqa: E402
                          leer, mensaje, metodo, pagina, por_mes, portada)
 
 dash.register_page(__name__, path="/demanda", name="Demanda", title="Demanda - HUN", order=21)
 
 TITULO = "Los pacientes llegan de día y entre semana, y la demanda no crece"
 ETIQUETA = {"llegadas": "llegadas", "ingresos_a_cama": "ingresos a cama"}
+DIAS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]
 NO_CRECEN = {"llegadas": "Las llegadas no crecen", "ingresos_a_cama": "Los ingresos a cama no crecen"}
 
 
@@ -46,6 +47,14 @@ def layout():
                "Promedio por día de cada mes completo, de febrero de 2023 a marzo de 2026. **Si la demanda no crece, la saturación "
                "hay que buscarla dentro del hospital.**",
                grafico("dem-mes", alto=330), id_dato="dem-dato", invertida=True),
+        lamina(3, html.Span(id="dem-titular-semana"),
+               "Promedio por día de la semana; en gris, el fin de semana. **El ritmo del hospital baja sábado y domingo**, y con él "
+               "las altas y los ingresos a cama.",
+               grafico("dem-semana", alto=320), id_dato="dem-dato-semana"),
+        lamina(4, html.Span(id="dem-titular-festivo"),
+               "Un festivo se parece a un domingo: llegan menos pacientes y se hospitalizan menos. El pronóstico ya lo tiene en "
+               "cuenta, junto con la Semana Santa y el Carnaval.",
+               grafico("dem-festivo", alto=300), id_dato="dem-dato-festivo", invertida=True),
         mensaje("La presión sobre las camas **no viene de más pacientes**. Hay que mirar cuánto se quedan y cómo se liberan las "
                 "camas: es lo que muestran las páginas siguientes."),
         metodo(
@@ -57,7 +66,9 @@ def layout():
 
 
 @callback(Output("dem-cifras", "children"), Output("dem-calor", "figure"), Output("dem-titular", "children"), Output("dem-dato", "children"),
-          Output("dem-mes", "figure"), Input("dem-serie", "value"), Input("theme-store", "data"))
+          Output("dem-mes", "figure"), Output("dem-titular-semana", "children"), Output("dem-semana", "figure"),
+          Output("dem-dato-semana", "children"), Output("dem-titular-festivo", "children"), Output("dem-festivo", "figure"),
+          Output("dem-dato-festivo", "children"), Input("dem-serie", "value"), Input("theme-store", "data"))
 def actualizar(col, tema):
     p, cal = _panel(), leer("llegadas_calor.csv", index_col=0)
     lab = ETIQUETA[col]
@@ -84,4 +95,22 @@ def actualizar(col, tema):
                                customdata=[fecha_es(f) for f in m.index], hovertemplate="%{customdata}: %{y:.0f} por día<extra></extra>"))
     estilo(mes, tema).update_yaxes(rangemode="tozero")
     etiqueta_final(eje_fechas(mes, m.index), m.index[-1], m.values[-1], coma(m.values[-1], 0))
-    return cifras, calor, titular, cambio, mes
+
+    s = p.groupby("dia_semana_num")[col].mean()
+    alto, bajo = DIAS[s.idxmax()].lower(), DIAS[s.idxmin()].lower()
+    semana = go.Figure(go.Bar(x=DIAS, y=s.values, marker_color=[AZUL] * 5 + [TENUE] * 2, text=[coma(v, dec) for v in s.values],
+                              textposition="outside", cliponaxis=False, hovertemplate="%{x}: %{y:.1f} por día<extra></extra>"))
+    estilo(semana, tema).update_yaxes(rangemode="tozero", range=[0, s.max() * 1.15])
+    semana.update_layout(bargap=0.4)
+    t_semana = f"El {alto} es el día con más {lab} ({coma(s.max(), dec)}); el {bajo}, con menos ({coma(s.min(), dec)})"
+    d_semana = dato(f"{coma(100 * (s.min() / s.max() - 1), 0)} %".replace("-", "−"), f"de {lab} el {bajo} frente al {alto}")
+
+    f = p.groupby(p.festivo.astype(bool))[col].mean()
+    festivo = go.Figure(go.Bar(x=["Día normal", "Festivo"], y=[f[False], f[True]], marker_color=[TENUE, AZUL],
+                               text=[coma(f[False], dec), coma(f[True], dec)], textposition="outside", cliponaxis=False,
+                               hovertemplate="%{x}: %{y:.1f} por día<extra></extra>"))
+    estilo(festivo, tema).update_yaxes(rangemode="tozero", range=[0, f.max() * 1.15])
+    festivo.update_layout(bargap=0.6)
+    t_festivo = f"En festivo hay {coma(abs(100 * (f[True] / f[False] - 1)), 0)} % menos {lab}"
+    d_festivo = dato(str(int(p.festivo.astype(bool).sum())), "festivos en el periodo analizado")
+    return cifras, calor, titular, cambio, mes, t_semana, semana, d_semana, t_festivo, festivo, d_festivo

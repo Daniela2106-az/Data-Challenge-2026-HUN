@@ -31,6 +31,7 @@ import comparar_estimadores as ce  # noqa: E402
 import confianza_perfil as cp  # noqa: E402
 import estimador_tiempo_restante as etr  # noqa: E402
 import estimador_tiempos as et  # noqa: E402
+from componentes import cifra, portada  # noqa: E402
 import tema_graficos as tg  # noqa: E402
 
 dash.register_page(__name__, path="/paciente", name="Paciente en espera", title="¿Cuándo recibirá cama? - HUN", order=2)
@@ -78,9 +79,12 @@ def validacion():
 def layout():
     ahora = pd.Timestamp.now().floor("h")
     return html.Div(className="page-container", children=[
-        html.H2("¿Cuándo recibirá cama este paciente?"),
-        html.P("Describe al paciente y el estimador muestra en qué momento del día es más probable que reciba cama. Es el rango de pacientes "
-               "parecidos en la historia del hospital, no una promesa para una persona.", style={"color": GRIS}),
+        portada("Predicción · Paciente en espera", "Para cada paciente en espera se puede estimar cuándo llegará su cama",
+                "Describe al paciente y el estimador muestra en qué momento del día es más probable que reciba cama. Es el rango de "
+                "pacientes parecidos en la historia del hospital, no una promesa para una persona.",
+                [cifra("46 %", "recibe la cama en una de las dos ventanas más probables (sin modelo: 37 %)"),
+                 cifra("+11 %", "de mejora del rango estimado a las pocas horas de espera"),
+                 cifra("2,7", "pacientes de error al estimar cuántos tendrán cama en 24 horas")]),
         html.Div(style={"display": "flex", "flexWrap": "wrap", "gap": "32px", "alignItems": "flex-start"}, children=[
             html.Div(className="form-panel", style={"flex": "0 0 300px"}, children=[
                 campo("Edad (años)", dcc.Input(id="pac-edad", type="number", min=0, max=110, value=67, style={"width": "100%"})),

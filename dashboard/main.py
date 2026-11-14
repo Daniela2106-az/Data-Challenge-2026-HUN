@@ -21,6 +21,7 @@ PAGINAS (ver docstring de cada una en dashboard/pages/):
   /demanda         demanda.py          Cuando llegan los pacientes (Samuel)
   /ocupacion       ocupacion.py        Camas ocupadas frente a las 106 del hospital (Samuel)
   /espera          espera.py           Espera de cama: el cuello de botella (Samuel)
+  /comparar        comparar.py         Comparar dos años: que cambio en la espera de cama (version por año de A7)
   /altas           altas.py            Hora de llegada, altas y asignacion de camas (Samuel)
   /estacionalidad  estacionalidad.py   La forma del año del pronostico (A9, Samuel)
   /factores        factores.py         Que influye en la espera de cama (Samuel)
@@ -35,7 +36,8 @@ PAGINAS (ver docstring de cada una en dashboard/pages/):
 MENU (13-nov-2026): la barra lateral agrupa las paginas por seccion (contexto, resultados, prediccion y propuestas) con la
 lista de `dashboard/navegacion.py`, la misma que usa el inicio. Una pagina que no este en esa lista aparece al final, bajo "Más".
 Al pie de cada pagina hay botones «anterior» y «siguiente» en ese mismo orden: el dashboard se puede recorrer como una presentacion.
-Las flechas izquierda y derecha del teclado hacen lo mismo (assets/recorrido.js).
+Las flechas izquierda y derecha del teclado hacen lo mismo, y el boton de modo presentacion de la barra superior oculta el menu
+y agranda la pagina para exponer (assets/recorrido.js). La barra superior muestra la seccion y el nombre de la pagina.
 
 COMO CORRERLO  python dashboard/main.py   y abrir http://127.0.0.1:8050
   La primera vez que se visita /paciente, el modelo de A6 se entrena si no existe (~1 min). Las demas paginas
@@ -137,6 +139,8 @@ def barra_superior():
         html.Div("Inicio", id="topbar-titulo", className="topbar__title"),
         html.Div(className="topbar__right", children=[
             html.Span("Datos confiables hasta 9-abr-2026", className="topbar__chip"),
+            html.Button(html.Span(className="nav__ico ico-present"), id="modo-presentacion", className="theme-toggle",
+                        title="Modo presentación: oculta el menú y agranda la página (Esc para salir)"),
             html.Button("☾", id="theme-toggle", className="theme-toggle", n_clicks=0,
                         title="Cambiar entre modo claro y oscuro"),
         ]),
@@ -167,7 +171,9 @@ def sincronizar_navegacion(ruta):
     ruta = ruta or "/"
     enlaces = enlaces_nav(ruta)
     actual = next((p["name"] for p in dash.page_registry.values() if p["path"] == ruta), "Inicio")
-    return enlaces, actual, pasos(ruta)
+    seccion = next((t for t, _d, grupo in agrupar(_paginas_ordenadas()) if any(p["path"] == ruta for p in grupo)), "")
+    titulo = [html.Span(seccion + " · ", className="topbar__seccion"), actual] if seccion else actual
+    return enlaces, titulo, pasos(ruta)
 
 
 # Modo claro/oscuro: todo del lado del cliente para que sea instantaneo y no necesite al servidor.

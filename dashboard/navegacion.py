@@ -10,13 +10,13 @@ ICONOS = {"/": "ico-home", "/pronostico": "ico-forecast", "/paciente": "ico-pati
           "/perfiles": "ico-profiles", "/recomendaciones": "ico-recs", "/documentacion": "ico-docs", "/datos": "ico-data",
           "/demanda": "ico-demand", "/ocupacion": "ico-occup", "/espera": "ico-wait", "/altas": "ico-clock",
           "/estacionalidad": "ico-season", "/alertas": "ico-alert", "/factores": "ico-factors", "/estancia": "ico-stay",
-          "/diagnosticos": "ico-dx", "/atipicos": "ico-outlier", "/modelos": "ico-models", "/resumen": "ico-summary"}
+          "/diagnosticos": "ico-dx", "/atipicos": "ico-outlier", "/modelos": "ico-models", "/resumen": "ico-summary", "/comparar": "ico-compare"}
 
 # (titulo de la seccion, que responde, rutas en orden)
 SECCIONES = [
     ("Contexto", "El proyecto en una pantalla, y qué datos hay detrás", ["/resumen", "/datos"]),
     ("Resultados", "Qué pasa hoy en el hospital y dónde se pierde el tiempo",
-     ["/demanda", "/ocupacion", "/espera", "/altas", "/factores", "/estancia", "/diagnosticos", "/perfiles"]),
+     ["/demanda", "/ocupacion", "/espera", "/comparar", "/altas", "/factores", "/estancia", "/diagnosticos", "/perfiles"]),
     ("Predicción", "Qué se espera y qué pasaría si algo cambia",
      ["/pronostico", "/estacionalidad", "/alertas", "/atipicos", "/paciente", "/camas", "/modelos"]),
     ("Propuestas", "Qué hacer con lo que se encontró", ["/recomendaciones", "/documentacion"]),

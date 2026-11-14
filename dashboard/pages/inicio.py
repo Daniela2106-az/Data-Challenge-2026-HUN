@@ -22,6 +22,8 @@ dash.register_page(__name__, path="/", name="Inicio", title="Dashboard HUN — I
 TARJETAS = {
     "/resumen": ("Resumen",
                  "El proyecto en una pantalla: los ocho hallazgos, cada uno con su página, y lo que proponemos."),
+    "/comparar": ("Comparar años",
+                  "Elige dos años y mira qué cambió en la espera: en qué tramos, en qué grupos de pacientes y por dónde entran."),
     "/factores": ("Qué influye en la espera",
                   "Lo que se sabe del paciente explica solo el 16 % de su espera: qué factores pesan y cuáles no."),
     "/estancia": ("Estancias largas",
@@ -108,6 +110,8 @@ def layout():
                    "los pacientes, dónde se pierde el tiempo, qué se espera para los próximos meses y qué proponemos. "
                    "Elige una página o recórrelo en orden, como una presentación.", className="hero__sub"),
             dcc.Link("Empezar el recorrido", href="/resumen", className="hero__cta"),
+            html.Div("Avanza con las flechas ← → del teclado. El botón de la esquina superior derecha oculta el menú para exponer.",
+                     className="hero__hint"),
         ]),
 
         html.Div("El hospital en una mirada", className="section-title", style={"marginTop": "28px"}),

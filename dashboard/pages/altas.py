@@ -13,13 +13,20 @@ import plotly.graph_objects as go
 from dash import Input, Output, callback, html
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from componentes import (AZUL, NARANJA, TENUE, aviso_datos, cifra, coma, dato, estilo, filtro, grafico, horas_eje, lamina, leer, mensaje,  # noqa: E402
+from componentes import (AZUL, NARANJA, TENUE, aviso_datos, bloque, cifra, coma, dato, estilo, filtro, grafico, hecho, horas_eje, lamina, leer, mensaje,  # noqa: E402
                          metodo, pagina, portada)
 
 dash.register_page(__name__, path="/altas", name="Llegada y altas", title="Hora de llegada y altas - HUN", order=24)
 
 TITULO = "Las altas salen por la tarde, y quien llega en la mañana espera hasta entonces"
 OLAS = set(range(15, 18)) | set(range(20, 24))            # 15-17 h y 20-23 h
+# Que pasaria si se adelantan las altas (CLAUDE.md 6b, simulacion de altas): cifras ya publicadas
+ESCENARIO = [
+    ("5 camas", "Libres al mediodía", "Si el 30 % de las altas de la tarde saliera entre las 9 y las 12 h."),
+    ("3 a 8 %", "Menos exceso de espera", "Estimación y tope máximo. Ayuda, pero no resuelve las esperas de varios días."),
+    ("1,8 h", "Tarda en reasignarse una cama", "La que se libera en la mañana. Hay que asignar enseguida, no solo dar de alta antes."),
+    ("72 %", "Recibe la cama al día siguiente", "De quienes llegan a las 16 h. De quienes llegan a las 8 h, la mitad."),
+]
 TARDE = set(range(13, 19))                                  # llegadas de 13:00 a 18:59 (recomendacion 6)
 
 
@@ -40,6 +47,8 @@ def layout():
                "Llegar entre las 13 y las 19 h (en azul) es haber perdido la ola de la tarde: la cama llega al día siguiente. Es una "
                "asociación: a esa hora también cambian el tipo de paciente y la carga.",
                grafico("alt-espera", alto=350), id_dato="alt-dato-peor", invertida=True),
+        bloque("Qué pasaría si se adelantan las altas", "Un escenario con supuestos escritos, no una predicción"),
+        html.Div(className="hechos", children=[hecho(*e) for e in ESCENARIO]),
         mensaje("**Adelantar altas a la mañana** pone camas libres cuando más se necesitan. Y hay un límite de proceso, no solo de "
                 "camas: una cama que se libera en la mañana tarda una mediana de 1,8 horas en volver a asignarse."),
         metodo(

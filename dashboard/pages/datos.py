@@ -27,6 +27,19 @@ CORREGIDO = [
     ("2 días", "Caída total del registro", "El 28 y el 29 de marzo de 2026 casi no hay registros. Se excluyen, igual que las etapas que "
                                            "seguían abiertas al extraer los datos."),
 ]
+# Que hay en la base y que no (CLAUDE.md secciones 2 y 3): cifras ya publicadas
+BASE = [
+    ("1,7 M", "Visitas", "De enero de 2023 a julio de 2026, de unos 304 mil pacientes."),
+    ("3,3 M", "Etapas del recorrido", "Llegada, atención en urgencias y hospitalización. De aquí salen todos los tiempos."),
+    ("38,6 M", "Diagnósticos", "El 37 % sin traducir, y se registran tarde: sirven para explicar, no para predecir al llegar."),
+    ("16,6 M", "Laboratorios", "La única tabla clínica con una hora útil: la de la toma de la muestra."),
+]
+FALTA = [
+    ("Servicio y cama", "No se sabe en qué piso está el paciente", "No se puede separar piso, cuidados intensivos ni camillas."),
+    ("Gravedad", "No hay triage ni signos vitales", "Con la gravedad al llegar, el estimador de espera mejoraría el doble."),
+    ("Orden de hospitalizar", "No se registra su hora", "Por eso no se separa la atención clínica de la espera pura por una cama."),
+    ("Hora de salida", "Falta en 4 de cada 10 etapas de urgencias", "Quien se va de alta desde urgencias casi nunca tiene hora de fin."),
+]
 HOSPITAL = [
     ("106", "Camas de hospitalización", "88 de adultos y 18 de niños y neonatos."),
     ("58", "Camillas de urgencias", "Observación de adultos y pediátrica."),
@@ -44,6 +57,8 @@ def layout():
         lamina(1, "De 3,3 millones de etapas quedan 337 mil episodios de atención",
                "Cada paso de la limpieza quita registros que no son atenciones reales: citas administrativas, copias y duplicados.",
                grafico("dat-embudo", alto=270), dato=("337 mil", "episodios de atención analizados")),
+        bloque("Qué hay en la base", "Una base clínica en formato OMOP, de solo lectura"),
+        html.Div(className="hechos", children=[hecho(*b) for b in BASE]),
         bloque("Qué se corrigió", "Cuatro problemas de calidad y la regla con que se resolvió cada uno"),
         html.Div(className="hechos", children=[hecho(*c) for c in CORREGIDO]),
         html.Div(className="hechos hechos--2", children=[
@@ -56,6 +71,8 @@ def layout():
                 html.P("Las visitas no bajan: se registra menos detalle. No es menos demanda, y por eso esos meses no se usan.",
                        className="hecho__txt")]),
         ]),
+        bloque("Lo que la base no registra", "Cuatro vacíos que limitan lo que se puede concluir, y que proponemos empezar a registrar"),
+        html.Div(className="hechos", children=[hecho(*f) for f in FALTA]),
         bloque("Lo que confirmó el hospital", "Sesión con el HUN del 29 de octubre de 2026"),
         html.Div(className="hechos", children=[hecho(*h) for h in HOSPITAL]),
         mensaje("**Todas las cifras del dashboard usan los datos limpios.** La limpieza es parte del resultado: sin ella, la ocupación y "
