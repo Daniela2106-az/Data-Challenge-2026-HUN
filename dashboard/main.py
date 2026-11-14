@@ -143,7 +143,7 @@ def enlace_documentacion(ruta):
     return [html.Span(className="nav__ico ico-docs doc-rel__ico"),
             html.Span([html.B("Esta página resume la documentación: "), f"capítulo {cap}, {sub}. ",
                        html.Span(desc[0].upper() + desc[1:] + ".", className="doc-rel__desc")]),
-            dcc.Link("Leer la sección completa →", href=href, className="doc-rel__link")]
+            dcc.Link("Leer la sección completa →", href=href, className="doc-rel__link", refresh=True)]
 
 
 def barra_superior():
@@ -262,33 +262,27 @@ if __name__ == "__main__":
 # desplaza hasta esa seccion (el navegador solo no lo hace, porque Dash dibuja el contenido despues de cargar).
 app.clientside_callback(
     """
-    function(hash, pathname) {
+    function(pasos, hash) {
+        hash = hash || window.location.hash;
         if (!hash) { return ''; }
         var id = decodeURIComponent(hash.replace('#', ''));
-        var hecho = false;
-        function ir(el) { el.scrollIntoView({block: 'start'}); }
-        function intentar() {
+        var parar = false, t0 = Date.now(); 
+        function usuario() { parar = true; }
+        ['wheel', 'touchstart', 'keydown'].forEach(function(e) { window.addEventListener(e, usuario, {once: true, passive: true}); });
+        // La pagina de documentacion tarda varios segundos en dibujarse, vuelve al tope al navegar y mueve el contenido al cargar las
+        // imagenes: se reintenta cada 300 ms (hasta 20 s) hasta que la seccion queda arriba, y se deja de insistir si la persona se mueve.
+        var timer = setInterval(function() {
             var el = document.getElementById(id);
-            if (el && !hecho) {
-                hecho = true;
-                // Se desplaza varias veces: dcc.Link vuelve al tope al navegar y las imagenes que cargan despues mueven el contenido.
-                [60, 400, 1200, 2500].forEach(function(ms) { setTimeout(function() { ir(el); }, ms); });
-                return true;
+            if (parar || Date.now() - t0 > 20000) { clearInterval(timer); return; }
+            if (el) {
+                if (Math.abs(el.getBoundingClientRect().top - 80) > 24) { el.scrollIntoView({block: 'start'}); }
+                else if (Date.now() - t0 > 2500) { clearInterval(timer); }
             }
-            return false;
-        }
-        // Con dcc.Link el contenido de la pagina anterior sigue en pantalla un momento: se espera al siguiente ciclo.
-        setTimeout(function() {
-            if (intentar()) { return; }
-            // La pagina de documentacion tarda varios segundos en dibujarse: se espera a que aparezca la seccion (hasta 30 s).
-            var obs = new MutationObserver(function() { if (intentar()) { obs.disconnect(); } });
-            obs.observe(document.body, {childList: true, subtree: true});
-            setTimeout(function() { obs.disconnect(); }, 30000);
-        }, 50);
+        }, 300);
         return '';
     }
     """,
     Output("ancla-dummy", "children"),
-    Input("url", "hash"),
-    Input("url", "pathname"),
+    Input("paso-nav", "children"),     # cambia en cada navegacion (tambien con dcc.Link, que no siempre dispara url.hash)
+    State("url", "hash"),
 )
