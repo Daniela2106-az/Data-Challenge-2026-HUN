@@ -15,7 +15,6 @@ PAGINAS (ver docstring de cada una en dashboard/pages/):
   /pronostico  pronostico.py  Pronostico de demanda (Daniela/Samuel)
   /paciente    paciente.py    Paciente en espera (A6, Samuel)
   /camas       camas.py       Planeacion de camas (A5, Anthony)
-  /perfiles    perfiles.py    Perfiles y picos (Anthony)
 
 COMO CORRERLO  python dashboard/main.py   y abrir http://127.0.0.1:8050
   La primera vez que se visita /paciente, el modelo de A6 se entrena si no existe (~1 min). Las demas paginas
@@ -29,8 +28,7 @@ app = Dash(__name__, use_pages=True, pages_folder="pages", title="Dashboard HUN"
 server = app.server
 
 # Icono (clase CSS de theme.css) para cada ruta. Una ruta sin entrada cae en el icono generico de perfiles.
-ICONOS = {"/": "ico-home", "/pronostico": "ico-forecast", "/paciente": "ico-patient",
-          "/camas": "ico-bed", "/perfiles": "ico-profiles"}
+ICONOS = {"/": "ico-home", "/pronostico": "ico-forecast", "/paciente": "ico-patient", "/camas": "ico-bed"}
 
 
 def _paginas_ordenadas():
@@ -127,8 +125,8 @@ app.clientside_callback(
     function(data) {
         if (!window.Plotly) { return ''; }
         var dark = (data && data.theme === 'dark');
-        var c = dark ? {t:'#e6edf3', ti:'#e8eef4', g:'#27313c', l:'#3a4653'}
-                     : {t:'#1a1d21', ti:'#0a2540', g:'#e6ecf3', l:'#d7dfe8'};
+        var c = dark ? {t:'#e6edf3', ti:'#e8eef4', g:'#27313c', l:'#3a4653', hb:'#1d2b38'}
+                     : {t:'#1a1d21', ti:'#0a2540', g:'#e6ecf3', l:'#d7dfe8', hb:'#ffffff'};
         document.querySelectorAll('.js-plotly-plot').forEach(function(gd){
             try {
                 Plotly.relayout(gd, {
@@ -136,7 +134,8 @@ app.clientside_callback(
                     'xaxis.gridcolor': c.g, 'yaxis.gridcolor': c.g,
                     'xaxis.linecolor': c.l, 'yaxis.linecolor': c.l,
                     'xaxis.zerolinecolor': c.g, 'yaxis.zerolinecolor': c.g,
-                    'paper_bgcolor': 'rgba(0,0,0,0)', 'plot_bgcolor': 'rgba(0,0,0,0)'
+                    'paper_bgcolor': 'rgba(0,0,0,0)', 'plot_bgcolor': 'rgba(0,0,0,0)',
+                    'hoverlabel.bgcolor': c.hb, 'hoverlabel.bordercolor': c.l, 'hoverlabel.font.color': c.t
                 });
             } catch (e) {}
         });

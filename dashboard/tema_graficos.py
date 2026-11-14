@@ -9,8 +9,8 @@ que depende del parametro `config` de dcc.Graph, no de estos colores.
 """
 FUENTE = "Google Sans, Roboto, 'Segoe UI', system-ui, sans-serif"
 
-CLARO = dict(texto="#1a1d21", titulo="#0a2540", rejilla="#e6ecf3", linea="#d7dfe8")
-OSCURO = dict(texto="#e6edf3", titulo="#e8eef4", rejilla="#27313c", linea="#3a4653")
+CLARO = dict(texto="#1a1d21", titulo="#0a2540", rejilla="#e6ecf3", linea="#d7dfe8", hover_fondo="#ffffff")
+OSCURO = dict(texto="#e6edf3", titulo="#e8eef4", rejilla="#27313c", linea="#3a4653", hover_fondo="#1d2b38")
 
 
 def es_oscuro(tema):
@@ -26,7 +26,8 @@ def aplicar(fig, dark=False):
         font=dict(family=FUENTE, color=c["texto"], size=13),
         title_font=dict(family=FUENTE, color=c["titulo"]),
         legend=dict(font=dict(color=c["texto"])),
-        hoverlabel=dict(font=dict(family=FUENTE)),
+        hoverlabel=dict(bgcolor=c["hover_fondo"], bordercolor=c["linea"],
+                        font=dict(family=FUENTE, color=c["texto"], size=12.5)),
     )
     fig.update_xaxes(gridcolor=c["rejilla"], linecolor=c["linea"], zerolinecolor=c["rejilla"])
     fig.update_yaxes(gridcolor=c["rejilla"], linecolor=c["linea"], zerolinecolor=c["rejilla"])

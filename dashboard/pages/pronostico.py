@@ -1,11 +1,25 @@
 """
-dashboard/pages/pronostico.py  -  pagina del dashboard multipagina (10-nov-2026, migrada de dashboard/app.py v4)
+dashboard/pages/pronostico.py  -  pagina del dashboard multipagina (10-nov-2026, migrada de dashboard/app.py v4;
+rediseno del 13-nov-2026: controles tipo switch centrados, recuadro rotativo de metricas, rango con animacion
+estable por ids fijos, y panel tecnico con la estacionalidad anual de Samuel (ficha A9))
 PRONOSTICO DE DEMANDA INTERACTIVO. El usuario elige solo DOS cosas: hasta cuando quiere ver y que quiere ver
 (ingresos al hospital o ingresos a cama). El modelo corre en el momento (menos de 0,1 s porque trabaja sobre
 el panel diario ya agregado, sin pacientes) y el grafico muestra como cambian los datos.
 
-Misma logica que la version standalone (dashboard/app.py, ya retirada); solo cambian los ids de componentes
-(prefijo "pron-") para que no choquen con las otras paginas en la misma app, y el registro con
+REDISEÑO (13-nov-2026):
+  - Controles sin numeracion, centrados como fila (clase "control-row").
+  - "Total esperado" y "Error tipico" viven en UN solo recuadro centrado ("lead-rotator") que alterna entre
+    las dos metricas con una animacion de deslizamiento, en bucle, por CSS puro (sin depender del servidor).
+  - La metrica de rango ("range-metric") ahora usa ids FIJOS para el relleno, el punto y las etiquetas de los
+    extremos: el calback solo cambia su `style`/`children`, nunca reemplaza los nodos, asi que la transicion
+    CSS (theme.css, .range-metric__fill/marker/endlabel) si se ve al cambiar los controles.
+  - Panel tecnico nuevo (para evaluadores): linea de tiempo de como se construyo el modelo (pasar el mouse por
+    cada etapa), el comparativo de error con/sin la forma del año (ficha A9, src/estacionalidad_anual.py y
+    rondas siguientes: dengue, GAM, IRA y EDA del SIVIGILA) y la tabla de que se probo y se descarto. Fuente:
+    docs/estacionalidad_anual.md y docs/documento_final.md seccion 6.1 (version del 13-nov-2026).
+
+Misma logica de datos que la version standalone (dashboard/app.py, ya retirada); solo cambian los ids de
+componentes (prefijo "pron-") para que no choquen con las otras paginas en la misma app, y el registro con
 `dash.register_page` en vez de crear su propio `Dash(__name__)`.
 
 DATOS  datos/procesados/para_equipo/panel_diario.csv. NO se conecta a la base del hospital.
@@ -46,22 +60,173 @@ try:
 except (FileNotFoundError, OSError):
     DATOS_OK = False
 
-GRIS, AZUL, ROJO = "#6b6b6b", "#2a6fb0", "#c0392b"
+GRIS, AZUL, ROJO, VERDE = "#6b6b6b", "#2a6fb0", "#c0392b", "#2e9b5b"
 PLAZOS = [("7 días", 7), ("30 días", 30), ("6 meses", 182), ("1 año", 365)]
 QUE_VER = {"llegadas_con_atencion": "Ingresos al hospital (pacientes que llegan a urgencias)",
            "ingresos_a_cama": "Ingresos a cama (pacientes que se hospitalizan)"}
 CORTO = {"llegadas_con_atencion": "ingresos al hospital por día", "ingresos_a_cama": "ingresos a cama por día"}
+INFO_VER = {"llegadas_con_atencion": "Pacientes que llegan a urgencias y reciben alguna atención, se hospitalicen o no.",
+            "ingresos_a_cama": "Pacientes que quedan hospitalizados, es decir, que llegan a ocupar una cama."}
+
+# ----------------------------------------------------------------------
+# Panel tecnico: comparativo de error con/sin la forma del año (ficha A9), numeros tal como quedaron en
+# docs/documento_final.md seccion 6.1 (version del 13-nov-2026) y docs/estacionalidad_anual.md.
+# ----------------------------------------------------------------------
+TRAMOS_WAPE = ["1-7 días", "1-3 meses", "3-6 meses", "6-12 meses"]
+COMPARATIVO_WAPE = {
+    "llegadas_con_atencion": {
+        "nombre_sin": "Sin la forma del año", "nombre_con": "Con el dengue (vigente)",
+        "sin": [8.0, 9.3, 11.4, 11.6], "con": [8.0, 8.6, 9.1, 9.6],
+    },
+    "ingresos_a_cama": {
+        "nombre_sin": "Solo la curva del año (GAM)", "nombre_con": "+ IRA y EDA del SIVIGILA (vigente)",
+        "sin": [18.2, 19.3, 19.7, 19.4], "con": [18.0, 18.7, 19.3, 19.0],
+    },
+}
+
+ETAPAS_PIPELINE = [
+    ("1. Calendario", "Variables de día de la semana, festivos de Colombia, víspera/día después, fin de "
+     "año y Semana Santa y Carnaval de Barranquilla (~17 % menos llegadas), calculadas para cualquier fecha "
+     "pasada o futura con holidays y la fecha de Pascua."),
+    ("2. Regresión de Poisson", "Un modelo de Poisson con enlace logarítmico, ajustado a mano por mínimos "
+     "cuadrados reponderados iterativamente (IRLS, sin librerías de estadística), sobre esas variables de "
+     "calendario y el nivel de los últimos 12 meses confiables."),
+    ("3. Backtest (retroceso)", "Se pronostican 365 días desde muchos cortes del pasado (cada 7-14 días, "
+     "desde el día 400 de los datos) y se compara contra lo que de verdad pasó después — así se mide el "
+     "error por plazo de anticipación sin usar el futuro para calibrar."),
+    ("4. Forma del año (A9)", "Con solo ~3 ciclos anuales confiables no se puede aprender la estacionalidad "
+     "directamente. Se probaron 7 fuentes externas públicas (dengue, IRA, EDA, lluvia, temperatura, "
+     "calendario escolar, El Niño, población) y se adoptó solo lo que mejoraba la validación sin empeorar "
+     "el corto plazo, confirmado luego en la prueba de 2026."),
+    ("5. Banda recalibrada", "Para cada plazo de anticipación se eligió el percentil de error que cubre al "
+     "menos el 80 % de los días en una validación aparte, con un límite para que la banda no se angoste al "
+     "crecer el horizonte."),
+]
+
+TABLA_DECISIONES = [
+    ("Climatología de dengue (SIVIGILA, 2 semanas antes)", "Entra en llegadas", "Mejora 3-12 meses; describe la forma del año (efecto negativo, no causal)"),
+    ("Curva cíclica del año (GAM, 4 grados de libertad)", "Entra en ingresos a cama", "Mejora pequeña, confirmada en la prueba de 2026"),
+    ("IRA + EDA (SIVIGILA, misma semana)", "Entra en ingresos a cama", "Mejora validación y prueba en todos los plazos"),
+    ("Armónicos de Fourier (1-3, aprendidos de nuestros datos)", "No entra", "Peor que el dengue; empeora el corto plazo en la prueba"),
+    ("Lluvia (NASA POWER e IDEAM) y temperatura", "No entra", "Sin mejora clara; la del IDEAM empeora la prueba de 2026"),
+    ("Calendario escolar oficial de Barranquilla", "No entra", "Empeora las dos series (se solapa con festivos ya modelados)"),
+    ("Índice de El Niño (ONI) y población (DANE)", "No entra", "Efecto nulo en las dos series"),
+    ("Modelo SARIMAX (alternativa a Poisson)", "No entra", "Mejor en validación, pero peor a 1-7 días y en la prueba de 2026"),
+]
 
 
 def hoy():
     return pd.Timestamp.today().normalize()
 
 
-def tarjeta(titulo, valor, detalle=""):
-    return html.Div(className="metric-card", children=[
-        html.Div(titulo, style={"fontSize": "12px"}),
-        html.Div(valor, style={"fontSize": "26px", "fontWeight": 700}),
-        html.Div(detalle, style={"fontSize": "12px", "color": GRIS})])
+def info_badge(texto):
+    return html.Span(className="info-badge tooltip-trigger", children=[
+        "i", html.Span(texto, className="tooltip-content")])
+
+
+def opcion_icono(ico, texto_info):
+    return html.Span(className="pill-icon-option", children=[
+        html.Span(className=f"nav__ico {ico}"), info_badge(texto_info)])
+
+
+def tabla_error_popup(e, lead0):
+    """Tabla completa de error por horizonte (los 5 tramos de retroceso()/tabla_error()), con el tramo
+    vigente resaltado -- se muestra en el popup de la metrica "Error típico"."""
+    filas = [html.Tr([html.Th("Días"), html.Th("Error"), html.Th("Sesgo"), html.Th("Cobertura 80%")])]
+    for _, r in e.iterrows():
+        a, b = (int(x) for x in r.tramo_dias.split("-"))
+        vigente = a <= lead0 <= b
+        estilo = {"fontWeight": 700, "color": AZUL} if vigente else {}
+        filas.append(html.Tr(style=estilo, children=[
+            html.Td(f"{r.tramo_dias} d" + (" ←" if vigente else "")), html.Td(f"{r.wape_pct:.0f} %"),
+            html.Td(f"{r.sesgo_pct:+.0f} %"), html.Td(f"{r.cobertura_80_pct:.0f} %")]))
+    return html.Div([
+        html.Div("Error validado contra el pasado, por qué tan lejos se pronostica:", style={"fontWeight": 700, "marginBottom": "4px"}),
+        html.Table(filas),
+        html.Div("Cobertura 80 %: de los días ya conocidos, qué % cayó dentro del rango probable que se dibujó para ese plazo.",
+                 style={"color": GRIS, "marginTop": "6px", "fontSize": "11px"}),
+    ])
+
+
+def _pos(v, lo, hi):
+    return max(0.0, min(100.0, (v - lo) / (hi - lo) * 100))
+
+
+def posiciones_rango(mean_val, low, high):
+    """Devuelve (pos_low, pos_high, pos_mean) en % sobre una escala con margen alrededor de low/high."""
+    ancho = max(high - low, max(mean_val * 0.05, 1.0))
+    esc_lo, esc_hi = max(0.0, low - ancho * 0.4), high + ancho * 0.4
+    esc_hi = max(esc_hi, esc_lo + 1.0)
+    return _pos(low, esc_lo, esc_hi), _pos(high, esc_lo, esc_hi), _pos(mean_val, esc_lo, esc_hi)
+
+
+def panel_contexto():
+    """Panel de 4 partes que ya define docs/estructura_dashboard.md (seccion 2): que se ve, como se calculo,
+    que significa para el hospital y que NO dice. Para el personal del hospital, en palabras simples."""
+    return html.Details(className="page-section", children=[
+        html.Summary("¿Cómo se interpreta?"),
+        html.Div(style={"padding": "10px 4px 2px", "display": "grid", "gap": "14px"}, children=[
+            html.Div([html.Div("Qué estás viendo", style={"fontWeight": 700, "color": AZUL, "marginBottom": "3px"}),
+                      html.Div("Cuántos pacientes se espera que lleguen (o se hospitalicen) cada día desde hoy, "
+                               "con una zona sombreada que muestra el rango dentro del cual probablemente va a "
+                               "caer el valor real.")]),
+            html.Div([html.Div("Cómo se calculó", style={"fontWeight": 700, "color": AZUL, "marginBottom": "3px"}),
+                      html.Div("Con el calendario del hospital (día de la semana, festivos, Semana Santa, Carnaval) "
+                               "y el nivel de pacientes de los meses confiables (febrero de 2023 a abril de 2026). "
+                               "El ancho de la zona sombreada se calibró revisando, muchas veces en el pasado, qué "
+                               "tan lejos estuvo este mismo método de la realidad (pasa el mouse sobre «Error "
+                               "típico» para ver el detalle por plazo).")]),
+            html.Div([html.Div("Qué significa para el hospital", style={"fontWeight": 700, "color": AZUL, "marginBottom": "3px"}),
+                      html.Div("Sirve para anticipar la carga de los próximos días o meses y planear personal y "
+                               "camas con tiempo. Para decisiones de corto plazo (días) es más preciso; para "
+                               "decisiones de largo plazo (meses) hay que mirar todo el rango, no solo la línea "
+                               "central.")]),
+            html.Div([html.Div("Qué NO dice", style={"fontWeight": 700, "color": ROJO, "marginBottom": "3px"}),
+                      html.Div("No anticipa brotes, cortes del sistema de registro, ni cambios del hospital después "
+                               "del 9 de abril de 2026 (el registro de ese momento en adelante está incompleto y no "
+                               "se usa para calcular el nivel). Es una tendencia con incertidumbre, no una promesa "
+                               "exacta para un día puntual.")]),
+        ]),
+    ])
+
+
+def panel_tecnico():
+    """Panel para evaluadores/jueces: como se construyo el modelo (linea de tiempo interactiva), la
+    estacionalidad anual que agrego Samuel integrando datos externos (ficha A9) y que se probo y se descarto.
+    Fuente: docs/estacionalidad_anual.md y docs/documento_final.md seccion 6.1."""
+    pasos = [html.Div(className="pipeline__step tooltip-trigger", children=[
+                html.Div(className="pipeline__dot"), html.Div(titulo, className="pipeline__label"),
+                html.Span(detalle, className="tooltip-content")])
+             for titulo, detalle in ETAPAS_PIPELINE]
+    filas_decision = [html.Tr([html.Th("Variable probada"), html.Th("Resultado"), html.Th("Por qué")])] + [
+        html.Tr([html.Td(v), html.Td(r, style={"fontWeight": 700, "color": VERDE if "Entra" in r else GRIS}), html.Td(por_que)])
+        for v, r, por_que in TABLA_DECISIONES]
+    return html.Details(className="page-section", children=[
+        html.Summary("Ficha técnica del pronóstico"),
+        html.Div(style={"padding": "14px 4px 4px", "display": "grid", "gap": "22px"}, children=[
+            html.Div([
+                html.Div("Etapas de construcción (pasa el mouse sobre cada una)", style={"fontWeight": 700, "marginBottom": "4px"}),
+                html.Div(className="pipeline", children=pasos),
+            ]),
+            html.Div([
+                html.Div([html.B("La forma del año (ficha A9, "), html.Code("src/estacionalidad_anual.py"), html.B("). "),
+                          "Con solo ~3 ciclos anuales confiables en el hospital, el modelo no podía aprender solo de sus "
+                          "propios datos qué meses tienen más pacientes. Se tomó prestada la ", html.B("forma típica del año"),
+                          " (no los valores futuros) de climatologías públicas de muchos años, probando 7 fuentes y "
+                          "aceptando solo lo que mejoraba la validación de jul-dic 2025 sin empeorar el corto plazo, y "
+                          "confirmándolo después en la prueba de 2026 (datos que no se usaron para elegir)."],
+                         style={"marginBottom": "10px", "lineHeight": "1.6"}),
+                dcc.Graph(id="pron-wape-chart", config={"displaylogo": False}),
+            ]),
+            html.Div([
+                html.Div("Qué se probó y qué se descartó", style={"fontWeight": 700, "marginBottom": "6px"}),
+                html.Table(filas_decision, style={"width": "100%", "fontSize": "12.5px", "borderCollapse": "collapse"}),
+                html.Div("Detalle completo de cada ronda de prueba (datos, fuentes y por qué se descartó cada una): "
+                         "docs/estacionalidad_anual.md. Documento final del equipo con las 7 recomendaciones y sus "
+                         "fuentes: docs/documento_final.pdf.", style={"color": GRIS, "fontSize": "11.5px", "marginTop": "8px"}),
+            ]),
+        ]),
+    ])
 
 
 def layout():
@@ -74,27 +239,82 @@ def layout():
                    "src/exportar_para_equipo.py.", style={"color": "#c0392b"}),
         ])
     return html.Div(className="page-container", children=[
-    html.H2("¿Cuántos pacientes ingresarán al hospital?"),
-    html.P(f"Estimación para los próximos días a partir de hoy, {hoy():%d-%m-%Y}, según la historia confiable del hospital. "
-           "Elige dos cosas y el gráfico se actualiza.", style={"color": GRIS}),
-    html.Div(style={"display": "flex", "flexWrap": "wrap", "gap": "40px", "alignItems": "flex-start"}, children=[
-        html.Div([html.Label("1. ¿Hasta cuándo quieres ver?", style={"fontWeight": 600}),
-                  dcc.RadioItems(id="pron-plazo", options=[{"label": " " + n, "value": d} for n, d in PLAZOS], value=30)]),
-        html.Div([html.Label("2. ¿Qué quieres ver?", style={"fontWeight": 600}),
-                  dcc.RadioItems(id="pron-objetivo", options=[{"label": " " + n, "value": o} for o, n in QUE_VER.items()],
-                                 value="llegadas_con_atencion")], style={"maxWidth": "420px"}),
-    ]),
-    html.Div(id="pron-tarjetas", style={"display": "flex", "flexWrap": "wrap", "gap": "12px", "margin": "16px 0"}),
-    dcc.Graph(id="pron-grafico", config={"displaylogo": False}),
-    html.Div(id="pron-nota", style={"fontSize": "13px", "color": GRIS, "marginTop": "8px"}),
+        html.Div(className="page-head", children=[
+            html.H2("¿Cuántos pacientes ingresarán al hospital?"),
+            html.P(f"Estimación para los próximos días a partir de hoy, {hoy():%d-%m-%Y}, según la historia confiable del hospital. "
+                   "Elige dos cosas y el gráfico se actualiza.", className="page-head__sub"),
+        ]),
+
+        html.Div(className="control-row", children=[
+            html.Div(className="control-group", children=[
+                html.Span("¿Hasta cuándo quieres ver?", className="control-group__label"),
+                dcc.RadioItems(id="pron-plazo", className="pill-switch",
+                               options=[{"label": n, "value": d} for n, d in PLAZOS], value=30)]),
+            html.Div(className="control-group", children=[
+                html.Span("¿Qué quieres ver?", className="control-group__label"),
+                dcc.RadioItems(id="pron-objetivo", className="pill-switch pill-switch--icons",
+                               options=[{"label": opcion_icono("ico-patient", INFO_VER["llegadas_con_atencion"]), "value": "llegadas_con_atencion"},
+                                        {"label": opcion_icono("ico-bed", INFO_VER["ingresos_a_cama"]), "value": "ingresos_a_cama"}],
+                               value="llegadas_con_atencion")]),
+        ]),
+
+        # Fila resumen: recuadro rotativo (izq) + metrica de rango (der), ocupando el ancho de la pagina
+        html.Div(className="pron-summary", children=[
+            # Recuadro rotativo: Total esperado <-> Error tipico (un solo recuadro, animacion por CSS)
+            html.Div(className="lead-rotator", children=[
+                html.Div(className="lead-rotator__slide lead-rotator__slide--a", children=[
+                    html.Div("Total esperado", className="lead-rotator__title"),
+                    html.Div(id="pron-lead-a-value", className="lead-rotator__value"),
+                    html.Div(id="pron-lead-a-detail", className="lead-rotator__detail"),
+                ]),
+                html.Div(className="lead-rotator__slide lead-rotator__slide--b tooltip-trigger", children=[
+                    html.Div("Error típico", className="lead-rotator__title"),
+                    html.Div(id="pron-lead-b-value", className="lead-rotator__value"),
+                    html.Div(id="pron-lead-b-detail", className="lead-rotator__detail"),
+                    html.Div(id="pron-lead-b-popup", className="tooltip-content"),
+                ]),
+                html.Div(className="lead-rotator__dots", children=[html.Div(className="lead-rotator__dot"), html.Div(className="lead-rotator__dot")]),
+            ]),
+
+            # Metrica de rango: ids fijos para que el callback solo cambie estilo/texto (asi SI se anima)
+            html.Div(className="range-metric", children=[
+                html.Div("Se espera por día (rango probable, 8 de cada 10 casos)", className="range-metric__title"),
+                html.Div(className="range-metric__line", children=[
+                    html.Div(className="range-metric__track"),
+                    html.Div(id="pron-range-fill", className="range-metric__fill"),
+                    html.Div(id="pron-range-low", className="range-metric__endlabel"),
+                    html.Div(id="pron-range-high", className="range-metric__endlabel"),
+                    html.Div(id="pron-range-marker", className="range-metric__marker", children=[
+                        html.Div(id="pron-range-marker-value", className="range-metric__marker-value"),
+                        html.Div(className="range-metric__marker-dot"),
+                    ]),
+                ]),
+                html.Div("El punto azul es el promedio esperado; los extremos de la línea son el rango dentro del cual "
+                         "cae el valor real la mayoría de los días.", className="range-metric__caption"),
+            ]),
+        ]),
+
+        html.Div(className="page-section", children=[dcc.Graph(id="pron-grafico", config={"displaylogo": False})]),
+        panel_contexto(),
+        panel_tecnico(),
     ])
 
 
-@callback(Output("pron-grafico", "figure"), Output("pron-tarjetas", "children"), Output("pron-nota", "children"),
-          Input("pron-plazo", "value"), Input("pron-objetivo", "value"), State("theme-store", "data"))
+@callback(
+    Output("pron-grafico", "figure"),
+    Output("pron-lead-a-value", "children"), Output("pron-lead-a-detail", "children"),
+    Output("pron-lead-b-value", "children"), Output("pron-lead-b-detail", "children"), Output("pron-lead-b-popup", "children"),
+    Output("pron-range-fill", "style"), Output("pron-range-low", "style"), Output("pron-range-low", "children"),
+    Output("pron-range-high", "style"), Output("pron-range-high", "children"),
+    Output("pron-range-marker", "style"), Output("pron-range-marker-value", "children"),
+    Output("pron-wape-chart", "figure"),
+    Input("pron-plazo", "value"), Input("pron-objetivo", "value"), State("theme-store", "data"),
+)
 def actualizar(dias, objetivo, tema):
+    dark = tg.es_oscuro(tema)
     if not DATOS_OK:                                            # no deberia dispararse (sin datos no se renderizan los controles), defensivo
-        return go.Figure(), [], "Datos no disponibles."
+        vacio = go.Figure()
+        return (vacio, "", "", "", "", "", {}, {}, "", {}, "", {}, "", vacio)
     serie, bt = SERIES[objetivo], BT[objetivo]
     desde = hoy()
     f = mp.pronostico_con_banda(serie, bt, dias, SUPUESTO, 0.0, True, False, desde)
@@ -110,19 +330,37 @@ def actualizar(dias, objetivo, tema):
     fig.update_layout(title=f"{nombre.capitalize()} esperados, día por día", hovermode="x unified", legend=dict(orientation="h", y=-0.15),
                       margin=dict(l=40, r=20, t=60, b=40), yaxis_title=nombre, template="simple_white")
     fig.update_xaxes(tickformat="%d-%m" if dias <= 30 else "%m-%Y")      # fechas en numeros (plotly escribe los meses en ingles)
+    tg.aplicar(fig, dark)
 
     e = ERR[objetivo]
     lead0 = int(f.dias_adelante.iloc[0])
     fila = e[e.tramo_dias.map(lambda t: int(t.split("-")[0]) <= lead0)].iloc[-1]
     meses = lead0 / 30.4
-    tarjetas = [
-        tarjeta("Se espera por día", f"{f.pronostico.mean():.0f}", f"promedio de los próximos {dias} días"),
-        tarjeta("Rango probable por día", f"{f.banda_baja.mean():.0f} a {f.banda_alta.mean():.0f}", "8 de cada 10 casos"),
-        tarjeta("Total esperado", f"{f.pronostico.sum():,.0f}".replace(",", "."), f"ingresos en los próximos {dias} días"),
-        tarjeta("Error típico", f"{fila.wape_pct:.0f} %", f"por día; el último dato confiable es de hace unos {meses:.0f} meses"),
-    ]
-    nota = (f"Cómo se calculó: según el calendario (día de la semana, festivos, semana santa, Carnaval) y el nivel de pacientes de febrero de 2023 a abril de 2026. "
-            f"Desde el 10-abr-2026 el registro de las etapas del hospital está incompleto: esos días no se usan para estimar el nivel. "
-            "No anticipa brotes ni cortes de sistema, ni lo que haya cambiado en el hospital desde entonces. Es una tendencia, no una predicción precisa.")
-    tg.aplicar(fig, tg.es_oscuro(tema))
-    return fig, tarjetas, nota
+
+    lead_a_val = f"{f.pronostico.sum():,.0f}".replace(",", ".")
+    lead_a_det = f"ingresos en los próximos {dias} días"
+    lead_b_val = f"{fila.wape_pct:.0f} %"
+    lead_b_det = f"por día; dato de hace ~{meses:.0f} meses — con el recuadro visible, pasa el mouse para el detalle"
+    lead_b_popup = tabla_error_popup(e, lead0)
+
+    p_low, p_high, p_mean = posiciones_rango(f.pronostico.mean(), f.banda_baja.mean(), f.banda_alta.mean())
+    estilo_fill = {"left": f"{p_low}%", "width": f"{p_high - p_low}%"}
+    estilo_low = {"left": f"{p_low}%"}
+    estilo_high = {"left": f"{p_high}%"}
+    estilo_marker = {"left": f"{p_mean}%"}
+
+    cmp = COMPARATIVO_WAPE[objetivo]
+    fig_wape = go.Figure([
+        go.Bar(x=TRAMOS_WAPE, y=cmp["sin"], name=cmp["nombre_sin"], marker_color=GRIS,
+               hovertemplate="%{x}<br>%{y:.1f} %% de error<extra></extra>"),
+        go.Bar(x=TRAMOS_WAPE, y=cmp["con"], name=cmp["nombre_con"], marker_color=AZUL,
+               hovertemplate="%{x}<br>%{y:.1f} %% de error<extra></extra>"),
+    ])
+    fig_wape.update_layout(title="Error del pronóstico (WAPE), con y sin la forma del año", barmode="group",
+                           yaxis_title="Error diario (%)", legend=dict(orientation="h", y=-0.22),
+                           template="simple_white", margin=dict(l=40, r=20, t=50, b=40))
+    tg.aplicar(fig_wape, dark)
+
+    return (fig, lead_a_val, lead_a_det, lead_b_val, lead_b_det, lead_b_popup,
+            estilo_fill, estilo_low, f"{f.banda_baja.mean():.0f}", estilo_high, f"{f.banda_alta.mean():.0f}",
+            estilo_marker, f"{f.pronostico.mean():.0f}", fig_wape)

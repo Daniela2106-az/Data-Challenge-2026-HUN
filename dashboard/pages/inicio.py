@@ -20,8 +20,6 @@ SECCIONES = [
      "Describe a un paciente y estima en qué momento del día es más probable que reciba cama, con su rango típico."),
     ("/camas", "ico-bed", "Planeación de camas",
      "Simula «¿qué pasaría si…?»: más ingresos, menos estancia u otra mezcla de perfiles, y mira la ocupación proyectada."),
-    ("/perfiles", "ico-profiles", "Perfiles y picos",
-     "¿Qué perfiles de paciente esperan o se quedan distinto cuando el hospital está más cargado? Tabla histórica."),
 ]
 
 RESUMEN = [
@@ -55,7 +53,7 @@ def layout():
             html.Div("Hospital Universidad del Norte · Servimos con corazón", className="hero__eyebrow"),
             html.H1("Analítica del flujo de pacientes", className="hero__title"),
             html.P("Un panel único para entender, predecir y planear la atención en el hospital: pronóstico de "
-                   "demanda, estimación de espera por cama, planeación de capacidad y perfiles de carga. "
+                   "demanda, estimación de espera por cama y planeación de capacidad. "
                    "Elige una sección para empezar.", className="hero__sub"),
         ]),
 
