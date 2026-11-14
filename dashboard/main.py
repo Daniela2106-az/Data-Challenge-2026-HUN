@@ -218,8 +218,8 @@ app.clientside_callback(
     function(data) {
         if (!window.Plotly) { return ''; }
         var dark = (data && data.theme === 'dark');
-        var c = dark ? {t:'#e6edf3', ti:'#e8eef4', g:'#27313c', l:'#3a4653'}
-                     : {t:'#1a1d21', ti:'#0a2540', g:'#e6ecf3', l:'#d7dfe8'};
+        var c = dark ? {t:'#e6edf3', ti:'#e8eef4', g:'#27313c', l:'#3a4653', hb:'#1d2b38'}
+                     : {t:'#1a1d21', ti:'#0a2540', g:'#e6ecf3', l:'#d7dfe8', hb:'#ffffff'};
         document.querySelectorAll('.js-plotly-plot').forEach(function(gd){
             try {
                 Plotly.relayout(gd, {
@@ -227,7 +227,8 @@ app.clientside_callback(
                     'xaxis.gridcolor': c.g, 'yaxis.gridcolor': c.g,
                     'xaxis.linecolor': c.l, 'yaxis.linecolor': c.l,
                     'xaxis.zerolinecolor': c.g, 'yaxis.zerolinecolor': c.g,
-                    'paper_bgcolor': 'rgba(0,0,0,0)', 'plot_bgcolor': 'rgba(0,0,0,0)'
+                    'paper_bgcolor': 'rgba(0,0,0,0)', 'plot_bgcolor': 'rgba(0,0,0,0)',
+                    'hoverlabel.bgcolor': c.hb, 'hoverlabel.bordercolor': c.l, 'hoverlabel.font.color': c.t
                 });
             } catch (e) {}
         });
