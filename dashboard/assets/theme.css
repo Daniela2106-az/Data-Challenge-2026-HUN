@@ -746,6 +746,16 @@ button, .btn-primary {
 .ico-clock  { --i: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z'/></svg>"); }
 .ico-season { --i: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z'/></svg>"); }
 
+.ico-alert, .ico-factors, .ico-stay, .ico-dx, .ico-outlier, .ico-models { -webkit-mask-image: var(--i); mask-image: var(--i); }
+.ico-alert { --i: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z'/></svg>"); }
+.ico-factors { --i: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M3 17v2h6v-2H3zM3 5v2h10V5H3zm10 16v-2h8v-2h-8v-2h-2v6h2zM7 9v2H3v2h4v2h2V9H7zm14 4v-2H11v2h10zm-6-4h2V7h4V5h-4V3h-2v6z'/></svg>"); }
+.ico-stay { --i: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z'/></svg>"); }
+.ico-dx { --i: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M19 3H5c-1.1 0-1.99.9-1.99 2L3 19c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-1 11h-4v4h-4v-4H6v-4h4V6h4v4h4v4z'/></svg>"); }
+.ico-outlier { --i: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z'/></svg>"); }
+.ico-models { --i: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M20 3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM10 17H5v-2h5v2zm0-4H5v-2h5v2zm0-4H5V7h5v2zm4.82 6L12 12.16l1.41-1.41 1.41 1.42L17.99 9l1.42 1.42L14.82 15z'/></svg>"); }
+
+.ico-summary { --i: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M14.4 6L14 4H5v17h2v-7h5.6l.4 2h7V6z'/></svg>"); -webkit-mask-image: var(--i); mask-image: var(--i); }
+
 /* Filtros: una fila arriba de las graficas, opciones en forma de pildora */
 .filtros { display: flex; flex-wrap: wrap; gap: 12px 30px; margin: 6px 0 16px; }
 .filtro__label { font-size: 11.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
@@ -810,6 +820,17 @@ button, .btn-primary {
 .hecho__num { font-size: 30px; font-weight: 800; letter-spacing: -.02em; line-height: 1.1; color: var(--brand-strong); }
 .hecho__titulo { font-size: 15.5px; font-weight: 700; color: var(--brand-ink); margin-top: 6px; }
 .hecho .hecho__txt { font-size: 13.5px; line-height: 1.5; color: var(--muted); margin: 6px 0 0; }
+.modelo__pregunta { font-size: 17px; font-weight: 700; line-height: 1.3; color: var(--brand-ink); margin: 6px 0 4px; }
+.modelo .rec-block { margin-top: 12px; }
+.modelo .rec-block p { font-size: 14px; line-height: 1.5; margin: 3px 0 0; }
+.hallazgo { display: block; text-decoration: none; color: inherit; transition: transform .18s var(--ease), box-shadow .18s var(--ease), border-color .18s var(--ease); }
+.hallazgo:hover { transform: translateY(-3px); box-shadow: var(--sh-2); border-color: var(--brand); }
+.hallazgo .hallazgo__txt { font-size: 14px; line-height: 1.55; color: var(--muted); margin: 4px 0 10px; }
+.hallazgo:hover .menu-card__go::after { transform: translateX(4px); }
+.hero__cta, .hero__cta:visited { position: relative; display: inline-block; margin-top: 20px; padding: 11px 22px; border-radius: var(--r-pill); background: #fff;
+  color: #0071bc; font-weight: 700; font-size: 14.5px; text-decoration: none; box-shadow: var(--sh-1); transition: transform .18s var(--ease), box-shadow .18s var(--ease); }
+.hero__cta:hover { transform: translateY(-2px); box-shadow: var(--sh-2); }
+.hero__cta::after { content: " \2192"; }
 .ad { display: flex; align-items: baseline; flex-wrap: wrap; gap: 2px 12px; margin-top: 14px; }
 .ad__antes { font-size: 24px; font-weight: 700; color: var(--muted); text-decoration: line-through; text-decoration-thickness: 2px; }
 .ad__flecha { font-size: 20px; color: var(--muted); }
@@ -834,6 +855,14 @@ button, .btn-primary {
 .paso__dir { font-size: 11.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; opacity: .8; }
 .paso__nombre { font-size: 15px; font-weight: 700; }
 .paso__pos { font-size: 12.5px; color: var(--muted); }
+
+@media (max-width: 880px) {
+  .paso { grid-template-columns: 1fr 1fr; padding: 0 16px; gap: 10px; }
+  .paso__pos { display: none; }
+  .paso__btn { min-width: 0; max-width: 100%; padding: 10px 14px; }
+  .paso__btn--sig { grid-column: 2; }
+  .cifra__num { font-size: 34px; }
+}
 
 /* Restos comunes: texto del metodo, pie con la fuente, aviso y bloque de la pagina de estacionalidad */
 .chart-card__title { font-size: 16px; font-weight: 700; color: var(--brand-ink); line-height: 1.3; }

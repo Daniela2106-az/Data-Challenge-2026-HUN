@@ -600,16 +600,23 @@ externos son de antes y después, sin grupo de comparación.
 | Página | Qué responde | Responsable |
 |---|---|---|
 | Inicio (`/`) | Portada con las cifras clave del hospital y el menú por secciones | Anthony |
+| Resumen (`/resumen`) | El proyecto en una pantalla: los ocho hallazgos, cada uno con su página, y lo que se propone | Samuel |
 | Datos y calidad (`/datos`) | Qué había en la base, qué se corrigió y hasta qué fecha son confiables los datos | Samuel |
 | Demanda (`/demanda`) | A qué hora y qué día llegan los pacientes, y si la demanda crece entre años | Samuel |
 | Ocupación de camas (`/ocupacion`) | Camas ocupadas frente a las 106 del hospital, y por qué sube la ocupación | Samuel |
 | Espera de cama (`/espera`) | Cuánto se espera por una cama, quién espera más y si los peores casos empeoran | Samuel |
 | Llegada y altas (`/altas`) | A qué hora salen las altas, a qué hora se asignan las camas y cuánto espera quien llega a cada hora | Samuel |
+| Qué influye en la espera (`/factores`) | Cuánto de la espera se explica con lo que se sabe del paciente y qué factores pesan | Samuel |
+| Estancias largas (`/estancia`) | Por qué subió la estancia media y qué comparten las estancias de semanas | Samuel |
+| Diagnósticos (`/diagnosticos`) | Qué grupos de diagnóstico esperan más cama y cuáles se quedan más | Samuel |
 | Perfiles y picos (`/perfiles`) | Cómo cambian la espera y la estancia según el perfil del paciente y la carga del momento | Anthony |
 | Pronóstico de demanda (`/pronostico`) | Cuántos pacientes llegarán y cuántos irán a cama, desde hoy hasta un año, con su banda del 80 % y la forma del año | Daniela y Samuel |
 | Forma del año (`/estacionalidad`) | Qué épocas del año traen más pacientes y cuánto mejora el pronóstico al saberlo | Samuel |
+| Alertas (`/alertas`) | Las tres alertas (día congestionado, paciente sin cama y camas de mañana): cuándo avisar y qué tanto aciertan | Samuel |
+| Días atípicos (`/atipicos`) | Los días que se salen del patrón y qué dicen del problema de la espera | Samuel |
 | Paciente en espera (`/paciente`) | Cuándo es más probable que un paciente que ya espera reciba cama (estimador A6), con sus avisos | Samuel |
 | Planeación de camas (`/camas`) | Riesgo de saturar las camas y escenarios de ingresos y estancia (simulación Monte Carlo, A5) | Anthony |
+| Cómo se eligieron los modelos (`/modelos`) | Para cada pregunta: el modelo elegido, por qué y qué se descartó | Samuel |
 | Recomendaciones (`/recomendaciones`) | Las siete recomendaciones, cada una con la evidencia propia, la evidencia de otros hospitales y su firmeza | Samuel |
 | Documentación (`/documentacion`) | Este documento completo, con sus tablas y figuras, y la descarga en PDF | Samuel |
 

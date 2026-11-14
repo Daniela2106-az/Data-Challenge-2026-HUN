@@ -1,0 +1,74 @@
+"""
+dashboard/pages/modelos.py  -  pagina «Cómo se eligieron los modelos» (13-nov-2026; pagina 3.6 de docs/estructura_dashboard.md; formato de presentacion)
+Para cada pregunta del hospital: que modelo se eligio, por que y que se descarto.
+
+DATOS  Tabla ya publicada al inicio de la seccion 6 de docs/documento_final.md, escrita aqui como constante. No lee ninguna tabla.
+"""
+import sys
+from pathlib import Path
+
+import dash
+from dash import html
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from componentes import bloque, cifra, mensaje, metodo, pagina, portada  # noqa: E402
+
+dash.register_page(__name__, path="/modelos", name="Elección de modelos", title="Cómo se eligieron los modelos - HUN", order=36)
+
+# (pregunta, modelo elegido, por que, lo que se descarto)
+MODELOS = [
+    ("¿Cuántos pacientes llegan y cuántos van a cama cada día?",
+     "Regresión de Poisson con día de la semana, festivos, Carnaval, nivel reciente y forma del año",
+     "Son conteos y cada efecto se lee como un porcentaje. Error de 7,9 % a 1–7 días.",
+     "SARIMAX y otros modelos de series (peores a corto plazo), quincenas, lluvia y calendario escolar."),
+    ("¿Hoy será un día congestionado?",
+     "Clasificador logístico sobre lo que ya llegó hasta las 12 h, mezclado con el pronóstico",
+     "Simple y acierta: detecta el 87 % de los días congestionados a media jornada.",
+     "La alerta un día antes: solo detecta 1 de cada 5."),
+    ("¿Cuándo recibirá cama este paciente?",
+     "Supervivencia hora a hora con árboles de gradiente",
+     "Da la distribución completa del tiempo que falta y se actualiza con lo que va pasando.",
+     "La fila «primero en llegar» (el orden no se cumple), cuantiles al llegar y un modelo de cola."),
+    ("¿Qué perfiles esperan más y por qué?",
+     "Regresión logística y regresión sobre el logaritmo de la espera",
+     "Los coeficientes se leen con su intervalo. Explica; no reemplaza al estimador.",
+     "Alertar por riesgo al llegar: marcaría al 44 % de los pacientes, con 4 de cada 10 falsas alarmas."),
+    ("¿Se van a saturar las camas?",
+     "Simulación Monte Carlo con estancias reales por perfil sobre los ingresos pronosticados",
+     "Respeta la cola larga de las estancias y da la probabilidad de superar las 106 camas.",
+     "Predecir la estancia de cada paciente (no se puede) y proyectar con las altas esperadas."),
+    ("¿Cuántos pacientes estarán esperando cama en 6 a 12 horas?",
+     "Modelo de flujo: entradas y salidas de la cola",
+     "Un tercio menos de error que suponer que todo sigue igual.",
+     "Suponer que la cola no cambia y usar la tasa típica."),
+]
+
+
+def _parte(titulo, texto):
+    return html.Div(className="rec-block", children=[html.Div(titulo, className="rec-block__label"), html.P(texto)])
+
+
+def _tarjeta(numero, pregunta, modelo, por_que, descartado):
+    return html.Div(className="hecho modelo", children=[
+        html.Div(f"{numero:02d}", className="lamina__num"), html.Div(pregunta, className="modelo__pregunta"),
+        _parte("Modelo elegido", modelo), _parte("Por qué", por_que), _parte("Se probó y se descartó", descartado)])
+
+
+def layout():
+    return pagina(
+        portada("Predicción · Cómo se eligieron los modelos", "Para cada pregunta, el modelo más simple que acertó en datos que no había visto",
+                "Ningún modelo se eligió por ser sofisticado. Cada uno se comparó con una referencia sencilla y solo se quedó si la superaba "
+                "en meses que nunca vio.",
+                [cifra("6", "preguntas del hospital, cada una con su modelo"), cifra("7,9 %", "de error al pronosticar las llegadas a una semana"),
+                 cifra("87 %", "de los días congestionados se detecta a mediodía")]),
+        bloque("Una pregunta, un modelo", "Qué se eligió, por qué y qué alternativas se descartaron"),
+        html.Div(className="hechos hechos--2", children=[_tarjeta(i, *m) for i, m in enumerate(MODELOS, 1)]),
+        mensaje("Todos los modelos se probaron **entrenando con el pasado y evaluando en meses que no habían visto**, siempre contra una "
+                "referencia simple. Donde un modelo complejo no ganó, se dejó el simple, que el hospital puede leer y mantener."),
+        metodo(
+            "Validación temporal: se entrena hasta una fecha y se evalúa después, nunca al azar. Las variables se eligieron con julio a "
+            "diciembre de 2025 y se confirmaron en 2026. El periodo de evaluación termina el 9 de abril de 2026.",
+            "Que un modelo acierte en el pasado no garantiza que acierte si cambia el hospital o el registro. Ninguno anticipa brotes ni "
+            "cortes del sistema, y casi todos describen **asociaciones**, no causas.",
+            "Fuente: docs/documento_final.md, sección 6 · src/modelo_pronostico.py · src/alertas.py · docs/estimador_tiempos.md · "
+            "docs/modelo_camas.md."))

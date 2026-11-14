@@ -20,6 +20,20 @@ dash.register_page(__name__, path="/", name="Inicio", title="Dashboard HUN — I
 
 # ruta -> (titulo de la tarjeta, descripcion). Una pagina sin entrada sale con su nombre y sin descripcion.
 TARJETAS = {
+    "/resumen": ("Resumen",
+                 "El proyecto en una pantalla: los ocho hallazgos, cada uno con su página, y lo que proponemos."),
+    "/factores": ("Qué influye en la espera",
+                  "Lo que se sabe del paciente explica solo el 16 % de su espera: qué factores pesan y cuáles no."),
+    "/estancia": ("Estancias largas",
+                  "Por qué subió la estancia media: unas pocas estancias de semanas ocupan un tercio de las camas."),
+    "/diagnosticos": ("Diagnósticos",
+                      "Qué grupos de diagnóstico esperan más cama y cuáles se quedan más tiempo hospitalizados."),
+    "/alertas": ("Alertas",
+                 "Tres avisos para actuar a tiempo: día congestionado, paciente sin cama y camas de mañana."),
+    "/atipicos": ("Días atípicos",
+                  "Los días que se salen del patrón y lo que dicen: el problema de la espera es de todos los días."),
+    "/modelos": ("Cómo se eligieron los modelos",
+                 "Para cada pregunta del hospital: qué modelo se eligió, por qué y qué alternativas se descartaron."),
     "/datos": ("Datos y calidad",
                "De 3,3 millones de etapas a 337 mil episodios: qué había en la base, qué se corrigió y hasta dónde se puede confiar."),
     "/demanda": ("Demanda",
@@ -92,7 +106,8 @@ def layout():
             html.H1("Analítica del flujo de pacientes", className="hero__title"),
             html.P("Un panel único para entender, predecir y planear la atención en el hospital: qué datos hay, cómo llegan "
                    "los pacientes, dónde se pierde el tiempo, qué se espera para los próximos meses y qué proponemos. "
-                   "Elige una página para empezar.", className="hero__sub"),
+                   "Elige una página o recórrelo en orden, como una presentación.", className="hero__sub"),
+            dcc.Link("Empezar el recorrido", href="/resumen", className="hero__cta"),
         ]),
 
         html.Div("El hospital en una mirada", className="section-title", style={"marginTop": "28px"}),

@@ -16,12 +16,19 @@ PAGINAS (ver docstring de cada una en dashboard/pages/):
   /paciente    paciente.py    Paciente en espera (A6, Samuel)
   /camas       camas.py       Planeacion de camas (A5, Anthony)
   /perfiles    perfiles.py    Perfiles y picos (Anthony)
+  /resumen         resumen.py          El proyecto en una pantalla: ocho hallazgos y lo que se propone (Samuel)
   /datos           datos.py            Datos y calidad: de la base a los episodios analizados (Samuel)
   /demanda         demanda.py          Cuando llegan los pacientes (Samuel)
   /ocupacion       ocupacion.py        Camas ocupadas frente a las 106 del hospital (Samuel)
   /espera          espera.py           Espera de cama: el cuello de botella (Samuel)
   /altas           altas.py            Hora de llegada, altas y asignacion de camas (Samuel)
   /estacionalidad  estacionalidad.py   La forma del año del pronostico (A9, Samuel)
+  /factores        factores.py         Que influye en la espera de cama (Samuel)
+  /estancia        estancia.py         Estancias largas: por que subio la estancia (A2 y A2b, Samuel)
+  /diagnosticos    diagnosticos.py     Espera y estancia por grupo de diagnostico (A3, Samuel)
+  /alertas         alertas.py          Las tres alertas y cuando avisar (Samuel)
+  /atipicos        atipicos.py         Dias atipicos frente al pronostico (Samuel)
+  /modelos         modelos.py          Como se eligieron los modelos (Samuel)
   /recomendaciones recomendaciones.py  Las 7 recomendaciones con su evidencia (Samuel)
   /documentacion   documentacion.py    El documento final completo con descarga en PDF (Samuel)
 
@@ -140,6 +147,7 @@ def servir_layout():
         dcc.Location(id="url"),
         dcc.Store(id="theme-store", storage_type="local"),   # recuerda el tema entre visitas
         html.Div(id="grafico-tema-dummy", style={"display": "none"}),
+        html.Div(id="nav-visible-dummy", style={"display": "none"}),
         barra_lateral(),
         html.Div(className="main", children=[
             barra_superior(),
@@ -208,6 +216,21 @@ app.clientside_callback(
     """,
     Output("grafico-tema-dummy", "children"),
     Input("theme-store", "data"),
+)
+
+# Con el menu largo, deja a la vista el enlace de la pagina activa (por ejemplo al avanzar con «siguiente»).
+app.clientside_callback(
+    """
+    function(hijos) {
+        setTimeout(function() {
+            var activo = document.querySelector('#nav-principal .nav__item.is-active');
+            if (activo && activo.scrollIntoView) { activo.scrollIntoView({block: 'nearest'}); }
+        }, 60);
+        return '';
+    }
+    """,
+    Output("nav-visible-dummy", "children"),
+    Input("nav-principal", "children"),
 )
 
 
