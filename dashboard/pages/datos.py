@@ -40,6 +40,8 @@ FALTA = [
     ("Orden de hospitalizar", "No se registra su hora", "Por eso no se separa la atención clínica de la espera pura por una cama."),
     ("Hora de salida", "Falta en 4 de cada 10 etapas de urgencias", "Quien se va de alta desde urgencias casi nunca tiene hora de fin."),
 ]
+# (año, % de las etapas de atencion en urgencias sin hora de salida) - conteo directo en la base (CLAUDE.md 4.3)
+SIN_FIN = [("2023", 41.6), ("2024", 38.4), ("2025", 35.8), ("2026", 36.6)]
 HOSPITAL = [
     ("106", "Camas de hospitalización", "88 de adultos y 18 de niños y neonatos."),
     ("58", "Camillas de urgencias", "Observación de adultos y pediátrica."),
@@ -57,6 +59,10 @@ def layout():
         lamina(1, "De 3,3 millones de etapas quedan 337 mil episodios de atención",
                "Cada paso de la limpieza quita registros que no son atenciones reales: citas administrativas, copias y duplicados.",
                grafico("dat-embudo", alto=270), dato=("337 mil", "episodios de atención analizados")),
+        lamina(2, "4 de cada 10 etapas de urgencias no tienen hora de salida",
+               "Porcentaje de etapas de atención en urgencias que no registran cuándo terminaron, por año. **No son atenciones "
+               "cortas: falta el dato.** Mejora un poco cada año, pero sigue siendo el mayor vacío de la base.",
+               grafico("dat-sinfin", alto=300), dato=("100 %", "de las hospitalizaciones sí tiene sus tiempos completos"), invertida=True),
         bloque("Qué hay en la base", "Una base clínica en formato OMOP, de solo lectura"),
         html.Div(className="hechos", children=[hecho(*b) for b in BASE]),
         bloque("Qué se corrigió", "Cuatro problemas de calidad y la regla con que se resolvió cada uno"),
@@ -84,6 +90,17 @@ def layout():
             "La persona real de las estancias duplicadas se deduce de los datos; el hospital dijo que «lo más probable» es que sean "
             "duplicados, pero no confirmó cuál es. Tampoco explicó por qué cambia el registro desde abril de 2026.",
             "Fuente: datos/tablas_dashboard/embudo_datos.csv · CLAUDE.md 4.1, 4.3, 4.6, 4.9 y 4.10 · sesión con el HUN del 29-oct-2026."))
+
+
+@callback(Output("dat-sinfin", "figure"), Input("theme-store", "data"))
+def sin_fin(tema):
+    fig = go.Figure(go.Bar(x=[a for a, _ in SIN_FIN], y=[v for _, v in SIN_FIN], marker_color=[AZUL] + [TENUE] * 3,
+                           text=[f"{v:.1f} %".replace(".", ",") for _, v in SIN_FIN], textposition="outside", cliponaxis=False,
+                           hovertemplate="%{x}: %{y:.1f} % de las etapas de urgencias sin hora de salida<extra></extra>"))
+    estilo(fig, tema).update_yaxes(ticksuffix=" %", range=[0, 50])
+    fig.update_xaxes(type="category")
+    fig.update_layout(bargap=0.45)
+    return fig
 
 
 @callback(Output("dat-embudo", "figure"), Input("theme-store", "data"))

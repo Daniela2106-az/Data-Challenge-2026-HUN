@@ -31,7 +31,7 @@ import comparar_estimadores as ce  # noqa: E402
 import confianza_perfil as cp  # noqa: E402
 import estimador_tiempo_restante as etr  # noqa: E402
 import estimador_tiempos as et  # noqa: E402
-from componentes import cifra, portada  # noqa: E402
+from componentes import bloque, cifra, portada  # noqa: E402
 import tema_graficos as tg  # noqa: E402
 
 dash.register_page(__name__, path="/paciente", name="Paciente en espera", title="¿Cuándo recibirá cama? - HUN", order=2)
@@ -110,7 +110,7 @@ def layout():
                 html.Div(id="pac-nota", style={"fontSize": "13px", "color": GRIS}),
             ]),
         ]),
-        html.H4("¿Qué tan bien funciona?", style={"marginTop": "24px"}),
+        bloque("¿Qué tan bien funciona?", "Probado con julio de 2025 al 9 de abril de 2026, meses que el modelo no había visto"),
         validacion(),
         html.P("Límites: la base no registra el triage, el servicio ni el tipo de cama, que es de lo que más depende la espera; la «cama» es la asignación "
                "administrativa, que puede ser una silla o camilla de apoyo; probado con jul-2025 a 9-abr-2026. Detalle en docs/estimador_tiempos.md.",

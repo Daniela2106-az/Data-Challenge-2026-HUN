@@ -8,10 +8,11 @@ import sys
 from pathlib import Path
 
 import dash
-from dash import html
+import plotly.graph_objects as go
+from dash import Input, Output, callback, html
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from componentes import bloque, cifra, hecho, mensaje, metodo, pagina, portada  # noqa: E402
+from componentes import AZUL, PIZARRA, bloque, cifra, coma, estilo, grafico, hecho, lamina, leer, mensaje, metodo, pagina, portada  # noqa: E402
 
 dash.register_page(__name__, path="/modelos", name="Elección de modelos", title="Cómo se eligieron los modelos - HUN", order=36)
 
@@ -49,6 +50,8 @@ VALIDACION = [
     ("Ene a abr 2026", "Prueba", "Meses que el modelo nunca vio. Solo se reportan: no se usaron para decidir nada."),
     ("Regla simple", "Referencia", "Cada modelo se compara con la opción más sencilla; si no la supera, no se usa."),
 ]
+HORIZONTES = {"1-7": "1–7 días", "8-30": "8–30 días", "31-91": "1–3 meses", "92-182": "3–6 meses", "183-365": "6–12 meses"}
+SERIES = [("llegadas_con_atencion", "Llegadas con atención", AZUL), ("ingresos_a_cama", "Ingresos a cama", PIZARRA)]
 
 
 def _parte(titulo, texto):
@@ -70,6 +73,11 @@ def layout():
                  cifra("87 %", "de los días congestionados se detecta a mediodía")]),
         bloque("Una pregunta, un modelo", "Qué se eligió, por qué y qué alternativas se descartaron"),
         html.Div(className="hechos hechos--2", children=[_tarjeta(i, *m) for i, m in enumerate(MODELOS, 1)]),
+        lamina(1, "El pronóstico falla cerca de 8 % a una semana y 10 % a un año",
+               "Error diario del pronóstico según qué tan lejos se mira, para las dos series. **Los ingresos a cama son más "
+               "difíciles**: son unos 20 por día y el azar pesa más, así que su error no puede bajar mucho de 18 %.",
+               grafico("mod-error", alto=320), dato=("8 %", "de error en las llegadas a una semana"))
+        if leer("estacionalidad_error.csv") is not None else None,
         bloque("Cómo se validó cada uno", "Siempre con el pasado para entrenar y con meses posteriores para comprobar"),
         html.Div(className="hechos", children=[hecho(*v) for v in VALIDACION]),
         mensaje("Todos los modelos se probaron **entrenando con el pasado y evaluando en meses que no habían visto**, siempre contra una "
@@ -81,3 +89,18 @@ def layout():
             "cortes del sistema, y casi todos describen **asociaciones**, no causas.",
             "Fuente: docs/documento_final.md, sección 6 · src/modelo_pronostico.py · src/alertas.py · docs/estimador_tiempos.md · "
             "docs/modelo_camas.md."))
+
+
+@callback(Output("mod-error", "figure"), Input("theme-store", "data"))
+def error(tema):
+    e = leer("estacionalidad_error.csv")
+    fig = go.Figure()
+    if e is not None:
+        for clave, nombre, color in SERIES:
+            d = e[e.objetivo == clave].sort_values("orden")
+            fig.add_trace(go.Bar(x=[HORIZONTES.get(t, t) for t in d.tramo_dias], y=d.wape_con, name=nombre, marker_color=color,
+                                 text=[f"{coma(v, 0)} %" for v in d.wape_con], textposition="outside", cliponaxis=False,
+                                 hovertemplate=nombre + ", %{x}: %{y:.1f} % de error<extra></extra>"))
+    estilo(fig, tema, leyenda=True).update_yaxes(ticksuffix=" %", range=[0, 24])
+    fig.update_layout(barmode="group", bargap=0.34, bargroupgap=0.06)
+    return fig

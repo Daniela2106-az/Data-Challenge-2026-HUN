@@ -14,8 +14,8 @@ from dash import Input, Output, callback, html
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import tema_graficos as tg  # noqa: E402
-from componentes import (AZUL, TENUE, aviso_datos, cifra, coma, dato, eje_fechas, estilo, etiqueta_final, fecha_es, filtro, grafico, lamina,  # noqa: E402
-                         leer, mensaje, metodo, pagina, por_mes, portada)
+from componentes import (AZUL, PIZARRA, TENUE, aviso_datos, cifra, coma, dato, eje_fechas, estilo, etiqueta_final, fecha_es, filtro, grafico,  # noqa: E402
+                         horas_eje, lamina, leer, mensaje, metodo, pagina, por_mes, portada)
 
 dash.register_page(__name__, path="/demanda", name="Demanda", title="Demanda - HUN", order=21)
 
@@ -55,6 +55,10 @@ def layout():
                "Un festivo se parece a un domingo: llegan menos pacientes y se hospitalizan menos. El pronóstico ya lo tiene en "
                "cuenta, junto con la Semana Santa y el Carnaval.",
                grafico("dem-festivo", alto=300), id_dato="dem-dato-festivo", invertida=True),
+        lamina(5, "El fin de semana llega la misma curva del día, con menos gente",
+               "Llegadas promedio en cada hora, entre semana y en fin de semana. **La forma es la misma: sube desde las 6, tiene su "
+               "pico a media mañana y cae en la noche.** Esta gráfica cuenta todas las llegadas.",
+               grafico("dem-horas", alto=320), id_dato="dem-dato-horas"),
         mensaje("La presión sobre las camas **no viene de más pacientes**. Hay que mirar cuánto se quedan y cómo se liberan las "
                 "camas: es lo que muestran las páginas siguientes."),
         metodo(
@@ -68,7 +72,8 @@ def layout():
 @callback(Output("dem-cifras", "children"), Output("dem-calor", "figure"), Output("dem-titular", "children"), Output("dem-dato", "children"),
           Output("dem-mes", "figure"), Output("dem-titular-semana", "children"), Output("dem-semana", "figure"),
           Output("dem-dato-semana", "children"), Output("dem-titular-festivo", "children"), Output("dem-festivo", "figure"),
-          Output("dem-dato-festivo", "children"), Input("dem-serie", "value"), Input("theme-store", "data"))
+          Output("dem-dato-festivo", "children"), Output("dem-horas", "figure"), Output("dem-dato-horas", "children"),
+          Input("dem-serie", "value"), Input("theme-store", "data"))
 def actualizar(col, tema):
     p, cal = _panel(), leer("llegadas_calor.csv", index_col=0)
     lab = ETIQUETA[col]
@@ -113,4 +118,15 @@ def actualizar(col, tema):
     festivo.update_layout(bargap=0.6)
     t_festivo = f"En festivo hay {coma(abs(100 * (f[True] / f[False] - 1)), 0)} % menos {lab}"
     d_festivo = dato(str(int(p.festivo.astype(bool).sum())), "festivos en el periodo analizado")
-    return cifras, calor, titular, cambio, mes, t_semana, semana, d_semana, t_festivo, festivo, d_festivo
+
+    entre, fin = cal.iloc[:5].mean(), cal.iloc[5:].mean()
+    horas = go.Figure()
+    horas.add_trace(go.Scatter(x=list(range(24)), y=entre.values, name="Entre semana", mode="lines", line=dict(color=AZUL, width=2),
+                               hovertemplate="%{x}:00 · %{y:.1f} llegadas por hora entre semana<extra></extra>"))
+    horas.add_trace(go.Scatter(x=list(range(24)), y=fin.values, name="Fin de semana", mode="lines", line=dict(color=PIZARRA, width=2),
+                               hovertemplate="%{x}:00 · %{y:.1f} llegadas por hora en fin de semana<extra></extra>"))
+    estilo(horas, tema, leyenda=True).update_yaxes(rangemode="tozero")
+    horas_eje(horas)
+    pico = int(entre.values.argmax())
+    d_horas = dato(f"{pico}:00", f"la hora con más llegadas entre semana: {coma(entre.values.max(), 0)} por hora")
+    return cifras, calor, titular, cambio, mes, t_semana, semana, d_semana, t_festivo, festivo, d_festivo, horas, d_horas

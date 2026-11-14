@@ -15,12 +15,15 @@ import plotly.graph_objects as go
 from dash import Input, Output, callback, html
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+import tema_graficos as tg  # noqa: E402
 from componentes import (AZUL, PIZARRA, TENUE, aviso_datos, bloque, cifra, coma, dato, eje_fechas, estilo, etiqueta_final, fecha_es, filtro,  # noqa: E402
                          grafico, hecho, lamina, leer, mensaje, metodo, miles, pagina, portada)
 
 dash.register_page(__name__, path="/espera", name="Espera de cama", title="Espera de cama - HUN", order=23)
 
 TITULO = "La mitad de los pacientes espera más de 18 horas por una cama, y los peores casos empeoran"
+EDADES = ["Niños (< 15)", "Adultos (15–59)", "Mayores (60+)"]
+TIPOS = ["Urgencias", "Ambulatorio", "Treatment urgency"]
 ULTIMO_MES = "2026-03"                                      # ultimo mes completo del periodo confiable (abril llega solo hasta el dia 9)
 # Donde se va el tiempo (CLAUDE.md 6b, 4.11 y 4.12): cifras ya publicadas
 TIEMPO = [
@@ -51,6 +54,10 @@ def layout():
                "La mediana se mantiene entre 17 y 20 horas. El **percentil 90**, el paciente que espera más que 9 de cada 10, sube año "
                "tras año. Esta gráfica muestra a todos los pacientes: no cambia con los filtros.",
                grafico("esp-mes", alto=340), dato=("+20 h", "en la espera de los peores casos, de 2023 a 2026"), invertida=True),
+        lamina(3, html.Span(id="esp-titular-quien"),
+               "Espera mediana de cada grupo de edad según el tipo de visita por el que entró: entre más oscuro, más espera. "
+               "**Cambia con el año de arriba**, no con los otros dos filtros. Los grupos con menos de 30 casos quedan en blanco.",
+               grafico("esp-matriz", alto=300), id_dato="esp-dato-quien"),
         bloque("Dónde se va el tiempo", "Cuatro cifras que explican por qué la espera es el cuello de botella"),
         html.Div(className="hechos", children=[hecho(*t) for t in TIEMPO]),
         mensaje("El problema no es la espera típica sino **las esperas de varios días**: el 83 % de las horas de espera viene de "
@@ -66,15 +73,17 @@ def layout():
 
 
 @callback(Output("esp-cifras", "children"), Output("esp-hist", "figure"), Output("esp-titular", "children"), Output("esp-dato", "children"),
-          Output("esp-mes", "figure"),
+          Output("esp-mes", "figure"), Output("esp-titular-quien", "children"), Output("esp-matriz", "figure"),
+          Output("esp-dato-quien", "children"),
           Input("esp-anio", "value"), Input("esp-tipo", "value"), Input("esp-grupo", "value"), Input("theme-store", "data"))
 def actualizar(anio, tipo, grupo, tema):
     c, m = leer("espera_cubo.csv", dtype={"anio": str}), leer("espera_por_mes.csv")
     f = c[(c.anio == anio) & (c.tipo_visita == tipo) & (c.grupo_edad == grupo)].iloc[0]
     mes = figura_mes(m, tema)
+    quien = figura_quien(c, anio, tema)
     if f.n < 30 or pd.isna(f.mediana):
         aviso = cifra("—", f"Con esos filtros solo hay {int(f.n)} estancias: son menos de 30 y no se muestran")
-        return [aviso], estilo(go.Figure(), tema), "No hay datos suficientes para esta combinación", [], mes
+        return [aviso], estilo(go.Figure(), tema), "No hay datos suficientes para esta combinación", [], mes, *quien
     cifras = [cifra(f"{coma(f.mediana)} h", f"de espera mediana ({miles(f.n)} estancias)"),
               cifra(f"{coma(f.p90, 0)} h", "o más espera 1 de cada 10 pacientes"),
               cifra(f"{coma(f.pct_24, 0)} %", "espera más de un día")]
@@ -83,7 +92,28 @@ def actualizar(anio, tipo, grupo, tema):
                             textposition="outside", cliponaxis=False, hovertemplate="%{x}: %{y:.1f} % de las estancias<extra></extra>"))
     estilo(hist, tema).update_yaxes(ticksuffix=" %", rangemode="tozero", range=[0, max(v) * 1.18])
     titular = f"El {coma(f.pct_24, 0)} % espera más de un día por una cama"
-    return cifras, hist, titular, dato(f"{coma(f.pct_48, 0)} %", "espera más de dos días"), mes
+    return cifras, hist, titular, dato(f"{coma(f.pct_48, 0)} %", "espera más de dos días"), mes, *quien
+
+
+def figura_quien(c, anio, tema):
+    """Espera mediana por grupo de edad y tipo de visita, del año elegido: titular, figura y dato."""
+    m = c[(c.anio == anio) & (c.tipo_visita != "Todos") & (c.grupo_edad != "Todos") & (c.n >= 30)]
+    m = m.pivot_table(index="grupo_edad", columns="tipo_visita", values="mediana").reindex(index=EDADES, columns=TIPOS)
+    escala = [[0, "#1d2b38"], [1, "#58c0ec"]] if tg.es_oscuro(tema) else [[0, "#eaf3fb"], [1, "#0a4f8f"]]
+    fig = go.Figure(go.Heatmap(z=m.values, x=TIPOS, y=EDADES, colorscale=escala, xgap=5, ygap=5, showscale=False,
+                               text=[[f"{coma(v, 0)} h" if pd.notna(v) else "" for v in fila] for fila in m.values],
+                               texttemplate="%{text}", textfont=dict(size=16),
+                               hovertemplate="%{y}, %{x}: espera mediana de %{z:.1f} h<extra></extra>"))
+    estilo(fig, tema)
+    fig.update_layout(margin=dict(l=110, r=10, t=10, b=36))
+    fig.update_yaxes(autorange="reversed", showgrid=False)
+    fig.update_xaxes(showline=False)
+    plano = m.stack()
+    if plano.empty:
+        return "No hay grupos con suficientes casos en este año", fig, []
+    (e1, t1), (e2, t2) = plano.idxmax(), plano.idxmin()
+    titular = f"Quienes más esperan: {e1.lower()} que entran por {t1.lower()}, {coma(plano.max(), 0)} h"
+    return titular, fig, dato(f"{coma(plano.min(), 0)} h", f"esperan {e2.lower()} por {t2.lower()}, el grupo que menos")
 
 
 def figura_mes(m, tema):
