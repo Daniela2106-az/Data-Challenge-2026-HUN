@@ -1,5 +1,5 @@
 """
-simulador_integral.py  -  version 1 (14-nov-2026)
+simulador_integral.py  -  version 2 (15-nov-2026: entrenamiento con estacionalidad y casos)
 Simulador integral del hospital (Fase 1 del plan de Samuel): UN SOLO motor de agentes que sigue a cada paciente
 sintetico por toda su historia (llegada -> espera de cama -> cama -> estancia -> alta) y emite las vistas
 sincronizadas que antes daban tres herramientas separadas: la demanda (pronostico), la cola de espera de cama
@@ -270,8 +270,144 @@ def _una_repeticion(lam_lleg, p_eff, rng, ajuste_estancia, ajuste_espera, n0_cam
             "total": censo_total, "ninos": censo_ninos, "adultos": censo_adultos}
 
 
+
+# ----------------------------------------------------------------------
+# MODELOS DE LA FICHA A9 Y CASOS (15-nov-2026)
+# ----------------------------------------------------------------------
+# MODELOS: por defecto el pronostico usa solo el calendario (dia de la semana, festivos, Semana Santa, Carnaval). El usuario puede marcar,
+# uno por uno, los modelos de la ficha A9 (formas del año tomadas de climatologias publicas). Cada modelo entra SOLO en la serie donde A9
+# lo probo: dengue y lluvia en las llegadas; curva del año, IRA y EDA en los ingresos a cama. La forma del año pone el RITMO del año.
+# CASOS: solo para los modelos marcados (la curva del año no tiene caso). El usuario elige un nivel de la escala de ese caso (muy bajo,
+# bajo, normal, alto, muy alto, grave, record: lo que de verdad paso en 2023-2025, ESCALA_CASOS), y el caso multiplica el pronostico de las
+# llegadas y de los ingresos a cama por el efecto PROPIO medido en las semanas reales de 2023 a 2025 (src/medir_casos.py ->
+# casos_efecto.csv): una elasticidad b por caso y serie, efecto = (1 + X/100)^b. Al medirse contra lo normal de cada semana y descontando
+# la forma del año, el efecto vale igual en cualquier mes (un brote de dengue en julio cuenta como brote) y no repite la temporada del
+# modelo marcado. Los cuatro casos se midieron juntos, asi que combinarlos multiplicando no repite efectos. El caso dura todo el horizonte.
+# Es una asociacion. Los datos externos llegan a 2025.
+MODELOS_A9 = {
+    "dengue": ("Dengue", "llegadas", "Forma del año del dengue en Barranquilla (2007–2022), en las llegadas."),
+    "lluvia": ("Lluvia", "llegadas", "Forma del año de la lluvia (NASA POWER, 2005–2025), en las llegadas. A9 la probó y la descartó."),
+    "curva": ("Curva suave del año", "ingresos", "Una curva que solo sigue el día del año, en los ingresos a cama."),
+    "ira": ("Infecciones respiratorias", "ingresos", "Forma del año de las consultas por IRA (SIVIGILA, 2016–2019), en los ingresos a cama."),
+    "eda": ("Diarreas", "ingresos", "Forma del año de los casos de EDA (SIVIGILA, 2016–2019), en los ingresos a cama."),
+}
+CASOS = {"dengue": "Dengue", "lluvia": "Lluvias", "ira": "Infecciones respiratorias", "eda": "Diarreas"}
+DASHBOARD_TABLAS = Path(__import__("os").environ.get("HUN_PROCESADOS", PROC)) / "dashboard"
+# Elasticidades de la ultima corrida de src/medir_casos.py (15-nov-2026), por si casos_efecto.csv no esta en este equipo.
+_EFECTO_RESPALDO = {}
+_ERROR_RESPALDO = {("llegadas", "ninguno"): (7.83, 6.90), ("llegadas", "dengue"): (7.28, 7.05), ("llegadas", "lluvia"): (7.57, 6.79),
+                   ("ingresos", "ninguno"): (16.73, 20.07), ("ingresos", "curva"): (16.75, 19.84), ("ingresos", "ira"): (16.63, 19.98),
+                   ("ingresos", "eda"): (16.95, 19.95)}
+
+
+def _leer_efectos():
+    try:
+        t = pd.read_csv(DASHBOARD_TABLAS / "casos_efecto.csv")
+        return {(r.caso, r.serie): float(r.elasticidad) for r in t.itertuples()}
+    except (OSError, KeyError, ValueError, AttributeError):
+        return _EFECTO_RESPALDO
+
+
+def _leer_errores():
+    try:
+        t = pd.read_csv(DASHBOARD_TABLAS / "modelos_error.csv")
+        return {(r.serie, r.modelo): (float(r.wape_validacion), float(r.wape_prueba)) for r in t.itertuples()}
+    except (OSError, KeyError, ValueError, AttributeError):
+        return _ERROR_RESPALDO
+
+
+# Escala de niveles de cada caso (src/medir_casos.py -> casos_escala.csv): cuanto estuvo por encima o por debajo de lo normal en las
+# semanas reales de 2023 a 2025 (percentiles 5, 25, 75, 90, 95 y maximo). Respaldo con la ultima corrida (15-nov-2026).
+_ESCALA_RESPALDO = {
+    "dengue": [("Muy bajo", -47), ("Alto", 216), ("Muy alto", 309), ("Grave", 369), ("Récord", 492)],
+    "ira": [("Alto", 44), ("Muy alto", 63), ("Grave", 78), ("Récord", 113)],
+    "eda": [("Muy bajo", -27), ("Bajo", -6), ("Alto", 24), ("Muy alto", 35), ("Grave", 41), ("Récord", 92)],
+    "lluvia": [("Muy bajo", -79), ("Bajo", -61), ("Alto", 92), ("Muy alto", 195), ("Grave", 479), ("Récord", 1570)],
+}
+
+
+def _leer_escala():
+    try:
+        t = pd.read_csv(DASHBOARD_TABLAS / "casos_escala.csv", encoding="utf-8").sort_values(["caso", "percentil"])
+        return {c: [(r.nivel, int(r.pct_sobre_normal)) for r in g.itertuples()] for c, g in t.groupby("caso")}
+    except (OSError, KeyError, ValueError, AttributeError):
+        return _ESCALA_RESPALDO
+
+
+def niveles_caso(caso):
+    """Niveles del caso en orden, con «Normal» (0 %) en su lugar: [(nombre, % sobre lo normal), ...]."""
+    esc = ESCALA_CASOS.get(caso, [])
+    return [n for n in esc if n[1] < 0] + [("Normal", 0)] + [n for n in esc if n[1] > 0]
+
+
+EFECTO_CASOS = _leer_efectos()      # (caso, serie) -> elasticidad
+ERROR_MODELOS = _leer_errores()     # (serie, modelo) -> (WAPE validacion jul-dic 2025, WAPE prueba ene-9 abr 2026)
+ESCALA_CASOS = _leer_escala()       # caso -> [(nivel, % sobre lo normal)] sin «Normal»
+
+
+def _clima_lluvia():
+    """Climatologia semanal de lluvia (mm/dia por semana ISO 1..53, NASA POWER 2005-2025, suavizada 3 semanas como en A9),
+    estandarizada. None si la tabla de A9 no esta en este equipo (entonces el modelo «lluvia» no se ofrece)."""
+    try:
+        c = pd.read_csv(TABLAS / "estacionalidad_climatologias.csv")
+        v = c.set_index("semana")["lluvia_mm_dia"].reindex(range(1, 54)).ffill().rolling(3, center=True, min_periods=1).mean()
+        return ((v - v.mean()) / v.std()).to_numpy()
+    except (OSError, KeyError, ValueError):
+        return None
+
+
+CLIMA_LLUVIA = _clima_lluvia()
+MODELOS_DISPONIBLES = [k for k in MODELOS_A9 if k != "lluvia" or CLIMA_LLUVIA is not None]
+
+
+def columnas_bases(idx, bases):
+    """Columnas de las bases elegidas para un rango de fechas."""
+    idx = pd.DatetimeIndex(idx)
+    out = pd.DataFrame(index=idx)
+    for b in bases or ():
+        if b == "dengue":
+            out["base_dengue"] = mp.regresor_estacional(idx, mp.CLIMA_DENGUE, mp.REZAGO_DENGUE_SEMANAS).to_numpy()
+        elif b == "ira":
+            out["base_ira"] = mp.regresor_estacional(idx, mp.CLIMA_IRA, 0).to_numpy()
+        elif b == "eda":
+            out["base_eda"] = mp.regresor_estacional(idx, mp.CLIMA_EDA, 0).to_numpy()
+        elif b == "lluvia" and CLIMA_LLUVIA is not None:
+            out["base_lluvia"] = mp.regresor_estacional(idx, CLIMA_LLUVIA, 0).to_numpy()
+        elif b == "curva":
+            g = mp._base_gam(idx.dayofyear)
+            for i in range(g.shape[1]):
+                out[f"base_curva_{i}"] = g[:, i]
+    return out
+
+
+def pronostico_entrenado(serie, corte, dias, escenario="historico", bases=()):
+    """Pronostico de `dias` dias despues de `corte`, entrenado con el calendario mas las `bases` (sin bases, el de siempre)."""
+    corte = pd.Timestamp(corte)
+    if not bases:
+        cal = mp.calendario(pd.date_range(serie.index.min(), corte + pd.Timedelta(days=dias + 2)))
+        return mp.pronosticar_desde(serie, cal, corte, dias, escenario)
+    idx = pd.date_range(serie.index.min(), corte + pd.Timedelta(days=dias + 2))
+    cal = pd.concat([mp.calendario(idx), columnas_bases(idx, bases)], axis=1)
+    return mp.pronosticar_desde(serie, cal, corte, dias, escenario)
+
+
+def efecto_aplicado(caso, serie, cambio_pct):
+    """% de cambio de la demanda de `serie` si el caso esta `cambio_pct` % por encima (o por debajo) de lo normal: (1 + X/100)^b - 1."""
+    if not cambio_pct:
+        return 0.0
+    return 100.0 * ((1 + cambio_pct / 100.0) ** EFECTO_CASOS.get((caso, serie), 0.0) - 1)
+
+
+def factor_casos(casos, serie):
+    """Factor de la demanda de `serie` por los casos ({caso: % sobre lo normal}); los casos se combinan multiplicando."""
+    f = 1.0
+    for caso, cambio in (casos or {}).items():
+        f *= 1 + efecto_aplicado(caso, serie, cambio) / 100.0
+    return f
+
+
 def simular_integral(corte, dias, escenario="historico", ajuste_llegadas=1.0, ajuste_estancia=1.0,
-                     ajuste_espera=1.0, n_rep=N_REP, semilla=SEMILLA):
+                     ajuste_espera=1.0, n_rep=N_REP, semilla=SEMILLA, modelos=None, casos=None):
     """Simula `dias` dias despues de `corte`. Devuelve (fechas, salidas, info) donde salidas es un dict
     {serie: array (n_rep, dias)} con las 7 series de SERIES_SALIDA e info trae kappa y las siembras.
 
@@ -279,13 +415,20 @@ def simular_integral(corte, dias, escenario="historico", ajuste_llegadas=1.0, aj
     mismo horizonte y escenario (opcion B de la conversacion de diseno: los conteos emergen de los agentes,
     no se fuerza una cuota con ranking). ajuste_llegadas escala la demanda completa (llegadas y, via los
     agentes, los ingresos); ajuste_espera solo mueve la cola (la ocupacion no depende de la espera);
-    ajuste_estancia es la palanca de camas de siempre (escenario C)."""
+    ajuste_estancia es la palanca de camas de siempre (escenario C).
+
+    modelos: claves de MODELOS_A9 marcadas (vacia = sin modelo); cada una entra solo en su serie. casos = {caso: % sobre lo normal},
+    solo de los modelos marcados, con el efecto propio medido (EFECTO_CASOS). Sin modelos ni casos, igual que antes."""
     rng = np.random.default_rng(semilla)
     corte = pd.Timestamp(corte)
-    cal = mp.calendario(pd.date_range(serie_llegadas.index.min(), corte + pd.Timedelta(days=dias + 2)))
-    pron_lleg = mp.pronosticar_desde(serie_llegadas, cal, corte, dias, escenario) * ajuste_llegadas
-    cal_i = mp.calendario(pd.date_range(scm.serie_ingresos.index.min(), corte + pd.Timedelta(days=dias + 2)))
-    pron_ing = mp.pronosticar_desde(scm.serie_ingresos, cal_i, corte, dias, escenario) * ajuste_llegadas
+    modelos = [m for m in (modelos or ()) if m in MODELOS_DISPONIBLES]
+    casos = {c: n for c, n in (casos or {}).items() if c in modelos and c in CASOS}      # un caso solo cuenta si su modelo esta marcado
+    bases_l = [m for m in modelos if MODELOS_A9[m][1] == "llegadas"]
+    bases_i = [m for m in modelos if MODELOS_A9[m][1] == "ingresos"]
+    f_lleg = factor_casos(casos, "llegadas")
+    f_ing = factor_casos(casos, "ingresos")
+    pron_lleg = pronostico_entrenado(serie_llegadas, corte, dias, escenario, bases_l) * ajuste_llegadas * f_lleg
+    pron_ing = pronostico_entrenado(scm.serie_ingresos, corte, dias, escenario, bases_i) * ajuste_llegadas * f_ing
     fechas = pron_lleg.index
     lam_lleg = pron_lleg.values
     kappa = float(pron_ing.values.sum() / max(lam_lleg.sum() * P_MEDIA, 1e-9))
@@ -306,7 +449,8 @@ def simular_integral(corte, dias, escenario="historico", ajuste_llegadas=1.0, aj
         for s in SERIES_SALIDA:
             out[s][r] = rep[s]
     info = {"kappa": kappa, "n0_camas": n0, "q0_cola": q0,
-            "ingresos_esperados_dia": float(pron_ing.values.mean()), "llegadas_esperadas_dia": float(lam_lleg.mean())}
+            "ingresos_esperados_dia": float(pron_ing.values.mean()), "llegadas_esperadas_dia": float(lam_lleg.mean()),
+            "modelos": modelos, "casos": casos, "factor_llegadas": f_lleg, "factor_ingresos": f_ing}
     return fechas, out, info
 
 

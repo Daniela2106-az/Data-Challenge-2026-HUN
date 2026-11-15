@@ -12,7 +12,7 @@ REUTILIZA POR COMPLETO src/simulador_integral.py (simular_integral), que a su ve
 proyeccion oficial solo corren al ejecutar el script directamente.
 
 Mismo patron visual que pages/camas.py: panel de sliders a la izquierda, boton "Simular" (los sliders son
-State), dcc.Store intermedio, un callback corre el motor y otro redibuja con el tema. Ids con prefijo "simint-".
+Input: las graficas se actualizan solas al mover cualquier control), dcc.Store intermedio, un callback corre el motor y otro redibuja con el tema. Ids con prefijo "simint-".
 """
 import sys
 from pathlib import Path
@@ -21,7 +21,7 @@ import dash
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
-from dash import Input, Output, State, callback, dcc, html
+from dash import ALL, Input, Output, State, callback, dcc, html
 from plotly.subplots import make_subplots
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "src"))
@@ -48,6 +48,44 @@ INFO_SLIDER = {
               "ver cuánta presión de sala de espera quitaría reducir la espera.",
 }
 
+INFO_SLIDER.update({
+    "entrenamiento": "Marca los modelos de la ficha A9 con que quieres entrenar el pronóstico; puedes marcar uno, varios o ninguno "
+                     "(sin modelo: solo el calendario). Cada uno entra solo en la serie donde A9 lo probó: dengue y lluvia en las "
+                     "llegadas; curva del año, respiratorias y diarreas en los ingresos a cama. Mueve las tres gráficas.",
+    "casos": "Aparece un deslizador por cada modelo marcado (la curva del año no tiene caso). Cada caso tiene su propia escala, "
+             "sacada de lo que de verdad pasó en 2023–2025 frente a lo normal de esa época del año: «alto» es una semana más alta "
+             "que 3 de cada 4, «muy alto» que 9 de cada 10, «grave» que 19 de cada 20 y «récord» la más alta que hubo. Solo "
+             "aparecen los niveles que existieron en ese caso. El efecto es el medido en esas semanas, descontando el calendario, "
+             "la forma del año y los otros casos, así que vale igual en cualquier mes. Es una asociación, no una causa.",
+})
+def texto_efecto(caso):
+    """Escala del caso y cuanto cambian llegadas e ingresos en su nivel mas alto."""
+    niveles = si.niveles_caso(caso)
+    escala = " · ".join(f"{n} {'+' if v > 0 else '−' if v < 0 else ''}{abs(v)} %" for n, v in niveles if n != "Normal")
+    nombre, tope = niveles[-1]
+    ef = lambda serie: f"{'+' if si.efecto_aplicado(caso, serie, tope) >= 0 else '−'}{abs(si.efecto_aplicado(caso, serie, tope)):.1f} %".replace(".", ",")
+    return [html.Div(f"Sobre lo normal: {escala}"),
+            html.Div(f"En «{nombre.lower()}»: llegadas {ef('llegadas')} · ingresos {ef('ingresos')}")]
+
+
+def deslizador_caso(caso):
+    niveles = si.niveles_caso(caso)
+    cero = [n for n, _ in niveles].index("Normal")
+    marcas = {i - cero: n for i, (n, _) in enumerate(niveles)}
+    return html.Div([html.Div(si.CASOS[caso], style={"fontSize": "13px", "fontWeight": 600, "marginBottom": "2px"}),
+                     dcc.Slider(id={"type": "simint-caso", "caso": caso}, min=min(marcas), max=max(marcas), step=1, value=0, marks=marcas),
+                     html.Div(texto_efecto(caso), style={"fontSize": "11px", "color": GRIS, "marginTop": "2px"})])
+
+
+def error_modelo(m):
+    serie = si.MODELOS_A9[m][1]
+    con, sin = si.ERROR_MODELOS.get((serie, m)), si.ERROR_MODELOS.get((serie, "ninguno"))
+    if not con or not sin:
+        return ""
+    f = lambda x: f"{x:.1f} %".replace(".", ",")
+    return f" Error en la prueba (ene–abr 2026): {f(con[1])}, sin modelo {f(sin[1])}; en la validación: {f(con[0])} y {f(sin[0])}."
+
+
 ETAPAS_PIPELINE = [
     ("1. Pronóstico de demanda", "Las llegadas diarias salen de una distribución de Poisson alrededor del "
      "pronóstico validado de llegadas (modelo_pronostico.py, el mismo de la página Pronóstico), entrenado solo "
@@ -67,6 +105,10 @@ ETAPAS_PIPELINE = [
     ("5. El día a día", "cama = llegada + espera; alta = cama + estancia. La ocupación se acumula por día "
      "(misma convención validada de A5) y la cola de espera por HORA (como la cola real observada). Se siembra "
      "el día 0 con el censo real en cama y la cola real del corte."),
+    ("Opcional: modelos y casos", "Se pueden marcar modelos de la ficha A9 (forma del año) para entrenar el pronóstico, cada uno en "
+     "la serie donde A9 lo probó, y para cada modelo marcado decir cuánto está su caso por encima o por debajo de lo normal. El "
+     "caso multiplica las llegadas y los ingresos a cama por su efecto propio medido en 2023–2025 (src/medir_casos.py). Sin nada marcado, el "
+     "motor es el de siempre."),
     ("6. Puerta de validación", "El simulador integrado re-pasó el backtest de ocupación del motor A5 "
      "(ene a 9-abr-2026 entrenado hasta dic-2025) y además reprodujo la cola real y las altas diarias — las "
      "cifras están en la tabla de abajo."),
@@ -242,6 +284,15 @@ def layout():
                     campo_slider("Demanda (llegadas)", "llegadas", dcc.Slider(id="simint-ajuste_llegadas", min=-30, max=30, step=5, value=0)),
                     campo_slider("Estancia en cama", "estancia", dcc.Slider(id="simint-ajuste_estancia", min=-20, max=20, step=5, value=0)),
                     campo_slider("Espera de cama", "espera", dcc.Slider(id="simint-ajuste_espera", min=-30, max=30, step=5, value=0)),
+                    campo_slider("Entrenar el pronóstico con (ficha A9)", "entrenamiento", dcc.Checklist(
+                        id="simint-entrenamiento", value=[], labelStyle={"display": "block", "margin": "3px 0"},
+                        inputStyle={"marginRight": "8px"},
+                        options=[{"label": si.MODELOS_A9[k][0], "value": k} for k in si.MODELOS_DISPONIBLES])),
+                    html.Div(id="simint-entrenamiento-texto", style={"fontSize": "12px", "color": GRIS, "marginTop": "-18px"}),
+                    html.Div(id="simint-casos-bloque", style={"display": "none"}, children=[
+                        campo_slider("Casos de los modelos marcados", "casos", html.Div()),
+                        html.Div(id="simint-casos", style={"display": "flex", "flexDirection": "column", "gap": "14px"}),
+                    ]),
                 ]),
                 html.Div(style={"marginTop": "18px"}, children=[
                     html.Button("Simular", id="simint-simular", n_clicks=0, className="btn-primary", style={"width": "100%"}),
@@ -270,18 +321,35 @@ def layout():
 
 @callback(Output("simint-datos", "data"), Output("simint-nota", "children"),
           Input("simint-simular", "n_clicks"),
-          State("simint-ajuste_llegadas", "value"), State("simint-ajuste_estancia", "value"),
-          State("simint-ajuste_espera", "value"), State("simint-plazo", "value"))
-def correr_simulacion(_, pct_lleg, pct_est, pct_esp, dias):
+          Input("simint-ajuste_llegadas", "value"), Input("simint-ajuste_estancia", "value"),
+          Input("simint-ajuste_espera", "value"), Input("simint-plazo", "value"), Input("simint-entrenamiento", "value"),
+          Input({"type": "simint-caso", "caso": ALL}, "value"), State({"type": "simint-caso", "caso": ALL}, "id"))
+def correr_simulacion(_, pct_lleg, pct_est, pct_esp, dias, modelos, valores_casos, ids_casos):
+    casos, nombres = {}, {}
+    for i, v in zip(ids_casos or [], valores_casos or []):
+        if v and i["caso"] in (modelos or []):
+            niveles = si.niveles_caso(i["caso"])
+            nombre, pct = niveles[[n for n, _ in niveles].index("Normal") + v]
+            casos[i["caso"]], nombres[i["caso"]] = pct, nombre
     fechas, out, info = si.simular_integral(scm.ULTIMO_CONFIABLE, dias,
                                             ajuste_llegadas=1 + pct_lleg / 100, ajuste_estancia=1 + pct_est / 100,
-                                            ajuste_espera=1 + pct_esp / 100, n_rep=N_REP_INTERACTIVO)
+                                            ajuste_espera=1 + pct_esp / 100, n_rep=N_REP_INTERACTIVO,
+                                            modelos=modelos or [], casos=casos)
     data = {"fechas": [str(f.date()) for f in fechas]}
     for s in SERIES:
         for p in (10, 50, 90):
             data[f"{s}_p{p}"] = np.percentile(out[s], p, axis=0).tolist()
     data["medias"] = {s: float(out[s].mean()) for s in SERIES}
     data["pct_sat"] = round(100 * float((out["total"] > scm.CAPACIDAD["total"]).mean()), 1)
+    elegidos = ", ".join(si.MODELOS_A9[m][0].lower() for m in (modelos or [])) or "sin modelo (solo el calendario)"
+    resumen = [html.B("Entrenado con: "), elegidos[0].upper() + elegidos[1:], "."]
+    if casos:
+        detalle = ", ".join(f"{si.CASOS[k].lower()} {nombres[k].lower()} ({'+' if v > 0 else '−'}{abs(v)} % sobre lo normal)"
+                            for k, v in casos.items())
+        cl, ci = 100 * (info["factor_llegadas"] - 1), 100 * (info["factor_ingresos"] - 1)
+        signo = lambda x: f"{'+' if x >= 0 else '−'}{abs(x):.1f} %".replace(".", ",")
+        resumen += [" ", html.B("Casos: "), f"{detalle} → llegadas {signo(cl)}, ingresos a cama {signo(ci)}."]
+    nota_casos = html.Div(resumen, style={"marginBottom": "8px"})
     nota = ""
     if pct_esp < 0:
         nota = html.Div([html.B("Ojo: "), "reducir la espera descarga la cola (sala de urgencias), pero NO libera "
@@ -291,7 +359,20 @@ def correr_simulacion(_, pct_lleg, pct_est, pct_esp, dias):
         nota = html.Div([html.B("R7 (recomendaciones): "), "bajar la estancia 5 % libera ~5 camas (ley de Little y "
                          "simulación A5); la palanca más barata antes de ampliar capacidad."],
                         style={"border": f"1px solid {VERDE}", "borderRadius": "6px", "padding": "6px 10px"})
-    return data, nota
+    return data, html.Div([nota_casos, nota]) if nota else nota_casos
+
+
+@callback(Output("simint-entrenamiento-texto", "children"), Input("simint-entrenamiento", "value"))
+def explicar_entrenamiento(modelos):
+    if not modelos:
+        return "Sin modelo: solo el calendario (día de la semana, festivos, Semana Santa y Carnaval)."
+    return html.Ul([html.Li(si.MODELOS_A9[m][2] + error_modelo(m)) for m in modelos], style={"margin": "0", "paddingLeft": "18px"})
+
+
+@callback(Output("simint-casos", "children"), Output("simint-casos-bloque", "style"), Input("simint-entrenamiento", "value"))
+def armar_casos(modelos):
+    con_caso = [m for m in (modelos or []) if m in si.CASOS]
+    return [deslizador_caso(m) for m in con_caso], ({"display": "block"} if con_caso else {"display": "none"})
 
 
 @callback(Output("simint-grafico", "figure"),
