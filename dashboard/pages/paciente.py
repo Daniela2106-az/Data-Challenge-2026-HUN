@@ -50,6 +50,7 @@ import estimador_tiempos as et  # noqa: E402
 import tema_graficos as tg  # noqa: E402
 from componentes import mensaje, metodo  # noqa: E402
 
+from eleccion_modelos import eleccion_modelo  # noqa: E402
 dash.register_page(__name__, path="/paciente", name="Paciente en espera", title="¿Cuándo recibirá cama? - HUN", order=2)
 
 GRIS, AZUL, NARANJA, VERDE, ROSA = "#6b6b6b", "#2a6fb0", "#eb6834", "#2e9b5b", "#d6336c"
@@ -543,6 +544,7 @@ def layout():
                "«cama» es la asignación administrativa, que puede ser una camilla de apoyo. En las primeras horas, parte de la probabilidad refleja "
                "el trámite de registro, no una predicción.",
                "Fuente: src/estimador_tiempo_restante.py (modelo guardado, versión 9) y las tablas de src/utilidad_estimador.py. Detalle: documentación, sección 6.4, y docs/estimador_tiempos.md.", ruta="/paciente"),
+        eleccion_modelo("/paciente"),
         panel_tecnico(),
     ])
 

@@ -24,6 +24,7 @@ from componentes import (AZUL, PIZARRA, TENUE, aviso_datos, bloque, cifra, coma,
                          interpretacion_de, mensaje, metodo, pagina, portada)
 import catalogo as cat  # noqa: E402
 
+from eleccion_modelos import eleccion_modelo  # noqa: E402
 dash.register_page(__name__, path="/alertas", name="Alertas", title="Alertas - HUN", order=33)
 
 TIPOS = [("A1", "Día congestionado"), ("A2", "Ocupación alta de mañana"), ("A3", "Paciente sin cama"), ("A4", "Aviso temprano con el estimador")]
@@ -98,6 +99,7 @@ def layout(alerta=None, **_):
                 f"hospital recibiría **unas {coma(total, 1)} alertas por día**, casi todas de pacientes que llevan 48 horas sin cama: una lista corta y "
                 "accionable, no una alarma constante."),
         interpretacion_de("/alertas"),
+        eleccion_modelo("/alertas"),
         metodo(
             "Prueba de enero al 9 de abril de 2026 reproduciendo cada día con lo que se sabía en ese momento; los cortes se eligieron con "
             "julio a diciembre de 2025. Día congestionado: llegadas por encima del percentil 90 del mismo día de la semana en las últimas "

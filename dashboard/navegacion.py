@@ -12,17 +12,21 @@ ICONOS = {"/": "ico-home", "/pronostico": "ico-forecast", "/paciente": "ico-pati
           "/perfiles": "ico-profiles", "/recomendaciones": "ico-recs", "/documentacion": "ico-docs", "/datos": "ico-data",
           "/demanda": "ico-demand", "/ocupacion": "ico-occup", "/espera": "ico-wait", "/altas": "ico-clock",
           "/estacionalidad": "ico-season", "/alertas": "ico-alert", "/factores": "ico-factors", "/estancia": "ico-stay",
-          "/diagnosticos": "ico-dx", "/atipicos": "ico-outlier", "/modelos": "ico-models", "/resumen": "ico-summary", "/comparar": "ico-compare"}
+          "/diagnosticos": "ico-dx", "/atipicos": "ico-outlier", "/modelos": "ico-models", "/resumen": "ico-summary", "/comparar": "ico-compare", "/prueba-flujo": "ico-alert", "/periodo": "ico-compare"}
 
 # (titulo de la seccion, que responde, rutas en orden)
 SECCIONES = [
     ("Contexto", "El proyecto en una pantalla, y qué datos hay detrás", ["/resumen", "/datos"]),
     ("Resultados", "Qué pasa hoy en el hospital y dónde se pierde el tiempo",
-     ["/demanda", "/estacionalidad", "/ocupacion", "/espera", "/comparar", "/altas", "/factores", "/estancia", "/diagnosticos", "/perfiles", "/atipicos"]),
+     ["/demanda", "/estacionalidad", "/ocupacion", "/espera", "/comparar", "/periodo", "/altas", "/factores", "/estancia", "/diagnosticos", "/perfiles", "/atipicos"]),
     ("Predicción", "Qué se espera y qué pasaría si algo cambia",
-     ["/pronostico", "/alertas", "/paciente", "/camas", "/modelos"]),
+     ["/pronostico", "/alertas", "/paciente", "/camas", "/prueba-flujo"]),
     ("Propuestas", "Qué hacer con lo que se encontró", ["/recomendaciones", "/documentacion"]),
 ]
+
+
+# Paginas que no van en el menu principal porque viven dentro de la Documentacion (se abren desde su submenu y desde cada componente)
+DENTRO_DE_DOCUMENTACION = {"/modelos": "Elección de modelos"}
 
 
 def agrupar(paginas):
@@ -36,6 +40,7 @@ def agrupar(paginas):
         if presentes:
             grupos.append((titulo, descripcion, presentes))
         usadas.update(rutas)
+    usadas.update(DENTRO_DE_DOCUMENTACION)
     resto = [p for p in paginas if p["path"] not in usadas]
     if resto:
         grupos.append(("Más", "", resto))
@@ -73,6 +78,8 @@ DOCUMENTACION = {
     "/atipicos": (6, "6.3 Días atípicos", "cómo se detectan y qué dicen del problema de la espera"),
     "/paciente": (6, "6.4 Estimador de la espera de cada paciente", "qué usa, cómo se validó y sus límites"),
     "/camas": (6, "6.5 Simulación Monte Carlo de camas", "cómo funciona, su validación, los escenarios y la curva de capacidad"),
+    "/periodo": (6, "6.7 Diagnóstico repetible del cuello de botella", "el reporte de cinco pasos de cualquier periodo, comparado con una referencia"),
+    "/prueba-flujo": (6, "6.2 Alertas", "cómo saltan las alertas y qué recomendación dispara cada una"),
     "/modelos": (6, "«Por qué estos modelos» y 6.8", "la elección de cada modelo y las alternativas evaluadas"),
     "/recomendaciones": (7, "Recomendaciones", "las siete acciones con su evidencia, su firmeza y lo que no recomendamos"),
 }

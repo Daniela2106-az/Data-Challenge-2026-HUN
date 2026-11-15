@@ -66,7 +66,7 @@ def _tarjeta(numero, pregunta, modelo, por_que, descartado):
 
 def layout():
     return pagina(
-        portada("Predicción · Cómo se eligieron los modelos", "Para cada pregunta, el modelo más simple que acertó en datos que no había visto",
+        portada("Documentación · Elección de modelos", "Para cada pregunta, el modelo más simple que acertó en datos que no había visto",
                 "Ningún modelo se eligió por ser sofisticado. Cada uno se comparó con una referencia sencilla y solo se quedó si la superaba "
                 "en meses que nunca vio.",
                 [cifra("6", "preguntas del hospital, cada una con su modelo"), cifra("7,9 %", "de error al pronosticar las llegadas a una semana"),

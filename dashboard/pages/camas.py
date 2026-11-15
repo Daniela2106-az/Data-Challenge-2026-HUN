@@ -57,6 +57,7 @@ import simulacion_camas_montecarlo as scm  # noqa: E402  (import liviano desde e
 import tema_graficos as tg  # noqa: E402
 from componentes import bloque, coma, leer, mensaje, metodo  # noqa: E402
 
+from eleccion_modelos import eleccion_modelo  # noqa: E402
 dash.register_page(__name__, path="/camas", name="Planeación de camas", title="Planeación de camas - HUN", order=3)
 
 GRIS, AZUL, NARANJA, VERDE, ROJO = "#6b6b6b", "#2a6fb0", "#eb6834", "#2e8b57", "#c0392b"
@@ -397,6 +398,7 @@ def layout():
                "No predice la estancia de ningún paciente concreto (R² cerca de 0). Arranca del último censo confiable (9-abr-2026), no del de hoy, porque después el registro "
                "de etapas está incompleto: se simulan los días hasta hoy y se muestra desde mañana, como el pronóstico de demanda. Las camas totales (106) son lo que informó el HUN; el exceso observado puede ser camas de apoyo o camillas.",
                "Fuente: src/simulacion_camas_montecarlo.py. Detalle: documentación, sección 6.5, y docs/modelo_camas.md.", ruta="/camas"),
+        eleccion_modelo("/camas"),
         panel_tecnico(),
     ])
 

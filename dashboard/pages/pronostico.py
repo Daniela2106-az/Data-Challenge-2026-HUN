@@ -40,6 +40,7 @@ import modelo_pronostico as mp  # noqa: E402
 import tema_graficos as tg  # noqa: E402
 from componentes import mensaje, metodo  # noqa: E402
 
+from eleccion_modelos import eleccion_modelo  # noqa: E402
 dash.register_page(__name__, path="/pronostico", name="Pronóstico", title="Pronóstico de demanda - HUN", order=1)
 
 SUPUESTO = "historico"                                      # nivel de los 12 meses del periodo confiable
@@ -312,6 +313,7 @@ def layout():
                "cuántos pacientes quedarán sin atender ni cuánto esperará cada uno (eso está en «Paciente en espera»). Las llegadas incluyen ~4 % de "
                "registros replicados, estables en el tiempo.",
                "Fuente: src/modelo_pronostico.py sobre panel_diario.csv (agregado por día, sin pacientes). Detalle: documentación, sección 6.1, y docs/estacionalidad_anual.md.", ruta="/pronostico"),
+        eleccion_modelo("/pronostico"),
         panel_tecnico(),
     ])
 

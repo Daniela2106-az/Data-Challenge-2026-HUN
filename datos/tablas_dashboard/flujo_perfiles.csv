@@ -1,0 +1,43 @@
+grupo_edad,tipo_visita,sexo,peso
+0-4,Ambulatorio,Hombre,0.00158
+0-4,Ambulatorio,Mujer,0.00043
+0-4,Treatment urgency,Hombre,0.00703
+0-4,Treatment urgency,Mujer,0.00717
+0-4,Urgencias,Hombre,0.03958
+0-4,Urgencias,Mujer,0.03471
+5-14,Ambulatorio,Hombre,0.00359
+5-14,Ambulatorio,Mujer,0.00143
+5-14,Treatment urgency,Hombre,0.01047
+5-14,Treatment urgency,Mujer,0.00846
+5-14,Urgencias,Hombre,0.0446
+5-14,Urgencias,Mujer,0.03456
+15-29,Ambulatorio,Hombre,0.00445
+15-29,Ambulatorio,Mujer,0.00559
+15-29,Treatment urgency,Hombre,0.01233
+15-29,Treatment urgency,Mujer,0.01678
+15-29,Urgencias,Hombre,0.05493
+15-29,Urgencias,Mujer,0.13552
+30-44,Ambulatorio,Hombre,0.00344
+30-44,Ambulatorio,Mujer,0.00559
+30-44,Treatment urgency,Hombre,0.00774
+30-44,Treatment urgency,Mujer,0.01033
+30-44,Urgencias,Hombre,0.04202
+30-44,Urgencias,Mujer,0.08791
+45-59,Ambulatorio,Hombre,0.00115
+45-59,Ambulatorio,Mujer,0.0033
+45-59,Treatment urgency,Hombre,0.01104
+45-59,Treatment urgency,Mujer,0.00918
+45-59,Urgencias,Hombre,0.0489
+45-59,Urgencias,Mujer,0.06339
+60-74,Ambulatorio,Hombre,0.00229
+60-74,Ambulatorio,Mujer,0.00272
+60-74,Treatment urgency,Hombre,0.01162
+60-74,Treatment urgency,Mujer,0.01018
+60-74,Urgencias,Hombre,0.06066
+60-74,Urgencias,Mujer,0.07084
+75+,Ambulatorio,Hombre,0.00057
+75+,Ambulatorio,Mujer,0.00043
+75+,Treatment urgency,Hombre,0.00688
+75+,Treatment urgency,Mujer,0.00975
+75+,Urgencias,Hombre,0.03972
+75+,Urgencias,Mujer,0.06712
