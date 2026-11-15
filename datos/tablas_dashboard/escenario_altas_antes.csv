@@ -1,0 +1,6 @@
+proporcion_movida,altas_movidas_por_dia,horas_cama_liberadas_por_dia,cota_superior_h_paciente_por_dia,estimacion_h_paciente_por_dia,cota_superior_pct_del_exceso,estimacion_pct_del_exceso,estimacion_pct_de_la_espera
+0.1,1.7,11.4,11.4,4.2,2.5,0.9,0.6
+0.2,3.5,22.8,22.8,8.4,5.0,1.9,1.2
+0.3,5.2,34.2,34.2,12.7,7.6,2.8,1.8
+0.5,8.7,57.0,57.0,21.1,12.6,4.7,3.0
+1.0,17.4,114.1,114.1,42.2,25.3,9.4,6.0

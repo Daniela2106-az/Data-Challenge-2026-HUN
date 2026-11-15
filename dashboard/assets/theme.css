@@ -1696,3 +1696,17 @@ button, .btn-primary {
 .doc-paso__titulo { font-weight: 650; color: var(--brand-ink); font-size: 15px; margin-bottom: 3px; }
 .doc-sub .doc-paso__txt { font-size: 14px; line-height: 1.6; }
 .doc-sub .doc-paso__txt p { margin: 0; }
+
+/* ---------- Enlaces entre alertas, recomendaciones y paginas de resultados (14-nov-2026; dashboard/catalogo.py) ---------- */
+.enlaces { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin: 6px 0 0; }
+.enlaces__rotulo { font-size: 11.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-right: 2px; }
+.enlaces__vacio { font-size: 12.5px; color: var(--muted); font-style: italic; }
+.enlace-chip { display: inline-block; font-size: 12.5px; font-weight: 600; padding: 4px 11px; border-radius: var(--r-pill); text-decoration: none;
+               background: rgba(0, 147, 208, .10); color: var(--brand-strong); border: 1px solid rgba(0, 147, 208, .25); transition: background .15s var(--ease); }
+.enlace-chip:hover { background: rgba(0, 147, 208, .20); }
+.enlace-chip--alerta { background: rgba(230, 126, 34, .10); color: #b85c00; border-color: rgba(230, 126, 34, .30); }
+.enlace-chip--alerta:hover { background: rgba(230, 126, 34, .20); }
+:root[data-theme="dark"] .enlace-chip--alerta { color: #f0a45a; }
+.ale-panel { display: grid; gap: 14px; margin: 6px 0 18px; }
+.ale-reco { border: 1px solid var(--line); border-radius: var(--r-md); padding: 12px 16px; background: var(--surface); }
+.ale-reco__titulo { font-weight: 700; color: var(--brand-ink); margin-bottom: 4px; }

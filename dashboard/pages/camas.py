@@ -55,7 +55,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "src"))
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))        # dashboard/ para el tema de graficos
 import simulacion_camas_montecarlo as scm  # noqa: E402  (import liviano desde el 10-nov: ~1-2 s, no corre el backtest)
 import tema_graficos as tg  # noqa: E402
-from componentes import mensaje, metodo  # noqa: E402
+from componentes import bloque, coma, leer, mensaje, metodo  # noqa: E402
 
 dash.register_page(__name__, path="/camas", name="Planeación de camas", title="Planeación de camas - HUN", order=3)
 
@@ -63,6 +63,7 @@ GRIS, AZUL, NARANJA, VERDE, ROJO = "#6b6b6b", "#2a6fb0", "#eb6834", "#2e8b57", "
 RAIZ = Path(__file__).resolve().parent.parent.parent
 TABLAS = Path(os.environ.get("HUN_TABLAS", RAIZ / "resultados" / "tablas"))
 N_REP_INTERACTIVO = 300
+_BASE = {}      # caso base (mediana por grupo) por (plazo, dia de arranque): se calcula una vez y se reutiliza
 GRUPOS = ["total", "ninos", "adultos"]
 NOMBRES_GRUPO = {"total": "Total", "ninos": "Niños (0-4, 5-14)", "adultos": "Adultos (15+)"}
 ICONO_GRUPO = {"total": "ico-group", "ninos": "ico-child", "adultos": "ico-patient"}
@@ -215,6 +216,22 @@ def panel_metricas_animado(medias, cap, pct_sat, dias_sin_cama, total_dias):
                 ]),
             ]),
         ]),
+    ])
+
+
+def panel_altas():
+    """Escenario aparte: adelantar a la mañana una parte de las altas que hoy se dan después del mediodia (tablas de src/simulacion_altas.py)."""
+    return html.Div(className="card", style={"padding": "16px 20px", "margin": "18px 0"}, children=[
+        bloque("Si se adelantan las altas de la tarde", "Un escenario aparte: no cambia la simulación de arriba"),
+        html.P("Hoy el 86 % de las altas se da después del mediodía. Elige qué parte pasaría a darse entre las 9 y las 12 h y mira cuántas camas quedarían libres "
+               "a mediodía y cuánto ayudaría a la espera.", style={"fontSize": "13.5px"}),
+        html.Div(className="camas-slider-group", children=[
+            html.Span("Altas de la tarde que se adelantan", className="camas-slider-group__label"),
+            dcc.Slider(id="camas-altas", min=0, max=100, step=10, value=30, marks={0: "0 %", 30: "30 %", 50: "50 %", 100: "100 %"},
+                       tooltip={"placement": "bottom", "always_visible": True})]),
+        html.Div(id="camas-altas-cifras", className="hechos"),
+        dcc.Graph(id="camas-altas-grafico", config={"displaylogo": False, "displayModeBar": False}, style={"height": "300px"}),
+        html.P(id="camas-altas-nota", style={"fontSize": "12px", "color": GRIS}),
     ])
 
 
@@ -372,12 +389,13 @@ def layout():
                "no causa.", style={"fontSize": "11px", "color": GRIS, "marginTop": "10px"}),
         mensaje("**Es un «qué pasa si», no un pronóstico del censo de hoy.** Sirve para ver cuántos días del próximo semestre podrían quedar por encima de las 106 camas "
                 "y cuánto cambiaría eso con más ingresos, estancias más cortas o una mezcla distinta de pacientes. La mayor presión está en los adultos."),
+        panel_altas(),
         panel_interpretacion(),
         metodo("Para cada día futuro se toman los ingresos pronosticados y estancias reales por perfil (niños y adultos), y se cuenta cuántos pacientes siguen en cama. "
                "Con miles de repeticiones sale la probabilidad de superar las 106 camas. Se validó con un backtest (enero a 9-abr-2026, entrenando solo hasta 2025): la banda "
                "del 80 % cubre ~79 % de los días reales.",
                "No predice la estancia de ningún paciente concreto (R² cerca de 0). Arranca del último censo confiable (9-abr-2026), no del de hoy, porque después el registro "
-               "de etapas está incompleto. Las camas totales (106) son lo que informó el HUN; el exceso observado puede ser camas de apoyo o camillas.",
+               "de etapas está incompleto: se simulan los días hasta hoy y se muestra desde mañana, como el pronóstico de demanda. Las camas totales (106) son lo que informó el HUN; el exceso observado puede ser camas de apoyo o camillas.",
                "Fuente: src/simulacion_camas_montecarlo.py. Detalle: documentación, sección 6.5, y docs/modelo_camas.md.", ruta="/camas"),
         panel_tecnico(),
     ])
@@ -389,16 +407,30 @@ def layout():
           State("camas-intensidad_d", "value"), State("camas-plazo", "value"))
 def correr_simulacion(_, pct_ingresos, pct_estancia, intensidad_d, dias):
     me, mr = (mezcla_escenario_d(intensidad_d / 100) if intensidad_d else (None, None))
-    fechas, censos = scm.simular(scm.serie_ingresos, scm.ULTIMO_CONFIABLE, dias,
+    # El motor arranca del ultimo censo confiable (9-abr-2026) y se simulan tambien los dias hasta hoy; se muestra solo lo que viene,
+    # desde mañana, igual que el pronostico de demanda. Asi "7 dias" son los proximos 7 dias y no el 10 al 16 de abril.
+    manana = pd.Timestamp.today().normalize() + pd.Timedelta(days=1)
+    previos = max((manana - pd.Timestamp(scm.ULTIMO_CONFIABLE)).days - 1, 0)
+    fechas, censos = scm.simular(scm.serie_ingresos, scm.ULTIMO_CONFIABLE, previos + dias,
                                   ajuste_ingresos=1 + pct_ingresos / 100, ajuste_estancia=1 + pct_estancia / 100,
                                   n_rep=N_REP_INTERACTIVO, mezcla_edad=me, mezcla_ruta=mr)
+    desde = np.where(np.asarray(fechas) >= np.datetime64(manana))[0][:dias]
+    fechas, censos = fechas[desde], {g: c[:, desde] for g, c in censos.items()}
     nota = ""
     if pct_estancia < 0:
         nota = html.Div([html.B("R7 (recomendaciones): "),
                           "revisión semanal de pacientes con más de 7 días de estancia, con gestión de casos, foco en "
                           "más de 14 días. Bajar la estancia 5 % libera ~5 camas según la ley de Little; volver a la "
                           "estancia de 2023, ~15."], style={"border": f"1px solid {VERDE}", "borderRadius": "6px", "padding": "6px 10px"})
-    data = {"fechas": [str(f.date()) for f in fechas], **{g: censos[g].tolist() for g in GRUPOS}}
+    cambio = bool(pct_ingresos or pct_estancia or intensidad_d)
+    clave = (int(dias), str(manana.date()))
+    if not cambio:                                           # sin cambios, esta corrida ya es el caso base
+        _BASE[clave] = {g: np.percentile(censos[g], 50, axis=0).tolist() for g in GRUPOS}
+    elif clave not in _BASE:
+        fb, cb = scm.simular(scm.serie_ingresos, scm.ULTIMO_CONFIABLE, previos + dias, n_rep=N_REP_INTERACTIVO)
+        db = np.where(np.asarray(fb) >= np.datetime64(manana))[0][:dias]
+        _BASE[clave] = {g: np.percentile(cb[g][:, db], 50, axis=0).tolist() for g in GRUPOS}
+    data = {"fechas": [str(f.date()) for f in fechas], "base": _BASE[clave], "cambio": cambio, **{g: censos[g].tolist() for g in GRUPOS}}
     return data, nota
 
 
@@ -445,6 +477,10 @@ def mostrar(data, grupo, tema):
         go.Scatter(x=fechas, y=[cap_hun] * len(fechas), mode="lines", line=dict(color=NARANJA, dash="dash"),
                    name=f"Capacidad HUN ({cap_hun})", hoverinfo="skip"),
     ])
+    base = (data.get("base") or {}).get(grupo) if data.get("cambio") else None
+    if base is not None:
+        fig.add_trace(go.Scatter(x=fechas, y=base, mode="lines", line=dict(color=GRIS, width=1.5, dash="dot"), name="Caso base (sin cambios)",
+                                 hovertemplate="%{x|%d-%m-%Y}<br>%{y:.0f} pacientes en cama en el caso base<extra></extra>"))
     fig.update_layout(title=f"Ocupación proyectada — {NOMBRES_GRUPO[grupo]}", yaxis_title="Pacientes en cama",
                       template="simple_white", legend=dict(orientation="h", y=-0.2), margin=dict(l=40, r=20, t=50, b=40))
 
@@ -452,7 +488,46 @@ def mostrar(data, grupo, tema):
     dias_sin_cama = int((p50 > cap_hun).sum())
     medias = {"mejor": float(p10.mean()), "base": float(p50.mean()), "peor": float(p90.mean())}
     metricas = panel_metricas_animado(medias, cap_hun, pct_sat, dias_sin_cama, len(fechas))
+    if base is not None:
+        dif = float(np.mean(p50) - np.mean(base))
+        dias_dif = int((p50 > cap_hun).sum() - (np.array(base) > cap_hun).sum())
+        frase = (f"Frente al caso base: {'+' if dif >= 0 else '−'}{coma(abs(dif), 1)} camas ocupadas en promedio y "
+                 f"{abs(dias_dif)} {'día' if abs(dias_dif) == 1 else 'días'} {'más' if dias_dif >= 0 else 'menos'} sin camas suficientes.")
+        metricas = html.Div([metricas, html.Div(frase, style={"textAlign": "center", "fontWeight": 600, "marginTop": "8px"})])
 
     dark = tg.es_oscuro(tema)
     tg.aplicar(fig, dark)
     return fig, metricas
+
+
+@callback(Output("camas-altas-cifras", "children"), Output("camas-altas-grafico", "figure"), Output("camas-altas-nota", "children"),
+          Input("camas-altas", "value"), State("theme-store", "data"))
+def altas_adelantadas(pct, tema):
+    esc, horas = leer("escenario_altas_antes.csv"), leer("escenario_camas_por_hora.csv")
+    if esc is None or horas is None:
+        return [], go.Figure(), "No se encontraron las tablas del escenario de altas."
+    p = (pct or 0) / 100
+    x = [0.0] + esc.proporcion_movida.tolist()
+    dato = lambda col: float(np.interp(p, x, [0.0] + esc[col].tolist()))            # las camas liberadas crecen en proporcion directa con el porcentaje
+    libres = horas.camas_libres_adicionales * (p / 0.30)                             # la tabla de camas por hora esta calculada con el 30 %
+    libres12 = float(libres[horas.hora == 12].iloc[0])
+    est, cota = dato("estimacion_pct_del_exceso"), dato("cota_superior_pct_del_exceso")
+    cifras = [hecho_altas(coma(dato("altas_movidas_por_dia"), 1), "Altas adelantadas por día", "De las que hoy se dan después del mediodía."),
+              hecho_altas(coma(libres12, 1), "Camas libres más a las 12 h", "Frente a lo que hay hoy a mediodía."),
+              hecho_altas(f"{coma(est, 1)} %", "De la espera por encima de lo normal se evitaría", f"Estimación; como máximo {coma(cota, 1)} %.")]
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=horas.hora, y=horas.ocupacion_base, mode="lines", name="Hoy", line=dict(color=GRIS, width=2, dash="dot"),
+                             hovertemplate="%{x} h: %{y:.0f} camas ocupadas hoy<extra></extra>"))
+    fig.add_trace(go.Scatter(x=horas.hora, y=horas.ocupacion_base - libres, mode="lines", name="Con las altas adelantadas", line=dict(color=AZUL, width=3),
+                             hovertemplate="%{x} h: %{y:.0f} camas ocupadas<extra></extra>"))
+    fig.add_hline(y=106, line_dash="dash", line_color=NARANJA, annotation_text="106 camas informadas por el hospital", annotation_position="top left")
+    fig.update_layout(template="simple_white", legend=dict(orientation="h", y=-0.25), margin=dict(l=40, r=20, t=20, b=40),
+                      xaxis_title="Hora del día", yaxis_title="Camas ocupadas", yaxis_range=[horas.ocupacion_base.min() - 8, 110])
+    tg.aplicar(fig, tg.es_oscuro(tema))
+    nota = ("Es un escenario con supuestos, no una predicción: las altas de los demás pacientes no cambian y cada cama liberada se vuelve a ocupar con parte de los ingresos. "
+            "Adelantar altas ayuda, pero no resuelve las esperas de varios días: el 83 % de las horas de espera viene de pacientes que esperan más de un día.")
+    return cifras, fig, nota
+
+
+def hecho_altas(numero, titulo, texto):
+    return html.Div(className="hecho", children=[html.Div(numero, className="hecho__num"), html.Div(titulo, className="hecho__titulo"), html.P(texto, className="hecho__txt")])

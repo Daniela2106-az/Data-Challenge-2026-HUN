@@ -1,0 +1,16 @@
+ruta_simple,episodios,pct_con_dx
+TU,231774,24.4
+ER,63165,1.4
+TU > HOSP,24270,64.8
+TU > ER > TU,6432,66.2
+TU > ER > TU > HOSP,755,94.3
+TU > ER,465,6.7
+HOSP,436,20.4
+TU > HOSP > ER > TU,85,95.3
+TU > HOSP > ER > TU > HOSP,52,100.0
+TU > ER > TU > HOSP > TU,44,93.2
+TU > ER > TU > HOSP > TU > HOSP,36,100.0
+TU > HOSP > TU > HOSP,29,96.6
+TU > HOSP > TU,24,100.0
+TU > ER > TU > ER > TU,11,81.8
+TU > ER > HOSP,8,12.5

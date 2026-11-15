@@ -38,6 +38,25 @@ TIPOS = ["Urgencias", "Ambulatorio", "Treatment urgency"]
 EDADES = ["Niños (< 15)", "Adultos (15–59)", "Mayores (60+)"]
 
 
+def _carga():
+    """Espera de cama por decil de llegadas en las 6 horas previas (datos/tablas_dashboard/carga_por_decil.csv), o None."""
+    t = leer("carga_por_decil.csv")
+    return None if t is None else t[(t.segmento == "espera_cama") & (t.carga == "llegadas_6h_previas")].sort_values("decil")
+
+
+def _lamina_carga():
+    t = _carga()
+    if t is None or t.empty:
+        return []
+    p1, p10, q1, q10 = t.p50.iloc[0], t.p50.iloc[-1], t.pct_mas_24h.iloc[0], t.pct_mas_24h.iloc[-1]
+    return [lamina(4, "Cuando llegan más pacientes en las horas previas, la espera sube",
+                   f"Los pacientes se ordenan en 10 grupos según cuántos llegaron en las 6 horas previas. La espera mediana pasa de **{coma(p1, 0)} h** "
+                   f"con pocas llegadas a **{coma(p10, 0)} h** con muchas, y los que esperan más de un día pasan de **{coma(q1, 0)} %** a **{coma(q10, 0)} %**. "
+                   "Es una asociación: la carga del momento explica poco de las diferencias entre pacientes.",
+                   grafico("fac-carga", alto=320), dato=(f"{coma(p1, 0)} → {coma(p10, 0)} h", "espera mediana con pocas llegadas frente a muchas"),
+                   invertida=True)]
+
+
 def layout():
     if leer("espera_cubo.csv") is None:
         return aviso_datos(TITULO, ["espera_cubo.csv"])
@@ -60,6 +79,7 @@ def layout():
                "Cuánto cambia la espera por cada característica cuando las demás se mantienen iguales (edad, hora, año y tipo de "
                "visita). **En azul, lo que alarga la espera; en gris, lo que la acorta.**",
                grafico("fac-efectos", alto=300), dato=("+27 %", "esperan las mujeres frente a los hombres, sin causa conocida")),
+        *_lamina_carga(),
         bloque("Lo demás que se probó", "Cuatro resultados que cambian qué vale la pena hacer"),
         html.Div(className="hechos", children=[hecho(*o) for o in OTROS]),
         mensaje("**La espera depende del sistema, no del paciente.** No hay un tipo de paciente al que culpar: lo que decide la espera es "
@@ -75,7 +95,7 @@ def layout():
 
 
 @callback(Output("fac-peso", "figure"), Output("fac-grupos", "figure"), Output("fac-dato", "children"), Output("fac-efectos", "figure"),
-          Input("theme-store", "data"))
+          Output("fac-carga", "figure"), Input("theme-store", "data"))
 def figuras(tema):
     nombres, puntos = [f for f, _ in FACTORES], [p for _, p in FACTORES]
     peso = go.Figure(go.Bar(y=nombres, x=puntos, orientation="h", marker_color=[AZUL] * 3 + [TENUE] * 5,
@@ -108,4 +128,15 @@ def figuras(tema):
     efectos.update_layout(margin=dict(l=10, r=30, t=6, b=6), bargap=0.4)
     efectos.update_yaxes(autorange="reversed", automargin=True, showgrid=False)
     efectos.update_xaxes(showticklabels=False, showline=False, range=[-55, 45], zeroline=True, zerolinewidth=1)
-    return peso, grupos, dato(f"{coma(tipo['Urgencias'], 0)} h", "de espera mediana al entrar por urgencias"), efectos
+    carga = go.Figure()
+    t = _carga()
+    if t is not None and not t.empty:
+        x = [str(d) for d in t.decil]
+        carga.add_trace(go.Bar(x=x, y=t.p50, name="Espera mediana", marker_color=AZUL, text=[f"{coma(v, 0)} h" for v in t.p50], textposition="outside",
+                               cliponaxis=False, hovertemplate="Grupo %{x}: espera mediana de %{y:.1f} h<extra></extra>"))
+        carga.add_trace(go.Bar(x=x, y=t.p90, name="Los que más esperan (1 de cada 10)", marker_color=PIZARRA,
+                               hovertemplate="Grupo %{x}: el 10 % que más espera pasa de %{y:.0f} h<extra></extra>"))
+        estilo(carga, tema, leyenda=True).update_yaxes(ticksuffix=" h", range=[0, t.p90.max() * 1.2])
+        carga.update_layout(barmode="group", bargap=0.3, bargroupgap=0.06)
+        carga.update_xaxes(title_text="Pacientes que llegaron en las 6 horas previas (de menos a más)")
+    return peso, grupos, dato(f"{coma(tipo['Urgencias'], 0)} h", "de espera mediana al entrar por urgencias"), efectos, carga

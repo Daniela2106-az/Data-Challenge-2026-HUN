@@ -35,6 +35,43 @@ TIEMPO = [
 TRAMOS = ["0–6 h", "6–12 h", "12–24 h", "24–48 h", "48–72 h", "72–120 h", "> 120 h"]
 
 
+REFERENCIAS = {"a10": "Espera de los días más tranquilos (10 %)", "a20": "Espera de los días más tranquilos (20 %)",
+               "b10": "Espera del 10 % que menos espera", "b25": "Espera del 25 % que menos espera"}
+
+
+def _exceso():
+    """Exceso de espera de cama por año (datos/tablas_dashboard/exceso_por_anio.csv), o None. 2026 es de enero al 9 de abril."""
+    t = leer("exceso_por_anio.csv")
+    return None if t is None or t.empty else t.sort_values("anio")
+
+
+def _reparto():
+    """Horas de exceso en urgencias antes de la cama y en huecos sin etapa, con cada referencia (datos/tablas_dashboard/ranking_cuellos.csv)."""
+    t = leer("ranking_cuellos.csv")
+    return None if t is None or t.empty else t
+
+
+def _laminas_exceso():
+    e, r = _exceso(), _reparto()
+    out = []
+    if e is not None:
+        a, z = e.exceso_medio_h.iloc[0], e.exceso_medio_h.iloc[-1]
+        out.append(lamina(4, "Cada paciente pierde cada vez más horas por encima de lo normal",
+                          f"El exceso es cuánto espera un paciente por encima de lo que se espera cuando el hospital está tranquilo. Pasó de **{coma(a, 1)} h** en "
+                          f"{int(e.anio.iloc[0])} a **{coma(z, 1)} h** en {int(e.anio.iloc[-1])} (enero a abril), un {coma(100 * (z / a - 1), 0)} % más.",
+                          grafico("esp-exceso", alto=320), dato=(f"+{coma(z - a, 1)} h", "de exceso medio por paciente, de 2023 a 2026"), invertida=True))
+    if r is not None:
+        u = r[r.segmento == "urgencias_antes_cama"].set_index("referencia").exceso_total_h
+        h = r[r.segmento == "hueco_antes_cama"].set_index("referencia").exceso_total_h
+        pct = 100 * u / (u + h)
+        out.append(lamina(5, "Casi todas las horas perdidas son en urgencias, esperando que se asigne la cama",
+                          f"Se compararon cuatro maneras de definir «lo normal». Con todas, entre el **{coma(pct.min(), 0)} %** y el **{coma(pct.max(), 0)} %** de las horas de "
+                          "exceso ocurre en urgencias antes de que se asigne la cama; el tiempo sin ninguna etapa registrada es mínimo. "
+                          "Incluye hasta julio de 2026: desde abril el registro está incompleto y ese tiempo sin etapa pesa algo más de lo real.",
+                          grafico("esp-reparto", alto=300), dato=(f"{coma(pct.mean(), 0)} %", "de las horas perdidas, en urgencias antes de la cama")))
+    return out
+
+
 def layout():
     if leer("espera_cubo.csv") is None or leer("espera_por_mes.csv") is None:
         return aviso_datos(TITULO, ["espera_cubo.csv", "espera_por_mes.csv"])
@@ -58,6 +95,7 @@ def layout():
                "Espera mediana de cada grupo de edad según el tipo de visita por el que entró: entre más intenso el azul, más espera. "
                "**Cambia con el año de arriba**, no con los otros dos filtros. Los grupos con menos de 30 casos quedan en blanco.",
                grafico("esp-matriz", alto=300), id_dato="esp-dato-quien"),
+        *_laminas_exceso(),
         bloque("Dónde se va el tiempo", "Cuatro cifras que explican por qué la espera es el cuello de botella"),
         html.Div(className="hechos", children=[hecho(*t) for t in TIEMPO]),
         mensaje("El problema no es la espera típica sino **las esperas de varios días**: el 83 % de las horas de espera viene de "
@@ -131,3 +169,30 @@ def figura_mes(m, tema):
     for col in ("p90", "mediana"):
         etiqueta_final(fig, fechas.iloc[-1], m[col].iloc[-1], f"{coma(m[col].iloc[-1], 0)} h")
     return fig
+
+
+@callback(Output("esp-exceso", "figure"), Output("esp-reparto", "figure"), Input("theme-store", "data"))
+def figuras_exceso(tema):
+    exc, rep = go.Figure(), go.Figure()
+    e = _exceso()
+    if e is not None:
+        x = [str(int(a)) + (" (ene–abr)" if int(a) == int(e.anio.max()) else "") for a in e.anio]
+        exc.add_trace(go.Bar(x=x, y=e.exceso_medio_h, marker_color=[TENUE] * (len(e) - 1) + [AZUL], text=[f"{coma(v, 1)} h" for v in e.exceso_medio_h],
+                             textposition="outside", cliponaxis=False, hovertemplate="%{x}: %{y:.1f} h de exceso medio por paciente<extra></extra>"))
+        estilo(exc, tema).update_yaxes(ticksuffix=" h", range=[0, e.exceso_medio_h.max() * 1.25])
+        exc.update_layout(bargap=0.45)
+    r = _reparto()
+    if r is not None:
+        u = r[r.segmento == "urgencias_antes_cama"].set_index("referencia").exceso_total_h
+        h = r[r.segmento == "hueco_antes_cama"].set_index("referencia").exceso_total_h
+        pu, ph = 100 * u / (u + h), 100 * h / (u + h)
+        ejes = [REFERENCIAS[k] for k in pu.index]
+        rep.add_trace(go.Bar(y=ejes, x=pu.values, orientation="h", name="En urgencias antes de la cama", marker_color=AZUL,
+                             text=[f"{coma(v, 0)} %" for v in pu.values], textposition="inside",
+                             hovertemplate="%{y}: %{x:.1f} % de las horas perdidas<extra></extra>"))
+        rep.add_trace(go.Bar(y=ejes, x=ph.values, orientation="h", name="Sin ninguna etapa registrada", marker_color=PIZARRA,
+                             hovertemplate="%{y}: %{x:.1f} % de las horas perdidas<extra></extra>"))
+        estilo(rep, tema, leyenda=True).update_xaxes(ticksuffix=" %", range=[0, 100])
+        rep.update_layout(barmode="stack", bargap=0.4, margin_l=10)
+        rep.update_yaxes(autorange="reversed", automargin=True)
+    return exc, rep

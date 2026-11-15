@@ -13,7 +13,7 @@ import plotly.graph_objects as go
 from dash import Input, Output, callback, html
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from componentes import AZUL, PIZARRA, TENUE, cifra, coma, dato, estilo, filtro, grafico, lamina, mensaje, metodo, miles, pagina, portada  # noqa: E402
+from componentes import AZUL, PIZARRA, TENUE, bloque, cifra, coma, dato, estilo, filtro, grafico, lamina, leer, mensaje, metodo, miles, pagina, portada  # noqa: E402
 
 dash.register_page(__name__, path="/diagnosticos", name="Diagnósticos", title="Diagnósticos y tiempos - HUN", order=27)
 
@@ -27,6 +27,27 @@ GRUPOS = [("Musculoesquelético y dolor", 423, 38.9, 108.0, 116.3), ("Renal y ur
 INDICADORES = {"espera": (2, "espera mediana por una cama", False), "p90": (3, "espera de los peores casos (percentil 90)", False),
                "estancia": (4, "estancia mediana en cama", True)}
 LENTOS = {"Musculoesquelético y dolor", "Renal y urinario", "Cáncer y tumores", "Digestivo"}
+
+
+def _tabla_grupos():
+    """Tabla por grupo de diagnostico con el numero de pacientes (datos/tablas_dashboard/tiempos_por_dx.csv) y la cobertura del diagnostico."""
+    t = leer("tiempos_por_dx.csv")
+    if t is None or t.empty:
+        return []
+    t = t.sort_values("espera_mediana_h", ascending=False)
+    cab = html.Thead(html.Tr([html.Th(c) for c in ["Grupo de diagnóstico", "Hospitalizados", "% que se hospitaliza", "Espera mediana", "Estancia mediana"]]))
+    filas = [html.Tr([html.Td(f.categoria_dx + (" *" if f.n_insuficiente else "")), html.Td(miles(f.hospitalizados)), html.Td(f"{coma(f.pct_hospitaliza, 0)} %"),
+                      html.Td(f"{coma(f.espera_mediana_h, 0)} h"), html.Td(f"{coma(f.estancia_mediana_h / 24, 1)} días")]) for f in t.itertuples()]
+    c = leer("cobertura_dx_por_ruta.csv")
+    cob = ""
+    if c is not None and not c.empty:
+        d = c.set_index("ruta_simple").pct_con_dx
+        if {"TU", "TU > HOSP"} <= set(d.index):
+            cob = (f"Solo el {coma(d['TU'], 0)} % de quienes se atienden en urgencias y se van de alta tiene un diagnóstico registrado, frente al {coma(d['TU > HOSP'], 0)} % de quienes se hospitalizan: "
+                   "los grupos reflejan sobre todo a los hospitalizados. ")
+    return [bloque("Cuántos pacientes hay detrás de cada grupo", "Ordenados de más a menos espera; un asterisco marca grupos con pocos casos"),
+            html.Div(className="tech-table-wrap", children=[html.Table(className="tech-table", children=[cab, html.Tbody(filas)])]),
+            html.P(cob + "El agrupamiento de diagnósticos no tiene validación clínica.", style={"fontSize": "12px", "marginTop": "8px"})]
 
 
 def layout():
@@ -47,6 +68,7 @@ def layout():
                "hospitalizado. **Renal y urinario espera mucho pero se queda poco**: su problema es conseguir la cama, no ocuparla.",
                grafico("dx-dispersion", alto=400), dato=("4,8 días", "de estancia mediana en musculoesquelético y en cáncer, los que más se quedan"),
                invertida=True),
+        *_tabla_grupos(),
         mensaje("La cola larga está en **cirugía, urología y ortopedia**: pacientes estables que esperan turno o una cama especializada. "
                 "Vale la pena revisar ese flujo aparte, porque no compite con las urgencias vitales."),
         metodo(

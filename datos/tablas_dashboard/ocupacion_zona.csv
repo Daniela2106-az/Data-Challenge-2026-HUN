@@ -1,0 +1,9 @@
+periodo,zona,capacidad_HUN,media,p95,maximo,pct_media_sobre_capacidad,pct_horas_sobre_capacidad
+2023,ninos (<15),18.0,16.6,24,31,92.1,32.6
+2023,adultos,88.0,77.3,86,91,87.9,0.8
+2024,ninos (<15),18.0,15.0,21,30,83.3,18.6
+2024,adultos,88.0,86.2,97,104,97.9,34.8
+2025,ninos (<15),18.0,15.8,24,29,87.8,29.8
+2025,adultos,88.0,89.2,98,106,101.4,57.5
+2026 (hasta 9-abr),ninos (<15),18.0,17.8,26,33,99.0,39.4
+2026 (hasta 9-abr),adultos,88.0,85.4,95,100,97.1,31.3

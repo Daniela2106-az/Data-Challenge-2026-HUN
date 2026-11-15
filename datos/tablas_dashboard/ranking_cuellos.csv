@@ -1,0 +1,9 @@
+referencia,segmento,n,exceso_total_h,exceso_medio_h
+a10,urgencias_antes_cama,25343,505706.0,20.0
+a10,hueco_antes_cama,25343,23417.0,0.9
+a20,urgencias_antes_cama,25343,502789.5,19.8
+a20,hueco_antes_cama,25343,23417.0,0.9
+b10,urgencias_antes_cama,25343,732438.4,28.9
+b10,hueco_antes_cama,25343,23417.0,0.9
+b25,urgencias_antes_cama,25343,629728.9,24.8
+b25,hueco_antes_cama,25343,23417.0,0.9

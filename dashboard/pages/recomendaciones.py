@@ -16,12 +16,13 @@ from dash import Input, Output, callback, html
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from componentes import bloque as titulo_bloque, cifra, filtro, mensaje, portada  # noqa: E402
-
 dash.register_page(__name__, path="/recomendaciones", name="Recomendaciones", title="Recomendaciones - HUN", order=5)
 
 TABLA = Path(__file__).resolve().parents[2] / "datos" / "tablas_dashboard" / "recomendaciones_tabla.csv"
 try:
     RECS = pd.read_csv(TABLA, encoding="utf-8").sort_values("prioridad")
+    for _c in ("alerta_ids", "paginas_respaldo"):          # columnas de enlace (dashboard/catalogo.py); vacias si la tabla es la version anterior
+        RECS[_c] = RECS[_c].fillna("") if _c in RECS else ""
     DATOS_OK = True
 except (FileNotFoundError, OSError):
     RECS, DATOS_OK = pd.DataFrame(), False

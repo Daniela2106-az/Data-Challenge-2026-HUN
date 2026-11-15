@@ -1,0 +1,11 @@
+segmento,carga,decil,n,carga_media,media_h,p50,p90,pct_mas_24h
+espera_cama,llegadas_6h_previas,1,2549,19.54,25.59,14.43,60.3,32.09
+espera_cama,llegadas_6h_previas,2,2638,33.39,29.28,15.37,65.18,36.66
+espera_cama,llegadas_6h_previas,3,2431,46.78,30.27,17.12,71.85,40.35
+espera_cama,llegadas_6h_previas,4,2657,57.98,30.45,18.52,70.12,41.48
+espera_cama,llegadas_6h_previas,5,2529,68.53,31.17,19.46,74.22,42.74
+espera_cama,llegadas_6h_previas,6,2544,78.91,31.31,19.55,73.67,43.63
+espera_cama,llegadas_6h_previas,7,2457,89.93,33.22,22.36,78.13,48.23
+espera_cama,llegadas_6h_previas,8,2585,101.89,34.21,24.08,78.57,50.17
+espera_cama,llegadas_6h_previas,9,2557,116.06,32.1,22.47,75.44,48.26
+espera_cama,llegadas_6h_previas,10,2422,138.24,35.2,26.32,78.52,54.25

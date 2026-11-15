@@ -13,7 +13,7 @@ import plotly.graph_objects as go
 from dash import Input, Output, callback, html
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from componentes import AZUL, MESES, PIZARRA, TENUE, bloque, cifra, estilo, grafico, hecho, lamina, ficha_de, interpretacion_de, mensaje, metodo, pagina, portada  # noqa: E402
+from componentes import AZUL, MESES, PIZARRA, TENUE, bloque, cifra, coma, estilo, filtro, grafico, hecho, lamina, leer, ficha_de, interpretacion_de, mensaje, metodo, pagina, portada  # noqa: E402
 
 dash.register_page(__name__, path="/atipicos", name="Días atípicos", title="Días atípicos - HUN", order=34)
 
@@ -25,6 +25,7 @@ DIAS = [("2023-07-03", 181, 240, "lunes festivo"), ("2023-12-05", 221, 305, "gru
         ("2025-11-01", 168, 223, "sábado de fin de semana largo"), ("2025-12-25", 212, 161, "Navidad: más de lo esperado"),
         ("2026-02-02", 229, 301, "sin causa aparente"), ("2026-03-28", 88, 221, "un solo ingreso a cama: posible corte del sistema"),
         ("2026-04-29", 173, 268, "inicio del registro incompleto"), ("2026-05-09", 126, 186, "periodo de registro incompleto")]
+VARIABLES = [("llegadas", "Llegadas"), ("ingresos a cama", "Ingresos a cama"), ("espera de cama (mediana del dia)", "Espera de cama")]
 CORTES = {"2024-06-15", "2026-03-28"}
 # (variable, dias con mas de lo esperado, dias con menos de lo esperado)
 RESUMEN = [("Llegadas", 1, 13), ("Ingresos a cama", 3, 6), ("Espera de cama", 0, 7)]
@@ -55,7 +56,7 @@ def _tabla():
 
 def layout():
     return pagina(
-        portada("Predicción · Días atípicos", "Ningún día tuvo una espera más alta de lo esperado: el problema es de todos los días",
+        portada("Resultados · Días atípicos", "Ningún día tuvo una espera más alta de lo esperado: el problema es de todos los días",
                 "En más de tres años, los días raros son casi todos de menos actividad. La espera larga no aparece en días récord, sino "
                 "como algo constante.",
                 [cifra("14", "días atípicos de llegadas entre 2023 y 2026"), cifra("13 de 14", "fueron días con menos llegadas de lo esperado"),
@@ -70,6 +71,10 @@ def layout():
                grafico("ati-resumen", alto=320), dato=("0 días", "con una espera más alta de lo esperado"), invertida=True),
         bloque("Los 14 días, uno por uno", "Llegadas reales frente a las que esperaba el pronóstico; resaltados, los dos posibles cortes del sistema"),
         _tabla(),
+        bloque("Los días atípicos de cada serie", "Elige qué mirar: cuánto se apartó cada día de lo esperado y qué lo explica"),
+        html.Div(className="filtros", children=[filtro("ati-var", "Qué mirar", VARIABLES, "llegadas")]),
+        grafico("ati-var-grafico", alto=340),
+        html.Div(id="ati-var-tabla"),
         bloque("Lo que explica el calendario", "Revisar los días raros sirvió para mejorar el pronóstico"),
         html.Div(className="hechos", children=[hecho(*c) for c in CALENDARIO]),
         mensaje("**El problema de la espera es crónico, no de días malos.** Reaccionar a los picos no lo resuelve: hay que cambiar el "
@@ -111,3 +116,27 @@ def figuras(tema):
     estilo(resumen, tema, leyenda=True).update_yaxes(range=[0, 15.5], title_text="días atípicos")
     resumen.update_layout(barmode="group", bargap=0.36, bargroupgap=0.08, margin_l=60)
     return dias, resumen
+
+
+@callback(Output("ati-var-grafico", "figure"), Output("ati-var-tabla", "children"), Input("ati-var", "value"), Input("theme-store", "data"))
+def por_variable(var, tema):
+    t = leer("dias_atipicos.csv")
+    if t is None:
+        return go.Figure(), html.P("No se encontró dias_atipicos.csv.")
+    t = t[t.variable == var].sort_values("fecha")
+    unidad = " h" if var.startswith("espera") else ""
+    desv = 100 * (t.real / t.esperado - 1)
+    mas = t.sentido.str.startswith("mas")
+    fig = go.Figure(go.Bar(x=[_fecha(f) for f in t.fecha], y=desv, marker_color=[AZUL if m else TENUE for m in mas],
+                           customdata=list(zip(t.real, t.esperado, t.causa_calendario.str.capitalize())),
+                           hovertemplate="<b>%{x}</b><br>Real: %{customdata[0]}" + unidad + "; se esperaba %{customdata[1]}" + unidad + " (%{y:+.0f} %)<br>%{customdata[2]}<extra></extra>"))
+    estilo(fig, tema).update_yaxes(ticksuffix=" %", zeroline=True, zerolinewidth=1)
+    fig.update_xaxes(type="category", tickangle=-45)
+    fig.update_layout(margin_b=78, bargap=0.3)
+    cab = html.Thead(html.Tr([html.Th("Fecha"), html.Th("Real", className="num"), html.Th("Se esperaba", className="num"), html.Th("Diferencia", className="num"),
+                              html.Th("Qué lo explica")]))
+    filas = [html.Tr([html.Td(_fecha(f.fecha)), html.Td(f"{coma(f.real, 0 if f.real >= 20 else 1)}{unidad}", className="num"),
+                      html.Td(f"{coma(f.esperado, 0 if f.esperado >= 20 else 1)}{unidad}", className="num"),
+                      html.Td(f"{'+' if f.real > f.esperado else '−'}{abs(round(100 * (f.real / f.esperado - 1)))} %", className="num"),
+                      html.Td(f.causa_calendario.capitalize())]) for f in t.itertuples()]
+    return fig, html.Div(className="card tabla-wrap", children=html.Table(className="tabla", children=[cab, html.Tbody(filas)]))

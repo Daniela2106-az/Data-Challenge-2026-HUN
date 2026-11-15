@@ -1,0 +1,19 @@
+categoria_dx,episodios,hospitalizados,pct_hospitaliza,espera_mediana_h,estancia_mediana_h,n_insuficiente
+Cardiovascular,5398.0,2470.0,45.76,8.59,83.95,False
+Digestivo,10460.0,2418.0,23.12,29.1,88.9,False
+"Embarazo, parto y ginecologia",9018.0,2175.0,24.12,16.87,46.15,False
+Trauma y lesiones,10205.0,1649.0,16.16,23.82,51.02,False
+Renal y urinario,9408.0,1646.0,17.5,34.85,69.36,False
+Respiratorio,5695.0,1337.0,23.48,8.79,69.96,False
+Infecciosas,3619.0,1106.0,30.56,18.18,98.17,False
+Neurologico,5334.0,704.0,13.2,12.62,90.04,False
+Endocrino y metabolico,1556.0,608.0,39.07,18.54,118.55,False
+Piel y tejidos blandos,2115.0,537.0,25.39,14.32,90.28,False
+Salud mental,4016.0,493.0,12.28,10.28,71.03,False
+Musculoesqueletico y dolor,4824.0,436.0,9.04,38.88,116.31,False
+Dolor y sintomas generales,2912.0,416.0,14.29,6.92,56.09,False
+Cancer y tumores,636.0,267.0,41.98,31.63,114.4,False
+Sangre e inmunologia,828.0,225.0,27.17,22.36,72.9,False
+Recien nacido,185.0,130.0,70.27,2.29,95.76,False
+"Ojo, oido, boca y dientes",1401.0,122.0,8.71,12.61,69.39,False
+Otros / sin clasificar,914.0,77.0,8.42,15.79,49.06,False

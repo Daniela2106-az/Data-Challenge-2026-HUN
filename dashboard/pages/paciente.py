@@ -391,11 +391,11 @@ def panel_tecnico():
                          style={"fontWeight": 600, "marginTop": "14px"}),
                 tabla_html(["Regla", "Alertas/día", "Acierta", "Detecta"], [
                     ["Sin modelo: todos los que llevan 12 h", "11,07", "38,6 %", "100 %"],
-                    ["Probabilidad ≥ 20 %", "9,75", "41,6 %", "95,0 %"],
-                    ["Probabilidad ≥ 30 %", "7,06", "47,9 %", "79,2 %"],
-                    ["Probabilidad ≥ 40 % (recomendada)", "4,13", "54,0 %", "52,3 %"],
-                    ["Probabilidad ≥ 50 %", "1,23", "61,2 %", "17,6 %"],
-                    ["Probabilidad ≥ 60 %", "0,21", "65,0 %", "3,2 %"],
+                    ["Probabilidad ≥ 20 %", "9,53", "42,6 %", "95,0 %"],
+                    ["Probabilidad ≥ 30 %", "6,89", "48,2 %", "77,7 %"],
+                    ["Probabilidad ≥ 40 % (recomendada)", "4,13", "54,8 %", "53,0 %"],
+                    ["Probabilidad ≥ 50 %", "1,45", "58,8 %", "19,9 %"],
+                    ["Probabilidad ≥ 60 %", "0,23", "65,2 %", "3,6 %"],
                     ["Mismas alertas que «24 h», decididas a las 12 h", "8,07", "45,7 %", "86,4 %"],
                     ["Sin modelo: todos los que llevan 24 h (12 h más tarde)", "8,07", "52,9 %", "100 %"],
                 ], resaltar_fila=3),
@@ -410,6 +410,25 @@ def panel_tecnico():
             ]),
         ]),
     ])
+
+
+def _grupos_dx():
+    """Grupos de diagnostico (datos/referencia/mapeo_dx.csv) para el diagnostico de una visita anterior."""
+    try:
+        d = pd.read_csv(Path(__file__).resolve().parents[2] / "datos" / "referencia" / "mapeo_dx.csv", encoding="utf-8")
+        return sorted(d.categoria_dx.dropna().unique())
+    except (FileNotFoundError, OSError):
+        return []
+
+
+GRUPOS_DX = _grupos_dx()
+# bandera -> (valor del laboratorio que se le pasa al estimador, justo mas alla del punto de corte; texto para el usuario)
+LABS_FUERA = {"leucocitos_alt": ("leuc_max", 13.0, "Leucocitos altos (más de 12)"), "leucopenia": ("leuc_min", 3.0, "Leucocitos bajos (menos de 4)"),
+              "anemia": ("hb_min", 9.0, "Hemoglobina baja (menos de 10)"), "creatinina_alta": ("creat_max", 2.0, "Creatinina alta (más de 1,5)"),
+              "bun_alto": ("bun_max", 45.0, "BUN alto (más de 40)"), "lactato_alto": ("lactato_max", 3.0, "Lactato alto (más de 2,2)"),
+              "potasio_alt": ("k_max", 6.0, "Potasio alto (más de 5,5)"), "sodio_bajo": ("na_min", 125.0, "Sodio bajo (menos de 130)"),
+              "sodio_alto": ("na_max", 155.0, "Sodio alto (más de 150)"), "troponina_alta": ("troponina_max", 2.0, "Troponina alta (más de 1,0)"),
+              "pcr_alta": ("pcr_max", 80.0, "PCR alta (más de 50)")}
 
 
 def layout():
@@ -466,6 +485,33 @@ def layout():
                     ]),
                     html.Div(id="pac-etapas-label-var", className="chip-editing-label"),
                     dcc.Store(id="pac-n_cerr", data=0), dcc.Store(id="pac-n_abie", data=1), dcc.Store(id="pac-etapas-sel", data="abie"),
+                ]),
+                html.Details(className="field-group", children=[
+                    html.Summary("Si ya estuvo hospitalizado antes (opcional)", className="field-group__label", style={"cursor": "pointer"}),
+                    html.Div("Su historial ayuda a afinar la estimación. Si nunca estuvo hospitalizado, déjalo en 0.", className="field-group__help"),
+                    html.Span("Veces que estuvo hospitalizado", className="field-group__label"),
+                    dcc.Input(id="pac-prev-n", type="number", min=0, step=1, value=0, style={"width": "100%"}),
+                    html.Span("Horas que esperó cama la última vez", className="field-group__label"),
+                    dcc.Input(id="pac-prev-espera", type="number", min=0, step=1, style={"width": "100%"}),
+                    html.Span("Días que estuvo hospitalizado la última vez", className="field-group__label"),
+                    dcc.Input(id="pac-prev-estancia", type="number", min=0, step=1, style={"width": "100%"}),
+                    html.Span("Hace cuántos días salió", className="field-group__label"),
+                    dcc.Input(id="pac-prev-dias", type="number", min=0, step=1, style={"width": "100%"}),
+                    html.Span("Diagnóstico de esa visita", className="field-group__label"),
+                    dcc.Dropdown(id="pac-dx-previo", options=GRUPOS_DX, placeholder="No se sabe", clearable=True),
+                ]),
+                html.Details(className="field-group", children=[
+                    html.Summary("Laboratorios de las primeras 6 horas (opcional)", className="field-group__label", style={"cursor": "pointer"}),
+                    html.Div("Cuentan desde que el paciente lleva 6 horas esperando. Marca lo que salió fuera de rango.", className="field-group__help"),
+                    dcc.RadioItems(id="pac-labs-si", className="pill-switch pill-switch--compact", value="no",
+                                   options=[{"label": "No le tomaron", "value": "no"}, {"label": "Sí le tomaron", "value": "si"}]),
+                    dcc.Checklist(id="pac-labs", options=[{"label": t, "value": k} for k, (_c, _v, t) in LABS_FUERA.items()], value=[],
+                                  style={"display": "grid", "gap": "4px", "marginTop": "8px", "fontSize": "13px"}),
+                ]),
+                html.Div(className="field-group", children=[
+                    html.Span("Camas ocupadas ahora en su zona (opcional)", className="field-group__label"),
+                    dcc.Input(id="pac-ocup", type="number", min=0, step=1, style={"width": "100%"}),
+                    html.Div("Si no lo sabes, se usa la ocupación típica de los últimos meses.", className="field-group__help"),
                 ]),
                 html.Button("Estimar", id="pac-estimar", n_clicks=0, className="btn-primary", style={"width": "100%", "marginTop": "6px"}),
                 html.Div(id="pac-alerta-perfil"),
@@ -648,11 +694,20 @@ def construir_grafico_acumulada(v, ventana_mas_probable, dark):
           Output("pac-nota", "children"), Output("pac-alerta-perfil", "children"),
           Input("pac-estimar", "n_clicks"),
           State("pac-edad", "value"), State("pac-sexo", "value"), State("pac-tipo", "value"), State("pac-horas", "value"), State("pac-ahora", "value"),
-          State("pac-n_cerr", "data"), State("pac-n_abie", "data"))
-def actualizar(_, edad, sexo, tipo, horas, ahora, n_cerr, n_abie):
+          State("pac-n_cerr", "data"), State("pac-n_abie", "data"),
+          State("pac-prev-n", "value"), State("pac-prev-espera", "value"), State("pac-prev-estancia", "value"), State("pac-prev-dias", "value"),
+          State("pac-dx-previo", "value"), State("pac-labs-si", "value"), State("pac-labs", "value"), State("pac-ocup", "value"))
+def actualizar(_, edad, sexo, tipo, horas, ahora, n_cerr, n_abie, prev_n, prev_espera, prev_estancia, prev_dias, dx_previo, labs_si, labs, ocup):
     try:
         horas = float(horas or 0)
-        r = etr.estimar_tiempo_restante(float(edad), sexo, tipo, horas, ahora,
+        previa = None
+        if prev_n and int(prev_n) > 0 and None not in (prev_espera, prev_estancia, prev_dias):
+            previa = {"espera_h": float(prev_espera), "estancia_h": 24.0 * float(prev_estancia), "dias_desde": float(prev_dias), "n_previas": int(prev_n)}
+        valores_lab = None
+        if labs_si == "si":                                       # con laboratorio y sin nada marcado = todo normal
+            valores_lab = {LABS_FUERA[k][0]: LABS_FUERA[k][1] for k in (labs or []) if k in LABS_FUERA} or {"leuc_max": 8.0}
+        r = etr.estimar_tiempo_restante(float(edad), sexo, tipo, horas, ahora, ocupacion_zona=float(ocup) if ocup else None,
+                                        hospitalizacion_previa=previa, diagnostico_previo=dx_previo or None, laboratorios_6h=valores_lab,
                                         etapas_urgencias=etapas_desde_conteos(n_cerr, n_abie, horas), admisiones=[0.0])
     except Exception as err:                                             # datos mal escritos: mostrar el motivo en vez de romper la pagina
         return None, [], [], f"No se pudo estimar: {err}", []
@@ -666,7 +721,7 @@ def actualizar(_, edad, sexo, tipo, horas, ahora, n_cerr, n_abie):
     perfil = cp.clasificar_perfil(edad, sexo, tipo)
     avisos_html = [html.Li(a) for a in r["avisos"]]
     nota = html.Div([
-        html.P(f"Zona: {'niños' if r['zona'] == 'ninos' else 'adultos'}; camas ocupadas usadas: {r['ocupacion_usada']:.0f} (típico de los últimos meses). "
+        html.P(f"Zona: {'niños' if r['zona'] == 'ninos' else 'adultos'}; camas ocupadas usadas: {r['ocupacion_usada']:.0f} ({'la que indicaste' if ocup else 'típico de los últimos meses'}). "
                "Las etapas en urgencias se aproximan a partir de los conteos.", style={"margin": "0 0 4px 0"}),
         html.Ul(avisos_html, style={"margin": 0, "paddingLeft": "18px"}),
     ])

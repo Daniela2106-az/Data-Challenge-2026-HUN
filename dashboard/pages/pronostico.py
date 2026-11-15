@@ -181,7 +181,10 @@ def panel_contexto():
                       html.Div("Sirve para anticipar la carga de los próximos días o meses y planear personal y "
                                "camas con tiempo. Para decisiones de corto plazo (días) es más preciso; para "
                                "decisiones de largo plazo (meses) hay que mirar todo el rango, no solo la línea "
-                               "central.")]),
+                               "central. Los ingresos a cama de un día suelto son casi ruido de conteo: para planear camas "
+                               "conviene mirar el total de la semana (en la versión anterior del modelo, el error de los ingresos a cama "
+                               "bajaba de ~22 % por día a 9,5 % por semana). "),
+                      dcc.Link("Cómo se eligió este modelo y qué alternativas se descartaron", href="/modelos", className="enlace-chip")]),
             html.Div([html.Div("Qué NO dice", className="metodo__rotulo"),
                       html.Div("No anticipa brotes, cortes del sistema de registro, ni cambios del hospital después "
                                "del 9 de abril de 2026 (el registro de ese momento en adelante está incompleto y no "

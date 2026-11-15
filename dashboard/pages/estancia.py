@@ -9,11 +9,12 @@ import sys
 from pathlib import Path
 
 import dash
+import pandas as pd
 import plotly.graph_objects as go
 from dash import Input, Output, callback, html
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from componentes import AZUL, TENUE, bloque, cifra, coma, estilo, grafico, hecho, lamina, mensaje, metodo, pagina, portada  # noqa: E402
+from componentes import AZUL, PIZARRA, TENUE, bloque, cifra, coma, estilo, grafico, hecho, lamina, leer, mensaje, metodo, pagina, portada  # noqa: E402
 
 dash.register_page(__name__, path="/estancia", name="Estancias largas", title="Estancias largas - HUN", order=26)
 
@@ -32,6 +33,23 @@ COMPARTEN = [
     ("6 veces", "Transfusión de glóbulos rojos", "13 % frente a 2 %. Marca pacientes complejos, no una causa."),
     ("5 a 7 veces", "Cultivos de sangre", "Los hemocultivos tempranos indican sospecha de infección desde el inicio."),
 ]
+
+
+def _mensual():
+    """Estancias largas por mes (datos/tablas_dashboard/disparadas_por_mes.csv), o None. Largas: más de 14 días; muy largas: más de 30."""
+    t = leer("disparadas_por_mes.csv")
+    return None if t is None or t.empty else t.assign(mes=pd.to_datetime(t.mes)).sort_values("mes")
+
+
+def _lamina_mensual():
+    t = _mensual()
+    if t is None:
+        return []
+    ini, fin = t.pct_largas.head(12).mean(), t.pct_largas.tail(12).mean()
+    return [lamina(5, "Las estancias largas se van volviendo más frecuentes mes a mes",
+                   f"De cada 100 pacientes hospitalizados, los que se quedan **más de 14 días** pasaron de **{coma(ini, 1)}** en el primer año a **{coma(fin, 1)}** en los últimos "
+                   "12 meses. Las de más de 30 días son pocas, pero ocupan muchas camas. Es una asociación y las barras mensuales se mueven un poco por azar.",
+                   grafico("lar-mensual", alto=320), dato=(f"{coma(ini, 1)} → {coma(fin, 1)} %", "de los hospitalizados se queda más de 14 días"), invertida=True)]
 
 
 def layout():
@@ -58,6 +76,7 @@ def layout():
                "con menos riesgo**: los partos y los problemas renales casi nunca se alargan.",
                grafico("lar-dx", alto=330), dato=("12,7 %", "de las visitas «treatment urgency» termina en una estancia larga, el doble que el resto"),
                invertida=True),
+        *_lamina_mensual(),
         bloque("Qué comparten las estancias largas", "Procedimientos y exámenes mucho más frecuentes en ellas que en el resto"),
         html.Div(className="hechos", children=[hecho(*c) for c in COMPARTEN]),
         mensaje("**Revisar cada semana las estancias largas es la forma más directa de liberar camas** (recomendación 7): son el 7 % de "
@@ -105,3 +124,15 @@ def figuras(tema):
     dx.update_yaxes(autorange="reversed", automargin=True, showgrid=False)
     dx.update_xaxes(showticklabels=False, showline=False, range=[0, 3.3])
     return camas, anio, edad, dx
+
+
+@callback(Output("lar-mensual", "figure"), Input("theme-store", "data"))
+def figura_mensual(tema):
+    fig, t = go.Figure(), _mensual()
+    if t is not None:
+        fig.add_trace(go.Scatter(x=t.mes, y=t.pct_largas, mode="lines+markers", name="Más de 14 días", line=dict(color=AZUL, width=2.5),
+                                 hovertemplate="%{x|%b %Y}: %{y:.1f} % se queda más de 14 días<extra></extra>"))
+        fig.add_trace(go.Scatter(x=t.mes, y=t.pct_muy_largas, mode="lines+markers", name="Más de 30 días", line=dict(color=PIZARRA, width=2),
+                                 hovertemplate="%{x|%b %Y}: %{y:.1f} % se queda más de 30 días<extra></extra>"))
+        estilo(fig, tema, leyenda=True).update_yaxes(ticksuffix=" %", rangemode="tozero")
+    return fig

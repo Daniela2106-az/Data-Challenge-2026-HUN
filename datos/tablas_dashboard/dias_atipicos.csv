@@ -1,0 +1,28 @@
+fecha,dia_semana,variable,real,esperado,z,sentido,causa_calendario
+2024-03-24,dom,espera de cama (mediana del dia),2.6,16.7,-4.2,menos de lo esperado,semana santa
+2024-09-08,dom,espera de cama (mediana del dia),3.4,17.5,-3.7,menos de lo esperado,sin causa de calendario aparente
+2025-10-19,dom,espera de cama (mediana del dia),83.0,16.0,3.7,mas de lo esperado,sin causa de calendario aparente
+2024-03-29,vie,espera de cama (mediana del dia),3.4,16.7,-3.6,menos de lo esperado,festivo
+2025-03-03,lun,espera de cama (mediana del dia),4.4,21.7,-3.6,menos de lo esperado,sin causa de calendario aparente
+2025-11-30,dom,espera de cama (mediana del dia),3.3,15.5,-3.5,menos de lo esperado,sin causa de calendario aparente
+2023-08-21,lun,espera de cama (mediana del dia),4.1,18.5,-3.4,menos de lo esperado,festivo
+2025-06-08,dom,espera de cama (mediana del dia),5.1,20.6,-3.2,menos de lo esperado,sin causa de calendario aparente
+2024-08-11,dom,espera de cama (mediana del dia),4.4,17.6,-3.1,menos de lo esperado,sin causa de calendario aparente
+2024-09-22,dom,espera de cama (mediana del dia),4.6,18.0,-3.1,menos de lo esperado,sin causa de calendario aparente
+2026-03-28,sab,ingresos a cama,1.0,20.5,-4.6,menos de lo esperado,sin causa de calendario aparente
+2024-09-07,sab,ingresos a cama,41.0,21.6,4.4,mas de lo esperado,sin causa de calendario aparente
+2024-05-20,lun,ingresos a cama,33.0,17.4,4.0,mas de lo esperado,sin causa de calendario aparente
+2024-01-28,dom,ingresos a cama,5.0,18.6,-3.4,menos de lo esperado,sin causa de calendario aparente
+2024-03-31,dom,ingresos a cama,4.0,17.3,-3.4,menos de lo esperado,semana santa
+2026-03-28,sab,llegadas,88.0,220.9,-10.8,menos de lo esperado,sin causa de calendario aparente
+2024-06-15,sab,llegadas,111.0,250.4,-9.6,menos de lo esperado,sin causa de calendario aparente
+2023-12-05,mar,llegadas,221.0,304.9,-3.8,menos de lo esperado,sin causa de calendario aparente
+2025-03-01,sab,llegadas,128.0,173.6,-3.6,menos de lo esperado,sin causa de calendario aparente
+2023-12-06,mie,llegadas,200.0,269.3,-3.5,menos de lo esperado,sin causa de calendario aparente
+2023-07-03,lun,llegadas,181.0,240.3,-3.4,menos de lo esperado,festivo
+2025-11-01,sab,llegadas,168.0,223.1,-3.4,menos de lo esperado,sin causa de calendario aparente
+2023-12-07,jue,llegadas,188.0,247.4,-3.3,menos de lo esperado,vispera o dia despues de un festivo
+2024-02-12,lun,llegadas,192.0,253.7,-3.3,menos de lo esperado,sin causa de calendario aparente
+2026-02-02,lun,llegadas,229.0,300.7,-3.3,menos de lo esperado,sin causa de calendario aparente
+2024-09-22,dom,llegadas,158.0,204.3,-3.1,menos de lo esperado,sin causa de calendario aparente
+2025-12-25,jue,llegadas,212.0,161.4,3.1,mas de lo esperado,festivo

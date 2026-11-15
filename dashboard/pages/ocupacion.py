@@ -36,6 +36,25 @@ def _panel():
     return None if p is None else p[(p.fecha >= "2023-02-01") & (p.fecha < "2026-04-10") & p.ocup_hosp_media.notna()]
 
 
+def _zona():
+    """Ocupacion media frente a las camas del HUN, para adultos y ninos (datos/tablas_dashboard/ocupacion_zona.csv), o None."""
+    t = leer("ocupacion_zona.csv")
+    return None if t is None or t.empty else t
+
+
+def _lamina_zona():
+    t = _zona()
+    if t is None:
+        return []
+    a, n = t[t.zona == "adultos"].set_index("periodo"), t[t.zona == "ninos (<15)"].set_index("periodo")
+    return [lamina(5, f"Los adultos pasaron de {coma(a.pct_media_sobre_capacidad['2023'], 0)} % a {coma(a.pct_media_sobre_capacidad['2025'], 0)} % de sus camas; "
+                      f"los niños se mantienen entre {coma(n.pct_media_sobre_capacidad.min(), 0)} % y {coma(n.pct_media_sobre_capacidad.max(), 0)} %",
+                   "Ocupación media frente a las camas que informó el hospital: 88 para adultos (incluye intermedia, intensiva y TPR) y 18 para niños. **Por encima de "
+                   "100 % hay más pacientes que camas informadas.** Los niños van juntos porque el desglose en camas pediátricas y neonatales no se puede comprobar con la edad.",
+                   grafico("ocu-zona", alto=320), dato=(f"{coma(a.pct_horas_sobre_capacidad['2025'], 0)} %", "de las horas de 2025 los adultos superaron sus 88 camas"),
+                   invertida=True)]
+
+
 def layout():
     p = _panel()
     if p is None:
@@ -65,6 +84,7 @@ def layout():
                "Camas ocupadas en promedio según el día de la semana. Aunque el fin de semana llegan menos pacientes y se dan menos "
                "altas, **la ocupación no baja**: el hospital no tiene un día para ponerse al día.",
                grafico("ocu-semana", alto=300), dato=("100 camas", "ocupadas en promedio cualquier día de la semana"), invertida=True),
+        *_lamina_zona(),
         bloque("Dónde está el exceso", "No todas las camas están igual de llenas"),
         html.Div(className="hechos", children=[hecho(*e) for e in EXCESO]),
         mensaje("**Bajar la estancia libera camas.** Volver a la estancia de 2023 equivale a unas 15 camas; la página de Planeación de "
@@ -116,3 +136,17 @@ def actualizar(vista, tema):
     estilo(semana, tema).update_yaxes(range=[0, 125])
     semana.update_layout(bargap=0.4)
     return camas, flujo, sobre, semana
+
+
+@callback(Output("ocu-zona", "figure"), Input("theme-store", "data"))
+def figura_zona(tema):
+    fig, t = go.Figure(), _zona()
+    if t is not None:
+        for zona, nombre, color in [("adultos", "Adultos (88 camas)", AZUL), ("ninos (<15)", "Niños menores de 15 años (18 camas)", TENUE)]:
+            d = t[t.zona == zona]
+            fig.add_trace(go.Bar(x=d.periodo, y=d.pct_media_sobre_capacidad, name=nombre, marker_color=color, text=[f"{coma(v, 0)} %" for v in d.pct_media_sobre_capacidad],
+                                 textposition="outside", cliponaxis=False, hovertemplate="%{x}: ocupación media de %{y:.0f} % de las camas<extra></extra>"))
+        fig.add_hline(y=100, line_dash="dash", line_color=NARANJA, annotation_text="Camas informadas por el hospital", annotation_position="top left")
+        estilo(fig, tema, leyenda=True).update_yaxes(ticksuffix=" %", range=[0, 118])
+        fig.update_layout(barmode="group", bargap=0.35, bargroupgap=0.08)
+    return fig

@@ -38,6 +38,36 @@ def _panel(anio):
     return p if anio == "Todos" else p[p.fecha.dt.year == int(anio)]
 
 
+DIAS_TIPO = {"dia habil": "Día hábil", "fin de semana": "Fin de semana", "festivo entre semana": "Festivo entre semana"}
+
+
+def _tipos():
+    t = leer("fin_de_semana_por_tipo_de_dia.csv")
+    return None if t is None or t.empty else t.set_index("tipo")
+
+
+def _horas():
+    t = leer("escenario_camas_por_hora.csv")
+    return None if t is None or t.empty else t
+
+
+def _laminas_extra():
+    out, t, h = [], _tipos(), _horas()
+    if t is not None and {"dia habil", "festivo entre semana"} <= set(t.index):
+        hab, fes, fin = t.altas_por_100_camas["dia habil"], t.altas_por_100_camas["festivo entre semana"], t.altas_por_100_camas["fin de semana"]
+        out.append(lamina(4, f"En los festivos se dan {coma(100 * (1 - fes / hab), 0)} % menos altas que en un día hábil",
+                          f"Altas por cada 100 camas: **{coma(hab, 0)}** en un día hábil, **{coma(fin, 0)}** en fin de semana y **{coma(fes, 0)}** en un festivo entre semana. "
+                          "Es probable que las camas que no se liberan esos días lleguen ocupadas al lunes. El efecto estimado en camas es pequeño (1 a 2 camas equivalentes), pero es de bajo costo.",
+                          grafico("alt-tipodia", alto=300), dato=(f"−{coma(100 * (1 - fes / hab), 0)} %", "de altas en festivos frente a un día hábil"), invertida=True))
+    if h is not None:
+        mx, mn = h.loc[h.ocupacion_base.idxmax()], h.loc[h.ocupacion_base.idxmin()]
+        out.append(lamina(5, f"La ocupación baja de {coma(mx.ocupacion_base, 0)} a {coma(mn.ocupacion_base, 0)} camas después de las altas de la tarde",
+                          f"Camas ocupadas en promedio según la hora del día. Llega a su punto más alto a las **{int(mx.hora)} h** y al más bajo a las **{int(mn.hora)} h**. "
+                          "Aun en el momento más vacío quedan unas 95 camas ocupadas, de las 106 que informó el hospital.",
+                          grafico("alt-ocuphora", alto=300), dato=(f"{coma(mx.ocupacion_base - mn.ocupacion_base, 0)} camas", "de diferencia entre la hora más llena y la más vacía")))
+    return out
+
+
 def layout():
     if leer("camas_por_hora.csv") is None or leer("espera_por_hora.csv") is None or leer("panel_diario.csv") is None:
         return aviso_datos(TITULO, ["camas_por_hora.csv", "espera_por_hora.csv", "panel_diario.csv"])
@@ -59,6 +89,7 @@ def layout():
                "Altas promedio por día de la semana; en gris, el fin de semana. **Menos altas el domingo son menos camas libres el "
                "lunes**, que es justo el día en que llegan más pacientes.",
                grafico("alt-semana", alto=320), id_dato="alt-dato-semana"),
+        *_laminas_extra(),
         bloque("Qué pasaría si se adelantan las altas", "Un escenario con supuestos escritos, no una predicción"),
         html.Div(className="hechos", children=[hecho(*e) for e in ESCENARIO]),
         mensaje("**Adelantar altas a la mañana** pone camas libres cuando más se necesitan. Y hay un límite de proceso, no solo de "
@@ -114,3 +145,22 @@ def actualizar(anio, tema):
     return (cifras, camas, dato(f"{coma(olas, 0)} %", "de las camas del día se asigna en esas dos olas"),
             espera, dato(f"{coma(peor.mediana)} h", f"de espera mediana para quien llega a las {int(peor.hora)}:00, la peor hora"),
             f"El domingo se dan {coma(menos, 0)} % menos altas que entre semana", semana, festivo)
+
+
+@callback(Output("alt-tipodia", "figure"), Output("alt-ocuphora", "figure"), Input("theme-store", "data"))
+def figuras_extra(tema):
+    tip, hor, t, h = go.Figure(), go.Figure(), _tipos(), _horas()
+    if t is not None:
+        orden = [k for k in DIAS_TIPO if k in t.index]
+        v = t.altas_por_100_camas.reindex(orden)
+        tip.add_trace(go.Bar(x=[DIAS_TIPO[k] for k in orden], y=v.values, marker_color=[AZUL if k == "dia habil" else TENUE for k in orden],
+                             text=[f"{coma(x, 0)}" for x in v.values], textposition="outside", cliponaxis=False,
+                             hovertemplate="%{x}: %{y:.1f} altas por cada 100 camas<extra></extra>"))
+        estilo(tip, tema).update_yaxes(title_text="Altas por cada 100 camas", range=[0, v.max() * 1.25])
+        tip.update_layout(bargap=0.45)
+    if h is not None:
+        hor.add_trace(go.Scatter(x=h.hora, y=h.ocupacion_base, mode="lines+markers", line=dict(color=AZUL, width=2.5),
+                                 hovertemplate="%{x} h: %{y:.0f} camas ocupadas<extra></extra>"))
+        estilo(hor, tema).update_yaxes(title_text="Camas ocupadas", range=[h.ocupacion_base.min() - 5, h.ocupacion_base.max() + 4])
+        hor.update_xaxes(title_text="Hora del día", dtick=3)
+    return tip, hor

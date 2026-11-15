@@ -18,9 +18,9 @@ ICONOS = {"/": "ico-home", "/pronostico": "ico-forecast", "/paciente": "ico-pati
 SECCIONES = [
     ("Contexto", "El proyecto en una pantalla, y qué datos hay detrás", ["/resumen", "/datos"]),
     ("Resultados", "Qué pasa hoy en el hospital y dónde se pierde el tiempo",
-     ["/demanda", "/estacionalidad", "/ocupacion", "/espera", "/comparar", "/altas", "/factores", "/estancia", "/diagnosticos", "/perfiles"]),
+     ["/demanda", "/estacionalidad", "/ocupacion", "/espera", "/comparar", "/altas", "/factores", "/estancia", "/diagnosticos", "/perfiles", "/atipicos"]),
     ("Predicción", "Qué se espera y qué pasaría si algo cambia",
-     ["/pronostico", "/alertas", "/atipicos", "/paciente", "/camas", "/modelos"]),
+     ["/pronostico", "/alertas", "/paciente", "/camas", "/modelos"]),
     ("Propuestas", "Qué hacer con lo que se encontró", ["/recomendaciones", "/documentacion"]),
 ]
 
