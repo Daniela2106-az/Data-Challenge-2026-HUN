@@ -1,0 +1,17 @@
+categoria_dx,efecto_pct_vs_digestivo,ic95_bajo,ic95_alto,espera_n
+Cardiovascular,-68.0,-70.0,-66.0,2454.0
+Dolor y sintomas generales,-54.0,-59.0,-48.0,401.0
+Neurologico,-54.0,-58.0,-50.0,689.0
+Otros / sin clasificar,-46.0,-54.0,-36.0,73.0
+Salud mental,-46.0,-52.0,-40.0,478.0
+Respiratorio,-38.0,-43.0,-33.0,1312.0
+Endocrino y metabolico,-37.0,-42.0,-30.0,593.0
+"Embarazo, parto y ginecologia",-29.0,-34.0,-24.0,1952.0
+Sangre e inmunologia,-24.0,-34.0,-12.0,223.0
+"Ojo, oido, boca y dientes",-23.0,-37.0,-7.0,120.0
+Infecciosas,-21.0,-27.0,-14.0,1080.0
+Piel y tejidos blandos,-17.0,-25.0,-8.0,524.0
+Trauma y lesiones,-11.0,-17.0,-4.0,1643.0
+Cancer y tumores,-5.0,-17.0,9.0,263.0
+Renal y urinario,17.0,10.0,25.0,1622.0
+Musculoesqueletico y dolor,24.0,11.0,38.0,423.0

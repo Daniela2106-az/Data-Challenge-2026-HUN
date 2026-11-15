@@ -1710,3 +1710,19 @@ button, .btn-primary {
 .ale-panel { display: grid; gap: 14px; margin: 6px 0 18px; }
 .ale-reco { border: 1px solid var(--line); border-radius: var(--r-md); padding: 12px 16px; background: var(--surface); }
 .ale-reco__titulo { font-weight: 700; color: var(--brand-ink); margin-bottom: 4px; }
+
+/* ---------- Deslizadores de Dash 4 (clases dash-slider-*): los de rc-slider de arriba ya no aplican; legibles en claro y oscuro (15-nov-2026) ---------- */
+.page-container .dash-slider-wrapper { padding-bottom: 34px; }                         /* deja sitio a la caja del valor, que queda siempre visible */
+.page-container .dash-slider-track { background: var(--line) !important; }
+.page-container .dash-slider-range { background: var(--brand-strong) !important; }
+.page-container .dash-slider-thumb { background: var(--brand-strong) !important; border: 2px solid var(--surface) !important; box-shadow: 0 0 0 1px var(--brand-strong); }
+.page-container .dash-slider-mark { color: var(--muted) !important; font-size: 11px; }
+.page-container .dash-slider-tooltip { background: var(--surface) !important; color: var(--ink) !important; border: 1px solid var(--line) !important;
+                                       box-shadow: 0 2px 8px rgba(0, 0, 0, .15); font-weight: 600; }
+
+/* ---------- Botones secundarios y pasos de un recorrido (prueba de flujo) ---------- */
+.page-container .btn-secondary { background: transparent; color: var(--brand-strong); border: 1px solid var(--line); }
+.page-container .btn-secondary:hover { background: rgba(0, 147, 208, .10); }
+.flujo-paso { font-size: 12.5px; font-weight: 600; padding: 5px 12px; border-radius: var(--r-pill); border: 1px solid var(--line); color: var(--muted); }
+.flujo-paso--hecho { background: rgba(0, 147, 208, .12); border-color: rgba(0, 147, 208, .30); color: var(--brand-strong); }
+.flujo-paso--actual { background: var(--brand-strong); border-color: var(--brand-strong); color: #fff; }

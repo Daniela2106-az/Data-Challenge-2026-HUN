@@ -1,0 +1,4 @@
+tipo,episodios,llegadas_por_dia,pct_con_atencion,episodios_con_atencion,pct_hospitaliza,pct_hospitaliza_ic_bajo,pct_hospitaliza_ic_alto,estancias,espera_mediana_h,espera_ic_bajo,espera_ic_alto,espera_p90_h,pct_espera_mas_24h,estancia_mediana_h,estancia_ic_bajo,estancia_ic_alto,pct_reingreso_72h,pct_reingreso_72h_ic_bajo,pct_reingreso_72h_ic_alto,pct_con_diagnostico,lectura_hospitaliza,lectura_espera,lectura_estancia,lectura_reingreso
+Ambulatorio,7146,6.14,98.2,7018,15.3,14.4,16.1,1071,11.3,11.1,11.5,27.4,11.2,43.9,43.3,44.6,1.95,1.65,2.3,28.9,GRANDE (más alto),GRANDE (más bajo),GRANDE (más bajo),GRANDE (más bajo)
+Treatment urgency,8772,7.54,100.0,8772,24.6,23.7,25.5,2157,9.8,7.6,11.2,63.3,34.3,111.9,105.8,115.0,9.85,9.24,10.49,49.3,GRANDE (más alto),GRANDE (más bajo),GRANDE (más alto),GRANDE (más alto)
+Urgencias,293460,252.11,80.1,235120,8.5,8.4,8.6,20015,20.8,20.2,21.4,75.4,45.4,69.0,68.3,69.8,7.55,7.44,7.65,72.7,pequeña,pequeña,ruido,ruido

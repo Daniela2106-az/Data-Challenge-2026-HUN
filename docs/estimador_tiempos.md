@@ -178,17 +178,17 @@ Código: `src/utilidad_estimador.py`. La precisión para un paciente tiene un te
 
 **El error está en el mínimo que permite el azar.** Cuántos pacientes reciben cama en unas horas es un conteo pequeño con ruido inevitable, como contar caras al lanzar monedas. El «mínimo posible» es el error que tendría hasta un estimador perfecto (distribución de Poisson), y el estimador lo alcanza. Por eso la referencia histórica, que es la cantidad en espera por la fracción que suele recibir cama a esa hora, queda casi igual. Lo útil es el **rango**: con la distribución de Poisson del estimado, el rango del 80 % acierta el 87–88 % de los días. Una banda que supusiera pacientes independientes acertaba solo el 64–73 %, porque las camas se asignan en tandas. Por semana el error baja a 9–18 %, pero el rango semanal queda algo angosto: acierta el 67–80 % de las semanas en vez del 80 %, porque hay semanas enteras más rápidas o más lentas.
 
-**3. Para actuar antes: ¿quién seguirá sin cama a las 48 h?** A las 12 h de espera, la probabilidad de seguir sin cama a las 48 h (AUC 0,68):
+**3. Para actuar antes: ¿quién seguirá sin cama a las 48 h?** A las 12 h de espera, la probabilidad de seguir sin cama a las 48 h (AUC 0,68; cifras recalculadas el 14-nov con `src/utilidad_estimador.py` y el modelo vigente, entrenado hasta jun-2025 y probado de jul-2025 al 9-abr-2026; la versión del 11-nov daba 55,3 % y 53,5 % en el corte de 40 %):
 
 | Regla | Alertas por día | Acierta | Detecta |
 |---|---|---|---|
 | Sin modelo: todos los que llevan 12 h | 11,1 | 38,6 % | 100 % |
-| Probabilidad ≥ 30 % | 7,0 | 47,9 % | 78,3 % |
-| **Probabilidad ≥ 40 %** | **4,1** | **55,3 %** | 53,5 % |
-| Probabilidad ≥ 50 % | 1,5 | 58,9 % | 20,3 % |
+| Probabilidad ≥ 30 % | 6,9 | 48,2 % | 77,7 % |
+| **Probabilidad ≥ 40 %** | **4,1** | **54,8 %** | 53,0 % |
+| Probabilidad ≥ 50 % | 1,5 | 58,8 % | 19,9 % |
 | Sin modelo: todos los que llevan 24 h (12 h más tarde) | 8,1 | 52,9 % | 100 % |
 
-**Lectura:** con un corte de 40 %, el estimador da 4,1 alertas diarias a las 12 h y acierta algo más que esperar a las 24 h y alertar a todos (55 % frente a 53 %), pero con **12 horas más de margen** y la mitad de alertas. A cambio, detecta solo a la mitad (54 %) de los que terminarán esperando más de 48 h. Complementa la alerta C de `src/alertas.py` (a las 48 h de espera), que avisa más tarde y acierta más.
+**Lectura:** con un corte de 40 %, el estimador da 4,1 alertas diarias a las 12 h y acierta algo más que esperar a las 24 h y alertar a todos (55 % frente a 53 %), pero con **12 horas más de margen** y la mitad de alertas. A cambio, detecta solo a la mitad (53 %) de los que terminarán esperando más de 48 h. Complementa la alerta C de `src/alertas.py` (a las 48 h de espera), que avisa más tarde y acierta más.
 
 **4. En el dashboard.** `dashboard/pages/paciente.py` reúne todo en una página. Se describe al paciente (edad, sexo, tipo de visita, horas de espera y, si se sabe, su hospitalización anterior y sus etapas en urgencias) y muestra:
 - la ventana más probable y el gráfico de ventanas con la acumulada;

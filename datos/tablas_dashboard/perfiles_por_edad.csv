@@ -1,0 +1,8 @@
+grupo_edad,episodios,llegadas_por_dia,pct_con_atencion,episodios_con_atencion,pct_hospitaliza,pct_hospitaliza_ic_bajo,pct_hospitaliza_ic_alto,estancias,espera_mediana_h,espera_ic_bajo,espera_ic_alto,espera_p90_h,pct_espera_mas_24h,estancia_mediana_h,estancia_ic_bajo,estancia_ic_alto,pct_reingreso_72h,pct_reingreso_72h_ic_bajo,pct_reingreso_72h_ic_alto,pct_con_diagnostico,lectura_hospitaliza,lectura_espera,lectura_estancia,lectura_reingreso
+0-4,25716,22.09,91.1,23435,10.1,9.7,10.5,2363,7.8,7.4,8.1,37.3,19.8,67.0,65.2,68.8,6.23,5.92,6.54,65.8,pequeña,GRANDE (más bajo),pequeña,pequeña
+5-14,36252,31.14,89.3,32388,7.1,6.8,7.4,2297,12.3,11.5,13.2,46.1,28.2,52.1,49.8,56.0,6.0,5.75,6.27,53.9,GRANDE (más bajo),GRANDE (más bajo),GRANDE (más bajo),pequeña
+15-29,92182,79.19,76.1,70141,7.9,7.7,8.1,5512,17.2,16.4,17.7,56.7,38.2,58.4,55.3,61.6,9.16,8.95,9.38,60.3,pequeña,pequeña,pequeña,GRANDE (más alto)
+30-44,65338,56.13,74.7,48780,7.6,7.4,7.9,3727,24.4,23.4,25.5,77.6,49.6,68.0,66.6,69.4,7.82,7.58,8.06,64.5,pequeña,GRANDE (más alto),pequeña,pequeña
+45-59,41364,35.54,79.8,32999,9.3,9.0,9.7,3083,27.1,25.6,28.4,81.9,53.4,76.9,72.6,86.2,6.81,6.55,7.09,69.9,ruido,GRANDE (más alto),pequeña,pequeña
+60-74,30825,26.48,87.5,26966,12.9,12.5,13.3,3468,25.0,23.3,26.4,83.6,50.4,92.4,90.6,95.5,6.72,6.43,7.03,80.8,GRANDE (más alto),GRANDE (más alto),GRANDE (más alto),pequeña
+75+,17701,15.21,91.5,16201,17.2,16.7,17.8,2793,27.1,25.6,28.3,86.3,53.2,103.2,96.2,112.3,6.41,6.05,6.8,87.9,GRANDE (más alto),GRANDE (más alto),GRANDE (más alto),pequeña

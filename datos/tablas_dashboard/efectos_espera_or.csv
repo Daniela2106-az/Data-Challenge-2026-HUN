@@ -1,0 +1,14 @@
+variable,razon,ic_bajo,ic_alto,lectura
+Mañana (6-11h) vs. madrugada,1.81,1.59,2.05,
+Grupo de edad 45-59 vs. 15-29,1.8,1.62,2.0,
+Tarde (12-17h) vs. madrugada,1.68,1.43,1.97,
+Grupo de edad 30-44 vs. 15-29,1.6,1.45,1.77,
+Grupo de edad 60-74 vs. 15-29,1.53,1.38,1.7,
+Grupo de edad 75+ vs. 15-29,1.52,1.36,1.7,
+Mujer vs. hombre,1.37,1.28,1.46,coherente con `CLAUDE.md` 4.10 (+27 % en el modelo lineal)
+Llegadas 6 h previas (por 1 desvío),1.25,1.18,1.32,congestión reciente sí pesa
+Noche (18-23h) vs. madrugada,1.2,1.04,1.39,
+Treatment urgency vs. urgencias,0.65,0.57,0.73,coherente con `CLAUDE.md` 6b (−39 %)
+Grupo de edad 5-14 vs. 15-29,0.64,0.56,0.72,
+Grupo de edad 0-4 vs. 15-29,0.4,0.35,0.46,"coherente con `docs/perfiles_pacientes.md` (""los niños esperan mucho menos"")"
+Ambulatorio vs. urgencias,0.16,0.13,0.19,coherente con `CLAUDE.md` 6b (−31 %)

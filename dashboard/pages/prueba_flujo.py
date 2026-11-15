@@ -65,8 +65,9 @@ def layout():
                 [cifra("5", "pasos, de la demanda a las recomendaciones"), cifra("4", "modelos del proyecto encadenados en cada recorrido"),
                  cifra("1", "ajuste de demanda que mueve todas las etapas")]),
         html.Div(style={"display": "flex", "flexWrap": "wrap", "gap": "18px 28px", "alignItems": "flex-start", "margin": "10px 0 14px"}, children=[
-            control("Días a partir de hoy", dcc.Slider(id="fl-dias", min=1, max=30, step=1, value=1, marks={1: "1", 7: "7", 14: "14", 21: "21", 30: "30"},
-                                                        tooltip={"placement": "bottom", "always_visible": True}), html.Div(id="fl-fecha", className="enlaces__vacio")),
+            control("Días a partir de hoy", html.Div(id="fl-fecha", className="enlaces__vacio", style={"marginBottom": "6px"}),
+                    dcc.Slider(id="fl-dias", min=1, max=30, step=1, value=1, marks={1: "1", 7: "7", 14: "14", 21: "21", 30: "30"},
+                               tooltip={"placement": "bottom", "always_visible": True})),
             control("Hora del día", dcc.Slider(id="fl-hora", min=1, max=23, step=1, value=12, marks={1: "1 h", 6: "6 h", 12: "12 h", 18: "18 h", 23: "23 h"},
                                                tooltip={"placement": "bottom", "always_visible": True}), ancho="220px"),
             control("Ajuste de la demanda (%)", dcc.Slider(id="fl-demanda", min=-30, max=30, step=5, value=0, marks={-30: "−30", 0: "0", 30: "+30"},
@@ -93,7 +94,7 @@ def layout():
 
 @callback(Output("fl-fecha", "children"), Input("fl-dias", "value"))
 def etiqueta_fecha(dias):
-    return "Fecha del recorrido: " + _fecha_txt(_hoy() + pd.Timedelta(days=int(dias or 1)))
+    return _fecha_txt(_hoy() + pd.Timedelta(days=int(dias or 1))).capitalize()
 
 
 # ---------------------------------------------------------------- los modelos, uno por etapa
@@ -224,7 +225,7 @@ def _prueba(alerta_id):
 def mostrar(paso, d):
     paso = paso or 0
     progreso = html.Div(style={"display": "flex", "flexWrap": "wrap", "gap": "8px", "margin": "0 0 16px"}, children=[
-        html.Span(f"{i}. {t}", className="enlace-chip" if paso >= i else "enlaces__vacio") for i, t in enumerate(PASOS, start=1)])
+        html.Span(f"{i}. {t}", className="flujo-paso" + (" flujo-paso--hecho" if paso > i else " flujo-paso--actual" if paso == i else "")) for i, t in enumerate(PASOS, start=1)])
     if paso == 0:
         return [progreso, mensaje("Pulsa **Siguiente paso** para empezar. Puedes cambiar el día, la hora, el ajuste de demanda o la cola en cualquier momento.", titulo="Cómo se usa")]
     if not d or "error" in d:
@@ -242,7 +243,7 @@ def mostrar(paso, d):
                        hecho(f"{coma(100 * cam['prob_sobre'], 0)} %", "Probabilidad de superar las camas", f"Que ese día haya más de {CAMAS_HUN} pacientes en cama.")])]
     if paso >= 3:
         pac = d["pacientes"]
-        cab = html.Thead(html.Tr([html.Th(c) for c in ["Paciente", "Edad", "Sexo", "Tipo de visita", "Lleva esperando", "La mitad de los parecidos ya tendría cama en", "Seguir sin cama a las 48 h", "Momento más probable"]]))
+        cab = html.Thead(html.Tr([html.Th(c) for c in ["Paciente", "Edad", "Sexo", "Tipo de visita", "Lleva esperando", "Cama para la mitad en", "Sin cama a las 48 h", "Momento más probable"]]))
         filas = [html.Tr([html.Td(f"n.º {p['n']}"), html.Td(f"{p['edad']} años"), html.Td(p["sexo"]), html.Td(p["tipo"]), html.Td(f"{coma(p['horas'], 0)} h"),
                           html.Td(f"{coma(p['mitad_h'], 0)} h"), html.Td(f"{coma(100 * p['sin_cama_48'], 0)} %"), html.Td(p["momento"])]) for p in pac]
         salida += [bloque("3. Cola y pacientes en espera", f"A las {d['hora']} h; la cola se proyecta con las llegadas de ese día, y a cada paciente de ejemplo el estimador le calcula cuánto le falta"),
@@ -250,7 +251,9 @@ def mostrar(paso, d):
                        hecho(coma(col["ahora"], 0), "Pacientes sin cama ahora", "Los de la lista de abajo."),
                        hecho(coma(col["h6"], 0), "Cola en 6 horas", "Cuando se probó el modelo se equivocó en promedio 2,6 pacientes."),
                        hecho(coma(col["h12"], 0), "Cola en 12 horas", "Cuando se probó, se equivocó en promedio 3,5 pacientes.")]),
-                   html.Div(className="tech-table-wrap", children=[html.Table(className="tech-table", children=[cab, html.Tbody(filas)])])]
+                   html.Div(className="tech-table-wrap", children=[html.Table(className="tech-table", children=[cab, html.Tbody(filas)])]),
+                   html.P("«Cama para la mitad en»: horas que faltan para que la mitad de los pacientes parecidos ya tenga cama. «Sin cama a las 48 h»: probabilidad de seguir sin cama cuando se cumplan 48 horas desde la llegada.",
+                          style={"fontSize": "12px", "opacity": .75, "marginTop": "6px"})]
     if paso >= 4:
         res = evaluar(d)
         tarjetas = [html.Div(className="card", style={"padding": "12px 16px"}, children=[

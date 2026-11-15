@@ -17,7 +17,7 @@ import plotly.graph_objects as go
 from dash import Input, Output, callback, dash_table, html
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from componentes import AZUL, TENUE, bloque, cifra, estilo, grafico, hecho, lamina, mensaje, metodo, pagina, portada  # noqa: E402
+from componentes import AZUL, NARANJA, TENUE, bloque, cifra, coma, estilo, filtro, grafico, hecho, lamina, leer, mensaje, metodo, pagina, portada  # noqa: E402
 
 dash.register_page(__name__, path="/perfiles", name="Perfiles y picos", title="Perfiles y picos de demanda - HUN", order=4)
 
@@ -39,6 +39,84 @@ def grandes(df, col="espera_contraste"):
 
 def etiqueta(r):
     return f"{r.grupo_edad} años, {r.sexo.lower()}, {r.tipo_visita}"
+
+
+# ---------------------------------------------------------------- indicadores por perfil (A1, docs/perfiles_pacientes.md)
+DIMS = [("perfiles_por_edad.csv", "grupo_edad", "Edad"), ("perfiles_por_sexo.csv", "sexo", "Sexo"), ("perfiles_por_tipo_visita.csv", "tipo", "Tipo de visita")]
+# (columna, intervalo bajo, intervalo alto, texto, unidad, columna de lectura)
+INDICADORES = {"espera_mediana_h": ("espera_ic_bajo", "espera_ic_alto", "Espera de cama (mediana)", " h", "lectura_espera"),
+               "pct_hospitaliza": ("pct_hospitaliza_ic_bajo", "pct_hospitaliza_ic_alto", "Se hospitalizan", " %", "lectura_hospitaliza"),
+               "estancia_mediana_h": ("estancia_ic_bajo", "estancia_ic_alto", "Estancia en cama (mediana)", " h", "lectura_estancia"),
+               "pct_reingreso_72h": ("pct_reingreso_72h_ic_bajo", "pct_reingreso_72h_ic_alto", "Reingreso en 72 horas", " %", "lectura_reingreso"),
+               "llegadas_por_dia": (None, None, "Llegan por día", "", None)}
+
+
+def _indicadores():
+    """Una fila por perfil (edad, sexo, tipo de visita) con sus indicadores, intervalos y lectura; None si faltan las tablas."""
+    partes = []
+    for archivo, col, nombre in DIMS:
+        t = leer(archivo)
+        if t is None:
+            return None
+        t = t.rename(columns={col: "grupo"}).assign(dimension=nombre)
+        partes.append(t)
+    return pd.concat(partes, ignore_index=True)
+
+
+def _marca(lectura):
+    return " ▲" if isinstance(lectura, str) and "más alto" in lectura else " ▼" if isinstance(lectura, str) and "más bajo" in lectura else ""
+
+
+def _tabla_dim(t, nombre):
+    cab = html.Thead(html.Tr([html.Th(c) for c in [nombre, "Llegan por día", "Se hospitalizan", "Espera mediana", "Estancia mediana", "Reingreso en 72 h"]]))
+    filas = [html.Tr([html.Td(str(r.grupo)), html.Td(coma(r.llegadas_por_dia, 1)), html.Td(f"{coma(r.pct_hospitaliza, 1)} %" + _marca(r.lectura_hospitaliza)),
+                      html.Td(f"{coma(r.espera_mediana_h, 1)} h" + _marca(r.lectura_espera)), html.Td(f"{coma(r.estancia_mediana_h, 0)} h" + _marca(r.lectura_estancia)),
+                      html.Td(f"{coma(r.pct_reingreso_72h, 1)} %" + _marca(r.lectura_reingreso))]) for r in t.itertuples()]
+    return html.Div(className="tech-table-wrap", children=[html.Table(className="tech-table", children=[cab, html.Tbody(filas)])])
+
+
+def _ruta_txt(r):
+    return " → ".join({"TU": "atención en urgencias", "ER": "admisión", "HOSP": "hospitalización", "AMB": "consulta"}.get(x.strip(), x.strip()) for x in str(r).split(">")).capitalize()
+
+
+def _seccion_indicadores():
+    t, tray = _indicadores(), leer("perfiles_trayectorias.csv")
+    if t is None:
+        return []
+    bloques = [bloque("Cómo se comporta cada perfil", "Quién llega, cuántos se hospitalizan, cuánto esperan, cuánto se quedan y quién vuelve en 72 horas"),
+               html.Div(className="filtros", children=[filtro("perf-indicador", "Indicador", [(k, v[2]) for k, v in INDICADORES.items()], "espera_mediana_h")]),
+               grafico("perf-ind", alto=420),
+               html.P("Cada barra es un perfil y la línea fina su intervalo de confianza. En azul, las diferencias grandes hacia arriba; en naranja, hacia abajo; en gris, las pequeñas o que pueden ser azar.",
+                      style={"fontSize": "12.5px", "opacity": .8, "margin": "4px 0 14px"})]
+    for archivo, col, nombre in DIMS:
+        bloques.append(_tabla_dim(t[t.dimension == nombre], nombre))
+    bloques.append(html.P("▲ y ▼ marcan una diferencia grande frente al resto, más alta o más baja. Sin marca, la diferencia es pequeña o puede ser azar. Los reingresos no están validados.",
+                          style={"fontSize": "12.5px", "opacity": .8, "margin": "6px 0 14px"}))
+    if tray is not None and not tray.empty:
+        top = tray.sort_values("pct", ascending=False).head(6)
+        cab = html.Thead(html.Tr([html.Th("Trayectoria del paciente"), html.Th("Episodios"), html.Th("%")]))
+        filas = [html.Tr([html.Td(_ruta_txt(r.ruta)), html.Td(f"{int(r.episodios):,}".replace(",", ".")), html.Td(f"{coma(r.pct, 1)} %")]) for r in top.itertuples()]
+        bloques += [bloque("Trayectorias más frecuentes", "Por dónde pasa el paciente dentro de una atención"),
+                    html.Div(className="tech-table-wrap", children=[html.Table(className="tech-table", children=[cab, html.Tbody(filas)])])]
+    return bloques
+
+
+@callback(Output("perf-ind", "figure"), Input("perf-indicador", "value"), Input("theme-store", "data"))
+def figura_indicador(ind, tema):
+    t, fig = _indicadores(), go.Figure()
+    if t is None or ind not in INDICADORES:
+        return fig
+    bajo, alto, nombre, unidad, lectura = INDICADORES[ind]
+    t = t.iloc[::-1]
+    color = [(AZUL if "más alto" in str(l) else NARANJA if "más bajo" in str(l) else TENUE) for l in (t[lectura] if lectura else [""] * len(t))]
+    err = dict(type="data", symmetric=False, array=(t[alto] - t[ind]) if alto else None, arrayminus=(t[ind] - t[bajo]) if bajo else None, thickness=1.4, width=4, color="#8a97a6") if alto else None
+    fig.add_trace(go.Bar(y=[f"{d} · {g}" for d, g in zip(t.dimension, t.grupo)], x=t[ind], orientation="h", marker_color=color, error_x=err,
+                         text=[f"{coma(v, 1)}{unidad}" for v in t[ind]], textposition="outside", cliponaxis=False,
+                         hovertemplate="%{y}: %{x:.1f}" + unidad + "<extra></extra>"))
+    estilo(fig, tema).update_xaxes(range=[0, float((t[alto] if alto else t[ind]).max()) * 1.25], title_text=nombre)
+    fig.update_yaxes(automargin=True)
+    fig.update_layout(margin=dict(l=10, r=30, t=10, b=40), bargap=0.35)
+    return fig
 
 
 def layout():
@@ -64,6 +142,7 @@ def layout():
         lamina(2, f"Con el hospital casi lleno al llegar, {len(g2)} perfiles esperan más",
                "Mismo cruce, pero tomando la ocupación de camas al llegar (el 10 % más alto). Aparece el mismo patrón: adultos y niños de urgencias.",
                grafico("perf-g2", alto=300), dato=(f"{len(g2)} de {n}", "perfiles con un aumento grande"), invertida=True),
+        *_seccion_indicadores(),
         bloque("Lo que la tabla permite concluir", "Cuatro lecturas, de la más específica a la más general"),
         html.Div(className="hechos", children=[
             hecho(f"{sobre} de {len(g1)}", "Ninguno llega más seguido en los picos" if sobre == 0 else "Pocos llegan más seguido en los picos",

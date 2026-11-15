@@ -50,7 +50,7 @@ def _tabla(lineas):
     filas = [[c.strip() for c in ln.strip().strip("|").split("|")] for ln in lineas if not set(ln.replace("|", "").strip()) <= set("-: ")]
     cab, cuerpo = filas[0], filas[1:]
     return html.Div(className="tech-table-wrap", children=[html.Table(className="tech-table", children=[
-        html.Thead(html.Tr([html.Th(c) for c in cab])), html.Tbody([html.Tr([html.Td(c) for c in f]) for f in cuerpo])])])
+        html.Thead(html.Tr([html.Th(c) for c in cab])), html.Tbody([html.Tr([html.Td(f"{int(c):,}".replace(",", ".") if c.isdigit() and len(c) > 3 else c) for c in f]) for f in cuerpo])])])
 
 
 def _componentes(texto):

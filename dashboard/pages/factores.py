@@ -57,6 +57,24 @@ def _lamina_carga():
                    invertida=True)]
 
 
+def _or():
+    """Efectos del modelo explicativo con su intervalo de confianza del 95 % (datos/tablas_dashboard/efectos_espera_or.csv, de docs/modelo_espera.md), o None."""
+    t = leer("efectos_espera_or.csv")
+    return None if t is None or t.empty else t
+
+
+def _lamina_or():
+    t = _or()
+    if t is None:
+        return []
+    m = t[t.variable.str.startswith("Mujer")]
+    dato_ = (f"{coma(m.razon.iloc[0], 2)}", "veces más probable esperar más de un día si es mujer") if len(m) else ("", "")
+    return [lamina(5, "Con lo demás igual, esperar más de un día es más probable por la mañana, entre los mayores y entre las mujeres",
+                   "Cada punto dice cuántas veces más (o menos) probable es esperar más de un día frente al grupo de referencia, con lo demás igual. La línea fina es el intervalo de "
+                   "confianza del 95 %. **A la derecha del 1, más espera; a la izquierda, menos.** Los niños y las visitas ambulatorias esperan mucho menos.",
+                   grafico("fac-or", alto=420), dato=dato_)]
+
+
 def layout():
     if leer("espera_cubo.csv") is None:
         return aviso_datos(TITULO, ["espera_cubo.csv"])
@@ -80,6 +98,7 @@ def layout():
                "visita). **En azul, lo que alarga la espera; en gris, lo que la acorta.**",
                grafico("fac-efectos", alto=300), dato=("+27 %", "esperan las mujeres frente a los hombres, sin causa conocida")),
         *_lamina_carga(),
+        *_lamina_or(),
         bloque("Lo demás que se probó", "Cuatro resultados que cambian qué vale la pena hacer"),
         html.Div(className="hechos", children=[hecho(*o) for o in OTROS]),
         mensaje("**La espera depende del sistema, no del paciente.** No hay un tipo de paciente al que culpar: lo que decide la espera es "
@@ -95,7 +114,7 @@ def layout():
 
 
 @callback(Output("fac-peso", "figure"), Output("fac-grupos", "figure"), Output("fac-dato", "children"), Output("fac-efectos", "figure"),
-          Output("fac-carga", "figure"), Input("theme-store", "data"))
+          Output("fac-carga", "figure"), Output("fac-or", "figure"), Input("theme-store", "data"))
 def figuras(tema):
     nombres, puntos = [f for f, _ in FACTORES], [p for _, p in FACTORES]
     peso = go.Figure(go.Bar(y=nombres, x=puntos, orientation="h", marker_color=[AZUL] * 3 + [TENUE] * 5,
@@ -139,4 +158,15 @@ def figuras(tema):
         estilo(carga, tema, leyenda=True).update_yaxes(ticksuffix=" h", range=[0, t.p90.max() * 1.2])
         carga.update_layout(barmode="group", bargap=0.3, bargroupgap=0.06)
         carga.update_xaxes(title_text="Pacientes que llegaron en las 6 horas previas (de menos a más)")
-    return peso, grupos, dato(f"{coma(tipo['Urgencias'], 0)} h", "de espera mediana al entrar por urgencias"), efectos, carga
+    orf, o = go.Figure(), _or()
+    if o is not None:
+        o = o.sort_values("razon")
+        orf.add_trace(go.Scatter(x=o.razon, y=o.variable, mode="markers", marker=dict(size=9, color=[AZUL if v > 1 else TENUE for v in o.razon]),
+                                 error_x=dict(type="data", symmetric=False, array=o.ic_alto - o.razon, arrayminus=o.razon - o.ic_bajo, thickness=1.5, width=4, color="#8a97a6"),
+                                 customdata=list(zip(o.ic_bajo, o.ic_alto)),
+                                 hovertemplate="<b>%{y}</b><br>%{x:.2f} veces (intervalo %{customdata[0]:.2f} a %{customdata[1]:.2f})<extra></extra>"))
+        orf.add_vline(x=1, line_dash="dash", line_color=TENUE)
+        estilo(orf, tema).update_xaxes(type="log", tickvals=[0.15, 0.25, 0.5, 1, 1.5, 2], ticktext=["0,15", "0,25", "0,5", "1", "1,5", "2"], title_text="Veces más (o menos) probable esperar más de un día")
+        orf.update_yaxes(automargin=True)
+        orf.update_layout(margin=dict(l=10, r=20, t=10, b=44))
+    return peso, grupos, dato(f"{coma(tipo['Urgencias'], 0)} h", "de espera mediana al entrar por urgencias"), efectos, carga, orf

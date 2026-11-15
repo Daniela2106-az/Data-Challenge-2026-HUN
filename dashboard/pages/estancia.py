@@ -52,6 +52,19 @@ def _lamina_mensual():
                    grafico("lar-mensual", alto=320), dato=(f"{coma(ini, 1)} → {coma(fin, 1)} %", "de los hospitalizados se queda más de 14 días"), invertida=True)]
 
 
+def _tabla_laboratorios():
+    """Examenes de laboratorio de las primeras 48 h mas asociados a las estancias largas (datos/tablas_dashboard/disparadas_laboratorios.csv)."""
+    t = leer("disparadas_laboratorios.csv")
+    if t is None or t.empty:
+        return []
+    cab = html.Thead(html.Tr([html.Th(c) for c in ["Examen (primeras 48 h)", "Estancias con el examen", "% de las estancias largas", "% de las demás", "Veces más frecuente"]]))
+    filas = [html.Tr([html.Td(r.nombre), html.Td(f"{int(r.estancias):,}".replace(",", ".")), html.Td(f"{coma(r.pct_largas, 1)} %"), html.Td(f"{coma(r.pct_otras, 1)} %"),
+                      html.Td(f"{coma(r.razon, 1)}×")]) for r in t.itertuples()]
+    return [bloque("Laboratorios más asociados a las estancias largas", "Exámenes de las primeras 48 horas que aparecen mucho más en quienes se quedan más de 14 días"),
+            html.Div(className="tech-table-wrap", children=[html.Table(className="tech-table", children=[cab, html.Tbody(filas)])]),
+            html.P("Un examen frecuente indica sospecha, no causa: los pacientes más graves tienen más exámenes. Los nombres son los de la base.", style={"fontSize": "12px", "opacity": .75, "marginTop": "6px"})]
+
+
 def layout():
     return pagina(
         portada("Resultados · Estancias largas", "Unas pocas estancias muy largas explican casi todo el aumento de la ocupación",
@@ -79,6 +92,7 @@ def layout():
         *_lamina_mensual(),
         bloque("Qué comparten las estancias largas", "Procedimientos y exámenes mucho más frecuentes en ellas que en el resto"),
         html.Div(className="hechos", children=[hecho(*c) for c in COMPARTEN]),
+        *_tabla_laboratorios(),
         mensaje("**Revisar cada semana las estancias largas es la forma más directa de liberar camas** (recomendación 7): son el 7 % de "
                 "las estancias y ocupan un tercio de las camas. Bajar la estancia 5 % equivale a unas 5 camas."),
         metodo(

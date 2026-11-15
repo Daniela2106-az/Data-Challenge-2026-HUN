@@ -221,7 +221,7 @@ pacientes, LD.04.03.11: los líderes deben usar datos y métricas para gestionar
 - **Por qué (nuestros datos):** ~4,0 alertas por día; el 52 % de esos pacientes termina esperando más de 72 h, con 24 h de margen. A las 36 h serían 5,3 por día
   (39 %); a las 60 h, 2,6 por día (80 %, solo 12 h de margen). (HALLAZGOS 5.2)
 - **Opción más temprana (9-nov, estimador A6):** a las 12 h de espera, avisar cuando el estimador dé 40 % o más de probabilidad de seguir sin cama a las 48 h: 4,1 alertas por día,
-  acierta en el 55 % (igual que alertar a todos los que llevan 24 h, 53 %) pero con 12 h más de margen; a cambio detecta solo a la mitad (54 %). Sirve solo para pacientes con orden
+  acierta en el 55 % (igual que alertar a todos los que llevan 24 h, 53 %) pero con 12 h más de margen; a cambio detecta solo a la mitad (53 %; cifras recalculadas el 14-nov). Sirve solo para pacientes con orden
   de hospitalización. (`docs/estimador_tiempos.md` 3.2)
 - **Evidencia externa (verificada el 12-nov; indirecta):** no hay un estudio de esta alerta exacta, pero sí de lo que se hace cuando salta:
   - **Viccellio y colegas** (*Ann Emerg Med* 2009, Stony Brook, 55.062 ingresos en 4 años, cohorte retrospectiva): con un **protocolo de capacidad

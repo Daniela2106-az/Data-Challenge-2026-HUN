@@ -47,7 +47,16 @@ def _tabla_grupos():
                    "los grupos reflejan sobre todo a los hospitalizados. ")
     return [bloque("Cuántos pacientes hay detrás de cada grupo", "Ordenados de más a menos espera; un asterisco marca grupos con pocos casos"),
             html.Div(className="tech-table-wrap", children=[html.Table(className="tech-table", children=[cab, html.Tbody(filas)])]),
-            html.P(cob + "El agrupamiento de diagnósticos no tiene validación clínica.", style={"fontSize": "12px", "marginTop": "8px"})]
+            html.P(cob + "El agrupamiento de diagnósticos no tiene validación clínica y el ACV (accidente cerebrovascular) está dentro de Cardiovascular.", style={"fontSize": "12px", "marginTop": "8px"})]
+
+
+def _efecto_dx():
+    """Efecto del grupo de diagnostico sobre la espera, con edad, tipo de visita, franja y año iguales (datos/tablas_dashboard/efecto_dx_espera.csv)."""
+    t = leer("efecto_dx_espera.csv")
+    if t is None or t.empty:
+        return []
+    return [bloque("Con lo demás igual", "Cuánto más o menos espera cada grupo que Digestivo, con tipo de visita, franja, año y edad iguales; la línea fina es el intervalo de confianza del 95 %"),
+            grafico("dx-efecto", alto=480)]
 
 
 def layout():
@@ -69,6 +78,7 @@ def layout():
                grafico("dx-dispersion", alto=400), dato=("4,8 días", "de estancia mediana en musculoesquelético y en cáncer, los que más se quedan"),
                invertida=True),
         *_tabla_grupos(),
+        *_efecto_dx(),
         mensaje("La cola larga está en **cirugía, urología y ortopedia**: pacientes estables que esperan turno o una cama especializada. "
                 "Vale la pena revisar ese flujo aparte, porque no compite con las urgencias vitales."),
         metodo(
@@ -118,3 +128,19 @@ def actualizar(indicador, tema):
     veces = coma(valores[0] / valores[-1], 1)
     titular = f"{primero[0]} tiene la mayor {que.split(' (')[0]}: {veces} veces la de {ultimo[0].lower()}"
     return fig, titular, dato(f"{coma(valores[0], 1 if en_dias else 0)} {unidad}", f"de {que} en {primero[0].lower()}")
+
+
+@callback(Output("dx-efecto", "figure"), Input("theme-store", "data"))
+def figura_efecto(tema):
+    t, fig = leer("efecto_dx_espera.csv"), go.Figure()
+    if t is None or t.empty:
+        return fig
+    t = t.sort_values("efecto_pct_vs_digestivo")
+    fig.add_trace(go.Bar(y=t.categoria_dx, x=t.efecto_pct_vs_digestivo, orientation="h", marker_color=[AZUL if v > 0 else TENUE for v in t.efecto_pct_vs_digestivo],
+                         error_x=dict(type="data", symmetric=False, array=t.ic95_alto - t.efecto_pct_vs_digestivo, arrayminus=t.efecto_pct_vs_digestivo - t.ic95_bajo, thickness=1.4, width=4, color="#8a97a6"),
+                         text=[f"{coma(v, 0)} %" for v in t.efecto_pct_vs_digestivo], textposition="outside", cliponaxis=False,
+                         hovertemplate="<b>%{y}</b><br>%{x:+.0f} % de espera frente a Digestivo<extra></extra>"))
+    estilo(fig, tema).update_xaxes(ticksuffix=" %", zeroline=True, zerolinewidth=1)
+    fig.update_yaxes(automargin=True)
+    fig.update_layout(margin=dict(l=10, r=40, t=10, b=40), bargap=0.3)
+    return fig
