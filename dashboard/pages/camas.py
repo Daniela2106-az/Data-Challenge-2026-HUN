@@ -64,6 +64,7 @@ GRIS, AZUL, NARANJA, VERDE, ROJO = "#6b6b6b", "#2a6fb0", "#eb6834", "#2e8b57", "
 RAIZ = Path(__file__).resolve().parent.parent.parent
 TABLAS = Path(os.environ.get("HUN_TABLAS", RAIZ / "resultados" / "tablas"))
 N_REP_INTERACTIVO = 300
+CAMAS_HUN_TOTAL = 106            # camas de hospitalizacion que informo el HUN
 _BASE = {}      # caso base (mediana por grupo) por (plazo, dia de arranque): se calcula una vez y se reutiliza
 GRUPOS = ["total", "ninos", "adultos"]
 NOMBRES_GRUPO = {"total": "Total", "ninos": "Niños (0-4, 5-14)", "adultos": "Adultos (15+)"}
@@ -522,7 +523,7 @@ def altas_adelantadas(pct, tema):
                              hovertemplate="%{x} h: %{y:.0f} camas ocupadas hoy<extra></extra>"))
     fig.add_trace(go.Scatter(x=horas.hora, y=horas.ocupacion_base - libres, mode="lines", name="Con las altas adelantadas", line=dict(color=AZUL, width=3),
                              hovertemplate="%{x} h: %{y:.0f} camas ocupadas<extra></extra>"))
-    fig.add_hline(y=106, line_dash="dash", line_color=NARANJA, annotation_text="106 camas informadas por el hospital", annotation_position="top left")
+    fig.add_trace(go.Scatter(x=[0, 23], y=[CAMAS_HUN_TOTAL, CAMAS_HUN_TOTAL], mode="lines", line=dict(color=NARANJA, dash="dash", width=2), name="106 camas informadas por el hospital", hoverinfo="skip"))
     fig.update_layout(template="simple_white", legend=dict(orientation="h", y=-0.25), margin=dict(l=40, r=20, t=20, b=40),
                       xaxis_title="Hora del día", yaxis_title="Camas ocupadas", yaxis_range=[horas.ocupacion_base.min() - 8, 110])
     tg.aplicar(fig, tg.es_oscuro(tema))

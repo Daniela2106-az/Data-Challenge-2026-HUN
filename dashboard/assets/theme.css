@@ -1726,3 +1726,9 @@ button, .btn-primary {
 .flujo-paso { font-size: 12.5px; font-weight: 600; padding: 5px 12px; border-radius: var(--r-pill); border: 1px solid var(--line); color: var(--muted); }
 .flujo-paso--hecho { background: rgba(0, 147, 208, .12); border-color: rgba(0, 147, 208, .30); color: var(--brand-strong); }
 .flujo-paso--actual { background: var(--brand-strong); border-color: var(--brand-strong); color: #fff; }
+
+/* ---------- Campos de entrada de Dash 4 (dash-input-*): legibles en claro y oscuro (15-nov-2026) ---------- */
+.page-container .dash-input-container { background: var(--surface) !important; border: 1px solid var(--line) !important; border-radius: 10px; overflow: hidden; }
+.page-container .dash-input-element { background: transparent !important; color: var(--ink) !important; border: 0 !important; }
+.page-container .dash-input-stepper { background: transparent !important; color: var(--brand-strong) !important; border: 0 !important; border-radius: 0; box-shadow: none !important; min-width: 30px; padding: 0 10px; }
+.page-container .dash-input-stepper:hover { background: rgba(0, 147, 208, .14) !important; }
