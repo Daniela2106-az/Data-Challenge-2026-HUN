@@ -98,7 +98,11 @@ def filtro(id_, etiqueta, opciones, valor):
 
 
 def grafico(id_, alto=330):
-    return dcc.Graph(id=id_, config={"displaylogo": False, "displayModeBar": False}, style={"height": f"{alto}px"})
+    # responsive=True (16-nov-2026): deja que Plotly se reajuste solo cuando el contenedor cambia de ancho
+    # (p. ej. al expandirse una lamina del acordeon, o en modo presentacion), sin tener que forzar un resize
+    # manual desde JS.
+    return dcc.Graph(id=id_, config={"displaylogo": False, "displayModeBar": False, "responsive": True},
+                     style={"height": f"{alto}px"})
 
 
 def dato(valor, texto):
@@ -115,6 +119,22 @@ def lamina(numero, titular, texto, *grafica, dato=None, id_dato=None, invertida=
             html.Div(hijos_dato, className="lamina__dato", **({"id": id_dato} if id_dato else {}))]
     return html.Section(className="card lamina" + (" lamina--inv" if invertida else ""), children=[
         html.Div([x for x in lado if x is not None], className="lamina__texto"), html.Div(list(grafica), className="lamina__grafica")])
+
+
+def laminas_grupo(*lams):
+    """Agrupa varias lamina() en una fila horizontal tipo acordeon (16-nov-2026, dashboard/assets/acordeon.js):
+    colapsadas muestran solo su numero (la "espina"); se turnan para expandirse solas cada pocos segundos, o al
+    pasar el mouse por encima -- las demas se contraen para darle a la activa el mayor ancho posible. No cambia
+    lamina(): aqui solo se le agrega, por fuera, la espina que se ve colapsada y la clase que activa el acordeon,
+    asi lamina() sigue sirviendo igual para una pagina que no use el acordeon."""
+    hijos = []
+    for lam in lams:
+        numero_txt = lam.children[0].children[0].children   # el primer hijo de lamina__texto es siempre lamina__num
+        espina = html.Div(html.Div(numero_txt, className="lamina__espina-num"), className="lamina__espina")
+        lam.children = [espina] + list(lam.children)
+        lam.className = (lam.className or "") + " lamina-acordeon"
+        hijos.append(lam)
+    return html.Div(className="laminas-row", children=hijos)
 
 
 def bloque(titulo, bajada=""):

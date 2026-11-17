@@ -1,4 +1,4 @@
-/* ============================================================================
+﻿/* ============================================================================
    dashboard/assets/theme.css  -  Tema visual del dashboard HUN (12-nov-2026)
    Estilo moderno y minimalista inspirado en las apps de Google (Material 3 /
    Gemini): tipografia Google Sans/Roboto, superficies blancas con esquinas muy
@@ -62,10 +62,10 @@
   --sh-3: 0 12px 28px rgba(16,40,70,.14), 0 6px 10px rgba(16,40,70,.06);
 
   --sidebar-w: 248px;
+  --sidebar-w-colapsado: 72px;
   --ease: cubic-bezier(.2, .7, .3, 1);
 
   --topbar-bg: rgba(255, 255, 255, .82);
-  --logo-chip: transparent;        /* fondo detras del logo (transparente en claro) */
 }
 
 /* ============================================================================
@@ -89,7 +89,6 @@
   --sh-3: 0 12px 28px rgba(0,0,0,.55), 0 6px 10px rgba(0,0,0,.35);
 
   --topbar-bg: rgba(23, 29, 37, .82);
-  --logo-chip: #ffffff;            /* chip blanco para que el logo negro/azul se lea sobre fondo oscuro */
 }
 
 html { transition: background .3s var(--ease), color .3s var(--ease); }
@@ -129,13 +128,43 @@ a { color: inherit; }
   flex-direction: column;
   gap: 6px;
   z-index: 20;
+  overflow-x: hidden;
+  transition: width .28s var(--ease), flex-basis .28s var(--ease);
 }
+
+/* Menu lateral: esconder/expandir (16-nov-2026). El boton vive siempre arriba del todo, visible en los dos
+   estados; al colapsar se angosta a solo los iconos y se recuerda entre visitas (sidebar-store, como el tema). */
+.sidebar__toggle {
+  align-self: flex-end;
+  width: 32px; height: 32px; margin-bottom: 4px; flex: 0 0 auto;
+  border-radius: var(--r-pill); border: none; background: transparent; color: var(--muted);
+  cursor: pointer; display: grid; place-items: center; padding: 0;
+  transition: background .18s var(--ease), color .18s var(--ease), transform .18s var(--ease);
+}
+.sidebar__toggle .nav__ico { width: 16px; height: 16px; flex: 0 0 16px; }
+.sidebar__toggle:hover { background: var(--surface-2); color: var(--brand-strong); }
+:root.sidebar-colapsado .sidebar { width: var(--sidebar-w-colapsado); flex: 0 0 var(--sidebar-w-colapsado); }
+:root.sidebar-colapsado .sidebar__toggle { align-self: center; transform: rotate(180deg); }
+:root.sidebar-colapsado .sidebar__brand { justify-content: center; padding: 4px 0 16px; }
+:root.sidebar-colapsado .sidebar__brand img { max-width: 34px; }
+:root.sidebar-colapsado .nav__item span:last-child,
+:root.sidebar-colapsado .sidebar__foot { display: none; }
+:root.sidebar-colapsado .nav__item { justify-content: center; padding: 11px 0; gap: 0; }
+/* El texto de cada seccion ("Resultados", "Predicción"...) no cabe colapsado: el label se convierte en una
+   linea divisoria sutil (su texto se esconde, el elemento se queda solo como separador entre grupos de iconos). */
+:root.sidebar-colapsado .nav__label {
+  height: 0; margin: 10px 8px 8px; padding: 0; border-top: 1px solid var(--line);
+  font-size: 0; line-height: 0; color: transparent; overflow: hidden; white-space: nowrap;
+}
+@media (max-width: 880px) { .sidebar__toggle { display: none; } }   /* en movil el menu ya se maneja distinto (modo presentacion) */
 
 .sidebar__brand {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 10px;
-  padding: 4px 8px 16px 8px;
+  padding: 0 8px 16px 8px;
+  margin-top: -22px;
   margin-bottom: 6px;
   border-bottom: 1px solid var(--line);
   text-decoration: none;
@@ -144,13 +173,11 @@ a { color: inherit; }
   width: 100%;
   max-width: 190px;
   height: auto;
-  display: block;
-  background: var(--logo-chip);
-  padding: var(--logo-pad, 0);
-  border-radius: 10px;
-  transition: background .3s var(--ease), padding .3s var(--ease);
 }
-:root[data-theme="dark"] .sidebar__brand img { --logo-pad: 8px 11px; }
+.sidebar__brand-img--claro { display: block; }
+.sidebar__brand-img--oscuro { display: none; }
+:root[data-theme="dark"] .sidebar__brand-img--claro { display: none; }
+:root[data-theme="dark"] .sidebar__brand-img--oscuro { display: block; }
 
 .nav {
   display: flex;
@@ -217,6 +244,10 @@ a { color: inherit; }
 /* "Niños": cabeza grande + cuerpo redondeado (proporciones de bebe/infante), bien distinta de ico-patient
    (silueta de adulto estandar) -- antes era la misma figura solo achicada y las dos se confundian. */
 .ico-child    { -webkit-mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><circle cx='12' cy='7.3' r='4.3'/><path d='M12 13c-3.3 0-6.3 2.1-6.3 4.6V20h12.6v-2.4c0-2.5-3-4.6-6.3-4.6z'/></svg>"); mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><circle cx='12' cy='7.3' r='4.3'/><path d='M12 13c-3.3 0-6.3 2.1-6.3 4.6V20h12.6v-2.4c0-2.5-3-4.6-6.3-4.6z'/></svg>"); }
+/* Engranaje (boton de configuracion del simulador, 17-nov): mismo patron .nav__ico (mask + currentColor) que
+   el resto de iconos — asi se ve solido en claro y oscuro, a diferencia del emoji "⚙" que algunos sistemas
+   (Windows) dibujan con un glifo de color fijo que ignora la propiedad CSS color. */
+.ico-settings { -webkit-mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M19.14 12.94c.04-.3.06-.61.06-.94s-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94L14.4 2.81c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41L9.25 5.35c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.07.63-.07.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z'/></svg>"); mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M19.14 12.94c.04-.3.06-.61.06-.94s-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94L14.4 2.81c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41L9.25 5.35c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.07.63-.07.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z'/></svg>"); }
 
 .sidebar__foot {
   margin-top: auto;
@@ -819,11 +850,77 @@ button, .btn-primary {
   .portada .portada__title { font-size: 25px; }
 }
 
+/* ---- Laminas en acordeon horizontal (16-nov-2026, dashboard/assets/acordeon.js) ----
+   Varias lamina() agrupadas con laminas_grupo(): colapsadas a una tira muy angosta con solo su numero (la
+   "espina"), para que la activa recupere casi todo el ancho horizontal que tenia antes del acordeon (cuando
+   cada lamina ocupaba toda la fila); la activa crece con flex-grow para llenar el resto. Se transiciona solo
+   flex-grow (flex-basis queda fijo en 40px): un valor numerico interpola de forma continua y evita el problema
+   de intentar animar hacia "auto", que la mayoria de navegadores no anima con fluidez. El padding de la lamina
+   (26px 30px 20px, igual al de una lamina normal) solo se aplica cuando esta expandida; colapsada queda en 0
+   para que los 40px sean puro ancho de tarjeta, no texto exprimido. */
+.laminas-row { display: flex; align-items: stretch; gap: 8px; margin-bottom: 18px; }
+.laminas-row .lamina-acordeon { margin-bottom: 0; }
+.lamina-acordeon {
+  position: relative; overflow: hidden; cursor: pointer;
+  flex-grow: 0; flex-shrink: 0; flex-basis: 40px; min-width: 40px;
+  padding: 0 !important;
+  transition: flex-grow .55s var(--ease), padding .4s var(--ease);
+}
+.lamina-acordeon:hover { background: var(--surface-2); }
+.lamina-acordeon.is-expanded {
+  flex-grow: 1; flex-shrink: 1; cursor: default;
+  padding: 26px 30px 20px !important;
+}
+.lamina-acordeon.is-expanded:hover { background: var(--surface); }
+.lamina-acordeon .lamina__texto, .lamina-acordeon .lamina__grafica {
+  opacity: 0; transition: opacity .3s var(--ease); pointer-events: none;
+}
+.lamina-acordeon.is-expanded .lamina__texto, .lamina-acordeon.is-expanded .lamina__grafica {
+  opacity: 1; transition: opacity .4s var(--ease) .16s; pointer-events: auto;
+}
+.lamina__espina {
+  position: absolute; inset: 0; display: flex; justify-content: center; align-items: flex-start;
+  padding-top: 16px; opacity: 1; transition: opacity .22s var(--ease);
+}
+.lamina-acordeon.is-expanded .lamina__espina { opacity: 0; pointer-events: none; }
+.lamina__espina-num { font-size: 16px; font-weight: 800; letter-spacing: -.02em; color: var(--brand); }
+@media (max-width: 900px) {
+  /* En pantallas angostas el acordeon no cabe: se apilan todas abiertas, como antes del acordeon */
+  .laminas-row { flex-direction: column; }
+  .lamina-acordeon, .lamina-acordeon.is-expanded { flex: 1 1 auto; min-width: 0; padding: 26px 24px 20px !important; }
+  .lamina-acordeon .lamina__texto, .lamina-acordeon .lamina__grafica { opacity: 1; pointer-events: auto; }
+  .lamina__espina { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lamina-acordeon { transition: none; }
+  .lamina-acordeon .lamina__texto, .lamina-acordeon .lamina__grafica, .lamina__espina { transition: none; }
+}
+
 .bloque-titulo { font-size: 21px; font-weight: 700; letter-spacing: -.01em; color: var(--brand-ink); margin: 28px 0 2px; }
 .bloque-bajada { font-size: 14.5px; color: var(--muted); margin: 0 0 14px; }
 .hechos { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(230px, 100%), 1fr)); gap: 14px; margin-bottom: 14px; }
 .hechos--2 { grid-template-columns: repeat(auto-fit, minmax(min(380px, 100%), 1fr)); }
 .hecho { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); box-shadow: var(--sh-1); padding: 18px 20px; }
+/* Revelacion secuencial de las tarjetas de conclusiones (16-nov-2026): cada tarjeta aparece una tras otra y,
+   cuando ya aparecieron todas, se mantienen un momento y el ciclo se repite -- puro CSS (sin JS), con el mismo
+   patron de "una animacion, un reloj compartido" que ya usa .camas-loop mas abajo en este archivo. */
+.hechos .hecho {
+  animation-duration: 13s; animation-timing-function: ease-in-out; animation-iteration-count: infinite;
+  animation-fill-mode: both;
+}
+.hechos .hecho:nth-child(1) { animation-name: hechoRev1; }
+.hechos .hecho:nth-child(2) { animation-name: hechoRev2; }
+.hechos .hecho:nth-child(3) { animation-name: hechoRev3; }
+.hechos .hecho:nth-child(4) { animation-name: hechoRev4; }
+.hechos .hecho:nth-child(5) { animation-name: hechoRev5; }
+@keyframes hechoRev1 { 0% { opacity: 0; transform: translateY(10px) scale(.97); } 3%, 94% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(10px) scale(.97); } }
+@keyframes hechoRev2 { 0%, 18% { opacity: 0; transform: translateY(10px) scale(.97); } 21%, 94% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(10px) scale(.97); } }
+@keyframes hechoRev3 { 0%, 37% { opacity: 0; transform: translateY(10px) scale(.97); } 40%, 94% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(10px) scale(.97); } }
+@keyframes hechoRev4 { 0%, 55% { opacity: 0; transform: translateY(10px) scale(.97); } 58%, 94% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(10px) scale(.97); } }
+@keyframes hechoRev5 { 0%, 74% { opacity: 0; transform: translateY(10px) scale(.97); } 77%, 94% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(10px) scale(.97); } }
+@media (prefers-reduced-motion: reduce) {
+  .hechos .hecho { animation: none; opacity: 1; transform: none; }
+}
 .hecho__num { font-size: 30px; font-weight: 800; letter-spacing: -.02em; line-height: 1.1; color: var(--brand-strong); }
 .hecho__titulo { font-size: 15.5px; font-weight: 700; color: var(--brand-ink); margin-top: 6px; }
 .hecho .hecho__txt { font-size: 13.5px; line-height: 1.5; color: var(--muted); margin: 6px 0 0; }
@@ -845,8 +942,18 @@ button, .btn-primary {
 .ad__despues { font-size: 34px; font-weight: 800; letter-spacing: -.02em; color: var(--brand-strong); }
 .ad__que { flex-basis: 100%; font-size: 13.5px; color: var(--muted); }
 
-.mensaje { position: relative; overflow: hidden; border-radius: var(--r-lg); padding: 24px 30px 22px 36px; margin: 22px 0 14px; background: var(--surface-2); border: 1px solid var(--line); }
+.mensaje {
+  position: relative; overflow: hidden; border-radius: var(--r-lg); padding: 24px 30px 22px 36px; margin: 22px 0 14px;
+  background: var(--surface-2); border: 1px solid var(--line);
+  animation: mensajeAlumbra 9s ease-in-out infinite;    /* 16-nov-2026: se resalta sutilmente cada ciclo, para que no pase de largo */
+}
 .mensaje::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 6px; background: linear-gradient(180deg, var(--brand-strong), var(--accent)); }
+@keyframes mensajeAlumbra {
+  0%, 78% { box-shadow: none; border-color: var(--line); }
+  88% { box-shadow: 0 0 0 3px rgba(0,147,208,.22), var(--sh-2); border-color: rgba(0,147,208,.4); }
+  100% { box-shadow: none; border-color: var(--line); }
+}
+@media (prefers-reduced-motion: reduce) { .mensaje { animation: none; } }
 .mensaje__label { font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--brand-strong); }
 .mensaje__texto p { font-size: 19px; line-height: 1.5; font-weight: 500; color: var(--brand-ink); margin: 8px 0 0; max-width: 920px; }
 .page-container details.metodo { padding: 12px 18px; margin: 0 0 6px; border-radius: var(--r-md); }
@@ -874,6 +981,9 @@ button, .btn-primary {
 
 /* Modo presentacion (boton de la barra superior, assets/recorrido.js): sin menu lateral y con todo un poco mas grande */
 .ico-present { --i: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z'/></svg>"); -webkit-mask-image: var(--i); mask-image: var(--i); }
+/* Esconder/expandir el menu lateral (16-nov-2026): una sola flecha (antes tenia dos trazos superpuestos, que se
+   leian como dos iconos a la vez); gira 180 grados cuando el menu esta colapsado. */
+.ico-chevron { --i: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z'/></svg>"); -webkit-mask-image: var(--i); mask-image: var(--i); }
 .topbar__seccion { color: var(--muted); font-weight: 600; }
 :root.presentando .sidebar { display: none; }
 :root.presentando .page-container, :root.presentando .paso { max-width: 1340px; }
@@ -928,15 +1038,22 @@ button, .btn-primary {
 .home-group__head .section-title { margin: 0; }
 .home-group__sub { font-size: 13.5px; color: var(--muted); }
 
-/* ---- Pie «Esta página resume la documentación» (lo arma main.py según la ruta; 14-nov-2026) ---- */
-.doc-rel { display: flex; align-items: center; gap: 12px; margin: 22px 0 4px; padding: 12px 16px; border: 1px solid var(--line);
-           border-left: 4px solid var(--accent); border-radius: 10px; font-size: 13px; line-height: 1.45; }
-.doc-rel:empty { display: none; }
+/* ---- Pie «Esta página resume la documentación» (lo arma main.py según la ruta; 14-nov-2026) ----
+   16-nov-2026 (corregido): el borde izquierdo debe caer donde empiezan los componentes de arriba (p. ej.
+   "mensaje"/"Qué significa para el hospital"), que estan DENTRO de .page-container y por eso quedan a
+   max-width(1180) + padding-left(28) del borde del contenedor. Un borde (border-left) se dibuja en el borde
+   de la caja, no dentro del padding, asi que igualar el padding-left a 28px NO alineaba nada (quedaba 28px
+   mas a la izquierda que "mensaje"). La caja de .doc-rel tiene que ser 56px mas angosta (28 a cada lado) y
+   quedar centrada en el mismo eje: max-width 1124 = 1180 - 2*28, el ancho exacto del contenido interno de
+   .page-container, con el padding ya solo para el aire interno del texto. */
+.doc-rel { display: flex; align-items: center; gap: 12px; max-width: 1124px; margin: 10px auto 28px; padding: 14px 20px;
+           border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 10px; font-size: 13px; line-height: 1.45; }
+.doc-rel:empty { display: none; margin: 0; }
 .doc-rel__ico { flex: 0 0 auto; }
 .doc-rel__desc { color: var(--muted); }
 .doc-rel__link { margin-left: auto; white-space: nowrap; font-weight: 600; color: var(--accent); text-decoration: none; }
 .doc-rel__link:hover { text-decoration: underline; }
-@media (max-width: 720px) { .doc-rel { flex-wrap: wrap; } .doc-rel__link { margin-left: 0; } }
+@media (max-width: 720px) { .doc-rel { flex-wrap: wrap; padding: 14px 16px; } .doc-rel__link { margin-left: 0; } }
 
 
 /* ============================================================================
@@ -1579,3 +1696,203 @@ button, .btn-primary {
   }
   .camas-loop__ocupadas, .camas-loop__dot, .camas-loop__linea, .camas-loop__final { animation: none !important; opacity: 0 !important; }
 }
+
+/* ============================================================
+   Simulador integral: radiografia del dia (pictogramas, /simulador)
+   18-nov: mas aire respecto a los bordes de la tarjeta (el panel ahora vive en una columna izquierda de
+   ancho fijo, no a todo el ancho de la pagina — ver .simint-radio-panel).
+   19-nov: titulo principal mas grande; mas espacio entre el titulo/vistas y el contenido; las 5 metricas
+   pasan de columnas lado a lado a FILAS (una debajo de otra), con el pictograma ocupando todo el espacio
+   libre a la derecha hasta el borde de la tarjeta, en vez de un bloque angosto debajo del numero.
+   ============================================================ */
+.simint-radio { margin-top: 0; padding: 20px 22px 22px; }
+.simint-radio__titulo { font-size: 20px; font-weight: 700; }
+.simint-radio__header { gap: 14px; margin-bottom: 4px; }
+.simint-radio__filas { display: flex; flex-direction: column; }
+.simint-radio__fila { display: flex; align-items: center; gap: 14px; padding: 18px 0; border-bottom: 1px solid var(--line); }
+.simint-radio__fila:last-child { border-bottom: none; }
+.simint-radio__fila-izq { flex: 0 0 auto; min-width: 118px; }
+.simint-radio__fila-der { flex: 1 1 auto; display: flex; align-items: center; min-width: 0; padding-right: 2px; }
+.simint-radio__num { font-size: 20px; font-weight: 700; line-height: 1.1; display: flex; align-items: baseline; gap: 4px; }
+/* Flecha de tendencia (20-nov, estilo cotizacion de bolsa): minimalista, chica, junto al numero — el color
+   (verde/rojo) lo decide flecha_tendencia() en Python segun si subir es bueno o malo para esa metrica. */
+.simint-radio__flecha { font-size: 11px; line-height: 1; }
+.simint-radio__cap { font-size: 11px; color: var(--muted); margin-bottom: 2px; }
+.simint-picto { display: flex; flex-wrap: wrap; gap: 4px 3px; }
+.simint-picto__p { position: relative; width: 9px; height: 12px; border-radius: 4px 4px 2px 2px; margin-top: 5px; }
+.simint-picto__p::before { content: ""; position: absolute; top: -5px; left: 50%; transform: translateX(-50%);
+  width: 6px; height: 6px; border-radius: 50%; background: inherit; }
+.simint-picto__p--tu { box-shadow: 0 0 0 1.5px rgba(0, 0, 0, .35); }
+:root[data-theme="dark"] .simint-picto__p--tu { box-shadow: 0 0 0 1.5px rgba(255, 255, 255, .55); }
+.simint-picto__p--amb { opacity: .5; }
+.simint-radio__leyenda { display: flex; flex-wrap: wrap; gap: 10px 14px; font-size: 11px; color: var(--muted);
+  margin-top: 16px; align-items: center; border-top: 1px solid var(--line); padding-top: 10px; }
+.simint-radio__chip { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 4px; vertical-align: -1px; }
+
+/* Modulo colapsable de una vista especifica (18-nov): hoy solo "Tablero de camas" en la vista Camas, pensado
+   para que futuros graficos adicionales por vista sigan el mismo patron (html.Details, igual que los paneles
+   "Como se interpreta"/"Ficha tecnica" de esta misma pagina) — contraido por defecto, se expande con un clic. */
+.simint-radio__modulo { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--line); }
+.simint-radio__modulo-titulo { font-weight: 700; font-size: 13px; color: var(--brand-strong); }
+
+/* Layout de dos columnas (18-nov): radiografia a la izquierda (panel fijo), grafico a la derecha. En vistas
+   con una sola fila de grafico (flujo/camas/espera) el espacio libre lo absorbe la columna izquierda (puede
+   crecer con sus modulos) en vez de estirar el grafico de forma artificial. */
+.simint-layout-dos-col { display: flex; gap: 24px; align-items: flex-start; flex-wrap: wrap; margin-top: 16px; }
+.simint-radio-panel { flex: 1 1 380px; max-width: 420px; min-width: 320px; }
+.simint-grafico-panel { flex: 2 1 560px; min-width: 320px; }
+
+/* Banner de alerta del simulador (18-nov): separado del reproductor con margen arriba Y abajo (antes solo
+   tenia margen arriba y quedaba pegado al reproductor); texto a la izquierda, botones Continuar/Intervenir
+   agrupados y pegados al borde DERECHO de la tarjeta (margin-left:auto en el grupo, no en cada boton). */
+.simint-alerta.alert-inline {
+  margin: 16px 0 20px; display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; flex-wrap: wrap;
+}
+.simint-alerta__botones { display: flex; gap: 8px; margin-left: auto; flex: 0 0 auto; }
+
+/* Cinta de reproduccion del simulador integral (/simulador) */
+.simint-player { display: flex; align-items: center; gap: 14px; margin-bottom: 8px; flex-wrap: wrap; }
+.simint-player__btn { padding: 7px 16px; white-space: nowrap; }
+
+/* Boton partido Continuar/Reiniciar (20-nov): mismo contorno de pildora que simint-player__btn, pero en DOS
+   mitades con una linea delgada en el medio en vez de un hueco — cada mitad es un <button> cuadrado por dentro,
+   recortado a la forma de pildora por el overflow:hidden del contenedor. */
+.simint-player__split { display: flex; align-items: stretch; border-radius: var(--r-pill); overflow: hidden;
+  background: var(--brand-strong); }
+/* Especificidad .page-container button.X (0,1,2) a proposito: le gana a .page-container button (0,1,1), que
+   fija padding/border-radius con !important y si no quedaria por encima de estas reglas. */
+.page-container button.simint-player__split-btn { flex: 1 1 auto; display: flex; align-items: center;
+  justify-content: center; gap: 6px; padding: 7px 14px !important; margin: 0; background: transparent !important;
+  border: none; border-radius: 0 !important; color: #fff; font-size: 14px; white-space: nowrap; cursor: pointer; }
+.page-container button.simint-player__split-btn:hover { background: rgba(255,255,255,.16) !important; box-shadow: none !important; }
+.page-container button.simint-player__split-btn:active { transform: scale(.97); }
+.simint-player__split-btn + .simint-player__split-btn { border-left: 1px solid rgba(255,255,255,.4); }
+.simint-player__track { flex: 1 1 160px; height: 6px; border-radius: var(--r-pill); background: var(--surface-2);
+  overflow: hidden; min-width: 120px; }
+.simint-player__fill { height: 100%; width: 100%; border-radius: var(--r-pill); background: var(--brand);
+  transition: width .3s linear; }
+.simint-player__fecha { font-size: 12px; color: var(--muted); min-width: 84px; font-variant-numeric: tabular-nums; }
+
+/* Tablero de camas del simulador integral (/simulador) */
+.simint-bedgrid { display: flex; flex-wrap: wrap; gap: 3px; padding-top: 4px; }
+.simint-bed { width: 11px; height: 14px; border-radius: 3px 3px 1px 1px; background: var(--brand); }
+.simint-bed--libre { background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--line); }
+.simint-bed--sobre { background: #c0392b; }
+
+/* % de carga junto a la barra del reproductor (rediseno 16-nov) */
+.simint-player__pct { font-size: 12px; color: var(--muted); min-width: 40px; text-align: right; font-variant-numeric: tabular-nums; }
+
+/* ============================================================
+   Simulador integral: boton de configuracion (rediseno 17-nov-2026, corregido el mismo dia)
+   El BOTON (46x46) vive EN LA FILA del reproductor, a la izquierda de "Reproducir" — no flota sobre nada ni
+   se superpone con otros componentes. Solo el PANEL que emerge al pasar el mouse es position:absolute,
+   anclado al boton, y SI se superpone sobre el contenido de abajo (eso si es lo esperado). Puro CSS
+   (hover/focus-within), sin Store ni callback.
+   ============================================================ */
+.simint-config-sidebar {
+  position: relative; z-index: 40;
+  width: 46px; height: 46px; flex: 0 0 46px;
+  border-radius: var(--r-lg); background: var(--surface); box-shadow: var(--sh-1); border: 1px solid var(--line);
+  transition: box-shadow .2s ease;
+}
+.simint-config-sidebar:hover, .simint-config-sidebar:focus-within { box-shadow: var(--sh-3); }
+.simint-config-tab {
+  position: absolute; top: 0; left: 0; width: 44px; height: 44px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--ink); opacity: 1; transition: opacity .15s ease; pointer-events: none;
+}
+.simint-config-tab .nav__ico { width: 22px; height: 22px; color: var(--ink); }
+:root[data-theme="dark"] .simint-config-tab .nav__ico { color: #f5f5f5; }
+.simint-config-sidebar:hover .simint-config-tab, .simint-config-sidebar:focus-within .simint-config-tab { opacity: 0; }
+.simint-config-inner {
+  position: absolute; top: 0; left: 0; width: 640px; max-height: 0; overflow: hidden;
+  padding: 0 16px; opacity: 0; pointer-events: none;
+  background: var(--surface); border-radius: var(--r-lg); box-shadow: var(--sh-3);
+  transition: max-height .3s cubic-bezier(.2, .7, .3, 1), opacity .2s ease, padding .3s ease;
+  display: grid; grid-template-columns: repeat(2, minmax(260px, 1fr)); gap: 18px 24px;
+}
+.simint-config-sidebar:hover .simint-config-inner, .simint-config-sidebar:focus-within .simint-config-inner {
+  max-height: 900px; overflow-y: auto; padding: 16px; opacity: 1; pointer-events: auto;
+  transition: max-height .3s cubic-bezier(.2, .7, .3, 1), opacity .25s ease .08s, padding .3s ease;
+}
+.simint-config-title { font-weight: 700; font-size: 15px; color: var(--brand-strong); margin-bottom: 14px; grid-column: 1 / -1; }
+.simint-config-group-header {
+  font-weight: 700; font-size: 12.5px; color: var(--muted); display: flex; align-items: center; gap: 6px;
+  margin: 0 0 10px; padding: 0; border: none; line-height: 1.2;
+}
+/* 2x2: columna izquierda (Operación, Optimización) con borde derecho; fila superior (Operación, Estrés)
+   con borde inferior. nth-child cuenta TODOS los hijos de .simint-config-inner (el titulo es el hijo 1),
+   asi que las 4 secciones son los hijos 2 (Operación), 3 (Estrés), 4 (Optimización) y 5 (Factores externos). */
+.simint-config-section { padding: 0 14px 14px 0; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.simint-config-section:nth-child(3) { border-right: none; padding-right: 0; }                         /* Estrés: arriba-derecha */
+.simint-config-section:nth-child(4) { border-bottom: none; padding-bottom: 0; }                        /* Optimización: abajo-izquierda */
+.simint-config-section:nth-child(5) { border-right: none; border-bottom: none; padding-right: 0; padding-bottom: 0; }  /* Factores externos: abajo-derecha */
+
+/* Sliders de la ventana de configuracion: azul de marca (var(--brand-strong), se adapta solo al cambiar de
+   tema), colapsados por defecto (barra fina, sin numeros ni punto) y juntos con un margen minimo; al pasar
+   el mouse se expanden levemente y muestran el punto y los numeros — SIN resaltar ningun fondo (17-nov: se
+   quito el "cuadro de fondo azul" que aparecia antes al pasar el mouse). Especificidad alta (3 clases) para
+   ganarle a los overrides compartidos .page-container .rc-slider* usados por /camas. */
+.simint-slider-group { margin-bottom: 16px; padding: 0; }
+.simint-slider-group:last-child { margin-bottom: 2px; }
+.simint-slider-group__label {
+  display: flex; align-items: center; gap: 6px; font-weight: 600; font-size: 12px; color: var(--muted);
+  margin-bottom: 6px;
+}
+.page-container .simint-slider-group .rc-slider { height: 14px; margin: 0; }
+.page-container .simint-slider-group .rc-slider-rail {
+  height: 3px !important; background: #d4dce6 !important;
+}
+.page-container .simint-slider-group .rc-slider-track {
+  height: 3px !important; background: #2a6fb0 !important;
+}
+.page-container .simint-slider-group .rc-slider-handle {
+  opacity: 1; border-color: #2a6fb0 !important;
+  box-shadow: 0 0 0 4px color-mix(in srgb, #2a6fb0 20%, transparent) !important;
+}
+.page-container .simint-slider-group .rc-slider-dot {
+  opacity: 0; border-color: #d4dce6 !important; background: var(--surface) !important;
+}
+.page-container .simint-slider-group .rc-slider-dot-active { border-color: #2a6fb0 !important; background: #2a6fb0 !important; }
+.page-container .simint-slider-group .rc-slider-mark-text { opacity: 0; font-size: 9px !important; }
+.page-container .simint-slider-group .rc-slider-mark-text-active { color: #2a6fb0 !important; font-weight: 600; opacity: 1; }
+
+/* Checkbox mejorado: "Comparar sin configuraciones" */
+.simint-comparar { font-size: 13px; font-weight: 600; margin-top: 12px; }
+
+/* Modo oscuro: textos y numeros del panel de configuracion en blanco para que se vean sobre el fondo oscuro */
+:root[data-theme="dark"] .simint-config-inner,
+:root[data-theme="dark"] .simint-config-inner .simint-slider-group__label,
+:root[data-theme="dark"] .simint-config-group-header,
+:root[data-theme="dark"] .page-container .simint-slider-group .rc-slider-mark-text {
+  color: #f5f5f5 !important;
+}
+
+/* Radiografia: cabecera con titulo + vista, y filtros (edad/ruta/sexo) APILADOS uno encima del otro, cada
+   uno con su etiqueta (20-nov) — se activan SOLO con clic explicito, cada grupo incluye su opcion "Todos"/
+   "Todas" como primera opcion (ver panel_filtros en simulador.py). */
+.simint-radio__header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; row-gap: 20px; }
+.simint-radio__titulo { font-size: 16px; font-weight: 700; }
+.simint-radio__filtros-col {
+  margin-top: 14px; border-top: 1px solid var(--line); padding-top: 10px;
+  display: flex; flex-direction: column; gap: 8px;
+}
+/* flex-wrap:nowrap en la FILA para que la etiqueta nunca "caiga" a la linea de abajo (le pasaba a "Edad",
+   con 8 chips, cuando la fila completa no cabia y el navegador bajaba el grupo entero de chips); el que
+   envuelve es el GRUPO de chips (flex-wrap:wrap + min-width:0 para poder encogerse), que se queda al lado
+   de la etiqueta y, si no caben todos los chips en una linea, el grupo crece hacia abajo pero la etiqueta
+   sigue a su izquierda en la primera linea. */
+.simint-radio__filtro-fila { display: flex; align-items: flex-start; gap: 10px; flex-wrap: nowrap; }
+.simint-radio__filtro-etiqueta { font-size: 11px; font-weight: 700; color: var(--muted); width: 36px;
+  flex: 0 0 36px; padding-top: 4px; }
+.simint-radio__filtro-grupo { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; flex: 1 1 auto; min-width: 0; }
+.simint-chip {
+  display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: var(--r-pill);
+  border: 1px solid var(--line); font-size: 11.5px; cursor: pointer; transition: all .15s ease; user-select: none;
+  background: var(--surface);
+}
+.simint-chip:hover { border-color: var(--brand-strong); }
+.simint-chip.is-active { background: var(--brand-strong); border-color: var(--brand-strong); color: #fff; }
+.simint-chip--icon { padding: 3px 11px; }
+.simint-chip__swatch { display: inline-block; width: 9px; height: 9px; border-radius: 3px; }

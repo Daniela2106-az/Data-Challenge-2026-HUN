@@ -13,7 +13,8 @@ import plotly.graph_objects as go
 from dash import Input, Output, callback, html
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from componentes import AZUL, PIZARRA, TENUE, cifra, coma, dato, estilo, filtro, grafico, lamina, mensaje, metodo, miles, pagina, portada  # noqa: E402
+from componentes import (AZUL, PIZARRA, TENUE, bloque, cifra, coma, dato, estilo, filtro, grafico, hecho, lamina, laminas_grupo, mensaje,  # noqa: E402
+                         metodo, miles, pagina, portada)
 
 dash.register_page(__name__, path="/diagnosticos", name="Diagnósticos", title="Diagnósticos y tiempos - HUN", order=27)
 
@@ -27,6 +28,18 @@ GRUPOS = [("Musculoesquelético y dolor", 423, 38.9, 108.0, 116.3), ("Renal y ur
 INDICADORES = {"espera": (2, "espera mediana por una cama", False), "p90": (3, "espera de los peores casos (percentil 90)", False),
                "estancia": (4, "estancia mediana en cama", True)}
 LENTOS = {"Musculoesquelético y dolor", "Renal y urinario", "Cáncer y tumores", "Digestivo"}
+# Lo que el grupo de diagnóstico agrega al modelo (docs/diagnosticos_y_tiempos.md 3 y 6): distinto de las
+# laminas, que solo comparan espera y estancia entre grupos.
+AGREGA = [
+    ("9,3 % → 20,5 %", "Sube el poder explicativo de la espera", "Al agregar el grupo de diagnóstico a edad, tipo de visita, franja "
+     "horaria y año — solo entre quienes tienen diagnóstico traducido."),
+    ("−68 %", "Menos espera en cardiovascular que en digestivo", "Controlando tipo de visita, franja, año y edad. Hipótesis sin "
+     "comprobar: prioridad clínica por infarto o accidente cerebrovascular."),
+    ("136 h", "La estancia más larga: recién nacidos", "Junto a cáncer (115 h) y endocrino (118 h); embarazo (47 h) y trauma "
+     "(53 h), las más cortas — probablemente otro flujo clínico, no comparable con medicina interna."),
+    ("0,9 %", "De los episodios queda sin clasificar", "El mapeo cubre 2.404 diagnósticos distintos en 17 grupos clínicos, "
+     "revisado a mano en los 300 más frecuentes (85 % de los casos con diagnóstico)."),
+]
 
 
 def layout():
@@ -36,17 +49,21 @@ def layout():
                 "los que hacen la cola larga.",
                 [cifra("39 h", "de espera mediana en musculoesquelético y dolor"), cifra("9 h", "en cardiovascular y respiratorio"),
                  cifra("65 %", "de las hospitalizaciones tiene un diagnóstico que se puede agrupar")]),
-        lamina(1, html.Span(id="dx-titular"),
-               "Cada barra es un grupo de diagnóstico, ordenado de mayor a menor. **En azul, los cuatro grupos que más esperan cama.** "
-               "Pasa el cursor por una barra para ver cuántos pacientes tiene.",
-               grafico("dx-barras", alto=430), id_dato="dx-dato",
-               controles=filtro("dx-indicador", "Qué medir", [("espera", "Espera de cama"), ("p90", "Peores casos"), ("estancia", "Estancia")],
-                                "espera")),
-        lamina(2, "Musculoesquelético y cáncer esperan mucho y además se quedan más tiempo",
-               "Cada punto es un grupo de diagnóstico: hacia la derecha, más espera por una cama; hacia arriba, más días "
-               "hospitalizado. **Renal y urinario espera mucho pero se queda poco**: su problema es conseguir la cama, no ocuparla.",
-               grafico("dx-dispersion", alto=400), dato=("4,8 días", "de estancia mediana en musculoesquelético y en cáncer, los que más se quedan"),
-               invertida=True),
+        laminas_grupo(
+            lamina(1, html.Span(id="dx-titular"),
+                   "Cada barra es un grupo de diagnóstico, ordenado de mayor a menor. **En azul, los cuatro grupos que más esperan cama.** "
+                   "Pasa el cursor por una barra para ver cuántos pacientes tiene.",
+                   grafico("dx-barras", alto=430), id_dato="dx-dato",
+                   controles=filtro("dx-indicador", "Qué medir", [("espera", "Espera de cama"), ("p90", "Peores casos"), ("estancia", "Estancia")],
+                                    "espera")),
+            lamina(2, "Musculoesquelético y cáncer esperan mucho y además se quedan más tiempo",
+                   "Cada punto es un grupo de diagnóstico: hacia la derecha, más espera por una cama; hacia arriba, más días "
+                   "hospitalizado. **Renal y urinario espera mucho pero se queda poco**: su problema es conseguir la cama, no ocuparla.",
+                   grafico("dx-dispersion", alto=400), dato=("4,8 días", "de estancia mediana en musculoesquelético y en cáncer, los que más se quedan"),
+                   invertida=True),
+        ),
+        bloque("Lo que agrega el diagnóstico", "Qué tanto ayuda a explicar la espera, y sus propios límites"),
+        html.Div(className="hechos", children=[hecho(*a) for a in AGREGA]),
         mensaje("La cola larga está en **cirugía, urología y ortopedia**: pacientes estables que esperan turno o una cama especializada. "
                 "Vale la pena revisar ese flujo aparte, porque no compite con las urgencias vitales."),
         metodo(

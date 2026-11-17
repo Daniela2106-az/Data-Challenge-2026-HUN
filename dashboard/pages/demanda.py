@@ -14,8 +14,8 @@ from dash import Input, Output, callback, html
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import tema_graficos as tg  # noqa: E402
-from componentes import (AZUL, PIZARRA, TENUE, aviso_datos, cifra, coma, dato, eje_fechas, estilo, etiqueta_final, fecha_es, filtro, grafico,  # noqa: E402
-                         horas_eje, lamina, leer, mensaje, metodo, pagina, por_mes, portada)
+from componentes import (AZUL, PIZARRA, TENUE, aviso_datos, bloque, cifra, coma, dato, eje_fechas, estilo, etiqueta_final, fecha_es, filtro,  # noqa: E402
+                         grafico, hecho, horas_eje, lamina, laminas_grupo, leer, mensaje, metodo, pagina, por_mes, portada)
 
 dash.register_page(__name__, path="/demanda", name="Demanda", title="Demanda - HUN", order=21)
 
@@ -23,6 +23,18 @@ TITULO = "Los pacientes llegan de día y entre semana, y la demanda no crece"
 ETIQUETA = {"llegadas": "llegadas", "ingresos_a_cama": "ingresos a cama"}
 DIAS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]
 NO_CRECEN = {"llegadas": "Las llegadas no crecen", "ingresos_a_cama": "Los ingresos a cama no crecen"}
+# Lo que no se ve en la curva diaria (CLAUDE.md 4.13, docs/HALLAZGOS.md 4.9 y 5.1): cifras ya publicadas,
+# distintas de lo que ya muestran las laminas (que son calendario y hora, no calidad del registro ni reingresos).
+NO_SE_VE = [
+    ("4,3 %", "De los episodios son réplicas de llegada", "El mismo registro duplicado entre dos personas (la estancia gemela de "
+     "CLAUDE.md 4.6). Es estable en el tiempo, así que no cambia la forma de las curvas y no se corrige."),
+    ("5,3 % / 14,1 %", "Reingresa en 72 horas o en 30 días", "Ya sin registros gemelos ni traslapes. De quienes salen de una "
+     "hospitalización, el 28,6 % vuelve antes de 30 días (incluye controles programados, no solo complicaciones)."),
+    ("−17 %", "Visitas en Carnaval de Barranquilla", "Sábados −24 %, lunes −28 %: el único evento del calendario, fuera de los "
+     "festivos, que de verdad mueve el nivel de llegadas."),
+    ("−37 %", "Visitas el 24 y el 31 de diciembre", "La caída más fuerte del calendario; el 25 de diciembre y el 1 de enero se "
+     "comportan como un festivo normal."),
+]
 
 
 def _panel():
@@ -39,26 +51,30 @@ def layout():
                 "las camas no viene de ahí.", id_cifras="dem-cifras"),
         html.Div(className="filtros", children=[
             filtro("dem-serie", "Qué contar", [("llegadas", "Todas las llegadas"), ("ingresos_a_cama", "Ingresos a cama")], "llegadas")]),
-        lamina(1, "El pico es de 9 a 11 de la mañana, y el lunes es el día más cargado",
-               "Cada cuadro es una hora de un día de la semana: entre más intenso el azul, más llegadas. De noche y en fin de semana el "
-               "hospital recibe mucho menos.",
-               grafico("dem-calor", alto=330), dato=("9 a 11 a. m.", "la franja con más llegadas, todos los días")),
-        lamina(2, html.Span(id="dem-titular"),
-               "Promedio por día de cada mes completo, de febrero de 2023 a marzo de 2026. **Si la demanda no crece, la saturación "
-               "hay que buscarla dentro del hospital.**",
-               grafico("dem-mes", alto=330), id_dato="dem-dato", invertida=True),
-        lamina(3, html.Span(id="dem-titular-semana"),
-               "Promedio por día de la semana; en gris, el fin de semana. **El ritmo del hospital baja sábado y domingo**, y con él "
-               "las altas y los ingresos a cama.",
-               grafico("dem-semana", alto=320), id_dato="dem-dato-semana"),
-        lamina(4, html.Span(id="dem-titular-festivo"),
-               "Un festivo se parece a un domingo: llegan menos pacientes y se hospitalizan menos. El pronóstico ya lo tiene en "
-               "cuenta, junto con la Semana Santa y el Carnaval.",
-               grafico("dem-festivo", alto=300), id_dato="dem-dato-festivo", invertida=True),
-        lamina(5, "El fin de semana llega la misma curva del día, con menos gente",
-               "Llegadas promedio en cada hora, entre semana y en fin de semana. **La forma es la misma: sube desde las 6, tiene su "
-               "pico a media mañana y cae en la noche.** Esta gráfica cuenta todas las llegadas.",
-               grafico("dem-horas", alto=320), id_dato="dem-dato-horas"),
+        laminas_grupo(
+            lamina(1, "El pico es de 9 a 11 de la mañana, y el lunes es el día más cargado",
+                   "Cada cuadro es una hora de un día de la semana: entre más intenso el azul, más llegadas. De noche y en fin de semana el "
+                   "hospital recibe mucho menos.",
+                   grafico("dem-calor", alto=330), dato=("9 a 11 a. m.", "la franja con más llegadas, todos los días")),
+            lamina(2, html.Span(id="dem-titular"),
+                   "Promedio por día de cada mes completo, de febrero de 2023 a marzo de 2026. **Si la demanda no crece, la saturación "
+                   "hay que buscarla dentro del hospital.**",
+                   grafico("dem-mes", alto=330), id_dato="dem-dato", invertida=True),
+            lamina(3, html.Span(id="dem-titular-semana"),
+                   "Promedio por día de la semana; en gris, el fin de semana. **El ritmo del hospital baja sábado y domingo**, y con él "
+                   "las altas y los ingresos a cama.",
+                   grafico("dem-semana", alto=320), id_dato="dem-dato-semana"),
+            lamina(4, html.Span(id="dem-titular-festivo"),
+                   "Un festivo se parece a un domingo: llegan menos pacientes y se hospitalizan menos. El pronóstico ya lo tiene en "
+                   "cuenta, junto con la Semana Santa y el Carnaval.",
+                   grafico("dem-festivo", alto=300), id_dato="dem-dato-festivo", invertida=True),
+            lamina(5, "El fin de semana llega la misma curva del día, con menos gente",
+                   "Llegadas promedio en cada hora, entre semana y en fin de semana. **La forma es la misma: sube desde las 6, tiene su "
+                   "pico a media mañana y cae en la noche.** Esta gráfica cuenta todas las llegadas.",
+                   grafico("dem-horas", alto=320), id_dato="dem-dato-horas"),
+        ),
+        bloque("Lo que no se ve en la curva diaria", "Calidad del registro y repetición de pacientes, no calendario"),
+        html.Div(className="hechos", children=[hecho(*h) for h in NO_SE_VE]),
         mensaje("La presión sobre las camas **no viene de más pacientes**. Hay que mirar cuánto se quedan y cómo se liberan las "
                 "camas: es lo que muestran las páginas siguientes."),
         metodo(

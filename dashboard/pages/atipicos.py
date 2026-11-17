@@ -13,7 +13,7 @@ import plotly.graph_objects as go
 from dash import Input, Output, callback, html
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from componentes import AZUL, MESES, PIZARRA, TENUE, bloque, cifra, estilo, grafico, hecho, lamina, mensaje, metodo, pagina, portada  # noqa: E402
+from componentes import AZUL, MESES, PIZARRA, TENUE, bloque, cifra, estilo, grafico, hecho, lamina, laminas_grupo, mensaje, metodo, pagina, portada  # noqa: E402
 
 dash.register_page(__name__, path="/atipicos", name="Días atípicos", title="Días atípicos - HUN", order=34)
 
@@ -60,14 +60,16 @@ def layout():
                 "como algo constante.",
                 [cifra("14", "días atípicos de llegadas entre 2023 y 2026"), cifra("13 de 14", "fueron días con menos llegadas de lo esperado"),
                  cifra("0", "días con espera más alta de lo esperado")]),
-        lamina(1, "Los dos días más extremos parecen cortes del sistema, no menos pacientes",
-               "Cada barra es un día atípico: cuánto se apartaron las llegadas de lo que esperaba el pronóstico. **En azul, los dos días "
-               "en que también cayeron los ingresos a cama**, algo que apunta a una falla de registro. Pasa el cursor para ver cada día.",
-               grafico("ati-dias", alto=360), dato=("−60 %", "de llegadas el 28 de marzo de 2026, con un solo ingreso a cama")),
-        lamina(2, "La espera larga no produce días récord",
-               "Días con más y con menos de lo esperado en cada serie. **Los 7 días atípicos de espera son de espera más corta**, casi "
-               "todos domingos, festivos o Semana Santa.",
-               grafico("ati-resumen", alto=320), dato=("0 días", "con una espera más alta de lo esperado"), invertida=True),
+        laminas_grupo(
+            lamina(1, "Los dos días más extremos parecen cortes del sistema, no menos pacientes",
+                   "Cada barra es un día atípico: cuánto se apartaron las llegadas de lo que esperaba el pronóstico. **En azul, los dos días "
+                   "en que también cayeron los ingresos a cama**, algo que apunta a una falla de registro. Pasa el cursor para ver cada día.",
+                   grafico("ati-dias", alto=360), dato=("−60 %", "de llegadas el 28 de marzo de 2026, con un solo ingreso a cama")),
+            lamina(2, "La espera larga no produce días récord",
+                   "Días con más y con menos de lo esperado en cada serie. **Los 7 días atípicos de espera son de espera más corta**, casi "
+                   "todos domingos, festivos o Semana Santa.",
+                   grafico("ati-resumen", alto=320), dato=("0 días", "con una espera más alta de lo esperado"), invertida=True),
+        ),
         bloque("Los 14 días, uno por uno", "Llegadas reales frente a las que esperaba el pronóstico; resaltados, los dos posibles cortes del sistema"),
         _tabla(),
         bloque("Lo que explica el calendario", "Revisar los días raros sirvió para mejorar el pronóstico"),

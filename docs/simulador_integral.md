@@ -11,6 +11,55 @@ Código: `src/simulador_integral.py` (motor) y `dashboard/pages/simulador.py` (p
 Tablas: `resultados/tablas/simint_*.csv`; gráfico: `resultados/graficos/simint_resultados.png`.
 Es la **Fase 1** del plan de Samuel (simulador → alertas operativas → motor de recomendaciones).
 
+## Evolución del 16-nov-2026 (seis etapas sobre la base del 14/15-nov)
+
+Construido en orden, cada etapa usable por sí sola y sin romper la puerta de validación (el backtest se
+re-corrió después de cada cambio que tocó el motor; sigue CUMPLIENDO):
+
+1. **Composición por perfil + "Radiografía del día"** (`con_composicion=True`): el motor acumula, sin consumir
+   números aleatorios (regresión de semilla intacta, verificado), cuántos pacientes de cada uno de los 21
+   perfiles (edad × ruta) hay cada día en 5 etapas (llegan, esperando, entran a cama, en cama, salen de alta).
+   La página muestra un panel de pictogramas (1 figura = N pacientes según el tamaño del grupo) con los 3
+   perfiles dominantes comparados contra lo típico del horizonte, actualizado al pasar el cursor por el gráfico.
+2. **Cinta de reproducción**: botones ▶/⏸ y velocidad (1 día o 1 semana por tick, puro `dcc.Interval` +
+   clientside), que mueve un velo translúcido sobre el "futuro" de los 3 paneles (vía `Plotly.relayout`, sin
+   redibujar trazas) y sincroniza la radiografía del día con el cursor.
+3. **Tablero de camas**: grid de 106 celdas (88 adultos + 18 niños) que se llena según la mediana simulada del
+   día del cursor; una fila roja adicional crece cuando el censo supera la capacidad — la sobreocupación se ve,
+   no se lee en una nota.
+4. **Alertas durante la reproducción**: se precomputa `prob_sat_48h` (fracción de repeticiones que saturan 106
+   camas dos días después de cada día, costo cero al simular); si cruza 60 % mientras se reproduce, la cinta se
+   pausa sola con un banner de alerta — primer brote de la Fase 2 (alertas operativas) montado sobre el motor.
+5. **Palancas de hallazgos + preset + intervenir**: cuatro controles nuevos, todos neutros por defecto
+   (verificado: con 0/None el motor es bit-idéntico al de antes):
+   - **Recortar estancias largas (R7)**: reduce un % SOLO a las estancias sorteadas de más de 14 días (gestión
+     de casos, no un recorte parejo). 15 % libera ~4,4 camas en la prueba (ley de Little/R7: 3-6 esperadas).
+   - **Adelantar altas a la mañana (escenario A)**: inyecta el efecto YA MEDIDO en `simulacion_altas.py`
+     (0,1 % de espera menos por punto de adelanto) como reducción de la espera sorteada — declarado como
+     estimación inyectada, no mecánica interna (las esperas del motor se sortean, no se derivan de la
+     disponibilidad de camas). 30 % de adelanto baja la cola ~3 % sin casi tocar la ocupación (coherente con
+     "suaviza el pico, no baja el nivel").
+   - **Mezcla de estrés** (`mezcla_edad`/`mezcla_ruta` sobre las LLEGADAS, mismo espíritu que el escenario D de
+     `/camas`): sustituye los marginales de edad/ruta de quienes llegan; P(cama\|perfil) no cambia.
+   - **Capacidad hipotética**: un slider que mueve la franja de 106 y el % de días saturados leyendo
+     `sat_por_capacidad` (precomputado para 96-130 camas) sin volver a simular — mismo patrón que
+     `curva_capacidad` de A5.
+   - **Preset "Operación óptima"** (R7 15 % + adelanto 30 %, sin tocar la estancia uniforme para no contar dos
+     veces el recorte) y **comparación "hoy"**: superpone en los 3 paneles una corrida neutra con la misma
+     semilla (líneas punteadas grises). El botón **Intervenir** del banner de alerta aplica el mismo preset.
+6. **Vista horaria** (plazo "3 días, hora a hora"): un motor simplificado (`simular_horario`, sin modelos A9,
+   casos, R7, adelanto ni mezcla — solo estancia y espera) que NO redondea a días: calcula cama = llegada +
+   espera y alta = cama + estancia en horas continuas, y deja la cola sin promediar a día. Para que la hora de
+   asignación de cada agente reproduzca el patrón real, se le quita a `trayectoria_para` el ruido de Silverman
+   sobre la espera (parámetro `suavizar_espera=False`, nuevo y opcional — el motor diario no lo usa y queda
+   bit-idéntico): sin el ruido, hora_llegada + espera de un paciente real da exactamente la hora en que ESE
+   paciente recibió su cama. Validado contra el patrón real (`ingreso_cama.dt.hour`): la franja 20-23 h salió
+   **29,0 % simulado contra 29,8 % real**, con el pico exacto en la misma hora (21 h) en ambos — las dos olas de
+   asignación de camas (`docs/estimador_tiempos.md` 1.2) emergen solas del motor, sin programarlas.
+
+Límite nuevo declarado: la vista horaria es un motor deliberadamente más simple (sin las palancas de
+hallazgos ni A9/casos) pensado para la experiencia en vivo de corto plazo, no para análisis de escenarios.
+
 ## Decisiones de diseño (de la conversación del 14-nov; cada descarte tiene su porqué)
 
 | Qué se consideró | Resultado | Por qué |
@@ -26,6 +75,15 @@ Es la **Fase 1** del plan de Samuel (simulador → alertas operativas → motor 
 
 1. **Llegadas** diarias ~ Poisson(pronóstico de `llegadas` de `modelo_pronostico.py`).
 2. Cada llegada recibe un **perfil** (grupo de edad × ruta) de la mezcla real de llegadas de 2025 (21 perfiles).
+   **Desde el 16-nov el perfil puede completarse con el sexo** (para la vista de perfiles del dashboard):
+   en llegadas, sorteado con la mezcla real por perfil (`sexo_llegada`, P(mujer) de 41 a 62 % según la celda,
+   global 56 %); en hospitalizados, **el del mismo paciente histórico de la trayectoria** (4.º valor de
+   `trayectoria_para`), para que la etiqueta sea coherente con la espera mostrada (las mujeres esperan más:
+   mediana 21,8 h contra 14,3 h en el pool 2024-2025, hallazgo abierto de A1). El sexo **no entra en ningún
+   cálculo del motor** (P(cama), espera y estancia ya lo promedian dentro de cada perfil): los resultados son
+   bit-idénticos con o sin él. **Raza y etnia no se asignan**: en la base la raza está 95 % sin dato y la
+   etnia es casi constante ("Hispanic or Latino", `CLAUDE.md` sección 3); si la vista las muestra, que diga
+   "Sin dato en la base".
 3. Cada llegada **se hospitaliza** con probabilidad κ × P(cama|perfil), donde P viene de `tabla_episodios`
    (hospitalizado y `estancia_unica` entre TODOS los episodios de 2025: global 7,6 %; va de 5,1 % en adultos
    jóvenes por urgencias a 35,6 % en los de 75+ por Treatment urgency) y κ calibra el nivel contra el
@@ -33,6 +91,8 @@ Es la **Fase 1** del plan de Samuel (simulador → alertas operativas → motor 
 4. A cada futuro hospitalizado se le **sortea una trayectoria real** de un paciente de su mismo perfil
    (hora de llegada, espera y estancia del MISMO paciente histórico, ventana 2024-2025, 14.287 estancias,
    20 de 21 celdas con ≥ 30 casos), suavizada con ruido de Silverman (misma técnica que el motor A5).
+   **Desde el 16-nov**, la espera sorteada se ajusta por la **carga de llegadas del día simulado**
+   (ver la subsección del backtest; `HUN_SIMINT_CARGA=0` lo desactiva).
 5. **cama = llegada + espera; alta = cama + estancia.** La ocupación se acumula por día (misma convención
    validada de A5); la cola de espera por HORA y se promedia por día, igual que la cola real observada.
 6. **Siembra** en el corte: el censo real en cama (~100) y la cola real (~21-36) de ese día.
@@ -52,6 +112,52 @@ cobertura dentro de la meta 70-90 %) y reproducir la cola y las altas, que A5 no
 | Ingresos a cama/día (emergentes) | 4,0 | +0,7 | 79,8 % | los conteos que emergen de los agentes cuadran |
 | Altas/día | 4,7 | +0,5 | 68,7 % | — |
 | Llegadas/día | 18,8 | +11,7 | 58,8 % | banda angosta: solo ruido Poisson, no error del pronóstico (límite heredado de A5) |
+
+### Validación directa de distribuciones (15-nov-2026, sección 5b del script)
+
+La validación por agregados es indirecta (la cola es la huella de la espera y la ocupación la de la estancia,
+ley de Little). Para cerrar el argumento se compararon **de frente** los percentiles de los tiempos que reciben
+los agentes (100.000 sorteos con el mismo mecanismo: perfil ponderado por P(cama) y `trayectoria_para`) contra
+los reales del periodo de backtest (`resultados/tablas/simint_distribuciones.csv`):
+
+| Serie | n real | Mediana sim / real | p75 sim / real | p90 sim / real | Media sim / real |
+|---|---|---|---|---|---|
+| Espera de cama (h) | 1.810 | 18,9 / 17,0 | 40,3 / 45,1 | 74,7 / 79,6 | 31,7 / 33,8 |
+| Estancia (h) | 1.756 | 75,2 / 69,6 | 149,1 / 141,6 | 283,8 / 260,6 | 125,9 / 116,9 |
+
+Los percentiles casi se calcan. Dos sesgos chicos y explicables: la cola alta de la **espera** real de 2026 es
+algo peor que el pool 2024-2025 (coherente con que los peores casos empeoran año a año, `CLAUDE.md` 6b), y la
+cola alta de la **estancia** real está algo recortada porque las estancias largas que entraron en el backtest y
+aún no tenían alta registrada quedan fuera del lado real (censura, no error del simulador).
+
+### Ajuste de la espera por carga de llegadas del día (16-nov-2026, sección 1b del script)
+
+En los días con más llegadas la espera **típica** de cama es más larga: coeficiente de log(espera+1) sobre las
+llegadas estandarizadas del día de llegada = **+4,7 % por desviación** (~48 llegadas; se 0,011, t ≈ 4,5,
+14.289 estancias de 2024-2025). Desde el 16-nov cada día simulado multiplica las esperas sorteadas de sus
+llegadas por `exp(β·z)/C`, con z acotado a ±3 (soporte histórico) y C un centrado medido entre hospitalizados
+que deja la **media poblacional de la espera sin cambio**. Verificación (puerta: no distorsionar el backtest y
+conservar el promedio — **cumple**):
+
+| Métrica | Sin ajuste (base 15-nov) | Con ajuste (16-nov) |
+|---|---|---|
+| Backtest ocupación MAE / cobertura | 9,32 / 74,7 % | 9,38 / 75,8 % |
+| Backtest cola MAE / sesgo / cobertura | 4,33 / −2,37 / 70,7 % | 4,34 / −2,44 / 70,7 % |
+| Cola media simulada (demo misma semilla) | 25,29 | 25,21 |
+| Corr(llegadas, cola) día a día simulada | 0,260 | **0,264** (real: 0,289) |
+| Proyección 180 d: ocupación / % saturación | 112,2 / 69,1 % | 112,2 / 69,2 % |
+
+Qué hace y qué no (medido antes de implementarlo, decisión de la conversación del 16-nov):
+- **Se descartó condicionar por decil de llegadas del día con multiplicadores de la media**: salen 0,95–1,09
+  **sin patrón monótono** (el decil más cargado da 0,99) — a esa granularidad la espera MEDIA es plana; solo la
+  típica (mediana/escala log) sube. El ajuste implementado usa la escala log, y por eso **redistribuye** la
+  espera típica entre días cargados y tranquilos sin cambiar las horas totales.
+- El gradiente fuerte de la Fase 4 (14 → 26 h por decil de llegadas de las **6 h previas**) vive dentro del día
+  y **ya estaba embebido**: las trayectorias sortean hora y espera juntas del mismo paciente real, así que el
+  patrón por franja (madrugada 13,7 h / tarde 24,3 h de mediana) se reproduce solo.
+- **La retroalimentación ocupación → espera NO se modela**: no es estimable del histórico (espera plana por
+  quintil de ocupación, Fase 4; cola sin correlación con la ocupación, `docs/capacidad_efectiva.md`). El
+  hospital nunca operó holgado, así que no hay contraste para medirla; se declara como límite.
 
 ## Proyección integrada (180 días desde el 9-abr-2026, 1.000 repeticiones)
 
@@ -87,6 +193,10 @@ después; la nota de la página lo advierte para que nadie lea "menos espera = c
 - Los sembrados reciben tiempos completos del bootstrap (sin corregir el sesgo de selección); solo afecta los
   primeros días.
 - Las llegadas incluyen ~4 % de réplicas (cota conocida, `CLAUDE.md` 4.13).
+- El ajuste por carga del día (16-nov) mueve la espera típica, no la media por día (que es plana en los datos);
+  la retroalimentación ocupación → espera no se modela porque no es estimable del histórico (ver la subsección
+  del backtest). Si la simulación sale muy lejos del régimen histórico de ocupación, las esperas no se alargan
+  solas: el resultado de esos escenarios es la presión sobre camas, no la espera individual.
 - Asociación, no causa; periodo confiable hasta el 9-abr-2026; 106 camas es la cifra del HUN sin fecha.
 
 ## Fases siguientes (plan de Samuel)

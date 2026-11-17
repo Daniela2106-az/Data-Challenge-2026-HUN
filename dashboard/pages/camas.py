@@ -410,29 +410,31 @@ def mostrar(data, grupo, tema):
     # que rodean la transicion (eso deja que cada tramo "se pase" del umbral, porque uno de los dos puntos
     # reales que comparten esta por definicion del otro lado), se interpola el cruce exacto (x, cap_hun) entre
     # cada par de puntos consecutivos que cambian de lado y se inserta ESE punto (no los reales) en ambas series.
-    x_normal, y_normal, x_sobre, y_sobre, deficit_normal, deficit_sobre = [], [], [], [], [], []
+    x_normal, y_normal, x_sobre, y_sobre = [], [], [], []
     n = len(p50)
     for i in range(n):
-        valor, deficit_i = float(p50[i]), max(float(p50[i]) - cap_hun, 0.0)
+        valor = float(p50[i])
         if sobre[i]:
-            x_sobre.append(fechas[i]); y_sobre.append(valor); deficit_sobre.append(deficit_i)
+            x_sobre.append(fechas[i]); y_sobre.append(valor)
         else:
-            x_normal.append(fechas[i]); y_normal.append(valor); deficit_normal.append(0.0)
+            x_normal.append(fechas[i]); y_normal.append(valor)
         if i < n - 1 and sobre[i] != sobre[i + 1]:
             frac = (cap_hun - float(p50[i])) / (float(p50[i + 1]) - float(p50[i]))
             x_cruce = fechas[i] + frac * (fechas[i + 1] - fechas[i])
-            x_normal.append(x_cruce); y_normal.append(cap_hun); deficit_normal.append(0.0)
-            x_sobre.append(x_cruce); y_sobre.append(cap_hun); deficit_sobre.append(0.0)
-    deficit = np.clip(p50 - cap_hun, 0, None)                 # pacientes sin cama ese dia, segun la mediana simulada (para el panel)
+            x_normal.append(x_cruce); y_normal.append(cap_hun)
+            x_sobre.append(x_cruce); y_sobre.append(cap_hun)
 
+    # El tramo rojo NO son "pacientes sin cama": superar las 106 camas reportadas es sobreocupacion o una
+    # capacidad real mayor (CLAUDE.md 4.8), asi que el hover muestra la ocupacion total, igual que el azul.
     fig = go.Figure([
         go.Scatter(x=fechas, y=p90, mode="lines", line=dict(width=0), showlegend=False, hoverinfo="skip"),
         go.Scatter(x=fechas, y=p10, mode="lines", line=dict(width=0), fill="tonexty", fillcolor="rgba(42,111,176,0.15)",
                    name="Banda 10-90 %", hoverinfo="skip"),
         go.Scatter(x=x_normal, y=y_normal, mode="lines", line=dict(color=AZUL, width=2), name="Pacientes en cama",
-                   customdata=deficit_normal, hovertemplate="%{x|%d-%m-%Y}<br>%{y:.0f} pacientes en cama<extra></extra>"),
-        go.Scatter(x=x_sobre, y=y_sobre, mode="lines", line=dict(color=ROJO, width=2.5), name="Sin cama suficiente",
-                   customdata=deficit_sobre, hovertemplate="%{x|%d-%m-%Y}<br><b>%{customdata:.0f} pacientes sin cama ese día</b><extra></extra>"),
+                   hovertemplate="%{x|%d-%m-%Y}<br>%{y:.0f} pacientes en cama<extra></extra>"),
+        go.Scatter(x=x_sobre, y=y_sobre, mode="lines", line=dict(color=ROJO, width=2.5),
+                   name=f"Por encima de la capacidad ({cap_hun})",
+                   hovertemplate="%{x|%d-%m-%Y}<br>%{y:.0f} pacientes en cama<extra></extra>"),
         go.Scatter(x=fechas, y=[cap_hun] * len(fechas), mode="lines", line=dict(color=NARANJA, dash="dash"),
                    name=f"Capacidad HUN ({cap_hun})", hoverinfo="skip"),
     ])

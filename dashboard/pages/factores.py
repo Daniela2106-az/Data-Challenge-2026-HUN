@@ -13,8 +13,8 @@ import plotly.graph_objects as go
 from dash import Input, Output, callback, html
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from componentes import (AZUL, PIZARRA, TENUE, aviso_datos, bloque, cifra, coma, dato, estilo, grafico, hecho, lamina, leer, mensaje, metodo,  # noqa: E402
-                         pagina, portada)
+from componentes import (AZUL, PIZARRA, TENUE, aviso_datos, bloque, cifra, coma, dato, estilo, grafico, hecho, lamina, laminas_grupo, leer,  # noqa: E402
+                         mensaje, metodo, pagina, portada)
 
 dash.register_page(__name__, path="/factores", name="Factores de la espera", title="Qué influye en la espera - HUN", order=25)
 
@@ -48,18 +48,20 @@ def layout():
                 [cifra("16 %", "de las diferencias de espera se explica con lo observado"),
                  cifra("84 %", "depende de lo que la base no registra"),
                  cifra("0", "peso del día de la semana y los festivos")]),
-        lamina(1, "El diagnóstico y la edad pesan algo; el calendario, nada",
-               "Cada barra es cuánto de la espera explica un factor, de un total de 16 puntos. **Ninguno domina**, y el que más pesa (el "
-               "diagnóstico) se registra tarde y no se conoce al llegar.",
-               grafico("fac-peso", alto=350), dato=("7,2 de 16", "puntos los aporta el diagnóstico, un dato que se conoce después")),
-        lamina(2, "Quien entra por urgencias y quien es mayor espera más",
-               "Espera mediana por tipo de visita y por grupo de edad. Las visitas ambulatorias y las de «treatment urgency» consiguen "
-               "cama antes, y los niños esperan menos de la mitad que los mayores de 60. Son **asociaciones**: cada grupo trae pacientes distintos.",
-               grafico("fac-grupos", alto=350), id_dato="fac-dato", invertida=True),
-        lamina(3, "Con todo lo demás igual, ser mujer y entrar por urgencias suma espera",
-               "Cuánto cambia la espera por cada característica cuando las demás se mantienen iguales (edad, hora, año y tipo de "
-               "visita). **En azul, lo que alarga la espera; en gris, lo que la acorta.**",
-               grafico("fac-efectos", alto=300), dato=("+27 %", "esperan las mujeres frente a los hombres, sin causa conocida")),
+        laminas_grupo(
+            lamina(1, "El diagnóstico y la edad pesan algo; el calendario, nada",
+                   "Cada barra es cuánto de la espera explica un factor, de un total de 16 puntos. **Ninguno domina**, y el que más pesa (el "
+                   "diagnóstico) se registra tarde y no se conoce al llegar.",
+                   grafico("fac-peso", alto=350), dato=("7,2 de 16", "puntos los aporta el diagnóstico, un dato que se conoce después")),
+            lamina(2, "Quien entra por urgencias y quien es mayor espera más",
+                   "Espera mediana por tipo de visita y por grupo de edad. Las visitas ambulatorias y las de «treatment urgency» consiguen "
+                   "cama antes, y los niños esperan menos de la mitad que los mayores de 60. Son **asociaciones**: cada grupo trae pacientes distintos.",
+                   grafico("fac-grupos", alto=350), id_dato="fac-dato", invertida=True),
+            lamina(3, "Con todo lo demás igual, ser mujer y entrar por urgencias suma espera",
+                   "Cuánto cambia la espera por cada característica cuando las demás se mantienen iguales (edad, hora, año y tipo de "
+                   "visita). **En azul, lo que alarga la espera; en gris, lo que la acorta.**",
+                   grafico("fac-efectos", alto=300), dato=("+27 %", "esperan las mujeres frente a los hombres, sin causa conocida")),
+        ),
         bloque("Lo demás que se probó", "Cuatro resultados que cambian qué vale la pena hacer"),
         html.Div(className="hechos", children=[hecho(*o) for o in OTROS]),
         mensaje("**La espera depende del sistema, no del paciente.** No hay un tipo de paciente al que culpar: lo que decide la espera es "

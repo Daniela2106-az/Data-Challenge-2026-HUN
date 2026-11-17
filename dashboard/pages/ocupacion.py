@@ -14,7 +14,7 @@ from dash import Input, Output, callback, html
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from componentes import (AZUL, NARANJA, TENUE, aviso_datos, bloque, cifra, coma, eje_fechas, estilo, etiqueta_final, fecha_es, filtro, grafico, lamina,  # noqa: E402
-                         hecho, leer, mensaje, metodo, pagina, por_mes, portada)
+                         hecho, laminas_grupo, leer, mensaje, metodo, pagina, por_mes, portada)
 
 dash.register_page(__name__, path="/ocupacion", name="Ocupación de camas", title="Ocupación de camas - HUN", order=22)
 
@@ -49,22 +49,24 @@ def layout():
                 [cifra(coma(o25, 0), f"camas ocupadas en promedio en 2025 (en 2023: {coma(o23, 0)})"),
                  cifra(f"{coma(sobre, 0)} %", "de los días de 2025 por encima de las 106 camas"),
                  cifra("5,3 días", "de estancia media en 2025 (en 2023: 4,6 días)")]),
-        lamina(1, f"En dos años la ocupación subió de {coma(o23, 0)} a {coma(o25, 0)} camas",
-               "La línea naranja son las **106 camas** que informó el hospital. Desde 2024 la ocupación se mueve pegada a ese techo, y "
-               "muchos días lo supera.",
-               grafico("ocu-camas", alto=340), dato=(f"+{coma(o25 - o23, 0)} camas", "ocupadas en promedio, de 2023 a 2025"),
-               controles=filtro("ocu-vista", "Vista", [("mes", "Promedio por mes"), ("dia", "Día por día")], "mes")),
-        lamina(2, f"Pero entran los mismos pacientes: unos {coma(p.ingresos_a_cama.mean(), 0)} ingresos a cama por día",
-               "Lo que creció no es la demanda sino la **estancia**: cada paciente se queda en promedio 5,3 días, frente a 4,6 en 2023.",
-               grafico("ocu-flujo", alto=320), dato=("+16 %", "de estancia media entre 2023 y 2025"), invertida=True),
-        lamina(3, f"En 2023 casi ningún día superó las 106 camas; en 2025, el {coma(sobre, 0)} %",
-               "Porcentaje de los días de cada año con más camas ocupadas, en promedio, que las 106 del hospital. **El exceso es "
-               "reciente**: aparece en 2024 y se duplica en 2025.",
-               grafico("ocu-sobre", alto=320), dato=(f"{coma(p.ocup_hosp_max.max(), 0)} camas", "ocupadas en el momento de mayor ocupación")),
-        lamina(4, "Las camas están igual de llenas todos los días de la semana",
-               "Camas ocupadas en promedio según el día de la semana. Aunque el fin de semana llegan menos pacientes y se dan menos "
-               "altas, **la ocupación no baja**: el hospital no tiene un día para ponerse al día.",
-               grafico("ocu-semana", alto=300), dato=("100 camas", "ocupadas en promedio cualquier día de la semana"), invertida=True),
+        laminas_grupo(
+            lamina(1, f"En dos años la ocupación subió de {coma(o23, 0)} a {coma(o25, 0)} camas",
+                   "La línea naranja son las **106 camas** que informó el hospital. Desde 2024 la ocupación se mueve pegada a ese techo, y "
+                   "muchos días lo supera.",
+                   grafico("ocu-camas", alto=340), dato=(f"+{coma(o25 - o23, 0)} camas", "ocupadas en promedio, de 2023 a 2025"),
+                   controles=filtro("ocu-vista", "Vista", [("mes", "Promedio por mes"), ("dia", "Día por día")], "mes")),
+            lamina(2, f"Pero entran los mismos pacientes: unos {coma(p.ingresos_a_cama.mean(), 0)} ingresos a cama por día",
+                   "Lo que creció no es la demanda sino la **estancia**: cada paciente se queda en promedio 5,3 días, frente a 4,6 en 2023.",
+                   grafico("ocu-flujo", alto=320), dato=("+16 %", "de estancia media entre 2023 y 2025"), invertida=True),
+            lamina(3, f"En 2023 casi ningún día superó las 106 camas; en 2025, el {coma(sobre, 0)} %",
+                   "Porcentaje de los días de cada año con más camas ocupadas, en promedio, que las 106 del hospital. **El exceso es "
+                   "reciente**: aparece en 2024 y se duplica en 2025.",
+                   grafico("ocu-sobre", alto=320), dato=(f"{coma(p.ocup_hosp_max.max(), 0)} camas", "ocupadas en el momento de mayor ocupación")),
+            lamina(4, "Las camas están igual de llenas todos los días de la semana",
+                   "Camas ocupadas en promedio según el día de la semana. Aunque el fin de semana llegan menos pacientes y se dan menos "
+                   "altas, **la ocupación no baja**: el hospital no tiene un día para ponerse al día.",
+                   grafico("ocu-semana", alto=300), dato=("100 camas", "ocupadas en promedio cualquier día de la semana"), invertida=True),
+        ),
         bloque("Dónde está el exceso", "No todas las camas están igual de llenas"),
         html.Div(className="hechos", children=[hecho(*e) for e in EXCESO]),
         mensaje("**Bajar la estancia libera camas.** Volver a la estancia de 2023 equivale a unas 15 camas; la página de Planeación de "

@@ -14,7 +14,7 @@ import plotly.graph_objects as go
 from dash import Input, Output, callback, html
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from componentes import AZUL, PIZARRA, TENUE, bloque, cifra, coma, estilo, grafico, hecho, lamina, mensaje, metodo, pagina, portada  # noqa: E402
+from componentes import AZUL, PIZARRA, TENUE, bloque, cifra, coma, estilo, grafico, hecho, lamina, laminas_grupo, mensaje, metodo, pagina, portada  # noqa: E402
 
 dash.register_page(__name__, path="/alertas", name="Alertas", title="Alertas - HUN", order=33)
 
@@ -46,15 +46,17 @@ def layout():
                 [cifra("87 %", "de los días congestionados se detecta a las 12 h (13 de 15)"),
                  cifra("4 por día", "pacientes cumplen 48 horas sin cama; la mitad terminará esperando más de 72"),
                  cifra("4,6", "alertas por día en total con el diseño recomendado")]),
-        lamina(1, "Día congestionado: el aviso sirve a mediodía, no un día antes",
-               "Con lo que ha llegado hasta las 12 h, el modelo detecta casi todos los días congestionados. **Un día antes solo detecta "
-               "1 de cada 5**; a las 15 h acierta más, pero ya queda poco margen para reaccionar.",
-               grafico("ale-dia", alto=350), dato=("12 h", "el mejor momento para avisar: detecta el 87 % y acierta 1 de cada 2 avisos")),
-        lamina(2, "Paciente sin cama: avisar a las 48 horas es el mejor equilibrio",
-               "Avisar antes genera muchas alertas que no terminan en una espera larga; avisar después deja poco tiempo. **A las 48 horas, "
-               "la mitad de los avisos termina esperando más de 72 horas** y quedan 24 horas para actuar.",
-               grafico("ale-paciente", alto=350), dato=("4 avisos", "por día a las 48 horas: una lista corta para la reunión de camas"),
-               invertida=True),
+        laminas_grupo(
+            lamina(1, "Día congestionado: el aviso sirve a mediodía, no un día antes",
+                   "Con lo que ha llegado hasta las 12 h, el modelo detecta casi todos los días congestionados. **Un día antes solo detecta "
+                   "1 de cada 5**; a las 15 h acierta más, pero ya queda poco margen para reaccionar.",
+                   grafico("ale-dia", alto=350), dato=("12 h", "el mejor momento para avisar: detecta el 87 % y acierta 1 de cada 2 avisos")),
+            lamina(2, "Paciente sin cama: avisar a las 48 horas es el mejor equilibrio",
+                   "Avisar antes genera muchas alertas que no terminan en una espera larga; avisar después deja poco tiempo. **A las 48 horas, "
+                   "la mitad de los avisos termina esperando más de 72 horas** y quedan 24 horas para actuar.",
+                   grafico("ale-paciente", alto=350), dato=("4 avisos", "por día a las 48 horas: una lista corta para la reunión de camas"),
+                   invertida=True),
+        ),
         bloque("Camas de mañana", "Para saber si mañana habrá ocupación alta, lo simple le gana a lo complejo"),
         html.Div(className="hechos", children=[hecho(*c) for c in CAMAS]),
         bloque("Para qué sirve cada alerta", "Una alerta solo ayuda si alguien sabe qué hacer cuando suena"),
