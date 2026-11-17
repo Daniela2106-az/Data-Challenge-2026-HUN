@@ -8,11 +8,11 @@ Una pagina nueva que no este en SECCIONES aparece sola al final, bajo "Más": pa
 import re
 
 # Icono (clase CSS de theme.css) de cada ruta. Una ruta sin entrada usa el icono generico de perfiles.
-ICONOS = {"/": "ico-home", "/pronostico": "ico-forecast", "/paciente": "ico-patient", "/camas": "ico-bed",
+ICONOS = {"/": "ico-home", "/pronostico": "ico-forecast", "/paciente": "ico-patient", "/camas": "ico-bed", "/simulador": "ico-models",
           "/perfiles": "ico-profiles", "/recomendaciones": "ico-recs", "/documentacion": "ico-docs", "/datos": "ico-data",
           "/demanda": "ico-demand", "/ocupacion": "ico-occup", "/espera": "ico-wait", "/altas": "ico-clock",
           "/estacionalidad": "ico-season", "/alertas": "ico-alert", "/factores": "ico-factors", "/estancia": "ico-stay",
-          "/diagnosticos": "ico-dx", "/atipicos": "ico-outlier", "/modelos": "ico-models", "/resumen": "ico-summary", "/comparar": "ico-compare", "/periodo": "ico-period"}
+          "/diagnosticos": "ico-dx", "/atipicos": "ico-outlier", "/resumen": "ico-summary", "/comparar": "ico-compare", "/periodo": "ico-period"}
 
 # (titulo de la seccion, que responde, rutas en orden)
 SECCIONES = [
@@ -20,13 +20,13 @@ SECCIONES = [
     ("Resultados", "Qué pasa hoy en el hospital y dónde se pierde el tiempo",
      ["/demanda", "/estacionalidad", "/ocupacion", "/espera", "/comparar", "/periodo", "/altas", "/factores", "/estancia", "/diagnosticos", "/perfiles", "/atipicos", "/alertas"]),
     ("Predicción", "Qué se espera y qué pasaría si algo cambia",
-     ["/pronostico", "/paciente", "/camas"]),
+     ["/pronostico", "/paciente", "/camas", "/simulador"]),
     ("Propuestas", "Qué hacer con lo que se encontró", ["/recomendaciones", "/documentacion"]),
 ]
 
 
 # Paginas que no van en el menu principal porque viven dentro de la Documentacion (se abren desde su submenu y desde cada componente)
-DENTRO_DE_DOCUMENTACION = {"/modelos": "Elección de modelos"}
+DENTRO_DE_DOCUMENTACION = {}
 
 
 def agrupar(paginas):
@@ -79,7 +79,7 @@ DOCUMENTACION = {
     "/paciente": (6, "6.4 Estimador de la espera de cada paciente", "qué usa, cómo se validó y sus límites"),
     "/camas": (6, "6.5 Simulación Monte Carlo de camas", "cómo funciona, su validación, los escenarios y la curva de capacidad"),
     "/periodo": (6, "6.7 Diagnóstico repetible del cuello de botella", "el reporte de cinco pasos de cualquier periodo, comparado con una referencia"),
-    "/modelos": (6, "«Por qué estos modelos» y 6.8", "la elección de cada modelo y las alternativas evaluadas"),
+    "/simulador": (6, "6.5 Simulación (motor integral)", "el motor de agentes que une demanda, cola de espera y ocupación sobre el Monte Carlo"),
     "/recomendaciones": (7, "Recomendaciones", "las siete acciones con su evidencia, su firmeza y lo que no recomendamos"),
 }
 

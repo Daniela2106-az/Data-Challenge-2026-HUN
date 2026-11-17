@@ -1,13 +1,16 @@
 """
 dashboard/eleccion_modelos.py  -  resumen de «como se eligio este modelo» para cada componente de Prediccion (15-nov-2026)
 
-La eleccion de modelos vive en la Documentacion (documento final, seccion 6.8 «Alternativas evaluadas», y la pagina /modelos, que
-ahora se abre desde la Documentacion). Cada componente trae aqui su parte: que se eligio, por que y que se descarto, con las mismas
-alternativas y cifras del cuadro 6.8 de docs/documento_final.md. Si cambia ese cuadro, actualizar RESUMEN.
+La eleccion de modelos vive en la Documentacion (documento final, seccion 6.8 «Alternativas evaluadas»). Cada componente trae aqui
+su parte: que se eligio, por que y que se descarto, con las mismas alternativas y cifras del cuadro 6.8 de docs/documento_final.md.
+Si cambia ese cuadro, actualizar RESUMEN.
+
+17-nov-2026: se quito la pagina /modelos (quedaba redundante, ya que esta informacion se redistribuyo aqui y en el documento final);
+por eso el enlace "Ver todas las alternativas..." que tenian estas dos funciones tambien se quito, en vez de apuntar a una ruta que ya no existe.
 
 USO  en la pagina: `eleccion_modelo("/pronostico")` devuelve un desplegable listo para el diseño de la pagina.
 """
-from dash import dcc, html
+from dash import html
 
 # ruta -> (que se eligio y por que, [(alternativa, que mostro, que se eligio en su lugar)])
 RESUMEN = {
@@ -46,7 +49,6 @@ def eleccion_modelo(ruta):
         html.Div(className="metodo__apilado", style={"display": "grid"}, children=[
             html.Div([html.Div("Qué se eligió", className="metodo__rotulo"), html.Div(eligio)]),
             html.Div([html.Div("Qué se descartó", className="metodo__rotulo"), tabla]),
-            html.Div(dcc.Link("Ver todas las alternativas evaluadas en la Documentación", href="/modelos", className="enlace-chip")),
         ])])
 
 
@@ -60,4 +62,4 @@ def tarjeta_eleccion(ruta):
         html.Div("Cómo se eligió este modelo", className="bloque-titulo"),
         html.P(eligio, className="bloque-bajada"),
         html.Ul([html.Li([html.B(f"{a}: "), f"{m}. ", html.Span(f"Se eligió: {e}.", className="eleccion__eligio")]) for a, m, e in alternativas], className="eleccion__lista"),
-        dcc.Link("Ver todas las alternativas evaluadas en la Documentación", href="/modelos", className="enlace-chip")])
+    ])

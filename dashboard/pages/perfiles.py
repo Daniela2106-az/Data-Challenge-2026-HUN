@@ -2,10 +2,13 @@
 dashboard/pages/perfiles.py  -  pagina «Perfiles y picos» (14-nov-2026; formato de presentacion; antes una tabla sin controles)
 Cruza el perfil del paciente (grupo de edad x sexo x tipo de visita, 42 perfiles) con el momento de carga en que llego, que ni A1 (perfil sin
 mirar la carga) ni los analisis de saturacion (carga sin desagregar por perfil) hacian. Dice: la carga alarga la espera en los perfiles de
-Urgencias mas comunes (30 a 70 %), pero no cambia quien llega ni cuanto se queda en cama; y los dias de alta demanda no son dias de cuello de botella.
+Urgencias mas comunes (30 a 70 %), pero no cambia quien llega ni cuanto se queda en cama.
 
-DATOS  resultados/tablas/perfiles_en_picos_llegadas.csv, perfiles_en_picos_ocupacion.csv y dias_alta_demanda.csv (src/perfiles_en_picos.py; correrlo
-       antes si no existen). Documento: docs/perfiles_en_picos.md. Periodo confiable 1-feb-2023 a 9-abr-2026.
+17-nov-2026: la seccion «Días de alta demanda» ya no es una tabla de 199 filas (quedaba floja frente al resto de la pagina, que es por
+perfil, no por dia); ahora es una lamina mas, con una grafica de dias por año (_lamina_dias()).
+
+DATOS  resultados/tablas/perfiles_en_picos_llegadas.csv, perfiles_en_picos_ocupacion.csv y dias_alta_demanda.csv (src/perfiles_en_picos.py;
+       correrlo antes si no existen). Documento: docs/perfiles_en_picos.md. Periodo confiable 1-feb-2023 a 9-abr-2026.
 """
 import os
 import sys
@@ -17,9 +20,9 @@ import plotly.graph_objects as go
 from dash import Input, Output, callback, html
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from componentes import AZUL, NARANJA, TENUE, bloque, cifra, coma, estilo, filtro, grafico, hecho, lamina, leer, mensaje, metodo, pagina, portada  # noqa: E402
+from componentes import AZUL, NARANJA, TENUE, bloque, cifra, coma, estilo, filtro, grafico, hecho, lamina, laminas_grupo, leer, mensaje, metodo, pagina, portada  # noqa: E402
 
-from componentes import frase, tarjetas, tarjeta_grafica  # noqa: E402,F401
+from componentes import frase  # noqa: E402
 
 dash.register_page(__name__, path="/perfiles", name="Perfiles y picos", title="Perfiles y picos de demanda - HUN", order=4)
 
@@ -120,7 +123,7 @@ def figura_indicador(ind, tema):
 def layout():
     if not DATOS_OK:
         return pagina(html.H2("Perfiles y picos de demanda"), html.Div(className="card aviso", children=[
-            "Faltan las tablas de esta página (perfiles_en_picos_*.csv y dias_alta_demanda.csv). Se generan con ",
+            "Faltan las tablas de esta página (perfiles_en_picos_*.csv). Se generan con ",
             html.Code("python3 src/perfiles_en_picos.py"), " (necesita los datos procesados, que viven fuera del repositorio)."]))
     g1, g2 = grandes(LLEG), grandes(OCUP)
     n = len(LLEG)
@@ -134,15 +137,17 @@ def layout():
                  cifra(f"+{pct.min():.0f} a +{pct.max():.0f} %", "más espera en esos perfiles, todos de urgencias"),
                  cifra(f"{est} de {n}", "perfiles cambia su estancia con la carga")]),
         frase("La carga alarga la espera en los perfiles de urgencias más comunes, pero no cambia quién llega ni cuánto se queda en cama."),
-        lamina(1, f"Con muchas llegadas seguidas, {len(g1)} perfiles esperan entre {pct.min():.0f} y {pct.max():.0f} % más",
-               "Espera mediana en horas, comparando a quienes llegaron cuando entraron más pacientes en las 6 horas previas (el 10 % más cargado) con "
-               "el resto. **Son los perfiles de urgencias más numerosos**: adultos y niños escolares.",
-               grafico("perf-g1", alto=330), dato=(f"{len(g1)} de {n}", "perfiles con un aumento grande (14 %)")),
-        lamina(2, f"Con el hospital casi lleno al llegar, {len(g2)} perfiles esperan más",
-               "Mismo cruce, pero tomando la ocupación de camas al llegar (el 10 % más alto). Aparece el mismo patrón: adultos y niños de urgencias.",
-               grafico("perf-g2", alto=300), dato=(f"{len(g2)} de {n}", "perfiles con un aumento grande"), invertida=True),
-        *_laminas_indicadores(),
-        *_lamina_dias(),
+        laminas_grupo(
+            lamina(1, f"Con muchas llegadas seguidas, {len(g1)} perfiles esperan entre {pct.min():.0f} y {pct.max():.0f} % más",
+                   "Espera mediana en horas, comparando a quienes llegaron cuando entraron más pacientes en las 6 horas previas (el 10 % más cargado) con "
+                   "el resto. **Son los perfiles de urgencias más numerosos**: adultos y niños escolares.",
+                   grafico("perf-g1", alto=330), dato=(f"{len(g1)} de {n}", "perfiles con un aumento grande (14 %)")),
+            lamina(2, f"Con el hospital casi lleno al llegar, {len(g2)} perfiles esperan más",
+                   "Mismo cruce, pero tomando la ocupación de camas al llegar (el 10 % más alto). Aparece el mismo patrón: adultos y niños de urgencias.",
+                   grafico("perf-g2", alto=300), dato=(f"{len(g2)} de {n}", "perfiles con un aumento grande"), invertida=True),
+            *_laminas_indicadores(),
+            *_lamina_dias(),
+        ),
         bloque("Lo que permite concluir", "Cuatro lecturas, de la más específica a la más general"),
         html.Div(className="hechos", children=[
             hecho(f"{sobre} de {len(g1)}", "Ninguno llega más seguido en los picos" if sobre == 0 else "Pocos llegan más seguido en los picos",
@@ -164,8 +169,7 @@ def layout():
                "maneras: las llegadas de las 6 horas previas o la ocupación del hospital al llegar, tomando el 10 % más alto como «pico». Para cada "
                "perfil se compara la mediana de espera y de estancia en el pico frente al resto. La diferencia es **grande** si es al menos de 20 % y "
                "su intervalo de confianza del 95 % no incluye el cero; **pequeña** o **ruido** en otro caso; y **sin datos suficientes** si el pico o "
-               "el resto tienen menos de 30 estancias. Los días de alta demanda reutilizan la alerta del día congestionado: llegadas por encima del "
-               "percentil 90 del mismo día de la semana en las 12 semanas anteriores.",
+               "el resto tienen menos de 30 estancias.",
                "Es una asociación, no una causa: que un perfil espere más en los picos no prueba que espere por el pico. No distingue qué parte "
                "de la espera es atención clínica y cuál es espera pura. Treatment urgency y ambulatoria casi nunca tienen veredicto por falta de "
                "datos. Periodo confiable: 1-feb-2023 a 9-abr-2026.",

@@ -13,9 +13,9 @@ import plotly.graph_objects as go
 from dash import Input, Output, callback, html
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from componentes import AZUL, PIZARRA, TENUE, cifra, coma, dato, estilo, filtro, grafico, lamina, leer, mensaje, metodo, miles, pagina, portada  # noqa: E402
+from componentes import AZUL, PIZARRA, TENUE, cifra, coma, dato, estilo, filtro, grafico, lamina, laminas_grupo, leer, mensaje, metodo, miles, pagina, portada  # noqa: E402
 
-from componentes import frase, tarjetas, tarjeta_grafica  # noqa: E402,F401
+from componentes import frase, tarjetas  # noqa: E402
 
 dash.register_page(__name__, path="/diagnosticos", name="Diagnósticos", title="Diagnósticos y tiempos - HUN", order=27)
 
@@ -75,19 +75,21 @@ def layout():
                 [cifra("39 h", "de espera mediana en musculoesquelético y dolor"), cifra("9 h", "en cardiovascular y respiratorio"),
                  cifra("65 %", "de las hospitalizaciones tiene un diagnóstico que se puede agrupar")]),
         frase("Lo urgente consigue cama rápido; lo quirúrgico y lo urológico espera cuatro veces más."),
-        lamina(1, html.Span(id="dx-titular"),
-               "Cada barra es un grupo de diagnóstico, ordenado de mayor a menor. **En azul, los cuatro grupos que más esperan cama.** "
-               "Pasa el cursor por una barra para ver cuántos pacientes tiene.",
-               grafico("dx-barras", alto=430), id_dato="dx-dato",
-               controles=filtro("dx-indicador", "Qué medir", [("espera", "Espera de cama"), ("p90", "Peores casos"), ("estancia", "Estancia")],
-                                "espera")),
-        lamina(2, "Musculoesquelético y cáncer esperan mucho y además se quedan más tiempo",
-               "Cada punto es un grupo de diagnóstico: hacia la derecha, más espera por una cama; hacia arriba, más días "
-               "hospitalizado. **Renal y urinario espera mucho pero se queda poco**: su problema es conseguir la cama, no ocuparla.",
-               grafico("dx-dispersion", alto=400), dato=("4,8 días", "de estancia mediana en musculoesquelético y en cáncer, los que más se quedan"),
-               invertida=True),
-        *_laminas_pacientes(),
-        *_lamina_efecto(),
+        laminas_grupo(
+            lamina(1, html.Span(id="dx-titular"),
+                   "Cada barra es un grupo de diagnóstico, ordenado de mayor a menor. **En azul, los cuatro grupos que más esperan cama.** "
+                   "Pasa el cursor por una barra para ver cuántos pacientes tiene.",
+                   grafico("dx-barras", alto=430), id_dato="dx-dato",
+                   controles=filtro("dx-indicador", "Qué medir", [("espera", "Espera de cama"), ("p90", "Peores casos"), ("estancia", "Estancia")],
+                                    "espera")),
+            lamina(2, "Musculoesquelético y cáncer esperan mucho y además se quedan más tiempo",
+                   "Cada punto es un grupo de diagnóstico: hacia la derecha, más espera por una cama; hacia arriba, más días "
+                   "hospitalizado. **Renal y urinario espera mucho pero se queda poco**: su problema es conseguir la cama, no ocuparla.",
+                   grafico("dx-dispersion", alto=400), dato=("4,8 días", "de estancia mediana en musculoesquelético y en cáncer, los que más se quedan"),
+                   invertida=True),
+            *_laminas_pacientes(),
+            *_lamina_efecto(),
+        ),
         tarjetas("Lo que dicen los diagnósticos", "Cuatro lecturas de las gráficas de arriba",
                  ("39 h", "La espera más larga", "Es la de musculoesquelético y dolor, el grupo que más espera por una cama."),
                  ("9 h", "La más corta", "Cardiovascular y respiratorio reciben cama en horas: lo urgente no hace cola."),

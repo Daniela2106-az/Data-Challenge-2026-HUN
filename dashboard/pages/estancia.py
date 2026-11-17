@@ -14,9 +14,9 @@ import plotly.graph_objects as go
 from dash import Input, Output, callback, html
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from componentes import AZUL, PIZARRA, TENUE, bloque, cifra, coma, estilo, grafico, hecho, lamina, leer, mensaje, metodo, pagina, portada  # noqa: E402
+from componentes import AZUL, PIZARRA, TENUE, bloque, cifra, coma, estilo, grafico, hecho, lamina, laminas_grupo, leer, mensaje, metodo, pagina, portada  # noqa: E402
 
-from componentes import frase, tarjetas, tarjeta_grafica  # noqa: E402,F401
+from componentes import frase, tarjetas  # noqa: E402
 
 dash.register_page(__name__, path="/estancia", name="Estancias largas", title="Estancias largas - HUN", order=26)
 
@@ -74,25 +74,27 @@ def layout():
                 [cifra("7 %", "de las estancias dura más de 14 días"), cifra("1 de cada 3", "camas la ocupa una de esas estancias largas"),
                  cifra("63 → 117", "estancias de más de 30 días por año, de 2023 a 2025")]),
         frase("Unas pocas estancias muy largas explican casi todo el aumento de la ocupación: de las 11 camas que subió, 7 vienen de estancias de más de 30 días."),
-        lamina(1, "De las 11 camas que subió la ocupación, 7 vienen de estancias de más de 30 días",
-               "Cada barra es cuántas camas ocupadas sumó o restó ese tramo de duración entre 2023 y 2025. **Las estancias cortas ocupan "
-               "hoy menos camas que antes**; todo el aumento está en las largas.",
-               grafico("lar-camas", alto=340), dato=("+10,5 camas", "suman las estancias de más de 14 días")),
-        lamina(2, "Cada año hay más estancias largas",
-               "Porcentaje de estancias que duran más de 14 días, por año de ingreso. La subida es gradual, sobre todo desde finales de "
-               "2024: no hay «meses malos» puntuales.",
-               grafico("lar-anio", alto=320), dato=("+16 %", "de estancia media: de 4,6 a 5,3 días"), invertida=True),
-        lamina(3, "A mayor edad, más riesgo de quedarse semanas",
-               "Cuántas veces más probable es una estancia larga frente a los pacientes de 15 a 29 años. También pesa la ruta: las visitas "
-               "de tipo «treatment urgency» tienen 2,4 veces más estancias largas.",
-               grafico("lar-edad", alto=320), dato=("3 veces", "más probable desde los 75 años")),
-        lamina(4, "Cáncer, infecciones y salud mental casi triplican el riesgo",
-               "Cuántas veces más probable es una estancia larga en cada grupo de diagnóstico frente al resto. **En gris, los grupos "
-               "con menos riesgo**: los partos y los problemas renales casi nunca se alargan.",
-               grafico("lar-dx", alto=330), dato=("12,7 %", "de las visitas «treatment urgency» termina en una estancia larga, el doble que el resto"),
-               invertida=True),
-        *_lamina_mensual(),
-        *_lamina_laboratorios(),
+        laminas_grupo(
+            lamina(1, "De las 11 camas que subió la ocupación, 7 vienen de estancias de más de 30 días",
+                   "Cada barra es cuántas camas ocupadas sumó o restó ese tramo de duración entre 2023 y 2025. **Las estancias cortas ocupan "
+                   "hoy menos camas que antes**; todo el aumento está en las largas.",
+                   grafico("lar-camas", alto=340), dato=("+10,5 camas", "suman las estancias de más de 14 días")),
+            lamina(2, "Cada año hay más estancias largas",
+                   "Porcentaje de estancias que duran más de 14 días, por año de ingreso. La subida es gradual, sobre todo desde finales de "
+                   "2024: no hay «meses malos» puntuales.",
+                   grafico("lar-anio", alto=320), dato=("+16 %", "de estancia media: de 4,6 a 5,3 días"), invertida=True),
+            lamina(3, "A mayor edad, más riesgo de quedarse semanas",
+                   "Cuántas veces más probable es una estancia larga frente a los pacientes de 15 a 29 años. También pesa la ruta: las visitas "
+                   "de tipo «treatment urgency» tienen 2,4 veces más estancias largas.",
+                   grafico("lar-edad", alto=320), dato=("3 veces", "más probable desde los 75 años")),
+            lamina(4, "Cáncer, infecciones y salud mental casi triplican el riesgo",
+                   "Cuántas veces más probable es una estancia larga en cada grupo de diagnóstico frente al resto. **En gris, los grupos "
+                   "con menos riesgo**: los partos y los problemas renales casi nunca se alargan.",
+                   grafico("lar-dx", alto=330), dato=("12,7 %", "de las visitas «treatment urgency» termina en una estancia larga, el doble que el resto"),
+                   invertida=True),
+            *_lamina_mensual(),
+            *_lamina_laboratorios(),
+        ),
         bloque("Qué comparten las estancias largas", "Procedimientos y exámenes mucho más frecuentes en ellas que en el resto"),
         html.Div(className="hechos", children=[hecho(*c) for c in COMPARTEN]),
         mensaje("**Revisar cada semana las estancias largas es la forma más directa de liberar camas** (recomendación 7): son el 7 % de "

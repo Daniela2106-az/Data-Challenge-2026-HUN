@@ -98,7 +98,11 @@ def filtro(id_, etiqueta, opciones, valor):
 
 
 def grafico(id_, alto=330):
-    return dcc.Graph(id=id_, config={"displaylogo": False, "displayModeBar": False}, style={"height": f"{alto}px"})
+    # responsive=True (16-nov-2026): deja que Plotly se reajuste solo cuando el contenedor cambia de ancho
+    # (p. ej. al expandirse una lamina del acordeon, o en modo presentacion), sin tener que forzar un resize
+    # manual desde JS.
+    return dcc.Graph(id=id_, config={"displaylogo": False, "displayModeBar": False, "responsive": True},
+                     style={"height": f"{alto}px"})
 
 
 def dato(valor, texto):
@@ -115,6 +119,22 @@ def lamina(numero, titular, texto, *grafica, dato=None, id_dato=None, invertida=
             html.Div(hijos_dato, className="lamina__dato", **({"id": id_dato} if id_dato else {}))]
     return html.Section(className="card lamina" + (" lamina--inv" if invertida else ""), children=[
         html.Div([x for x in lado if x is not None], className="lamina__texto"), html.Div(list(grafica), className="lamina__grafica")])
+
+
+def laminas_grupo(*lams):
+    """Agrupa varias lamina() en una fila horizontal tipo acordeon (16-nov-2026, dashboard/assets/acordeon.js):
+    colapsadas muestran solo su numero (la "espina"); se turnan para expandirse solas cada pocos segundos, o al
+    pasar el mouse por encima -- las demas se contraen para darle a la activa el mayor ancho posible. No cambia
+    lamina(): aqui solo se le agrega, por fuera, la espina que se ve colapsada y la clase que activa el acordeon,
+    asi lamina() sigue sirviendo igual para una pagina que no use el acordeon."""
+    hijos = []
+    for lam in lams:
+        numero_txt = lam.children[0].children[0].children   # el primer hijo de lamina__texto es siempre lamina__num
+        espina = html.Div(html.Div(numero_txt, className="lamina__espina-num"), className="lamina__espina")
+        lam.children = [espina] + list(lam.children)
+        lam.className = (lam.className or "") + " lamina-acordeon"
+        hijos.append(lam)
+    return html.Div(className="laminas-row", children=hijos)
 
 
 def bloque(titulo, bajada=""):
@@ -135,14 +155,17 @@ def antes_despues(antes, despues, que):
         html.Span(que, className="ad__que")])
 
 
-def mensaje(texto, titulo="Qué significa para el hospital"):
-    """La conclusion de la pagina para el hospital, destacada (Markdown)."""
-    return html.Section(className="mensaje", children=[html.Div(titulo, className="mensaje__label"), dcc.Markdown(texto, className="mensaje__texto")])
+def mensaje(texto, titulo="Qué significa para el hospital", clase=""):
+    """La conclusion de la pagina para el hospital, destacada (Markdown). Se resalta sola cada tantos segundos
+    (theme.css, @keyframes mensajeAlumbra) -- `clase` permite excluir ese resaltado (lo usa frase(), para que
+    "En una frase" no compita por la atencion con "Qué significa para el hospital")."""
+    return html.Section(className=("mensaje " + clase).strip(), children=[html.Div(titulo, className="mensaje__label"), dcc.Markdown(texto, className="mensaje__texto")])
 
 
 def frase(texto):
-    """El abrebocas de una pagina de Resultados: la conclusion en una frase, justo debajo del encabezado (Markdown)."""
-    return mensaje(texto, titulo="En una frase")
+    """El abrebocas de una pagina de Resultados: la conclusion en una frase, justo debajo del encabezado (Markdown).
+    Sin el resaltado periodico de mensaje() -- ese se reserva para «Qué significa para el hospital», al final."""
+    return mensaje(texto, titulo="En una frase", clase="mensaje--frase")
 
 
 def tarjetas(titulo, bajada, *datos):
@@ -157,15 +180,16 @@ def tarjeta_grafica(grafica, titulo=None, bajada=""):
 
 
 def _relacionadas(ruta):
-    """Filas del final de la documentacion de una pagina: con que otra pagina se conecta (cada resultado con su prediccion y al reves) y el
-    capitulo del documento final que la respalda."""
+    """Filas del final de la documentacion de una pagina: con que otra pagina se conecta (cada resultado con su prediccion y al reves).
+    17-nov-2026: ya NO agrega aqui la fila «Documentación» (capitulo + enlace): esa funcion la cumple la barra siempre visible al pie de
+    cada pagina (`main.enlace_documentacion`, clase .doc-pie), para no mostrar el mismo enlace dos veces -- una visible y otra escondida
+    dentro de este panel plegable."""
     import dash
     from documentacion_paginas import conexiones
-    from navegacion import SECCIONES, documentacion_de
+    from navegacion import SECCIONES
     nombres = {p["path"]: p["name"] for p in dash.page_registry.values()}
     prediccion = {r for t, _d, rs in SECCIONES if t == "Predicción" for r in rs}
     con = [(r, mot) for r, mot in conexiones(ruta) if r in nombres]
-    d = documentacion_de(ruta)
     filas = []
     if con:
         rotulo = "Resultado relacionado (qué pasa)" if ruta in prediccion else "Predicción relacionada (qué se espera)"
@@ -173,12 +197,6 @@ def _relacionadas(ruta):
             html.Span(rotulo, className="doc-rel__rotulo"),
             html.Div(className="doc-rel__chips", children=[
                 dcc.Link([html.B(nombres[r]), html.Span(mot, className="doc-rel__motivo") if mot else None], href=r, className="doc-rel__chip") for r, mot in con])]))
-    if d:
-        cap, sub, desc, href = d
-        filas.append(html.Div(className="doc-rel__fila", children=[
-            html.Span("Documentación", className="doc-rel__rotulo"),
-            html.Span([f"Capítulo {cap}, {sub}. ", html.Span(desc[0].upper() + desc[1:] + ".", className="doc-rel__desc")], className="doc-rel__texto"),
-            dcc.Link("Leer la sección completa →", href=href, className="doc-rel__link", refresh=True)]))
     return filas
 
 

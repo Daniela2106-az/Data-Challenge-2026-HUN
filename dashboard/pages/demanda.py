@@ -14,10 +14,10 @@ from dash import Input, Output, callback, html
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import tema_graficos as tg  # noqa: E402
-from componentes import (AZUL, PIZARRA, TENUE, aviso_datos, cifra, coma, dato, eje_fechas, estilo, etiqueta_final, fecha_es, filtro, grafico,  # noqa: E402
-                         horas_eje, lamina, leer, mensaje, metodo, pagina, por_mes, portada)
+from componentes import (AZUL, PIZARRA, TENUE, aviso_datos, cifra, coma, dato, eje_fechas, estilo, etiqueta_final, fecha_es, filtro,  # noqa: E402
+                         grafico, horas_eje, lamina, laminas_grupo, leer, mensaje, metodo, pagina, por_mes, portada)
 
-from componentes import frase, tarjetas, tarjeta_grafica  # noqa: E402,F401
+from componentes import frase, tarjetas  # noqa: E402
 
 dash.register_page(__name__, path="/demanda", name="Demanda", title="Demanda - HUN", order=21)
 
@@ -42,26 +42,28 @@ def layout():
         html.Div(className="filtros", children=[
             filtro("dem-serie", "Qué contar", [("llegadas", "Todas las llegadas"), ("ingresos_a_cama", "Ingresos a cama")], "llegadas")]),
         frase("El pico es a media mañana y el lunes es el día más cargado; de un año a otro no llega más gente, así que la presión sobre las camas no viene de ahí."),
-        lamina(1, "El pico es de 9 a 11 de la mañana, y el lunes es el día más cargado",
-               "Cada cuadro es una hora de un día de la semana: entre más intenso el azul, más llegadas. De noche y en fin de semana el "
-               "hospital recibe mucho menos.",
-               grafico("dem-calor", alto=330), dato=("9 a 11 a. m.", "la franja con más llegadas, todos los días")),
-        lamina(2, html.Span(id="dem-titular"),
-               "Promedio por día de cada mes completo, de febrero de 2023 a marzo de 2026. **Si la demanda no crece, la saturación "
-               "hay que buscarla dentro del hospital.**",
-               grafico("dem-mes", alto=330), id_dato="dem-dato", invertida=True),
-        lamina(3, html.Span(id="dem-titular-semana"),
-               "Promedio por día de la semana; en gris, el fin de semana. **El ritmo del hospital baja sábado y domingo**, y con él "
-               "las altas y los ingresos a cama.",
-               grafico("dem-semana", alto=320), id_dato="dem-dato-semana"),
-        lamina(4, html.Span(id="dem-titular-festivo"),
-               "Un festivo se parece a un domingo: llegan menos pacientes y se hospitalizan menos. El pronóstico ya lo tiene en "
-               "cuenta, junto con la Semana Santa y el Carnaval.",
-               grafico("dem-festivo", alto=300), id_dato="dem-dato-festivo", invertida=True),
-        lamina(5, "El fin de semana llega la misma curva del día, con menos gente",
-               "Llegadas promedio en cada hora, entre semana y en fin de semana. **La forma es la misma: sube desde las 6, tiene su "
-               "pico a media mañana y cae en la noche.** Esta gráfica cuenta todas las llegadas.",
-               grafico("dem-horas", alto=320), id_dato="dem-dato-horas"),
+        laminas_grupo(
+            lamina(1, "El pico es de 9 a 11 de la mañana, y el lunes es el día más cargado",
+                   "Cada cuadro es una hora de un día de la semana: entre más intenso el azul, más llegadas. De noche y en fin de semana el "
+                   "hospital recibe mucho menos.",
+                   grafico("dem-calor", alto=330), dato=("9 a 11 a. m.", "la franja con más llegadas, todos los días")),
+            lamina(2, html.Span(id="dem-titular"),
+                   "Promedio por día de cada mes completo, de febrero de 2023 a marzo de 2026. **Si la demanda no crece, la saturación "
+                   "hay que buscarla dentro del hospital.**",
+                   grafico("dem-mes", alto=330), id_dato="dem-dato", invertida=True),
+            lamina(3, html.Span(id="dem-titular-semana"),
+                   "Promedio por día de la semana; en gris, el fin de semana. **El ritmo del hospital baja sábado y domingo**, y con él "
+                   "las altas y los ingresos a cama.",
+                   grafico("dem-semana", alto=320), id_dato="dem-dato-semana"),
+            lamina(4, html.Span(id="dem-titular-festivo"),
+                   "Un festivo se parece a un domingo: llegan menos pacientes y se hospitalizan menos. El pronóstico ya lo tiene en "
+                   "cuenta, junto con la Semana Santa y el Carnaval.",
+                   grafico("dem-festivo", alto=300), id_dato="dem-dato-festivo", invertida=True),
+            lamina(5, "El fin de semana llega la misma curva del día, con menos gente",
+                   "Llegadas promedio en cada hora, entre semana y en fin de semana. **La forma es la misma: sube desde las 6, tiene su "
+                   "pico a media mañana y cae en la noche.** Esta gráfica cuenta todas las llegadas.",
+                   grafico("dem-horas", alto=320), id_dato="dem-dato-horas"),
+        ),
         tarjetas("Lo que hay que saber de la demanda", "Cuatro ideas para leer las gráficas de arriba",
                  ("9 a 11 h", "La hora de más llegadas", "Es el pico de todos los días; de noche el hospital recibe mucho menos."),
                  ("Lunes", "El día más cargado", "El ritmo baja sábado y domingo, y con él las altas y los ingresos a cama."),

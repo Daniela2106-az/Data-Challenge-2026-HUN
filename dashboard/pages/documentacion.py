@@ -34,7 +34,4 @@ def layout():
                 [cifra(str(len(caps)), "capítulos, del reto a los anexos"), cifra("7", "recomendaciones para el hospital"),
                  cifra(str(referencias(caps)), "referencias, listadas en los anexos")],
                 accion=html.A("Descargar el documento en PDF", href="/documento_final.pdf", className="doc-pdf", download="documento_final_HUN.pdf")),
-        html.Div(className="doc-cards", children=tarjetas + [dcc.Link(href="/modelos", className="doc-card", children=[
-            html.Div("+", className="doc-card__num"), html.Div("Elección de modelos", className="doc-card__titulo"),
-            html.Ul([html.Li("Una pregunta, un modelo"), html.Li("Qué alternativas se descartaron"), html.Li("Cómo se validó cada uno")], className="doc-card__subs"),
-            html.Div("Abrir →", className="doc-card__ir")])])])
+        html.Div(className="doc-cards", children=tarjetas)])

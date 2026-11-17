@@ -13,9 +13,9 @@ import plotly.graph_objects as go
 from dash import Input, Output, callback, html
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from componentes import AZUL, MESES, PIZARRA, TENUE, cifra, estilo, filtro, grafico, lamina, leer, mensaje, metodo, pagina, portada  # noqa: E402
+from componentes import AZUL, MESES, PIZARRA, TENUE, cifra, estilo, filtro, grafico, lamina, laminas_grupo, leer, mensaje, metodo, pagina, portada  # noqa: E402
 
-from componentes import frase, tarjetas, tarjeta_grafica  # noqa: E402,F401
+from componentes import frase, tarjetas  # noqa: E402
 
 dash.register_page(__name__, path="/atipicos", name="Días atípicos", title="Días atípicos - HUN", order=34)
 
@@ -53,23 +53,25 @@ def layout():
                 [cifra("14", "días atípicos de llegadas entre 2023 y 2026"), cifra("13 de 14", "fueron días con menos llegadas de lo esperado"),
                  cifra("0", "días con espera más alta de lo esperado")]),
         frase("Ningún día tuvo una espera más alta de lo esperado: el problema de la espera es de todos los días, no de días puntuales."),
-        lamina(1, "Los dos días más extremos parecen cortes del sistema, no menos pacientes",
-               "Cada barra es un día atípico: cuánto se apartaron las llegadas de lo que esperaba el pronóstico. **En azul, los dos días "
-               "en que también cayeron los ingresos a cama**, algo que apunta a una falla de registro. Pasa el cursor para ver cada día.",
-               grafico("ati-dias", alto=360), dato=("−60 %", "de llegadas el 28 de marzo de 2026, con un solo ingreso a cama")),
-        lamina(2, "La espera larga no produce días récord",
-               "Días con más y con menos de lo esperado en cada serie. **Los 7 días atípicos de espera son de espera más corta**, casi "
-               "todos domingos, festivos o Semana Santa.",
-               grafico("ati-resumen", alto=320), dato=("0 días", "con una espera más alta de lo esperado"), invertida=True),
-        lamina(3, "Los 14 días, uno por uno: lo que llegó frente a lo que se esperaba",
-               "Cada par de barras es un día atípico de llegadas: **en gris lo que esperaba el pronóstico y en azul lo que llegó de verdad**. "
-               "Los dos posibles cortes del sistema se marcan con un asterisco. Pasa el cursor para ver la causa de cada día.",
-               grafico("ati-dias-real", alto=380), dato=("14 días", "con llegadas fuera de lo esperado, 13 de ellos con menos pacientes")),
-        lamina(4, "Los días atípicos de cada serie, uno por uno",
-               "Elige qué mirar. Cada par de barras es un día: **lo que se esperaba (gris) frente a lo que ocurrió (azul)**. Pasa el cursor para ver "
-               "cuánto se apartó y qué lo explica.",
-               grafico("ati-var-grafico", alto=380), id_dato="ati-var-dato", invertida=True,
-               controles=filtro("ati-var", "Qué mirar", VARIABLES, "llegadas")),
+        laminas_grupo(
+            lamina(1, "Los dos días más extremos parecen cortes del sistema, no menos pacientes",
+                   "Cada barra es un día atípico: cuánto se apartaron las llegadas de lo que esperaba el pronóstico. **En azul, los dos días "
+                   "en que también cayeron los ingresos a cama**, algo que apunta a una falla de registro. Pasa el cursor para ver cada día.",
+                   grafico("ati-dias", alto=360), dato=("−60 %", "de llegadas el 28 de marzo de 2026, con un solo ingreso a cama")),
+            lamina(2, "La espera larga no produce días récord",
+                   "Días con más y con menos de lo esperado en cada serie. **Los 7 días atípicos de espera son de espera más corta**, casi "
+                   "todos domingos, festivos o Semana Santa.",
+                   grafico("ati-resumen", alto=320), dato=("0 días", "con una espera más alta de lo esperado"), invertida=True),
+            lamina(3, "Los 14 días, uno por uno: lo que llegó frente a lo que se esperaba",
+                   "Cada par de barras es un día atípico de llegadas: **en gris lo que esperaba el pronóstico y en azul lo que llegó de verdad**. "
+                   "Los dos posibles cortes del sistema se marcan con un asterisco. Pasa el cursor para ver la causa de cada día.",
+                   grafico("ati-dias-real", alto=380), dato=("14 días", "con llegadas fuera de lo esperado, 13 de ellos con menos pacientes")),
+            lamina(4, "Los días atípicos de cada serie, uno por uno",
+                   "Elige qué mirar. Cada par de barras es un día: **lo que se esperaba (gris) frente a lo que ocurrió (azul)**. Pasa el cursor para ver "
+                   "cuánto se apartó y qué lo explica.",
+                   grafico("ati-var-grafico", alto=380), id_dato="ati-var-dato", invertida=True,
+                   controles=filtro("ati-var", "Qué mirar", VARIABLES, "llegadas")),
+        ),
         tarjetas("Lo que explica el calendario", "Revisar los días raros sirvió para mejorar el pronóstico",
                  *CALENDARIO, ("Sin causa", "Días que el calendario no explica", "Solo 3 de los 14 días de llegadas tienen causa de calendario; el resto sigue sin explicación conocida.")),
         mensaje("**El problema de la espera es crónico, no de días malos.** Reaccionar a los picos no lo resuelve: hay que cambiar el "

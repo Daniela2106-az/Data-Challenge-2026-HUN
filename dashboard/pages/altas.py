@@ -13,8 +13,8 @@ import plotly.graph_objects as go
 from dash import Input, Output, callback, html
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from componentes import (AZUL, NARANJA, TENUE, aviso_datos, bloque, cifra, coma, dato, estilo, filtro, grafico, hecho, horas_eje, lamina, leer, mensaje,  # noqa: E402
-                         metodo, pagina, portada)
+from componentes import (AZUL, NARANJA, TENUE, aviso_datos, bloque, cifra, coma, dato, estilo, filtro, grafico, hecho, horas_eje, lamina,  # noqa: E402
+                         laminas_grupo, leer, mensaje, metodo, pagina, portada)
 
 from componentes import frase, tarjetas, tarjeta_grafica  # noqa: E402,F401
 
@@ -91,19 +91,21 @@ def layout():
         html.Div(className="filtros", children=[
             filtro("alt-anio", "Año", ["Todos", "2023", "2024", "2025", ("2026", "2026 (ene–abr)")], "Todos")]),
         frase("La cama llega en dos olas porque el 63 % de las altas sale por la tarde: quien llega por la mañana espera hasta entonces."),
-        lamina(1, "Las camas se asignan en dos olas: de 15 a 17 h y de 20 a 23 h",
-               "Las **altas** (línea naranja) se concentran en la tarde y las camas se asignan justo después. En la mañana casi no se "
-               "libera ninguna.",
-               grafico("alt-camas", alto=350), id_dato="alt-dato-olas"),
-        lamina(2, "Quien llega después del mediodía espera cerca de un día",
-               "Llegar entre las 13 y las 19 h (en azul) es haber perdido la ola de la tarde: la cama llega al día siguiente. Es una "
-               "asociación: a esa hora también cambian el tipo de paciente y la carga.",
-               grafico("alt-espera", alto=350), id_dato="alt-dato-peor", invertida=True),
-        lamina(3, html.Span(id="alt-titular-semana"),
-               "Altas promedio por día de la semana; en gris, el fin de semana. **Menos altas el domingo son menos camas libres el "
-               "lunes**, que es justo el día en que llegan más pacientes.",
-               grafico("alt-semana", alto=320), id_dato="alt-dato-semana"),
-        *_laminas_extra(),
+        laminas_grupo(
+            lamina(1, "Las camas se asignan en dos olas: de 15 a 17 h y de 20 a 23 h",
+                   "Las **altas** (línea naranja) se concentran en la tarde y las camas se asignan justo después. En la mañana casi no se "
+                   "libera ninguna.",
+                   grafico("alt-camas", alto=350), id_dato="alt-dato-olas"),
+            lamina(2, "Quien llega después del mediodía espera cerca de un día",
+                   "Llegar entre las 13 y las 19 h (en azul) es haber perdido la ola de la tarde: la cama llega al día siguiente. Es una "
+                   "asociación: a esa hora también cambian el tipo de paciente y la carga.",
+                   grafico("alt-espera", alto=350), id_dato="alt-dato-peor", invertida=True),
+            lamina(3, html.Span(id="alt-titular-semana"),
+                   "Altas promedio por día de la semana; en gris, el fin de semana. **Menos altas el domingo son menos camas libres el "
+                   "lunes**, que es justo el día en que llegan más pacientes.",
+                   grafico("alt-semana", alto=320), id_dato="alt-dato-semana"),
+            *_laminas_extra(),
+        ),
         bloque("Qué pasaría si se adelantan las altas", "Un escenario con supuestos escritos, no una predicción"),
         html.Div(className="hechos", children=[hecho(*e) for e in ESCENARIO]),
         mensaje("**Adelantar altas a la mañana** pone camas libres cuando más se necesitan. Y hay un límite de proceso, no solo de "

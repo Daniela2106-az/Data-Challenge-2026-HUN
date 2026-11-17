@@ -16,10 +16,10 @@ import plotly.graph_objects as go
 from dash import Input, Output, callback, html
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from componentes import (AZUL, PIZARRA, TENUE, aviso_datos, cifra, coma, dato, estilo, filtro, grafico, lamina, leer, mensaje, metodo,  # noqa: E402
-                         pagina, portada)
+from componentes import (AZUL, PIZARRA, TENUE, aviso_datos, cifra, coma, dato, estilo, filtro, grafico, lamina, laminas_grupo,  # noqa: E402
+                         leer, mensaje, metodo, pagina, portada)
 
-from componentes import frase, tarjetas, tarjeta_grafica  # noqa: E402,F401
+from componentes import frase, tarjetas  # noqa: E402
 
 dash.register_page(__name__, path="/comparar", name="Comparar años", title="Comparar años - HUN", order=23.5)
 
@@ -47,22 +47,24 @@ def layout():
                 id_cifras="com-cifras"),
         html.Div(className="filtros", children=[filtro("com-anio", "Año", ANIOS, "2025"), filtro("com-ref", "Comparar con", ANIOS, "2023")]),
         frase("El cuello de botella es el mismo cada año, pero castiga cada vez más a los pacientes que más esperan."),
-        lamina(1, html.Span(id="com-titular-1"),
-               "Porcentaje de las hospitalizaciones en cada tramo de espera, en los dos años. **Si las barras azules crecen a la derecha, "
-               "hay más esperas largas.**",
-               grafico("com-tramos", alto=340), id_dato="com-dato-1"),
-        lamina(2, html.Span(id="com-titular-2"),
-               "Cambio en la espera de los peores casos (percentil 90) de cada grupo de pacientes. **En azul, los grupos que empeoraron.** "
-               "Solo aparecen los grupos con al menos 30 hospitalizaciones en los dos años.",
-               grafico("com-grupos", alto=360), id_dato="com-dato-2", invertida=True),
-        lamina(3, html.Span(id="com-titular-3"),
-               "Reparto de las hospitalizaciones según el tipo de visita por el que entró el paciente. Un cambio aquí significa que "
-               "cambió **quién llega**, no solo cuánto espera.",
-               grafico("com-mezcla", alto=320), id_dato="com-dato-3"),
-        lamina(4, "Año por año: la espera típica no se mueve, los peores casos sí",
-               "Espera mediana y espera de los peores casos (percentil 90) en cada año, sin importar los dos que elijas arriba. "
-               "**La barra gris casi no cambia; la azul sube cada año.**",
-               grafico("com-anios", alto=320), id_dato="com-dato-4", invertida=True),
+        laminas_grupo(
+            lamina(1, html.Span(id="com-titular-1"),
+                   "Porcentaje de las hospitalizaciones en cada tramo de espera, en los dos años. **Si las barras azules crecen a la derecha, "
+                   "hay más esperas largas.**",
+                   grafico("com-tramos", alto=340), id_dato="com-dato-1"),
+            lamina(2, html.Span(id="com-titular-2"),
+                   "Cambio en la espera de los peores casos (percentil 90) de cada grupo de pacientes. **En azul, los grupos que empeoraron.** "
+                   "Solo aparecen los grupos con al menos 30 hospitalizaciones en los dos años.",
+                   grafico("com-grupos", alto=360), id_dato="com-dato-2", invertida=True),
+            lamina(3, html.Span(id="com-titular-3"),
+                   "Reparto de las hospitalizaciones según el tipo de visita por el que entró el paciente. Un cambio aquí significa que "
+                   "cambió **quién llega**, no solo cuánto espera.",
+                   grafico("com-mezcla", alto=320), id_dato="com-dato-3"),
+            lamina(4, "Año por año: la espera típica no se mueve, los peores casos sí",
+                   "Espera mediana y espera de los peores casos (percentil 90) en cada año, sin importar los dos que elijas arriba. "
+                   "**La barra gris casi no cambia; la azul sube cada año.**",
+                   grafico("com-anios", alto=320), id_dato="com-dato-4", invertida=True),
+        ),
         tarjetas("Qué cambia y qué no entre años", "Cuatro ideas para leer la comparación",
                  ("Urgencias", "El cuello de botella no cambia de sitio", "Es la espera en urgencias antes de que se asigne la cama, año tras año."),
                  ("17 a 20 h", "La espera típica casi no se mueve", "La mediana se mantiene en ese rango de 2023 a 2026."),

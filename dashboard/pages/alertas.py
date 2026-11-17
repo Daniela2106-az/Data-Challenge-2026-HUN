@@ -19,8 +19,8 @@ import plotly.graph_objects as go
 from dash import Input, Output, callback, html
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from componentes import (AZUL, PIZARRA, TENUE, aviso_datos, cifra, coma, estilo, frase, grafico, lamina, mensaje, metodo, pagina, portada,  # noqa: E402
-                         secciones, ficha_de, tarjetas)
+from componentes import (AZUL, PIZARRA, TENUE, aviso_datos, cifra, coma, estilo, ficha_de, frase, grafico, lamina, laminas_grupo, mensaje,  # noqa: E402
+                         metodo, pagina, portada, secciones, tarjetas)
 import catalogo as cat  # noqa: E402
 
 dash.register_page(__name__, path="/alertas", name="Alertas", title="Alertas - HUN", order=33)
@@ -60,26 +60,28 @@ def layout(alerta=None, **_):
                  cifra(coma(total, 1), "alertas por día en total con el diseño recomendado")]),
         frase(f"Con las tres alertas recomendadas (día congestionado a las 12 h, ocupación alta de mañana y paciente a las 48 h sin cama) el hospital recibiría unas "
               f"{coma(total, 1)} alertas por día."),
-        lamina(1, f"Día congestionado: a las 12 h detecta {a1.deteccion_pct:.0f} % de los casos y acierta {a1.precision_pct:.0f} % de los avisos",
-               "Un día es congestionado cuando llegan más pacientes de lo habitual para ese día de la semana. **La barra azul es los casos que avisa; la gris, los avisos que acertaron.** "
-               "Avisar con más tiempo sube la detección y baja la precisión.",
-               grafico("ale-A1", alto=300), dato=(coma(a1.auc, 2), "AUC a las 12 h: qué tan bien separa los días congestionados (0,5 es azar)")),
-        lamina(2, "Ocupación alta de mañana: suponer que será igual que hoy funciona mejor que proyectar altas e ingresos",
-               "Avisa cuando la ocupación de camas al mediodía está entre el 20 % más alto (107 a 109 camas). **La opción recomendada (la más simple) detecta "
-               f"{a2.deteccion_pct:.0f} % y acierta {a2.precision_pct:.0f} %**, con menos avisos por día.",
-               grafico("ale-A2", alto=280), dato=("3,2 camas", "error de «mañana igual que hoy», frente a 3,7 de proyectar"), invertida=True),
-        lamina(3, f"Paciente sin cama a las 48 h: {a3.alertas_por_dia:.0f} avisos por día, y {a3.precision_pct:.0f} % termina esperando más de 72 h",
-               "Avisa de un paciente que lleva las horas elegidas desde su llegada sin cama. **Avisar antes da más alertas y menos precisión; avisar después deja menos margen.** "
-               "Cuenta solo a quienes luego se hospitalizan, así que la carga real es mayor.",
-               grafico("ale-A3", alto=300), dato=(f"{a3.margen_h:.0f} h", "de margen para actuar antes de que cumpla 72 horas")),
-        lamina(4, "A las 12 h el estimador avisa quién seguirá sin cama a las 48 h",
-               "Para pacientes con orden de hospitalización: el estimador calcula la probabilidad de seguir sin cama a las 48 h. **Con el corte de 40 % se avisa a unos "
-               f"{coma(a4.alertas_por_dia, 0)} pacientes por día, con 36 horas de margen.** Solo sirve a quienes ya tienen la orden.",
-               grafico("ale-A4", alto=280), dato=(f"{a4.precision_pct:.0f} %", "de los avisados termina esperando más de 72 h"), invertida=True),
-        lamina(5, "La cola de pacientes sin cama se pronostica con un tercio menos de error",
-               "Una señal para la reunión de camas, no una alerta con umbral: cuántos pacientes estarán esperando cama dentro de unas horas. "
-               "**En azul, el error del modelo; en gris, el de suponer «lo mismo que ahora».**",
-               grafico("ale-S1", alto=280), dato=("−33 %", "de error a 6 horas frente a «lo mismo que ahora»")),
+        laminas_grupo(
+            lamina(1, f"Día congestionado: a las 12 h detecta {a1.deteccion_pct:.0f} % de los casos y acierta {a1.precision_pct:.0f} % de los avisos",
+                   "Un día es congestionado cuando llegan más pacientes de lo habitual para ese día de la semana. **La barra azul es los casos que avisa; la gris, los avisos que acertaron.** "
+                   "Avisar con más tiempo sube la detección y baja la precisión.",
+                   grafico("ale-A1", alto=300), dato=(coma(a1.auc, 2), "AUC a las 12 h: qué tan bien separa los días congestionados (0,5 es azar)")),
+            lamina(2, "Ocupación alta de mañana: suponer que será igual que hoy funciona mejor que proyectar altas e ingresos",
+                   "Avisa cuando la ocupación de camas al mediodía está entre el 20 % más alto (107 a 109 camas). **La opción recomendada (la más simple) detecta "
+                   f"{a2.deteccion_pct:.0f} % y acierta {a2.precision_pct:.0f} %**, con menos avisos por día.",
+                   grafico("ale-A2", alto=280), dato=("3,2 camas", "error de «mañana igual que hoy», frente a 3,7 de proyectar"), invertida=True),
+            lamina(3, f"Paciente sin cama a las 48 h: {a3.alertas_por_dia:.0f} avisos por día, y {a3.precision_pct:.0f} % termina esperando más de 72 h",
+                   "Avisa de un paciente que lleva las horas elegidas desde su llegada sin cama. **Avisar antes da más alertas y menos precisión; avisar después deja menos margen.** "
+                   "Cuenta solo a quienes luego se hospitalizan, así que la carga real es mayor.",
+                   grafico("ale-A3", alto=300), dato=(f"{a3.margen_h:.0f} h", "de margen para actuar antes de que cumpla 72 horas")),
+            lamina(4, "A las 12 h el estimador avisa quién seguirá sin cama a las 48 h",
+                   "Para pacientes con orden de hospitalización: el estimador calcula la probabilidad de seguir sin cama a las 48 h. **Con el corte de 40 % se avisa a unos "
+                   f"{coma(a4.alertas_por_dia, 0)} pacientes por día, con 36 horas de margen.** Solo sirve a quienes ya tienen la orden.",
+                   grafico("ale-A4", alto=280), dato=(f"{a4.precision_pct:.0f} %", "de los avisados termina esperando más de 72 h"), invertida=True),
+            lamina(5, "La cola de pacientes sin cama se pronostica con un tercio menos de error",
+                   "Una señal para la reunión de camas, no una alerta con umbral: cuántos pacientes estarán esperando cama dentro de unas horas. "
+                   "**En azul, el error del modelo; en gris, el de suponer «lo mismo que ahora».**",
+                   grafico("ale-S1", alto=280), dato=("−33 %", "de error a 6 horas frente a «lo mismo que ahora»")),
+        ),
         tarjetas("Lo esencial de las alertas", "Cuatro cifras de la prueba de enero a abril de 2026",
                  (coma(total, 1), "Alertas por día", "Con el diseño recomendado; casi todas son de pacientes que llevan 48 horas sin cama."),
                  (f"{a1.deteccion_pct:.0f} %", "Días congestionados que detecta", f"A las 12 h, con {a1.precision_pct:.0f} % de acierto. Es la alerta con más señal."),

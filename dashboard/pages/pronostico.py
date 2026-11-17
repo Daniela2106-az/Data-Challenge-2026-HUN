@@ -185,8 +185,7 @@ def panel_contexto():
                                "decisiones de largo plazo (meses) hay que mirar todo el rango, no solo la línea "
                                "central. Los ingresos a cama de un día suelto son casi ruido de conteo: para planear camas "
                                "conviene mirar el total de la semana (en la versión anterior del modelo, el error de los ingresos a cama "
-                               "bajaba de ~22 % por día a 9,5 % por semana). "),
-                      dcc.Link("Cómo se eligió este modelo y qué alternativas se descartaron", href="/modelos", className="enlace-chip")]),
+                               "bajaba de ~22 % por día a 9,5 % por semana).")]),
             html.Div([html.Div("Qué NO dice", className="metodo__rotulo"),
                       html.Div("No anticipa brotes, cortes del sistema de registro, ni cambios del hospital después "
                                "del 9 de abril de 2026 (el registro de ese momento en adelante está incompleto y no "

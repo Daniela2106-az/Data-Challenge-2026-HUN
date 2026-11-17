@@ -277,11 +277,11 @@ def panel_interpretacion():
                                   "solo esa jornada, doble clic para volver a ver todas."),
                           html.Li("Hoy / Mañana / Pasado mañana agrupan las barras del eje horizontal; las líneas "
                                   "punteadas verticales marcan dónde termina un día y empieza el siguiente."),
-                          html.Li("La barra gris «Después» no es un bloque de horas como las demás: junta TODA la "
-                                  "probabilidad de recibir cama después del tercer día, sin límite de tiempo. Por eso "
-                                  "suele verse más alta que una sola jornada (que dura unas 5-7 horas) — no es un error "
-                                  "ni algo que se quitó, es que compara un rango de tiempo mucho más ancho contra "
-                                  "bloques angostos; no significa que «después» sea la opción más probable en sí."),
+                          html.Li("La vista «Normal» solo muestra hoy, mañana y pasado mañana. La probabilidad de "
+                                  "recibir cama después del tercer día no se dibuja como barra: junta TODO lo que "
+                                  "sigue, sin límite de tiempo, y no es comparable con bloques de 5-7 horas. Puedes "
+                                  "verla en la vista «Acumulada» (es el último tramo de la línea) y en la tabla de "
+                                  "la ficha técnica."),
                       ], style={"marginTop": "4px"})]),
             html.Div([html.Div("El switch «Normal / Acumulada»", className="metodo__rotulo"),
                       html.Div("Arriba a la derecha del gráfico puedes alternar entre dos formas de ver lo mismo. "
@@ -607,9 +607,13 @@ def _secuencia_ventanas(v):
 
 def construir_grafico_normal(v, ventana_mas_probable, dark):
     """Vista 'Normal': barras limpias por jornada (sin la acumulada) -- responde '¿en qué momento?'.
-    Incluye 'Después' como una barra propia al final (antes se excluía del eje sin explicación). El eje y
-    no se fija a [0, 100]: así el gráfico llega ya ajustado al tamaño real de las barras, sin que haya que
-    darle clic a 'autoscale' en la barra de herramientas de Plotly."""
+    Solo muestra hoy / mañana / pasado mañana: la barra 'Después' se quitó (16-nov) porque el modelo no mueve
+    esa probabilidad con las horas que el paciente lleva esperando (limitación conocida del estimador) y
+    porque junta un rango sin límite de tiempo que no es comparable con bloques de 5-7 h. Esa probabilidad
+    sigue visible en la vista Acumulada (su último tramo). El eje y no se fija a [0, 100]: así el gráfico
+    llega ya ajustado al tamaño real de las barras, sin que haya que darle clic a 'autoscale' en la barra de
+    herramientas de Plotly."""
+    v = v[v.ventana != "después"].reset_index(drop=True)
     xs, iconos, dias, centros, fronteras = _secuencia_ventanas(v)
     fig = go.Figure()
     for jornada in ORDEN_JORNADA:
@@ -623,14 +627,6 @@ def construir_grafico_normal(v, ventana_mas_probable, dark):
             name=f"{ICONOS_JORNADA[jornada]} {jornada.capitalize()} · {RANGO_12H[jornada]}",
             customdata=[v.ventana.iloc[x] for x in xj],
             hovertemplate="%{customdata}<br>%{y} %%<extra></extra>",
-        ))
-    idx_despues = [x for x, dia in zip(xs, dias) if dia == "Después"]
-    if idx_despues:
-        x = idx_despues[0]
-        fig.add_trace(go.Bar(
-            x=[x], y=[round(100 * v.probabilidad.iloc[x], 1)], marker_color="#9aa3af",
-            name="⋯ Después (más de 3 días)",
-            hovertemplate="Después del tercer día<br>%{y} %% (junta TODO lo que sigue, no un solo bloque)<extra></extra>",
         ))
     for fr in fronteras:
         fig.add_vline(x=fr, line_width=1.3, line_dash="dash", line_color="rgba(120,120,120,.75)")

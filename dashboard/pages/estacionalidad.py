@@ -15,10 +15,10 @@ import plotly.graph_objects as go
 from dash import Input, Output, callback, html
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from componentes import (AZUL, MESES, PIZARRA, aviso_datos, bloque, cifra, coma, dato, estilo, filtro, grafico, hecho, lamina, leer, mensaje,  # noqa: E402
-                         metodo, pagina, portada)
+from componentes import (AZUL, MESES, PIZARRA, aviso_datos, bloque, cifra, coma, dato, estilo, filtro, grafico, hecho, lamina, laminas_grupo,  # noqa: E402
+                         leer, mensaje, metodo, pagina, portada)
 
-from componentes import frase, tarjetas, tarjeta_grafica  # noqa: E402,F401
+from componentes import frase  # noqa: E402
 
 dash.register_page(__name__, path="/estacionalidad", name="Forma del año", title="La forma del año del pronóstico - HUN", order=32)
 
@@ -51,18 +51,20 @@ def layout():
                 "puede planear por temporadas.", id_cifras="est-cifras"),
         html.Div(className="filtros", children=[filtro("est-serie", "Serie", SERIES, "llegadas_con_atencion")]),
         frase("El año tiene una forma que se repite, y conocerla permite planear personal y camas con meses de anticipación."),
-        lamina(1, html.Span(id="est-titular"),
-               "La línea muestra cuánto se aparta la demanda esperada del promedio del año en cada época (suavizado a 15 días). Con solo "
-               "tres años de datos del hospital no se puede aprender esta forma: sale de **datos públicos de salud de Barranquilla**.",
-               grafico("est-efecto", alto=340), id_dato="est-dato-fuente"),
-        lamina(2, "Cuanto más lejos se mira, más ayuda saberlo",
-               "Error diario del pronóstico según el horizonte, sin y con la forma del año. A una semana casi no cambia; a varios meses, "
-               "el error baja.",
-               grafico("est-error", alto=340), id_dato="est-dato-error", invertida=True),
-        lamina(3, "Las llegadas y los ingresos a cama no tienen la misma temporada",
-               "Cambio esperado en cada mes frente al promedio del año, para las dos series. **Las llegadas suben de abril a junio, "
-               "con la temporada de dengue; los ingresos a cama, en julio y agosto.** Esta gráfica no cambia con el filtro.",
-               grafico("est-meses", alto=320), dato=("2 temporadas", "distintas: por eso cada serie lleva su propia forma del año")),
+        laminas_grupo(
+            lamina(1, html.Span(id="est-titular"),
+                   "La línea muestra cuánto se aparta la demanda esperada del promedio del año en cada época (suavizado a 15 días). Con solo "
+                   "tres años de datos del hospital no se puede aprender esta forma: sale de **datos públicos de salud de Barranquilla**.",
+                   grafico("est-efecto", alto=340), id_dato="est-dato-fuente"),
+            lamina(2, "Cuanto más lejos se mira, más ayuda saberlo",
+                   "Error diario del pronóstico según el horizonte, sin y con la forma del año. A una semana casi no cambia; a varios meses, "
+                   "el error baja.",
+                   grafico("est-error", alto=340), id_dato="est-dato-error", invertida=True),
+            lamina(3, "Las llegadas y los ingresos a cama no tienen la misma temporada",
+                   "Cambio esperado en cada mes frente al promedio del año, para las dos series. **Las llegadas suben de abril a junio, "
+                   "con la temporada de dengue; los ingresos a cama, en julio y agosto.** Esta gráfica no cambia con el filtro.",
+                   grafico("est-meses", alto=320), dato=("2 temporadas", "distintas: por eso cada serie lleva su propia forma del año")),
+        ),
         bloque("De dónde sale la forma del año", "Datos públicos de salud de muchos años, no los tres del hospital"),
         html.Div(className="hechos", children=[hecho(*o) for o in ORIGEN]),
         bloque("Todo lo que se probó", "Solo entró al modelo lo que mejoró el pronóstico en datos que el modelo no había visto"),

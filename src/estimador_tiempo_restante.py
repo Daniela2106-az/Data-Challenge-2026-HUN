@@ -1,5 +1,13 @@
 """
-estimador_tiempo_restante.py  -  version 6 (11-nov-2026)
+estimador_tiempo_restante.py  -  version 7 (14-nov-2026)
+(v7: LIMITE_ENTRENAMIENTO corta el entrenamiento en 2025-12-31 en vez de usar todo el periodo "confiable" (hasta 9-abr-2026). Se probo esta sesion
+ (conversacion sobre el salto de incoherencia entre landmarks) que entrenar con enero-abril de 2026 produce saltos grandes e incoherentes entre
+ landmarks vecinos (ej. landmark 5h y 6h, con el mismo paciente, llegaban a una espera total implicita distinta por ~14h) -- NO por los laboratorios
+ (se descarto moviendo HORAS_LAB, el salto seguia igual), sino porque el peso a lo reciente (VIDA_MEDIA_DIAS) concentra el entrenamiento en los
+ ultimos meses, y ya desde enero de 2026 el registro de las etapas TU viene cayendo (-13% a -17% frente al año anterior, CLAUDE.md 4.9), antes del
+ quiebre fuerte de abril. Prueba de precision (Brier score, holdout oct-dic 2025 que ninguna variante entreno): excluir enero-abril de 2026 no
+ empeora la precision -- en landmarks 5 y 6 la mejora levemente (-0.2%), en el modelo de 12h+ es practicamente igual (+0.1%, dentro del ruido). El
+ paquete pasa a la version 10 y el .joblib anterior se vuelve a entrenar solo.)
 (v6: las banderas de laboratorio se cruzan por persona real y se encuentran en HUN_CRUDOS/consultas (comparar_estimadores.py v5); el paquete pasa a la version 9 y el .joblib anterior se vuelve a entrenar solo.)
 (v5, 9-nov: el p90 se calcula con el nivel 0,93 (calibrado en la validacion, src/calibracion_y_corte.py): cubre ~91 % en la prueba en vez de 87-88 %.)
 (v4: un modelo por cada hora de espera de 0 a 11 h, en vez de 0, 2, 4, 6 y 9 h con el mas cercano por debajo; asi el modelo que se consulta es el mismo
@@ -21,8 +29,12 @@ QUE USA (todo se conoce en el momento de la consulta)
     y las admisiones. Si no se da, se asume lo mas comun: una etapa de atencion abierta desde la llegada y una admision al llegar.
   Modelo: comparar_estimadores.py (M1, version 2): con menos de 12 h de espera, un modelo por cada hora de espera (LANDMARKS: 0 a 11 h; se usa el de la hora entera ya cumplida) con historial y recorrido; desde las 12 h, un
   modelo con solo el historial (el recorrido ya no suma). Validado con jul-2025 a 9-abr-2026 (docs/estimador_tiempos.md); el modelo que se consulta se entrena
-  con TODO el periodo confiable (feb-2023 a 9-abr-2026), con MAS PESO A LO RECIENTE (un dato de hace 6 meses pesa la mitad): el hospital cambio y asi
-  estima mejor los meses nuevos (src/ventana_entrenamiento.py). Lo ideal es volver a entrenarlo cada mes con los datos nuevos (borrar el .joblib).
+  con el periodo confiable HASTA LIMITE_ENTRENAMIENTO (feb-2023 a 2025-12-31, no hasta 9-abr-2026), con MAS PESO A LO RECIENTE (un dato de hace 6 meses
+  pesa la mitad): el hospital cambio y asi estima mejor los meses nuevos (src/ventana_entrenamiento.py). Se recorta antes de abril de 2026 porque ya
+  desde enero de 2026 el registro de las etapas TU cae -13% a -17% frente al año anterior (CLAUDE.md 4.9): con ese peso reciente, entrenar incluyendo
+  esos meses producia saltos grandes e incoherentes entre landmarks vecinos, SIN mejorar (de hecho empeorando levemente) la precision medida en un
+  holdout limpio -- ver v7 arriba. Lo ideal es volver a entrenarlo cada mes con los datos nuevos, siempre que no se acerquen al tramo degradado
+  (borrar el .joblib).
 
 DONDE SE GUARDA EL MODELO
   HUN_PROCESADOS/modelos/m1_tiempo_restante.joblib, fuera del proyecto (sale de datos clinicos). Si no existe, se entrena al primer uso (~2 min); para eso
@@ -40,8 +52,11 @@ LIMITES
   la base no registra (triage, servicio, tipo de cama). La "espera de cama" termina en la asignacion administrativa, que puede ser una silla o camilla.
   A QUIEN APLICA: solo a pacientes que se van a hospitalizar (orden de hospitalizacion ya dada). Se entreno solo con quienes recibieron cama; para un
   paciente cualquiera que llega a urgencias no sirve (solo ~9 % se hospitaliza y eso no se sabe al llegar).
-  DESACTUALIZACION: los datos confiables terminan el 9-abr-2026 (CLAUDE.md 4.9) y no se puede reentrenar con meses nuevos mientras el registro siga
-  degradado. Si la fecha consultada esta a mas de DIAS_AVISO dias del fin del entrenamiento, el resultado trae un aviso.
+  DESACTUALIZACION: los datos confiables en general terminan el 9-abr-2026 (CLAUDE.md 4.9), pero ESTE modelo entrena solo hasta LIMITE_ENTRENAMIENTO
+  (2025-12-31): enero-marzo de 2026, aunque "confiables" para el resto del proyecto, ya muestran una caida de registro en las etapas TU que
+  desestabiliza este modelo en particular (ver v7 arriba). No se puede reentrenar con meses mas nuevos mientras el registro siga degradado. Si la
+  fecha consultada esta a mas de DIAS_AVISO dias del fin del entrenamiento, el resultado trae un aviso (con el corte mas temprano, el aviso aparece
+  mas seguido -- es correcto, el modelo de verdad esta basado en datos mas antiguos ahora).
   Hay un modelo por cada hora de 0 a 11 h, validado hora por hora en src/revision_estimador.py (la v2 tenia 0, 2, 4, 6 y 9 h y solo se probo en 0, 3 y 6 h).
 """
 import os
@@ -58,9 +73,12 @@ import estimador_tiempos as et  # noqa: E402
 
 LANDMARKS = list(range(ce.HORAS_RECORRIDO))    # 0 a 11 h, uno por hora; con 12 h o mas se usa el modelo con solo el historial
 VIDA_MEDIA_DIAS = 182                          # peso a lo reciente: la mitad cada 6 meses hacia atras
+LIMITE_ENTRENAMIENTO = "2025-12-31"            # NO "2026-04-09" (el fin del periodo confiable general): desde enero-2026 el registro de TU ya cae
+                                                # -13% a -17% frente al año anterior (CLAUDE.md 4.9), y con VIDA_MEDIA_DIAS=182 ese tramo reciente
+                                                # pesa mucho -- produce saltos incoherentes entre landmarks vecinos sin mejorar la precision (14-nov)
 DIAS_AVISO = 60                                # mas de 60 dias entre el fin del entrenamiento y la fecha consultada: el modelo puede estar viejo
 NIVEL_P90 = 0.93                               # nivel calibrado en la validacion ene-jun 2025 (src/calibracion_y_corte.py): con 0,90 el p90 cubria 87-88 %; con 0,93, ~91 %
-VERSION_MODELO = 9                             # 8: con banderas de laboratorio (a6-utilidad) y un modelo por hora (a6-revision); 9: banderas por persona real (sevp_*, 11-nov)
+VERSION_MODELO = 10                            # 9: banderas por persona real (sevp_*, 11-nov); 10: LIMITE_ENTRENAMIENTO corta antes del tramo degradado (14-nov)
 MODELO = Path(os.environ.get("HUN_PROCESADOS", ce.PROC)) / "modelos" / "m1_tiempo_restante.joblib"
 _CACHE = {}
 
@@ -113,7 +131,7 @@ def ventanas_de_cama(S, c, horas_esperando, ahora, dias=3):
 
 def _entrenar_y_guardar():
     d, h, rejilla, estado = ce.preparar()
-    paquete = entrenar_paquete(d, rejilla, estado)                                # todo el periodo confiable
+    paquete = entrenar_paquete(d, rejilla, estado, hasta=LIMITE_ENTRENAMIENTO)     # NO todo el periodo confiable -- ver LIMITE_ENTRENAMIENTO arriba
     MODELO.parent.mkdir(parents=True, exist_ok=True)
     joblib.dump(paquete, MODELO)
     return paquete

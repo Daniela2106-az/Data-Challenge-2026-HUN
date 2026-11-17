@@ -17,7 +17,7 @@ from dash import Input, Output, callback, html
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import tema_graficos as tg  # noqa: E402
 from componentes import (AZUL, PIZARRA, TENUE, aviso_datos, bloque, cifra, coma, dato, eje_fechas, estilo, etiqueta_final, fecha_es, filtro,  # noqa: E402
-                         grafico, hecho, lamina, leer, mensaje, metodo, miles, pagina, portada)
+                         grafico, hecho, lamina, laminas_grupo, leer, mensaje, metodo, miles, pagina, portada)
 
 from componentes import frase, tarjetas, tarjeta_grafica  # noqa: E402,F401
 
@@ -86,19 +86,21 @@ def layout():
             filtro("esp-tipo", "Tipo de visita", ["Todos", "Urgencias", "Ambulatorio", "Treatment urgency"], "Todos"),
             filtro("esp-grupo", "Grupo de edad", ["Todos", "Niños (< 15)", "Adultos (15–59)", "Mayores (60+)"], "Todos")]),
         frase("Casi toda la espera por una cama (98 %) ocurre en urgencias, y la de los pacientes que más esperan crece año tras año."),
-        lamina(1, html.Span(id="esp-titular"),
-               "Cada barra es un tramo de espera, desde la llegada hasta que se asigna la cama. **En azul, quienes esperan más de "
-               "24 horas.** Cambia con los filtros de arriba.",
-               grafico("esp-hist", alto=340), id_dato="esp-dato"),
-        lamina(2, "La espera típica no cambia, pero los peores casos pasan de 61 a 81 horas",
-               "La mediana se mantiene entre 17 y 20 horas. El **percentil 90**, el paciente que espera más que 9 de cada 10, sube año "
-               "tras año. Esta gráfica muestra a todos los pacientes: no cambia con los filtros.",
-               grafico("esp-mes", alto=340), dato=("+20 h", "en la espera de los peores casos, de 2023 a 2026"), invertida=True),
-        lamina(3, html.Span(id="esp-titular-quien"),
-               "Espera mediana de cada grupo de edad según el tipo de visita por el que entró: entre más intenso el azul, más espera. "
-               "**Cambia con el año de arriba**, no con los otros dos filtros. Los grupos con menos de 30 casos quedan en blanco.",
-               grafico("esp-matriz", alto=300), id_dato="esp-dato-quien"),
-        *_laminas_exceso(),
+        laminas_grupo(
+            lamina(1, html.Span(id="esp-titular"),
+                   "Cada barra es un tramo de espera, desde la llegada hasta que se asigna la cama. **En azul, quienes esperan más de "
+                   "24 horas.** Cambia con los filtros de arriba.",
+                   grafico("esp-hist", alto=340), id_dato="esp-dato"),
+            lamina(2, "La espera típica no cambia, pero los peores casos pasan de 61 a 81 horas",
+                   "La mediana se mantiene entre 17 y 20 horas. El **percentil 90**, el paciente que espera más que 9 de cada 10, sube año "
+                   "tras año. Esta gráfica muestra a todos los pacientes: no cambia con los filtros.",
+                   grafico("esp-mes", alto=340), dato=("+20 h", "en la espera de los peores casos, de 2023 a 2026"), invertida=True),
+            lamina(3, html.Span(id="esp-titular-quien"),
+                   "Espera mediana de cada grupo de edad según el tipo de visita por el que entró: entre más intenso el azul, más espera. "
+                   "**Cambia con el año de arriba**, no con los otros dos filtros. Los grupos con menos de 30 casos quedan en blanco.",
+                   grafico("esp-matriz", alto=300), id_dato="esp-dato-quien"),
+            *_laminas_exceso(),
+        ),
         bloque("Dónde se va el tiempo", "Cuatro cifras que explican por qué la espera es el cuello de botella"),
         html.Div(className="hechos", children=[hecho(*t) for t in TIEMPO]),
         mensaje("El problema no es la espera típica sino **las esperas de varios días**: el 83 % de las horas de espera viene de "

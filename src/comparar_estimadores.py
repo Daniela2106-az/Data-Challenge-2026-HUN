@@ -433,6 +433,20 @@ COLS_M1 = ["transcurrido", "hora_reloj", "dia_semana", "cola", "ocup", "edad_cod
 CATEGORICAS = ["hora_reloj", "dia_semana", "tipo_cod", "dx_cod", "dx_previo_cod", "servicio_cod"]
 COLS_M1_BASE = [c for c in COLS_M1 if c != "cola"]      # la cola no mejora la estimacion y no se conoce del todo en el momento
 COLS_M1_FINAL = COLS_M1_BASE + HIST + REC
+COLS_POOLED = COLS_M1_BASE + HIST + REC + LAB           # modelo unico (14-nov): recorrido Y laboratorio siempre presentes, sin ramas por 'desde'
+
+
+def aplicar_ventana_lab(X, horas):
+    """Pone en 0 (la misma codificacion de 'sin laboratorio' que ya usa el proyecto: todas las banderas en 0 y
+    con_laboratorio_6h=0) las columnas de LAB en las filas cuyas horas < HORAS_LAB: antes de cumplirse la ventana
+    de 6 h, el resultado de verdad no se puede conocer todavia, sin importar si la estancia SI tiene un valor mas
+    adelante. Sin esto, un modelo que abarque filas de ambos lados de la frontera (como el modelo unico) vería un
+    valor de laboratorio "futuro" en filas donde ese dato todavia no existia -- fuga de informacion. No-op para
+    cualquier llamado existente (landmarks y el M1 de 12h+ ya cumplen horas >= HORAS_LAB cuando incluyen LAB)."""
+    presentes = [c for c in LAB if c in X.columns]
+    if presentes:
+        X.loc[np.asarray(horas) < HORAS_LAB, presentes] = 0.0
+    return X
 
 
 def filas_persona_hora(d, rejilla, estado, desde=0, fijar_estado=False, cols=COLS_M1, retraso_h=0.0):
@@ -453,6 +467,7 @@ def filas_persona_hora(d, rejilla, estado, desde=0, fijar_estado=False, cols=COL
     if any(c in REC for c in cols):
         for c, v in recorrido_filas(d, idx, kk, desde, fijar_estado, retraso_h).items():
             X[c] = v
+    X = aplicar_ventana_lab(X, kk)
     return X, idx, kk
 
 
@@ -494,6 +509,34 @@ def entrenar_landmark(tr, rejilla, estado, desde, cols=None, vida_media_dias=Non
                                        categorical_features=[cols.index(c) for c in CATEGORICAS if c in cols], random_state=SEMILLA)
     m.fit(X[cols], y[vivo], sample_weight=None if w is None else w[vivo])
     m.cols_, m.desde_, m.retraso_h_ = cols, desde, retraso_h
+    return m
+
+
+def entrenar_pooled(tr, rejilla, estado, cols=COLS_POOLED, vida_media_dias=None, monotonic_cst=None, retraso_h=0.0):
+    """Modelo UNICO de tiempo restante para todas las horas de espera (0 a MAX_H), reemplazando los 13 modelos
+    landmark/M1: 'transcurrido' es una variable numerica normal, no un criterio para elegir que modelo consultar.
+    Entrena DINAMICO (fijar_estado=False, igual que entrenar_m1 -- NO como entrenar_landmark, que lo fija en
+    'desde'): cada fila usa cola/ocup/recorrido tal como se conocian de verdad en esa hora historica, para que el
+    modelo aprenda la relacion real entre cuanto se ha esperado y el riesgo por hora en TODO el rango. Si se
+    entrenara con fijar_estado=True y desde=0, el recorrido quedaria congelado en 'lo que se sabe a la hora 0'
+    (todo cero) en todas las filas sin importar 'kk' -- se perderia la señal que se quiere capturar. Al predecir
+    se sigue usando predecir_m1 (ya congela el estado en la hora de la consulta y deja 'transcurrido' avanzar
+    hacia adelante), sin cambios.
+    monotonic_cst: dict opcional {columna: signo} (ej. {"transcurrido": -1}), resuelto aqui a la lista por
+    posicion que pide sklearn -- no hace falta que quien llama conozca el orden de 'cols'."""
+    X, idx, kk = filas_persona_hora(tr, rejilla, estado, desde=0, fijar_estado=False, cols=cols, retraso_h=retraso_h)
+    e = tr.espera_cama_h.to_numpy()[idx]
+    vivo = kk <= np.floor(e)
+    y = (kk == np.floor(e)).astype(int)
+    w = pesos_recientes(tr, idx, vida_media_dias)
+    X, y = X[vivo], y[vivo]
+    print(f"M1 pooled: {len(X):,} filas paciente-hora para entrenar, {y.mean():.4f} de probabilidad media por hora")
+    cst = None if monotonic_cst is None else [monotonic_cst.get(c, 0) for c in cols]
+    m = HistGradientBoostingClassifier(max_iter=300, learning_rate=0.08, max_leaf_nodes=63, min_samples_leaf=200,
+                                       categorical_features=[cols.index(c) for c in CATEGORICAS if c in cols],
+                                       monotonic_cst=cst, random_state=SEMILLA)
+    m.fit(X[cols], y, sample_weight=None if w is None else w[vivo])
+    m.cols_, m.retraso_h_ = cols, retraso_h
     return m
 
 
