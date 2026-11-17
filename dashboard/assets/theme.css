@@ -1720,12 +1720,9 @@ button, .btn-primary {
 .page-container .dash-slider-tooltip { background: var(--surface) !important; color: var(--ink) !important; border: 1px solid var(--line) !important;
                                        box-shadow: 0 2px 8px rgba(0, 0, 0, .15); font-weight: 600; }
 
-/* ---------- Botones secundarios y pasos de un recorrido (prueba de flujo) ---------- */
+/* ---------- Botones secundarios ---------- */
 .page-container .btn-secondary { background: transparent; color: var(--brand-strong); border: 1px solid var(--line); }
 .page-container .btn-secondary:hover { background: rgba(0, 147, 208, .10); }
-.flujo-paso { font-size: 12.5px; font-weight: 600; padding: 5px 12px; border-radius: var(--r-pill); border: 1px solid var(--line); color: var(--muted); }
-.flujo-paso--hecho { background: rgba(0, 147, 208, .12); border-color: rgba(0, 147, 208, .30); color: var(--brand-strong); }
-.flujo-paso--actual { background: var(--brand-strong); border-color: var(--brand-strong); color: #fff; }
 
 /* ---------- Campos de entrada de Dash 4 (dash-input-*): legibles en claro y oscuro (15-nov-2026) ---------- */
 .page-container .dash-input-container { background: var(--surface) !important; border: 1px solid var(--line) !important; border-radius: 10px; overflow: hidden; }
