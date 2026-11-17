@@ -9,33 +9,32 @@ RELACION conecta cada resultado con la prediccion que lo usa (y al reves): un re
 
 # ruta -> rutas con las que se conecta (resultado <-> prediccion). La relacion inversa se calcula sola.
 RELACION = {
-    "/demanda": ["/pronostico", "/alertas", "/atipicos"],
+    "/demanda": ["/pronostico", "/atipicos"],
     "/estacionalidad": ["/pronostico"],
     "/ocupacion": ["/camas"],
-    "/espera": ["/paciente", "/alertas", "/atipicos"],
+    "/espera": ["/paciente", "/atipicos"],
     "/comparar": ["/camas"],
-    "/altas": ["/camas", "/alertas"],
+    "/altas": ["/camas"],
     "/factores": ["/paciente"],
     "/estancia": ["/camas"],
     "/diagnosticos": ["/paciente"],
-    "/perfiles": ["/alertas", "/paciente"],
+    "/perfiles": ["/paciente"],
+    "/alertas": ["/pronostico", "/paciente"],
 }
 MOTIVO = {  # (resultado, prediccion) -> por que se conectan
     ("/demanda", "/pronostico"): "las llegadas por hora y día son lo que el pronóstico proyecta",
-    ("/demanda", "/alertas"): "el percentil 90 de llegadas define el día congestionado",
     ("/demanda", "/atipicos"): "un día atípico es el que se aparta del pronóstico de llegadas",
     ("/estacionalidad", "/pronostico"): "la forma del año es una entrada del pronóstico",
     ("/ocupacion", "/camas"): "la ocupación observada es el punto de partida de la simulación",
     ("/espera", "/paciente"): "la espera de cada paciente se estima con la historia de la espera",
-    ("/espera", "/alertas"): "la alerta de paciente sin cama usa esa espera",
     ("/espera", "/atipicos"): "ningún día tuvo una espera fuera de lo esperado: el problema es crónico",
     ("/comparar", "/camas"): "el diagnóstico repetible se completa con la simulación de camas",
     ("/altas", "/camas"): "el escenario de adelantar altas se simula en la planeación de camas",
-    ("/altas", "/alertas"): "las altas de la tarde explican cuándo se libera cama",
     ("/factores", "/paciente"): "los factores de la espera son entradas del estimador",
     ("/estancia", "/camas"): "la estancia larga es lo que más sube la ocupación",
     ("/diagnosticos", "/paciente"): "el tipo de paciente cambia su tiempo de espera",
-    ("/perfiles", "/alertas"): "los picos de carga son lo que la alerta intenta anticipar",
+    ("/alertas", "/pronostico"): "el pronóstico de llegadas da el total esperado del día que la alerta compara",
+    ("/alertas", "/paciente"): "el estimador hora a hora alimenta el aviso temprano de paciente sin cama",
     ("/perfiles", "/paciente"): "los perfiles que esperan más son los que el estimador distingue",
 }
 

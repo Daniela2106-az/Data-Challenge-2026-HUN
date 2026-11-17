@@ -13,7 +13,9 @@ import plotly.graph_objects as go
 from dash import Input, Output, callback, html
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from componentes import AZUL, PIZARRA, TENUE, bloque, cifra, coma, dato, estilo, filtro, grafico, lamina, leer, mensaje, metodo, miles, pagina, portada  # noqa: E402
+from componentes import AZUL, PIZARRA, TENUE, cifra, coma, dato, estilo, filtro, grafico, lamina, leer, mensaje, metodo, miles, pagina, portada  # noqa: E402
+
+from componentes import frase, tarjetas, tarjeta_grafica  # noqa: E402,F401
 
 dash.register_page(__name__, path="/diagnosticos", name="Diagnósticos", title="Diagnósticos y tiempos - HUN", order=27)
 
@@ -29,34 +31,40 @@ INDICADORES = {"espera": (2, "espera mediana por una cama", False), "p90": (3, "
 LENTOS = {"Musculoesquelético y dolor", "Renal y urinario", "Cáncer y tumores", "Digestivo"}
 
 
-def _tabla_grupos():
-    """Tabla por grupo de diagnostico con el numero de pacientes (datos/tablas_dashboard/tiempos_por_dx.csv) y la cobertura del diagnostico."""
+ACENTOS = {"Embarazo, parto y ginecologia": "Embarazo, parto y ginecología", "Neurologico": "Neurológico", "Endocrino y metabolico": "Endocrino y metabólico",
+           "Musculoesqueletico y dolor": "Musculoesquelético y dolor", "Dolor y sintomas generales": "Dolor y síntomas generales", "Cancer y tumores": "Cáncer y tumores",
+           "Sangre e inmunologia": "Sangre e inmunología", "Recien nacido": "Recién nacido", "Ojo, oido, boca y dientes": "Ojo, oído, boca y dientes"}
+
+
+def _laminas_pacientes():
+    """Cuantos pacientes hay detras de cada grupo (datos/tablas_dashboard/tiempos_por_dx.csv) y la cobertura del diagnostico."""
     t = leer("tiempos_por_dx.csv")
     if t is None or t.empty:
         return []
-    t = t.sort_values("espera_mediana_h", ascending=False)
-    cab = html.Thead(html.Tr([html.Th(c) for c in ["Grupo de diagnóstico", "Hospitalizados", "% que se hospitaliza", "Espera mediana", "Estancia mediana"]]))
-    filas = [html.Tr([html.Td(f.categoria_dx + (" *" if f.n_insuficiente else "")), html.Td(miles(f.hospitalizados)), html.Td(f"{coma(f.pct_hospitaliza, 0)} %"),
-                      html.Td(f"{coma(f.espera_mediana_h, 0)} h"), html.Td(f"{coma(f.estancia_mediana_h / 24, 1)} días")]) for f in t.itertuples()]
     c = leer("cobertura_dx_por_ruta.csv")
     cob = ""
     if c is not None and not c.empty:
         d = c.set_index("ruta_simple").pct_con_dx
         if {"TU", "TU > HOSP"} <= set(d.index):
-            cob = (f"Solo el {coma(d['TU'], 0)} % de quienes se atienden en urgencias y se van de alta tiene un diagnóstico registrado, frente al {coma(d['TU > HOSP'], 0)} % de quienes se hospitalizan: "
-                   "los grupos reflejan sobre todo a los hospitalizados. ")
-    return [bloque("Cuántos pacientes hay detrás de cada grupo", "Ordenados de más a menos espera; un asterisco marca grupos con pocos casos"),
-            html.Div(className="tech-table-wrap", children=[html.Table(className="tech-table", children=[cab, html.Tbody(filas)])]),
-            html.P(cob + "El agrupamiento de diagnósticos no tiene validación clínica y el ACV (accidente cerebrovascular) está dentro de Cardiovascular.", style={"fontSize": "12px", "marginTop": "8px"})]
+            cob = (f" Solo el {coma(d['TU'], 0)} % de quienes se atienden en urgencias y se van de alta tiene un diagnóstico registrado, frente al {coma(d['TU > HOSP'], 0)} % de quienes se hospitalizan: "
+                   "los grupos reflejan sobre todo a los hospitalizados.")
+    mayor = t.sort_values("hospitalizados", ascending=False).iloc[0]
+    return [lamina(3, "Cuántos pacientes hay detrás de cada grupo",
+                   "Cada barra es el número de hospitalizados de un grupo de diagnóstico. Pasa el cursor para ver qué porcentaje de sus pacientes se hospitaliza. "
+                   "**En azul, los grupos con espera medida en suficientes casos**; en gris, los de pocos casos." + cob,
+                   grafico("dx-pacientes", alto=520), dato=(miles(mayor.hospitalizados), f"hospitalizados en {ACENTOS.get(mayor.categoria_dx, mayor.categoria_dx).lower()}, el grupo más grande"))]
 
 
-def _efecto_dx():
+def _lamina_efecto():
     """Efecto del grupo de diagnostico sobre la espera, con edad, tipo de visita, franja y año iguales (datos/tablas_dashboard/efecto_dx_espera.csv)."""
     t = leer("efecto_dx_espera.csv")
     if t is None or t.empty:
         return []
-    return [bloque("Con lo demás igual", "Cuánto más o menos espera cada grupo que Digestivo, con tipo de visita, franja, año y edad iguales; la línea fina es el intervalo de confianza del 95 %"),
-            grafico("dx-efecto", alto=480)]
+    top = t.sort_values("efecto_pct_vs_digestivo", ascending=False).iloc[0]
+    return [lamina(4, "Con lo demás igual, el diagnóstico sigue marcando cuánto se espera",
+                   "Cuánto más o menos espera cada grupo que Digestivo, con tipo de visita, franja, año y edad iguales. **La línea fina es el intervalo de confianza del 95 %**: "
+                   "si cruza el cero, la diferencia puede ser azar.",
+                   grafico("dx-efecto", alto=480), dato=(f"+{coma(top.efecto_pct_vs_digestivo, 0)} %", f"de espera en {top.categoria_dx.lower()} frente a Digestivo"), invertida=True)]
 
 
 def layout():
@@ -66,6 +74,7 @@ def layout():
                 "los que hacen la cola larga.",
                 [cifra("39 h", "de espera mediana en musculoesquelético y dolor"), cifra("9 h", "en cardiovascular y respiratorio"),
                  cifra("65 %", "de las hospitalizaciones tiene un diagnóstico que se puede agrupar")]),
+        frase("Lo urgente consigue cama rápido; lo quirúrgico y lo urológico espera cuatro veces más."),
         lamina(1, html.Span(id="dx-titular"),
                "Cada barra es un grupo de diagnóstico, ordenado de mayor a menor. **En azul, los cuatro grupos que más esperan cama.** "
                "Pasa el cursor por una barra para ver cuántos pacientes tiene.",
@@ -77,8 +86,13 @@ def layout():
                "hospitalizado. **Renal y urinario espera mucho pero se queda poco**: su problema es conseguir la cama, no ocuparla.",
                grafico("dx-dispersion", alto=400), dato=("4,8 días", "de estancia mediana en musculoesquelético y en cáncer, los que más se quedan"),
                invertida=True),
-        *_tabla_grupos(),
-        *_efecto_dx(),
+        *_laminas_pacientes(),
+        *_lamina_efecto(),
+        tarjetas("Lo que dicen los diagnósticos", "Cuatro lecturas de las gráficas de arriba",
+                 ("39 h", "La espera más larga", "Es la de musculoesquelético y dolor, el grupo que más espera por una cama."),
+                 ("9 h", "La más corta", "Cardiovascular y respiratorio reciben cama en horas: lo urgente no hace cola."),
+                 ("Renal", "Espera mucho, se queda poco", "Su problema es conseguir la cama, no ocuparla."),
+                 ("65 %", "De las hospitalizaciones se puede agrupar", "El resto no tiene un diagnóstico que se pueda traducir al llegar a la cama.")),
         mensaje("La cola larga está en **cirugía, urología y ortopedia**: pacientes estables que esperan turno o una cama especializada. "
                 "Vale la pena revisar ese flujo aparte, porque no compite con las urgencias vitales."),
         metodo(
@@ -143,4 +157,20 @@ def figura_efecto(tema):
     estilo(fig, tema).update_xaxes(ticksuffix=" %", zeroline=True, zerolinewidth=1)
     fig.update_yaxes(automargin=True)
     fig.update_layout(margin=dict(l=10, r=40, t=10, b=40), bargap=0.3)
+    return fig
+
+
+@callback(Output("dx-pacientes", "figure"), Input("theme-store", "data"))
+def figura_pacientes(tema):
+    fig, t = go.Figure(), leer("tiempos_por_dx.csv")
+    if t is not None and not t.empty:
+        t = t.sort_values("hospitalizados")
+        fig.add_trace(go.Bar(y=[ACENTOS.get(g, g) + (" *" if x else "") for g, x in zip(t.categoria_dx, t.n_insuficiente)], x=t.hospitalizados, orientation="h",
+                             marker_color=[TENUE if x else AZUL for x in t.n_insuficiente],
+                             text=[miles(h) for h in t.hospitalizados], textposition="outside", cliponaxis=False,
+                             customdata=list(zip(t.pct_hospitaliza, t.espera_mediana_h, t.estancia_mediana_h / 24)),
+                             hovertemplate="<b>%{y}</b><br>%{x:,.0f} hospitalizados (%{customdata[0]:.0f} % de sus pacientes)<br>espera mediana: %{customdata[1]:.0f} h; estancia mediana: %{customdata[2]:.1f} días<extra></extra>"))
+        estilo(fig, tema).update_xaxes(showticklabels=False, showline=False, range=[0, t.hospitalizados.max() * 1.15])
+        fig.update_layout(bargap=0.3, margin=dict(l=10, r=20, t=6, b=6))
+        fig.update_yaxes(automargin=True, showgrid=False)
     return fig

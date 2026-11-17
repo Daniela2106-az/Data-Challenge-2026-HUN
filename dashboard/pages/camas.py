@@ -57,7 +57,8 @@ import simulacion_camas_montecarlo as scm  # noqa: E402  (import liviano desde e
 import tema_graficos as tg  # noqa: E402
 from componentes import bloque, coma, leer, mensaje, metodo  # noqa: E402
 
-from eleccion_modelos import eleccion_modelo  # noqa: E402
+from eleccion_modelos import tarjeta_eleccion  # noqa: E402
+from componentes import ETAPAS_Y_PRUEBAS, secciones  # noqa: E402
 dash.register_page(__name__, path="/camas", name="Planeación de camas", title="Planeación de camas - HUN", order=3)
 
 GRIS, AZUL, NARANJA, VERDE, ROJO = "#6b6b6b", "#2a6fb0", "#eb6834", "#2e8b57", "#c0392b"
@@ -389,18 +390,17 @@ def layout():
         html.P("Supuestos: B y C se aplican de forma uniforme en todo el horizonte; D es un caso de estrés explícito "
                "(no un pronóstico); ningún escenario cambia la capacidad física (106/18/88, dato del HUN). Asociación, "
                "no causa.", style={"fontSize": "11px", "color": GRIS, "marginTop": "10px"}),
+        panel_altas(),
+        tarjeta_eleccion("/camas"),
         mensaje("**Es un «qué pasa si», no un pronóstico del censo de hoy.** Sirve para ver cuántos días del próximo semestre podrían quedar por encima de las 106 camas "
                 "y cuánto cambiaría eso con más ingresos, estancias más cortas o una mezcla distinta de pacientes. La mayor presión está en los adultos."),
-        panel_altas(),
-        panel_interpretacion(),
         metodo("Para cada día futuro se toman los ingresos pronosticados y estancias reales por perfil (niños y adultos), y se cuenta cuántos pacientes siguen en cama. "
                "Con miles de repeticiones sale la probabilidad de superar las 106 camas. Se validó con un backtest (enero a 9-abr-2026, entrenando solo hasta 2025): la banda "
                "del 80 % cubre ~79 % de los días reales.",
                "No predice la estancia de ningún paciente concreto (R² cerca de 0). Arranca del último censo confiable (9-abr-2026), no del de hoy, porque después el registro "
                "de etapas está incompleto: se simulan los días hasta hoy y se muestra desde mañana, como el pronóstico de demanda. Las camas totales (106) son lo que informó el HUN; el exceso observado puede ser camas de apoyo o camillas.",
-               "Fuente: src/simulacion_camas_montecarlo.py. Detalle: documentación, sección 6.5, y docs/modelo_camas.md.", ruta="/camas"),
-        eleccion_modelo("/camas"),
-        panel_tecnico(),
+               "Fuente: src/simulacion_camas_montecarlo.py. Detalle: documentación, sección 6.5, y docs/modelo_camas.md.", ruta="/camas",
+               antes=[], despues=secciones(panel_tecnico(), solo=ETAPAS_Y_PRUEBAS), pasos=False, modelo=False),
     ])
 
 

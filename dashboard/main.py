@@ -50,8 +50,7 @@ import dash
 from dash import Dash, Input, Output, State, callback, dcc, html
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from documentacion_paginas import conexiones  # noqa: E402
-from navegacion import DENTRO_DE_DOCUMENTACION, ICONOS, SECCIONES, agrupar, capitulos_documento, documentacion_de, recorrido  # noqa: E402
+from navegacion import DENTRO_DE_DOCUMENTACION, ICONOS, SECCIONES, agrupar, capitulos_documento, recorrido  # noqa: E402
 
 app = Dash(__name__, use_pages=True, pages_folder="pages", title="Dashboard HUN",
            update_title="Actualizando…")
@@ -141,30 +140,6 @@ def pasos(ruta):
             boton(i + 1, "Siguiente →", "paso__btn--sig")]
 
 
-def enlace_documentacion(ruta):
-    """Pie de cada pagina: con que otra pagina se conecta (cada resultado con su prediccion y al reves) y el capitulo del documento final que la respalda."""
-    nombres = {p["path"]: p["name"] for p in dash.page_registry.values()}
-    prediccion = {r for t, _d, rs in SECCIONES if t == "Predicción" for r in rs}
-    con = [(r, mot) for r, mot in conexiones(ruta) if r in nombres]
-    d = documentacion_de(ruta)
-    if not con and d is None:
-        return []
-    hijos = []
-    if con:
-        rotulo = "Resultado relacionado" if ruta in prediccion else "Predicción relacionada"
-        hijos.append(html.Div(className="doc-rel__fila", children=[
-            html.Span(rotulo + (" (qué pasa)" if ruta in prediccion else " (qué se espera)"), className="doc-rel__rotulo"),
-            html.Div(className="doc-rel__chips", children=[
-                dcc.Link([html.B(nombres[r]), html.Span(mot, className="doc-rel__motivo") if mot else None], href=r, className="doc-rel__chip") for r, mot in con])]))
-    if d:
-        cap, sub, desc, href = d
-        hijos.append(html.Div(className="doc-rel__fila", children=[
-            html.Span("Documentación", className="doc-rel__rotulo"),
-            html.Span([f"Capítulo {cap}, {sub}. ", html.Span(desc[0].upper() + desc[1:] + ".", className="doc-rel__desc")], className="doc-rel__texto"),
-            dcc.Link("Leer la sección completa →", href=href, className="doc-rel__link", refresh=True)]))
-    return hijos
-
-
 def barra_superior():
     return html.Header(className="topbar", children=[
         html.Div("Inicio", id="topbar-titulo", className="topbar__title"),
@@ -188,7 +163,7 @@ def servir_layout():
         barra_lateral(),
         html.Div(className="main", children=[
             barra_superior(),
-            html.Main(className="content", children=[dash.page_container, html.Div(id="doc-rel", className="doc-rel"), html.Nav(id="paso-nav", className="paso")]),
+            html.Main(className="content", children=[dash.page_container, html.Nav(id="paso-nav", className="paso")]),
         ]),
     ])
 
@@ -197,7 +172,7 @@ app.layout = servir_layout
 
 
 @callback(Output("nav-principal", "children"), Output("topbar-titulo", "children"), Output("paso-nav", "children"),
-          Output("doc-rel", "children"), Input("url", "pathname"))
+          Input("url", "pathname"))
 def sincronizar_navegacion(ruta):
     """Resalta el enlace activo en la barra lateral, pone el nombre de la pagina en la barra superior y arma los botones del pie."""
     ruta = ruta or "/"
@@ -205,7 +180,7 @@ def sincronizar_navegacion(ruta):
     actual = next((p["name"] for p in dash.page_registry.values() if p["path"] == ruta), "Documentación" if ruta.startswith("/documentacion") else "Inicio")
     seccion = next((t for t, _d, grupo in agrupar(_paginas_ordenadas()) if any(p["path"] == ruta for p in grupo)), "Propuestas" if ruta.startswith("/documentacion") or ruta in DENTRO_DE_DOCUMENTACION else "")
     titulo = [html.Span(seccion + " · ", className="topbar__seccion"), actual] if seccion else actual
-    return enlaces, titulo, pasos(ruta), enlace_documentacion(ruta)
+    return enlaces, titulo, pasos(ruta)
 
 
 # Modo claro/oscuro: todo del lado del cliente para que sea instantaneo y no necesite al servidor.

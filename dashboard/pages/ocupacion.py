@@ -16,6 +16,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from componentes import (AZUL, NARANJA, TENUE, aviso_datos, bloque, cifra, coma, eje_fechas, estilo, etiqueta_final, fecha_es, filtro, grafico, lamina,  # noqa: E402
                          hecho, leer, mensaje, metodo, pagina, por_mes, portada)
 
+from componentes import frase, tarjetas, tarjeta_grafica  # noqa: E402,F401
+
 dash.register_page(__name__, path="/ocupacion", name="Ocupación de camas", title="Ocupación de camas - HUN", order=22)
 
 TITULO = "La ocupación roza las 106 camas porque los pacientes se quedan más, no porque lleguen más"
@@ -68,6 +70,7 @@ def layout():
                 [cifra(coma(o25, 0), f"camas ocupadas en promedio en 2025 (en 2023: {coma(o23, 0)})"),
                  cifra(f"{coma(sobre, 0)} %", "de los días de 2025 por encima de las 106 camas"),
                  cifra("5,3 días", "de estancia media en 2025 (en 2023: 4,6 días)")]),
+        frase("En dos años la ocupación subió de 94 a 105 camas, y casi todo el aumento viene de que los pacientes se quedan más, no de que lleguen más."),
         lamina(1, f"En dos años la ocupación subió de {coma(o23, 0)} a {coma(o25, 0)} camas",
                "La línea naranja son las **106 camas** que informó el hospital. Desde 2024 la ocupación se mueve pegada a ese techo, y "
                "muchos días lo supera.",

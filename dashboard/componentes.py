@@ -140,33 +140,96 @@ def mensaje(texto, titulo="Qué significa para el hospital"):
     return html.Section(className="mensaje", children=[html.Div(titulo, className="mensaje__label"), dcc.Markdown(texto, className="mensaje__texto")])
 
 
-def metodo(como, no_dice, fuente="", ruta=None):
-    """Documentacion de la pagina, plegada al final (14-nov-2026): como se calculo, que NO dice, el paso a paso, la eleccion del modelo
-    (solo en las paginas de Prediccion) y a que otra pagina se conecta. `ruta` busca el detalle en documentacion_paginas.py."""
+def frase(texto):
+    """El abrebocas de una pagina de Resultados: la conclusion en una frase, justo debajo del encabezado (Markdown)."""
+    return mensaje(texto, titulo="En una frase")
+
+
+def tarjetas(titulo, bajada, *datos):
+    """Seccion de cuatro tarjetas: titulo, subtitulo y una fila de `hecho(numero, titulo, resumen)`."""
+    return html.Div([bloque(titulo, bajada), html.Div(className="hechos", children=[hecho(*d) for d in datos])])
+
+
+def tarjeta_grafica(grafica, titulo=None, bajada=""):
+    """Una grafica suelta dentro de una tarjeta, como las de las laminas, para que no quede sobre el fondo de la pagina."""
+    return html.Section(className="card tarjeta-grafica", children=[
+        html.Div([html.Div(titulo, className="bloque-titulo"), html.P(bajada, className="bloque-bajada")]) if titulo else None, grafica])
+
+
+def _relacionadas(ruta):
+    """Filas del final de la documentacion de una pagina: con que otra pagina se conecta (cada resultado con su prediccion y al reves) y el
+    capitulo del documento final que la respalda."""
+    import dash
+    from documentacion_paginas import conexiones
+    from navegacion import SECCIONES, documentacion_de
+    nombres = {p["path"]: p["name"] for p in dash.page_registry.values()}
+    prediccion = {r for t, _d, rs in SECCIONES if t == "Predicción" for r in rs}
+    con = [(r, mot) for r, mot in conexiones(ruta) if r in nombres]
+    d = documentacion_de(ruta)
+    filas = []
+    if con:
+        rotulo = "Resultado relacionado (qué pasa)" if ruta in prediccion else "Predicción relacionada (qué se espera)"
+        filas.append(html.Div(className="doc-rel__fila", children=[
+            html.Span(rotulo, className="doc-rel__rotulo"),
+            html.Div(className="doc-rel__chips", children=[
+                dcc.Link([html.B(nombres[r]), html.Span(mot, className="doc-rel__motivo") if mot else None], href=r, className="doc-rel__chip") for r, mot in con])]))
+    if d:
+        cap, sub, desc, href = d
+        filas.append(html.Div(className="doc-rel__fila", children=[
+            html.Span("Documentación", className="doc-rel__rotulo"),
+            html.Span([f"Capítulo {cap}, {sub}. ", html.Span(desc[0].upper() + desc[1:] + ".", className="doc-rel__desc")], className="doc-rel__texto"),
+            dcc.Link("Leer la sección completa →", href=href, className="doc-rel__link", refresh=True)]))
+    return filas
+
+
+ETAPAS_Y_PRUEBAS = ("Etapas", "Qué se probó", "Comparativo")      # lo que se conserva de la ficha tecnica de Prediccion
+
+
+def rotulo_de(c):
+    """Texto del rotulo (la primera linea) de una seccion de un panel plegable."""
+    h = getattr(c, "children", None)
+    h = h[0] if isinstance(h, list) and h else h
+    t = getattr(h, "children", None)
+    return t if isinstance(t, str) else ""
+
+
+def secciones(panel, quitar=(), solo=()):
+    """Secciones (los bloques con rotulo) de un panel plegable de Prediccion. `quitar`: rotulos exactos que se descartan; `solo`: si se da,
+    unicamente las cuyo rotulo empieza con alguno de esos textos (lo demas ya lo dice la documentacion de la pagina)."""
+    return [c for c in panel.children[1].children
+            if rotulo_de(c) not in quitar and (not solo or any(rotulo_de(c).startswith(x) for x in solo))]
+
+
+def metodo(como, no_dice, fuente="", ruta=None, antes=None, despues=None, pasos=True, modelo=True):
+    """UNICA documentacion de una pagina, plegada al final (17-nov-2026): como se calculo, que NO dice, el paso a paso, lo que se
+    probo y descarto (solo Prediccion) y a que otra pagina se conecta, con el enlace a su capitulo del documento final.
+    `antes` y `despues`: secciones propias de la pagina (por ejemplo, como leer su grafica) antes y despues del cuadro principal.
+    `pasos` y `modelo` en False cuando esas partes ya las trae la propia pagina. `ruta` busca el detalle en documentacion_paginas.py."""
     from documentacion_paginas import DETALLE
     det = DETALLE.get(ruta, {}) if ruta else {}
 
-    bloques = [html.Div(className="metodo__grid", children=[
-        html.Div(className="metodo__caja", children=[html.Div("Cómo se calculó", className="metodo__rotulo"), dcc.Markdown(como, className="ctx__text")]),
-        html.Div(className="metodo__caja metodo__caja--no", children=[html.Div("Qué NO dice", className="metodo__rotulo"), dcc.Markdown(no_dice, className="ctx__text")])])]
-    if det.get("pasos"):
+    cajas = [html.Div(className="metodo__caja", children=[html.Div("Cómo se calculó", className="metodo__rotulo"), dcc.Markdown(como, className="ctx__text")])]
+    if no_dice:
+        cajas.append(html.Div(className="metodo__caja metodo__caja--no", children=[html.Div("Qué NO dice", className="metodo__rotulo"), dcc.Markdown(no_dice, className="ctx__text")]))
+    bloques = [*(antes or []), html.Div(className="metodo__grid", children=cajas)]
+    if pasos and det.get("pasos"):
         bloques.append(html.Div(className="metodo__fila", children=[
             html.Div("Paso a paso", className="metodo__rotulo"),
             html.Ol([html.Li(dcc.Markdown(p, className="ctx__text")) for p in det["pasos"]], className="metodo__pasos")]))
-    if det.get("modelo"):
+    if modelo and det.get("modelo"):
         filas = [html.Tr([html.Th("Qué se evaluó"), html.Th("Qué mostró"), html.Th("Por qué")])] + [
             html.Tr([html.Td(a, className="mt__elegido" if "(elegido)" in a else None), html.Td(b), html.Td(c)]) for a, b, c in det["modelo"]]
         bloques.append(html.Div(className="metodo__fila", children=[
             html.Div("Por qué este modelo y no otro", className="metodo__rotulo"),
             html.P("Cada alternativa se probó con el mismo método: entrenar con el pasado y medir en meses que el modelo no había visto.", className="metodo__nota"),
             html.Div(html.Table(filas, className="metodo__tabla"), className="metodo__scroll")]))
-    pie = []
-    if fuente:
-        pie.append(html.P(fuente, className="page-foot"))
+    bloques += despues or []
+    pie = [html.P(fuente, className="page-foot")] if fuente else []
+    rel = _relacionadas(ruta) if ruta else []
     return html.Details(className="metodo", children=[
         html.Summary([html.Span("Documentación de esta sección", className="metodo__titulo"),
-                      html.Span("cómo se calculó, qué no dice" + (", por qué este modelo" if det.get("modelo") else ""), className="metodo__sub")]),
-        *bloques, html.Div(pie, className="metodo__pie") if pie else None])
+                      html.Span("cómo se calculó, qué no dice" + (", por qué este modelo" if (modelo and det.get("modelo")) or despues else ""), className="metodo__sub")]),
+        *bloques, html.Div(rel, className="doc-rel doc-rel--dentro") if rel else None, html.Div(pie, className="metodo__pie") if pie else None])
 
 
 def interpretacion_de(ruta):

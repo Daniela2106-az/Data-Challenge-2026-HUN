@@ -16,6 +16,8 @@ from dash import Input, Output, callback, html
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from componentes import AZUL, PIZARRA, TENUE, bloque, cifra, coma, estilo, grafico, hecho, lamina, leer, mensaje, metodo, pagina, portada  # noqa: E402
 
+from componentes import frase, tarjetas, tarjeta_grafica  # noqa: E402,F401
+
 dash.register_page(__name__, path="/estancia", name="Estancias largas", title="Estancias largas - HUN", order=26)
 
 # camas ocupadas que suma o resta cada tramo de duracion entre 2023 y 2025 (la ocupacion media sube 11 camas)
@@ -52,17 +54,16 @@ def _lamina_mensual():
                    grafico("lar-mensual", alto=320), dato=(f"{coma(ini, 1)} → {coma(fin, 1)} %", "de los hospitalizados se queda más de 14 días"), invertida=True)]
 
 
-def _tabla_laboratorios():
+def _lamina_laboratorios():
     """Examenes de laboratorio de las primeras 48 h mas asociados a las estancias largas (datos/tablas_dashboard/disparadas_laboratorios.csv)."""
     t = leer("disparadas_laboratorios.csv")
     if t is None or t.empty:
         return []
-    cab = html.Thead(html.Tr([html.Th(c) for c in ["Examen (primeras 48 h)", "Estancias con el examen", "% de las estancias largas", "% de las demás", "Veces más frecuente"]]))
-    filas = [html.Tr([html.Td(r.nombre), html.Td(f"{int(r.estancias):,}".replace(",", ".")), html.Td(f"{coma(r.pct_largas, 1)} %"), html.Td(f"{coma(r.pct_otras, 1)} %"),
-                      html.Td(f"{coma(r.razon, 1)}×")]) for r in t.itertuples()]
-    return [bloque("Laboratorios más asociados a las estancias largas", "Exámenes de las primeras 48 horas que aparecen mucho más en quienes se quedan más de 14 días"),
-            html.Div(className="tech-table-wrap", children=[html.Table(className="tech-table", children=[cab, html.Tbody(filas)])]),
-            html.P("Un examen frecuente indica sospecha, no causa: los pacientes más graves tienen más exámenes. Los nombres son los de la base.", style={"fontSize": "12px", "opacity": .75, "marginTop": "6px"})]
+    top = t.sort_values("razon", ascending=False).iloc[0]
+    return [lamina(6, "Los hemocultivos y los gases en sangre aparecen mucho más en quienes se quedan semanas",
+                   "Porcentaje de las estancias con cada examen en las primeras 48 horas: **en azul, las estancias de más de 14 días**; en gris, las demás. "
+                   "Un examen frecuente indica sospecha, no causa: los pacientes más graves tienen más exámenes.",
+                   grafico("lar-labs", alto=420), dato=(f"{coma(top.razon, 1)} veces", f"más frecuente: {top.nombre.lower()}"))]
 
 
 def layout():
@@ -72,6 +73,7 @@ def layout():
                 "se quedan semanas.",
                 [cifra("7 %", "de las estancias dura más de 14 días"), cifra("1 de cada 3", "camas la ocupa una de esas estancias largas"),
                  cifra("63 → 117", "estancias de más de 30 días por año, de 2023 a 2025")]),
+        frase("Unas pocas estancias muy largas explican casi todo el aumento de la ocupación: de las 11 camas que subió, 7 vienen de estancias de más de 30 días."),
         lamina(1, "De las 11 camas que subió la ocupación, 7 vienen de estancias de más de 30 días",
                "Cada barra es cuántas camas ocupadas sumó o restó ese tramo de duración entre 2023 y 2025. **Las estancias cortas ocupan "
                "hoy menos camas que antes**; todo el aumento está en las largas.",
@@ -90,9 +92,9 @@ def layout():
                grafico("lar-dx", alto=330), dato=("12,7 %", "de las visitas «treatment urgency» termina en una estancia larga, el doble que el resto"),
                invertida=True),
         *_lamina_mensual(),
+        *_lamina_laboratorios(),
         bloque("Qué comparten las estancias largas", "Procedimientos y exámenes mucho más frecuentes en ellas que en el resto"),
         html.Div(className="hechos", children=[hecho(*c) for c in COMPARTEN]),
-        *_tabla_laboratorios(),
         mensaje("**Revisar cada semana las estancias largas es la forma más directa de liberar camas** (recomendación 7): son el 7 % de "
                 "las estancias y ocupan un tercio de las camas. Bajar la estancia 5 % equivale a unas 5 camas."),
         metodo(
@@ -149,4 +151,20 @@ def figura_mensual(tema):
         fig.add_trace(go.Scatter(x=t.mes, y=t.pct_muy_largas, mode="lines+markers", name="Más de 30 días", line=dict(color=PIZARRA, width=2),
                                  hovertemplate="%{x|%b %Y}: %{y:.1f} % se queda más de 30 días<extra></extra>"))
         estilo(fig, tema, leyenda=True).update_yaxes(ticksuffix=" %", rangemode="tozero")
+    return fig
+
+
+@callback(Output("lar-labs", "figure"), Input("theme-store", "data"))
+def figura_laboratorios(tema):
+    fig, t = go.Figure(), leer("disparadas_laboratorios.csv")
+    if t is not None and not t.empty:
+        t = t.sort_values("razon")
+        fig.add_trace(go.Bar(y=t.nombre, x=t.pct_otras, orientation="h", name="Las demás estancias", marker_color=TENUE,
+                             hovertemplate="%{y}: %{x:.1f} % de las demás estancias<extra></extra>"))
+        fig.add_trace(go.Bar(y=t.nombre, x=t.pct_largas, orientation="h", name="Estancias de más de 14 días", marker_color=AZUL,
+                             text=[f"{coma(r, 1)}×" for r in t.razon], textposition="outside", cliponaxis=False,
+                             hovertemplate="%{y}: %{x:.1f} % de las estancias largas<extra></extra>"))
+        estilo(fig, tema, leyenda=True).update_xaxes(ticksuffix=" %", rangemode="tozero", range=[0, t.pct_largas.max() * 1.2], showgrid=True)
+        fig.update_layout(barmode="group", bargap=0.3, bargroupgap=0.06, margin=dict(l=10, r=40, t=34, b=36))
+        fig.update_yaxes(automargin=True, showgrid=False)
     return fig

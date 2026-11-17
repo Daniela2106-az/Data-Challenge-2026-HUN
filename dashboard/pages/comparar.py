@@ -19,6 +19,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from componentes import (AZUL, PIZARRA, TENUE, aviso_datos, cifra, coma, dato, estilo, filtro, grafico, lamina, leer, mensaje, metodo,  # noqa: E402
                          pagina, portada)
 
+from componentes import frase, tarjetas, tarjeta_grafica  # noqa: E402,F401
+
 dash.register_page(__name__, path="/comparar", name="Comparar años", title="Comparar años - HUN", order=23.5)
 
 TITULO = "El cuello de botella es el mismo cada año, pero castiga cada vez más a los que más esperan"
@@ -44,6 +46,7 @@ def layout():
                 "Elige dos años y mira qué cambió: cuánto se espera, en qué tramos, en qué grupos de pacientes y por dónde entran.",
                 id_cifras="com-cifras"),
         html.Div(className="filtros", children=[filtro("com-anio", "Año", ANIOS, "2025"), filtro("com-ref", "Comparar con", ANIOS, "2023")]),
+        frase("El cuello de botella es el mismo cada año, pero castiga cada vez más a los pacientes que más esperan."),
         lamina(1, html.Span(id="com-titular-1"),
                "Porcentaje de las hospitalizaciones en cada tramo de espera, en los dos años. **Si las barras azules crecen a la derecha, "
                "hay más esperas largas.**",
@@ -60,6 +63,11 @@ def layout():
                "Espera mediana y espera de los peores casos (percentil 90) en cada año, sin importar los dos que elijas arriba. "
                "**La barra gris casi no cambia; la azul sube cada año.**",
                grafico("com-anios", alto=320), id_dato="com-dato-4", invertida=True),
+        tarjetas("Qué cambia y qué no entre años", "Cuatro ideas para leer la comparación",
+                 ("Urgencias", "El cuello de botella no cambia de sitio", "Es la espera en urgencias antes de que se asigne la cama, año tras año."),
+                 ("17 a 20 h", "La espera típica casi no se mueve", "La mediana se mantiene en ese rango de 2023 a 2026."),
+                 ("61 → 81 h", "Los peores casos sí empeoran", "El 10 % que más espera pasó de 61 a 81 horas."),
+                 ("Mayores", "Quién paga el costo", "Cada año, más pacientes mayores que entran por urgencias esperan varios días.")),
         mensaje("El cuello de botella no cambia de sitio: es la espera en urgencias antes de la cama. Lo que cambia es **quién paga el "
                 "costo**: cada año, más pacientes esperan varios días, sobre todo los mayores que entran por urgencias."),
         metodo(

@@ -16,6 +16,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from componentes import (AZUL, PIZARRA, TENUE, aviso_datos, bloque, cifra, coma, dato, estilo, grafico, hecho, lamina, leer, mensaje, metodo,  # noqa: E402
                          pagina, portada)
 
+from componentes import frase, tarjetas, tarjeta_grafica  # noqa: E402,F401
+
 dash.register_page(__name__, path="/factores", name="Factores de la espera", title="Qué influye en la espera - HUN", order=25)
 
 TITULO = "Lo que se sabe del paciente explica solo el 16 % de su espera"
@@ -85,6 +87,7 @@ def layout():
                 [cifra("16 %", "de las diferencias de espera se explica con lo observado"),
                  cifra("84 %", "depende de lo que la base no registra"),
                  cifra("0", "peso del día de la semana y los festivos")]),
+        frase("La espera depende del sistema más que del paciente: lo que se registra explica solo el 16 % de la variación."),
         lamina(1, "El diagnóstico y la edad pesan algo; el calendario, nada",
                "Cada barra es cuánto de la espera explica un factor, de un total de 16 puntos. **Ninguno domina**, y el que más pesa (el "
                "diagnóstico) se registra tarde y no se conoce al llegar.",

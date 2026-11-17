@@ -5,6 +5,7 @@ Es la segunda parada del recorrido, despues del inicio.
 
 DATOS  Texto y cifras del resumen ejecutivo (docs/documento_final.md, seccion 1), escritos aqui como constantes. No lee ninguna tabla.
 """
+import re
 import sys
 from pathlib import Path
 
@@ -13,6 +14,7 @@ import plotly.graph_objects as go
 from dash import Input, Output, callback, dcc, html
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from catalogo import recomendaciones  # noqa: E402
 from componentes import AZUL, PIZARRA, bloque, cifra, coma, estilo, grafico, hecho, lamina, leer, mensaje, metodo, pagina, portada  # noqa: E402
 
 dash.register_page(__name__, path="/resumen", name="Resumen", title="Resumen de hallazgos - HUN", order=5)
@@ -44,13 +46,16 @@ HALLAZGOS = [
      "El estimador acierta sus rangos y mejora con las horas de espera. Con la gravedad y el servicio registrados al llegar, la mejora "
      "se duplicaría.", "/paciente", "Paciente en espera"),
 ]
-PROPUESTAS = [
-    ("1", "Registrar mejor", "La salida de urgencias, la asignación de cama, la gravedad, el servicio y la hora de la orden de hospitalización."),
-    ("2", "Reunión diaria de camas", "Apoyada en las alertas de día congestionado y de ocupación alta."),
-    ("3", "Adelantar altas y asignar enseguida", "Poner camas libres en la mañana y no dejar pasar horas antes de volver a ocuparlas."),
-    ("4", "Alerta por paciente sin cama", "A las 48 horas de espera, con una persona responsable de resolver cada caso."),
-    ("5", "Revisar las estancias largas", "Cada semana: son el 7 % de las estancias y ocupan un tercio de las camas."),
-]
+def _propuestas():
+    """Lo que se propone, leido de la tabla de recomendaciones (datos/tablas_dashboard/recomendaciones_tabla.csv) para que siempre coincida con la
+    pagina de Recomendaciones: titulo corto, firmeza y la primera frase de lo que dicen los datos."""
+    r = recomendaciones()
+    if r is None or r.empty:
+        return []
+    salida = []
+    for f in r.itertuples():
+        salida.append((str(int(f.prioridad)), f.titulo_accion, f"Firmeza {f.firmeza.lower()}. {f.por_que}"))
+    return salida
 
 
 def _hallazgo(numero, titulo, texto, ruta, pagina_):
@@ -59,21 +64,29 @@ def _hallazgo(numero, titulo, texto, ruta, pagina_):
         html.P(texto, className="hallazgo__txt"), html.Span(f"Ver en {pagina_}", className="menu-card__go")])
 
 
+def _lo_que_proponemos():
+    p = _propuestas()
+    if not p:
+        return []
+    return [bloque("Lo que proponemos", f"{len(p)} acciones, de la más básica a la más específica; se leen de la página de Recomendaciones y se actualizan con ella"),
+            html.Div(className="hechos", children=[hecho(*x) for x in p])]
+
+
 def layout():
     return pagina(
         portada("Contexto · Resumen", "El cuello de botella es la espera de cama, y se puede anticipar y reducir",
                 "El proyecto completo en una pantalla: ocho hallazgos, cada uno con su página, y lo que proponemos al hospital.",
                 [cifra("18,6 h", "de espera mediana por una cama"), cifra("105 de 106", "camas ocupadas en promedio en 2025"),
-                 cifra("7", "recomendaciones, cuatro con firmeza alta")]),
+                 cifra(str(len(_propuestas())), "recomendaciones, " + str(int((recomendaciones().firmeza == "Alta").sum())) + " con firmeza alta") if _propuestas() else None]),
         lamina(1, "El problema en una gráfica: la espera típica no cambia, la de los peores casos sube cada año",
                "Horas desde que el paciente llega hasta que se le asigna cama, por año. **La barra gris es el paciente típico; la azul, "
                "el que espera más que 9 de cada 10.**",
                grafico("res-espera", alto=320), dato=("61 → 81 h", "esperan los peores casos, de 2023 a 2026"))
         if leer("espera_cubo.csv") is not None else None,
         bloque("Lo que encontramos, en ocho puntos", "Toca un hallazgo para ver su página con las gráficas y el detalle"),
-        html.Div(className="hechos hechos--2", children=[_hallazgo(i, *h) for i, h in enumerate(HALLAZGOS, 1)]),
-        bloque("Lo que proponemos", "Cinco líneas de acción; el detalle y la evidencia están en la página de Recomendaciones"),
-        html.Div(className="hechos", children=[hecho(*p) for p in PROPUESTAS]),
+        html.P("Desliza hacia el lado para ver los ocho →", className="carrusel__ayuda"),
+        html.Div(className="carrusel", children=[_hallazgo(i, *h) for i, h in enumerate(HALLAZGOS, 1)]),
+        *_lo_que_proponemos(),
         mensaje("Más que faltar camas, falta **liberarlas, asignarlas y desocuparlas a tiempo**.", titulo="En una frase"),
         metodo(
             "Datos del hospital de febrero de 2023 al 9 de abril de 2026, ya limpios (página de Datos y calidad). Cada cifra sale de la "

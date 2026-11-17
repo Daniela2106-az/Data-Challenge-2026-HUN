@@ -17,6 +17,8 @@ import tema_graficos as tg  # noqa: E402
 from componentes import (AZUL, PIZARRA, TENUE, aviso_datos, cifra, coma, dato, eje_fechas, estilo, etiqueta_final, fecha_es, filtro, grafico,  # noqa: E402
                          horas_eje, lamina, leer, mensaje, metodo, pagina, por_mes, portada)
 
+from componentes import frase, tarjetas, tarjeta_grafica  # noqa: E402,F401
+
 dash.register_page(__name__, path="/demanda", name="Demanda", title="Demanda - HUN", order=21)
 
 TITULO = "Los pacientes llegan de día y entre semana, y la demanda no crece"
@@ -39,6 +41,7 @@ def layout():
                 "las camas no viene de ahí.", id_cifras="dem-cifras"),
         html.Div(className="filtros", children=[
             filtro("dem-serie", "Qué contar", [("llegadas", "Todas las llegadas"), ("ingresos_a_cama", "Ingresos a cama")], "llegadas")]),
+        frase("El pico es a media mañana y el lunes es el día más cargado; de un año a otro no llega más gente, así que la presión sobre las camas no viene de ahí."),
         lamina(1, "El pico es de 9 a 11 de la mañana, y el lunes es el día más cargado",
                "Cada cuadro es una hora de un día de la semana: entre más intenso el azul, más llegadas. De noche y en fin de semana el "
                "hospital recibe mucho menos.",
@@ -59,6 +62,11 @@ def layout():
                "Llegadas promedio en cada hora, entre semana y en fin de semana. **La forma es la misma: sube desde las 6, tiene su "
                "pico a media mañana y cae en la noche.** Esta gráfica cuenta todas las llegadas.",
                grafico("dem-horas", alto=320), id_dato="dem-dato-horas"),
+        tarjetas("Lo que hay que saber de la demanda", "Cuatro ideas para leer las gráficas de arriba",
+                 ("9 a 11 h", "La hora de más llegadas", "Es el pico de todos los días; de noche el hospital recibe mucho menos."),
+                 ("Lunes", "El día más cargado", "El ritmo baja sábado y domingo, y con él las altas y los ingresos a cama."),
+                 ("≈ domingo", "Así se comporta un festivo", "Llegan menos pacientes y se hospitalizan menos; el pronóstico ya lo tiene en cuenta."),
+                 ("Igual", "La demanda no crece", "De 2023 a 2025 llega casi la misma gente por día: el problema no es de volumen.")),
         mensaje("La presión sobre las camas **no viene de más pacientes**. Hay que mirar cuánto se quedan y cómo se liberan las "
                 "camas: es lo que muestran las páginas siguientes."),
         metodo(

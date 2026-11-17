@@ -1,14 +1,13 @@
 """
-dashboard/pages/alertas.py  -  pagina «Alertas» (14-nov-2026; pagina 3.2 de docs/estructura_dashboard.md; formato de presentacion)
-Las alertas del proyecto, con los dos controles del plan (tipo de alerta y momento del aviso) y, para cada una, lo que se midio y la
-recomendacion que dispara.
+dashboard/pages/alertas.py  -  pagina «Alertas» (17-nov-2026; pagina 3.2 de docs/estructura_dashboard.md; formato de presentacion de Resultados)
+Las alertas del proyecto y lo que se midio de cada una, sin controles: la prueba ya esta hecha, se ve completa. Frase, una grafica por alerta,
+cuatro tarjetas resumen, «que significa para el hospital» y la documentacion. Es un resultado (reproduce lo que habrian avisado los datos de
+enero a abril de 2026), no una herramienta que el usuario ajuste, asi que vive en Resultados.
 
 DATOS  datos/tablas_dashboard/alertas_tabla.csv (src/exportar_tabla_alertas.py, a partir de resultados/tablas/alertas_*.csv): una fila por
        alerta y momento de aviso, con identificador fijo (A1 a A4; la cola proyectada S1 es una senal, no una alerta). La relacion con las
-       recomendaciones sale de datos/tablas_dashboard/recomendaciones_tabla.csv (columna alerta_ids) mediante dashboard/catalogo.py.
-       Se puede abrir una alerta desde otra pagina con /alertas?alerta=A3.
-CONTROLES  Tipo de alerta (A1 dia congestionado, A2 ocupacion alta de manana, A3 paciente sin cama, A4 aviso temprano con el estimador);
-           Momento del aviso (cambia segun el tipo: hora del dia, horas sin cama o umbral de probabilidad).
+       recomendaciones sale de datos/tablas_dashboard/recomendaciones_tabla.csv mediante dashboard/catalogo.py.
+       /alertas?alerta=A3 sigue abriendo la pagina (el parametro ya no cambia nada).
 Prueba: enero al 9-abr-2026 reproduciendo los dias, con los cortes elegidos en jul-dic 2025 (src/alertas.py); no es tiempo real.
 """
 import re
@@ -17,153 +16,133 @@ from pathlib import Path
 
 import dash
 import plotly.graph_objects as go
-from dash import Input, Output, State, callback, dcc, html
+from dash import Input, Output, callback, html
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from componentes import (AZUL, PIZARRA, TENUE, aviso_datos, bloque, cifra, coma, estilo, ficha_de, filtro, grafico, hecho,  # noqa: E402
-                         interpretacion_de, mensaje, metodo, pagina, portada)
+from componentes import (AZUL, PIZARRA, TENUE, aviso_datos, cifra, coma, estilo, frase, grafico, lamina, mensaje, metodo, pagina, portada,  # noqa: E402
+                         secciones, ficha_de, tarjetas)
 import catalogo as cat  # noqa: E402
 
-from eleccion_modelos import eleccion_modelo  # noqa: E402
 dash.register_page(__name__, path="/alertas", name="Alertas", title="Alertas - HUN", order=33)
-
-TIPOS = [("A1", "Día congestionado"), ("A2", "Ocupación alta de mañana"), ("A3", "Paciente sin cama"), ("A4", "Aviso temprano con el estimador")]
-DESCRIPCION = {
-    "A1": "Un día es congestionado cuando llegan más pacientes de lo habitual para ese día de la semana (entre el 10 % más alto de las últimas 12 semanas). "
-          "El aviso se da a media jornada, con lo que ya llegó, no con un día de margen.",
-    "A2": "Avisa cuando la ocupación de camas al mediodía está entre el 20 % más alto (107 a 109 camas). Funciona mejor suponer que mañana será igual que hoy "
-          "que proyectar altas e ingresos.",
-    "A3": "Avisa de un paciente que lleva las horas elegidas desde su llegada sin cama. Avisar antes da más alertas y menos precisión; avisar después "
-          "deja menos margen para actuar.",
-    "A4": "A las 12 h de espera, el estimador calcula la probabilidad de que el paciente siga sin cama a las 48 h. Sirve solo para pacientes con orden de hospitalización.",
-}
-CAMAS = [
-    ("3,2 camas", "Error de «mañana igual que hoy»", "Suponer que mañana habrá las mismas camas ocupadas que hoy se equivoca menos que "
-                                                     "proyectar altas e ingresos (3,7 camas)."),
-    ("~20", "Camas que se liberan cada día", "Las altas esperadas sirven como orden de magnitud, no para afinar la alerta."),
-]
 
 
 def _corto(f):
-    """Etiqueta corta del momento de aviso para el eje y los botones."""
+    """Etiqueta corta del momento de aviso para el eje."""
     if f.alerta_id == "A4":
         m = re.search(r"≥ (\d+) %", f.momento)
-        return f"≥ {m.group(1)} %" if m else f.momento
+        return f"Probabilidad ≥ {m.group(1)} %" if m else f.momento
     if f.alerta_id == "A2":
-        return "Mañana = hoy" if "persistencia" in f.momento else "Proyección"
+        return "Mañana = hoy" if "persistencia" in f.momento else "Proyección con altas"
     return f.momento
-
-
-def _fmt(x, dec=0):
-    return coma(x, dec) if dec else f"{x:.0f}"
 
 
 def _filas(tabla, tipo):
     return tabla[tabla.alerta_id == tipo].sort_values("orden")
 
 
+def _rec(tabla, tipo):
+    f = _filas(tabla, tipo)
+    r = f[f.recomendada == 1]
+    return (r if len(r) else f).iloc[0]
+
+
 def layout(alerta=None, **_):
     tabla = cat.alertas()
     if tabla is None:
         return pagina(aviso_datos("Alertas", ["alertas_tabla.csv"]))
-    tipo = alerta if alerta in dict(TIPOS) else "A1"
-    rec = tabla[(tabla.recomendada == 1) & tabla.alerta_id.isin(["A1", "A2", "A3"])]
-    a1 = tabla[(tabla.alerta_id == "A1") & (tabla.recomendada == 1)].iloc[0]
-    a3 = tabla[(tabla.alerta_id == "A3") & (tabla.recomendada == 1)].iloc[0]
-    total = rec.alertas_por_dia.sum()
-    senal = _filas(tabla, "S1")
+    a1, a2, a3, a4 = (_rec(tabla, t) for t in ("A1", "A2", "A3", "A4"))
+    total = tabla[(tabla.recomendada == 1) & tabla.alerta_id.isin(["A1", "A2", "A3"])].alertas_por_dia.sum()
     return pagina(
-        portada("Predicción · Alertas", "Las alertas avisan a tiempo y cada una apunta a la recomendación que dispara",
-                "Elige una alerta y el momento en que avisa: verás qué tan bien acierta, cuántos avisos genera por día y qué recomendación le corresponde. "
-                "Se probó reproduciendo, día por día, los primeros meses de 2026.",
+        portada("Resultados · Alertas", "Las alertas avisan a tiempo y cada una apunta a la recomendación que dispara",
+                "Se probó reproduciendo, día por día, los primeros meses de 2026: qué habría avisado cada alerta, cuántas veces acertó y cuántas fueron falsas alarmas.",
                 [cifra(f"{a1.deteccion_pct:.0f} %", "de los días congestionados se detecta a las 12 h (13 de 15)"),
                  cifra(f"{a3.alertas_por_dia:.0f} por día", "pacientes cumplen 48 horas sin cama; la mitad terminará esperando más de 72"),
                  cifra(coma(total, 1), "alertas por día en total con el diseño recomendado")]),
-        html.Div(className="filtros", children=[
-            filtro("ale-tipo", "Tipo de alerta", TIPOS, tipo),
-            html.Div(className="filtro", children=[html.Div("Momento del aviso", className="filtro__label"),
-                                                   dcc.RadioItems(id="ale-momento", options=[], className="pildoras", inline=True)])]),
-        html.Div(className="ale-panel", children=[
-            html.P(id="ale-descripcion", className="prose"),
-            grafico("ale-grafico", alto=340),
-            html.Div(id="ale-tarjetas", className="hechos"),
-            html.Div(id="ale-recos"),
-        ]),
-        bloque("Cola proyectada", "Una señal para la reunión de camas, no una alerta con umbral"),
-        html.Div(className="hechos", children=[
-            hecho(re.search(r"Error de ([\d,]+) pacientes", f.medida).group(1) + " pacientes", f"Error de la cola {f.momento.lower()}",
-                  f.medida.split("; es una señal")[0] + ".") for f in senal.itertuples()]),
-        bloque("Camas de mañana", "Para saber si mañana habrá ocupación alta, lo simple le gana a lo complejo"),
-        html.Div(className="hechos", children=[hecho(*c) for c in CAMAS]),
-        mensaje(f"Con las tres alertas del diseño recomendado (día congestionado a las 12 h, ocupación alta de mañana y paciente a las 48 h sin cama) el "
-                f"hospital recibiría **unas {coma(total, 1)} alertas por día**, casi todas de pacientes que llevan 48 horas sin cama: una lista corta y "
-                "accionable, no una alarma constante."),
-        interpretacion_de("/alertas"),
-        eleccion_modelo("/alertas"),
+        frase(f"Con las tres alertas recomendadas (día congestionado a las 12 h, ocupación alta de mañana y paciente a las 48 h sin cama) el hospital recibiría unas "
+              f"{coma(total, 1)} alertas por día."),
+        lamina(1, f"Día congestionado: a las 12 h detecta {a1.deteccion_pct:.0f} % de los casos y acierta {a1.precision_pct:.0f} % de los avisos",
+               "Un día es congestionado cuando llegan más pacientes de lo habitual para ese día de la semana. **La barra azul es los casos que avisa; la gris, los avisos que acertaron.** "
+               "Avisar con más tiempo sube la detección y baja la precisión.",
+               grafico("ale-A1", alto=300), dato=(coma(a1.auc, 2), "AUC a las 12 h: qué tan bien separa los días congestionados (0,5 es azar)")),
+        lamina(2, "Ocupación alta de mañana: suponer que será igual que hoy funciona mejor que proyectar altas e ingresos",
+               "Avisa cuando la ocupación de camas al mediodía está entre el 20 % más alto (107 a 109 camas). **La opción recomendada (la más simple) detecta "
+               f"{a2.deteccion_pct:.0f} % y acierta {a2.precision_pct:.0f} %**, con menos avisos por día.",
+               grafico("ale-A2", alto=280), dato=("3,2 camas", "error de «mañana igual que hoy», frente a 3,7 de proyectar"), invertida=True),
+        lamina(3, f"Paciente sin cama a las 48 h: {a3.alertas_por_dia:.0f} avisos por día, y {a3.precision_pct:.0f} % termina esperando más de 72 h",
+               "Avisa de un paciente que lleva las horas elegidas desde su llegada sin cama. **Avisar antes da más alertas y menos precisión; avisar después deja menos margen.** "
+               "Cuenta solo a quienes luego se hospitalizan, así que la carga real es mayor.",
+               grafico("ale-A3", alto=300), dato=(f"{a3.margen_h:.0f} h", "de margen para actuar antes de que cumpla 72 horas")),
+        lamina(4, "A las 12 h el estimador avisa quién seguirá sin cama a las 48 h",
+               "Para pacientes con orden de hospitalización: el estimador calcula la probabilidad de seguir sin cama a las 48 h. **Con el corte de 40 % se avisa a unos "
+               f"{coma(a4.alertas_por_dia, 0)} pacientes por día, con 36 horas de margen.** Solo sirve a quienes ya tienen la orden.",
+               grafico("ale-A4", alto=280), dato=(f"{a4.precision_pct:.0f} %", "de los avisados termina esperando más de 72 h"), invertida=True),
+        lamina(5, "La cola de pacientes sin cama se pronostica con un tercio menos de error",
+               "Una señal para la reunión de camas, no una alerta con umbral: cuántos pacientes estarán esperando cama dentro de unas horas. "
+               "**En azul, el error del modelo; en gris, el de suponer «lo mismo que ahora».**",
+               grafico("ale-S1", alto=280), dato=("−33 %", "de error a 6 horas frente a «lo mismo que ahora»")),
+        tarjetas("Lo esencial de las alertas", "Cuatro cifras de la prueba de enero a abril de 2026",
+                 (coma(total, 1), "Alertas por día", "Con el diseño recomendado; casi todas son de pacientes que llevan 48 horas sin cama."),
+                 (f"{a1.deteccion_pct:.0f} %", "Días congestionados que detecta", f"A las 12 h, con {a1.precision_pct:.0f} % de acierto. Es la alerta con más señal."),
+                 (f"{a3.alertas_por_dia:.0f} por día", "Pacientes a las 48 h sin cama", f"{a3.precision_pct:.0f} % termina esperando más de 72 h; hay 24 horas de margen."),
+                 ("15", "Días congestionados en la prueba", "Son pocos: los porcentajes pueden moverse. No se probó en tiempo real.")),
+        mensaje(f"Con las tres alertas del diseño recomendado el hospital recibiría **unas {coma(total, 1)} alertas por día**, casi todas de pacientes que llevan 48 horas "
+                "sin cama: una lista corta y accionable, no una alarma constante. Qué hacer cuando suena cada una está en la página de Recomendaciones."),
         metodo(
             "Prueba de enero al 9 de abril de 2026 reproduciendo cada día con lo que se sabía en ese momento; los cortes se eligieron con "
             "julio a diciembre de 2025. Día congestionado: llegadas por encima del percentil 90 del mismo día de la semana en las últimas "
             "12 semanas. Ocupación alta: por encima del percentil 80 de las 12 h.",
             "No se probaron en tiempo real. En la prueba solo hubo **15 días congestionados**, así que los porcentajes pueden moverse. La "
             "alerta de paciente sin cama solo cuenta a quienes después se hospitalizan: la carga real es mayor. La alerta por zona (niños y adultos "
-            "por separado) no se probó.",
-            "Fuente: src/alertas.py · documentación, sección 6.2.", ruta="/alertas"),
-        ficha_de("/alertas"),
+            "por separado) no se probó. Una alerta no dice qué hacer: eso lo decide el hospital.",
+            "Fuente: src/alertas.py · documentación, sección 6.2.", ruta="/alertas",
+            despues=secciones(ficha_de("/alertas"), solo=("Etapas", "Qué se probó")), pasos=False, modelo=False),
     )
 
 
-@callback(Output("ale-momento", "options"), Output("ale-momento", "value"), Input("ale-tipo", "value"))
-def momentos(tipo):
-    tabla = cat.alertas()
-    filas = _filas(tabla, tipo)
-    ops = [{"label": _corto(f) + (" ✓" if f.recomendada else ""), "value": int(f.orden)} for f in filas.itertuples()]
-    rec = filas[filas.recomendada == 1]
-    return ops, int(rec.orden.iloc[0]) if len(rec) else int(filas.orden.iloc[0])
-
-
-@callback(Output("ale-grafico", "figure"), Output("ale-descripcion", "children"), Output("ale-tarjetas", "children"), Output("ale-recos", "children"),
-          Input("ale-tipo", "value"), Input("ale-momento", "value"), State("theme-store", "data"))
-def mostrar(tipo, momento, tema):
-    tabla = cat.alertas()
-    filas = _filas(tabla, tipo)
-    if momento not in set(filas.orden.astype(int)):          # el momento guardado es de otro tipo: tomar el recomendado
-        momento = int(filas[filas.recomendada == 1].orden.iloc[0])
-    x = [_corto(f) + (" ✓" if f.recomendada else "") for f in filas.itertuples()]
-    sel = [int(f.orden) == momento for f in filas.itertuples()]
-    opac = [1.0 if s else 0.4 for s in sel]
+def _agrupadas(tabla, tipo, tema, etiq_a="Casos que avisa (detección)", etiq_b="Avisos que aciertan (precisión)"):
+    """Detección y precisión por momento de aviso; el momento recomendado, en tono pleno."""
+    f = _filas(tabla, tipo)
+    x = [_corto(r) + (" ✓" if r.recomendada else "") for r in f.itertuples()]
+    opac = [1.0 if r.recomendada else 0.45 for r in f.itertuples()]
     fig = go.Figure()
-    if tipo == "A3":
-        fig.add_trace(go.Bar(x=[f"{xx}<br>{coma(a, 1)} avisos por día" for xx, a in zip(x, filas.alertas_por_dia)], y=filas.precision_pct,
-                             marker_color=[AZUL if s else TENUE for s in sel], text=[f"{p:.0f} %" for p in filas.precision_pct], textposition="outside",
-                             cliponaxis=False, name="Termina esperando más de 72 h",
-                             hovertemplate="%{y} % de los avisos termina esperando más de 72 horas<extra></extra>"))
-        estilo(fig, tema).update_yaxes(ticksuffix=" %", range=[0, 95], title_text="termina esperando más de 72 h")
-        fig.update_layout(margin=dict(l=64, b=58), bargap=0.4)
-    else:
-        fig.add_trace(go.Bar(x=x, y=filas.deteccion_pct, name="Detección: casos que avisa", marker_color=AZUL, marker_opacity=opac,
-                             text=[f"{d:.0f} %" for d in filas.deteccion_pct], textposition="outside", cliponaxis=False,
-                             hovertemplate="%{x}: detecta el %{y} % de los casos<extra></extra>"))
-        fig.add_trace(go.Bar(x=x, y=filas.precision_pct, name="Precisión: avisos que aciertan", marker_color=PIZARRA, marker_opacity=opac,
-                             hovertemplate="%{x}: acierta el %{y} % de los avisos<extra></extra>"))
-        estilo(fig, tema, leyenda=True).update_yaxes(ticksuffix=" %", range=[0, 105])
-        fig.update_layout(barmode="group", bargap=0.34, bargroupgap=0.08)
+    fig.add_trace(go.Bar(x=x, y=f.deteccion_pct, name=etiq_a, marker_color=AZUL, marker_opacity=opac, text=[f"{d:.0f} %" for d in f.deteccion_pct],
+                         textposition="outside", cliponaxis=False, hovertemplate="%{x}: detecta el %{y} % de los casos<extra></extra>"))
+    fig.add_trace(go.Bar(x=x, y=f.precision_pct, name=etiq_b, marker_color=PIZARRA, marker_opacity=opac, text=[f"{p:.0f} %" for p in f.precision_pct],
+                         textposition="outside", cliponaxis=False, hovertemplate="%{x}: acierta el %{y} % de los avisos<extra></extra>"))
+    estilo(fig, tema, leyenda=True).update_yaxes(ticksuffix=" %", range=[0, 112])
+    fig.update_layout(barmode="group", bargap=0.34, bargroupgap=0.08)
+    return fig
 
-    f = filas[filas.orden.astype(int) == momento].iloc[0]
-    tarjetas = [hecho(coma(f.alertas_por_dia, 2) if f.alertas_por_dia < 1 else coma(f.alertas_por_dia, 1), "Avisos por día", "Cuántas veces sonaría esta alerta en un día típico.")]
-    if f.alerta_id == "A3":
-        tarjetas.append(hecho(f"{f.precision_pct:.0f} %", "Termina esperando más de 72 h", "De los pacientes avisados, los que de verdad esperan más de tres días."))
-    else:
-        tarjetas.append(hecho(f"{f.precision_pct:.0f} %", "Acierta", "De los avisos que da, los que corresponden a un caso real."))
-    if f.deteccion_pct == f.deteccion_pct:
-        tarjetas.append(hecho(f"{f.deteccion_pct:.0f} %", "Casos que detecta", "De todos los casos reales, los que avisa a tiempo."))
-    if f.auc == f.auc:
-        tarjetas.append(hecho(coma(f.auc, 2), "AUC", "Qué tan bien separa los casos de los que no lo son (0,5 es azar, 1 es perfecto)."))
-    if f.margen_h == f.margen_h:
-        tarjetas.append(hecho(f"{f.margen_h:.0f} h", "De margen", "Tiempo que queda para actuar antes de que se cumpla la espera larga."))
 
-    recos = [html.Div(className="ale-reco", children=[
-                html.Div("Qué hacer cuando suena", className="enlaces__rotulo"),
-                html.Div(texto, className="ale-reco__titulo"),
-                dcc.Link("Ver la recomendación completa", href="/recomendaciones", className="enlace-chip")])
-             for _prio, texto in cat.recomendaciones_de(tipo)]
-    return fig, DESCRIPCION[tipo] + f"  {f.medida}.", tarjetas, recos
+@callback(Output("ale-A1", "figure"), Output("ale-A2", "figure"), Output("ale-A3", "figure"), Output("ale-A4", "figure"), Output("ale-S1", "figure"),
+          Input("theme-store", "data"))
+def figuras(tema):
+    tabla = cat.alertas()
+    if tabla is None:
+        return [go.Figure()] * 5
+    a1 = _agrupadas(tabla, "A1", tema)
+    a2 = _agrupadas(tabla, "A2", tema)
+    a4 = _agrupadas(tabla, "A4", tema, "Casos que avisa (detección)", "Avisos que aciertan (precisión)")
+
+    f = _filas(tabla, "A3")
+    x = [f"{r.momento.replace(' sin cama', '')}<br>{coma(r.alertas_por_dia, 1)} avisos por día" for r in f.itertuples()]
+    a3 = go.Figure(go.Bar(x=x, y=f.precision_pct, marker_color=[AZUL if r.recomendada else TENUE for r in f.itertuples()], text=[f"{p:.0f} %" for p in f.precision_pct],
+                          textposition="outside", cliponaxis=False, hovertemplate="%{y} % de los avisos termina esperando más de 72 horas<extra></extra>"))
+    estilo(a3, tema).update_yaxes(ticksuffix=" %", range=[0, 95], title_text="termina esperando más de 72 h")
+    a3.update_layout(margin=dict(l=64, b=58), bargap=0.4)
+
+    s = _filas(tabla, "S1")
+    modelo, base = [], []
+    for r in s.itertuples():
+        m = re.search(r"Error de ([\d,]+) pacientes frente a ([\d,]+)", r.medida)
+        modelo.append(float(m.group(1).replace(",", ".")) if m else None)
+        base.append(float(m.group(2).replace(",", ".")) if m else None)
+    xs = [r.momento + (" ✓" if r.recomendada else "") for r in s.itertuples()]
+    s1 = go.Figure()
+    s1.add_trace(go.Bar(x=xs, y=modelo, name="Error del modelo", marker_color=AZUL, text=[coma(v, 1) for v in modelo], textposition="outside", cliponaxis=False,
+                        hovertemplate="%{x}: error de %{y} pacientes<extra></extra>"))
+    s1.add_trace(go.Bar(x=xs, y=base, name="Error de «lo mismo que ahora»", marker_color=PIZARRA, text=[coma(v, 1) for v in base], textposition="outside", cliponaxis=False,
+                        hovertemplate="%{x}: error de %{y} pacientes<extra></extra>"))
+    estilo(s1, tema, leyenda=True).update_yaxes(rangemode="tozero", title_text="pacientes de error", range=[0, max(base) * 1.25])
+    s1.update_layout(barmode="group", bargap=0.34, bargroupgap=0.08, margin_l=64)
+    return a1, a2, a3, a4, s1

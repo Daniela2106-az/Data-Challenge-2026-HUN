@@ -16,6 +16,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from componentes import (AZUL, NARANJA, TENUE, aviso_datos, bloque, cifra, coma, dato, estilo, filtro, grafico, hecho, horas_eje, lamina, leer, mensaje,  # noqa: E402
                          metodo, pagina, portada)
 
+from componentes import frase, tarjetas, tarjeta_grafica  # noqa: E402,F401
+
 dash.register_page(__name__, path="/altas", name="Llegada y altas", title="Hora de llegada y altas - HUN", order=24)
 
 TITULO = "Las altas salen por la tarde, y quien llega en la mañana espera hasta entonces"
@@ -88,6 +90,7 @@ def layout():
                 "llegó.", id_cifras="alt-cifras"),
         html.Div(className="filtros", children=[
             filtro("alt-anio", "Año", ["Todos", "2023", "2024", "2025", ("2026", "2026 (ene–abr)")], "Todos")]),
+        frase("La cama llega en dos olas porque el 63 % de las altas sale por la tarde: quien llega por la mañana espera hasta entonces."),
         lamina(1, "Las camas se asignan en dos olas: de 15 a 17 h y de 20 a 23 h",
                "Las **altas** (línea naranja) se concentran en la tarde y las camas se asignan justo después. En la mañana casi no se "
                "libera ninguna.",

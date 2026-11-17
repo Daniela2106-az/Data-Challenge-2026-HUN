@@ -19,6 +19,8 @@ import tema_graficos as tg  # noqa: E402
 from componentes import (AZUL, PIZARRA, TENUE, aviso_datos, bloque, cifra, coma, dato, eje_fechas, estilo, etiqueta_final, fecha_es, filtro,  # noqa: E402
                          grafico, hecho, lamina, leer, mensaje, metodo, miles, pagina, portada)
 
+from componentes import frase, tarjetas, tarjeta_grafica  # noqa: E402,F401
+
 dash.register_page(__name__, path="/espera", name="Espera de cama", title="Espera de cama - HUN", order=23)
 
 TITULO = "La mitad de los pacientes espera más de 18 horas por una cama, y los peores casos empeoran"
@@ -83,6 +85,7 @@ def layout():
             filtro("esp-anio", "Año de llegada", ["Todos", "2023", "2024", "2025", ("2026", "2026 (ene–abr)")], "Todos"),
             filtro("esp-tipo", "Tipo de visita", ["Todos", "Urgencias", "Ambulatorio", "Treatment urgency"], "Todos"),
             filtro("esp-grupo", "Grupo de edad", ["Todos", "Niños (< 15)", "Adultos (15–59)", "Mayores (60+)"], "Todos")]),
+        frase("Casi toda la espera por una cama (98 %) ocurre en urgencias, y la de los pacientes que más esperan crece año tras año."),
         lamina(1, html.Span(id="esp-titular"),
                "Cada barra es un tramo de espera, desde la llegada hasta que se asigna la cama. **En azul, quienes esperan más de "
                "24 horas.** Cambia con los filtros de arriba.",

@@ -48,3 +48,16 @@ def eleccion_modelo(ruta):
             html.Div([html.Div("Qué se descartó", className="metodo__rotulo"), tabla]),
             html.Div(dcc.Link("Ver todas las alternativas evaluadas en la Documentación", href="/modelos", className="enlace-chip")),
         ])])
+
+
+def tarjeta_eleccion(ruta):
+    """«Cómo se eligió este modelo» como una tarjeta visible dentro del flujo de la pagina, antes de «qué significa para el hospital»:
+    que se eligio y que se descarto en su lugar (las alternativas y cifras son las del cuadro 6.8 del documento final)."""
+    if ruta not in RESUMEN:
+        return None
+    eligio, alternativas = RESUMEN[ruta]
+    return html.Section(className="card tarjeta-grafica eleccion", children=[
+        html.Div("Cómo se eligió este modelo", className="bloque-titulo"),
+        html.P(eligio, className="bloque-bajada"),
+        html.Ul([html.Li([html.B(f"{a}: "), f"{m}. ", html.Span(f"Se eligió: {e}.", className="eleccion__eligio")]) for a, m, e in alternativas], className="eleccion__lista"),
+        dcc.Link("Ver todas las alternativas evaluadas en la Documentación", href="/modelos", className="enlace-chip")])

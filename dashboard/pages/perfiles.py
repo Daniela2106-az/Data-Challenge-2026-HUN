@@ -14,10 +14,12 @@ from pathlib import Path
 import dash
 import pandas as pd
 import plotly.graph_objects as go
-from dash import Input, Output, callback, dash_table, html
+from dash import Input, Output, callback, html
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from componentes import AZUL, NARANJA, TENUE, bloque, cifra, coma, estilo, filtro, grafico, hecho, lamina, leer, mensaje, metodo, pagina, portada  # noqa: E402
+
+from componentes import frase, tarjetas, tarjeta_grafica  # noqa: E402,F401
 
 dash.register_page(__name__, path="/perfiles", name="Perfiles y picos", title="Perfiles y picos de demanda - HUN", order=4)
 
@@ -63,42 +65,38 @@ def _indicadores():
     return pd.concat(partes, ignore_index=True)
 
 
-def _marca(lectura):
-    return " ▲" if isinstance(lectura, str) and "más alto" in lectura else " ▼" if isinstance(lectura, str) and "más bajo" in lectura else ""
-
-
-def _tabla_dim(t, nombre):
-    cab = html.Thead(html.Tr([html.Th(c) for c in [nombre, "Llegan por día", "Se hospitalizan", "Espera mediana", "Estancia mediana", "Reingreso en 72 h"]]))
-    filas = [html.Tr([html.Td(str(r.grupo)), html.Td(coma(r.llegadas_por_dia, 1)), html.Td(f"{coma(r.pct_hospitaliza, 1)} %" + _marca(r.lectura_hospitaliza)),
-                      html.Td(f"{coma(r.espera_mediana_h, 1)} h" + _marca(r.lectura_espera)), html.Td(f"{coma(r.estancia_mediana_h, 0)} h" + _marca(r.lectura_estancia)),
-                      html.Td(f"{coma(r.pct_reingreso_72h, 1)} %" + _marca(r.lectura_reingreso))]) for r in t.itertuples()]
-    return html.Div(className="tech-table-wrap", children=[html.Table(className="tech-table", children=[cab, html.Tbody(filas)])])
-
-
 def _ruta_txt(r):
     return " → ".join({"TU": "atención en urgencias", "ER": "admisión", "HOSP": "hospitalización", "AMB": "consulta"}.get(x.strip(), x.strip()) for x in str(r).split(">")).capitalize()
 
 
-def _seccion_indicadores():
+def _laminas_indicadores():
+    """Indicadores de cada perfil y trayectorias, en graficas sobre tarjeta (sin las tablas por edad, sexo y tipo de visita, que repetian lo mismo)."""
     t, tray = _indicadores(), leer("perfiles_trayectorias.csv")
-    if t is None:
-        return []
-    bloques = [bloque("Cómo se comporta cada perfil", "Quién llega, cuántos se hospitalizan, cuánto esperan, cuánto se quedan y quién vuelve en 72 horas"),
-               html.Div(className="filtros", children=[filtro("perf-indicador", "Indicador", [(k, v[2]) for k, v in INDICADORES.items()], "espera_mediana_h")]),
-               grafico("perf-ind", alto=420),
-               html.P("Cada barra es un perfil y la línea fina su intervalo de confianza. En azul, las diferencias grandes hacia arriba; en naranja, hacia abajo; en gris, las pequeñas o que pueden ser azar.",
-                      style={"fontSize": "12.5px", "opacity": .8, "margin": "4px 0 14px"})]
-    for archivo, col, nombre in DIMS:
-        bloques.append(_tabla_dim(t[t.dimension == nombre], nombre))
-    bloques.append(html.P("▲ y ▼ marcan una diferencia grande frente al resto, más alta o más baja. Sin marca, la diferencia es pequeña o puede ser azar. Los reingresos no están validados.",
-                          style={"fontSize": "12.5px", "opacity": .8, "margin": "6px 0 14px"}))
+    salida = []
+    if t is not None:
+        salida.append(lamina(3, "Cómo se comporta cada perfil: quién llega, cuántos se hospitalizan, cuánto esperan y quién vuelve",
+                             "Cada barra es un grupo de pacientes y la línea fina su intervalo de confianza. **En azul, las diferencias grandes hacia arriba; en naranja, hacia abajo;** "
+                             "en gris, las pequeñas o que pueden ser azar. Los reingresos no están validados.",
+                             grafico("perf-ind", alto=520), dato=("Edad, sexo y visita", "se comparan en una sola gráfica"),
+                             controles=filtro("perf-indicador", "Indicador", [(k, v[2]) for k, v in INDICADORES.items()], "espera_mediana_h")))
     if tray is not None and not tray.empty:
-        top = tray.sort_values("pct", ascending=False).head(6)
-        cab = html.Thead(html.Tr([html.Th("Trayectoria del paciente"), html.Th("Episodios"), html.Th("%")]))
-        filas = [html.Tr([html.Td(_ruta_txt(r.ruta)), html.Td(f"{int(r.episodios):,}".replace(",", ".")), html.Td(f"{coma(r.pct, 1)} %")]) for r in top.itertuples()]
-        bloques += [bloque("Trayectorias más frecuentes", "Por dónde pasa el paciente dentro de una atención"),
-                    html.Div(className="tech-table-wrap", children=[html.Table(className="tech-table", children=[cab, html.Tbody(filas)])])]
-    return bloques
+        top = tray.sort_values("pct", ascending=False).iloc[0]
+        salida.append(lamina(4, f"El {coma(top.pct, 0)} % de las atenciones empieza y termina en urgencias",
+                             "Por dónde pasa el paciente dentro de una atención: cada barra es una trayectoria y el porcentaje de episodios que la siguen. "
+                             "**Solo se muestran las seis más frecuentes, en escala logarítmica para que se vean también las poco comunes.**",
+                             grafico("perf-tray", alto=330), dato=(f"{coma(100 - top.pct, 0)} %", "de las atenciones pasa por otra trayectoria"), invertida=True))
+    return salida
+
+
+def _lamina_dias():
+    """Dias de alta demanda por año (resultados/tablas/dias_alta_demanda.csv): una grafica en vez de la lista de 199 dias."""
+    if not DATOS_OK:
+        return []
+    return [lamina(5, f"{len(DIAS)} de 1.164 días fueron de alta demanda: no es un evento raro",
+                   f"Días en que llegaron más pacientes de lo normal para ese día de la semana (más que el percentil 90 de las 12 semanas anteriores), por año. "
+                   "**Ningún día tuvo una espera más alta de lo esperado**: el problema de la espera es crónico y de cola larga, no de días puntuales. "
+                   "Esta gráfica dice únicamente que ese día llegó más gente; no es un «día de cuello de botella».",
+                   grafico("perf-dias", alto=300), dato=(f"{100 * len(DIAS) / 1164:.0f} %", "de los días, más o menos 1 de cada 6"))]
 
 
 @callback(Output("perf-ind", "figure"), Input("perf-indicador", "value"), Input("theme-store", "data"))
@@ -135,6 +133,7 @@ def layout():
                 [cifra(f"{len(g1)} de {n}", "perfiles esperan mucho más cuando llegan en un pico de llegadas"),
                  cifra(f"+{pct.min():.0f} a +{pct.max():.0f} %", "más espera en esos perfiles, todos de urgencias"),
                  cifra(f"{est} de {n}", "perfiles cambia su estancia con la carga")]),
+        frase("La carga alarga la espera en los perfiles de urgencias más comunes, pero no cambia quién llega ni cuánto se queda en cama."),
         lamina(1, f"Con muchas llegadas seguidas, {len(g1)} perfiles esperan entre {pct.min():.0f} y {pct.max():.0f} % más",
                "Espera mediana en horas, comparando a quienes llegaron cuando entraron más pacientes en las 6 horas previas (el 10 % más cargado) con "
                "el resto. **Son los perfiles de urgencias más numerosos**: adultos y niños escolares.",
@@ -142,11 +141,12 @@ def layout():
         lamina(2, f"Con el hospital casi lleno al llegar, {len(g2)} perfiles esperan más",
                "Mismo cruce, pero tomando la ocupación de camas al llegar (el 10 % más alto). Aparece el mismo patrón: adultos y niños de urgencias.",
                grafico("perf-g2", alto=300), dato=(f"{len(g2)} de {n}", "perfiles con un aumento grande"), invertida=True),
-        *_seccion_indicadores(),
-        bloque("Lo que la tabla permite concluir", "Cuatro lecturas, de la más específica a la más general"),
+        *_laminas_indicadores(),
+        *_lamina_dias(),
+        bloque("Lo que permite concluir", "Cuatro lecturas, de la más específica a la más general"),
         html.Div(className="hechos", children=[
             hecho(f"{sobre} de {len(g1)}", "Ninguno llega más seguido en los picos" if sobre == 0 else "Pocos llegan más seguido en los picos",
-                  "Los perfiles que más sufren no son los que provocan el pico: simplemente les va peor cuando coincide con uno. Por eso esta tabla "
+                  "Los perfiles que más sufren no son los que provocan el pico: simplemente les va peor cuando coincide con uno. Por eso este cruce "
                   "no sirve para repartir cuántos pacientes de cada tipo llegan en un pico."),
             hecho(f"{est} de {n}", "La estancia casi no cambia",
                   "Cuánto se queda alguien hospitalizado depende de su cuadro clínico, no de qué tan lleno estaba el hospital cuando llegó."),
@@ -157,19 +157,6 @@ def layout():
                   "Saber la saturación real al llegar mejora la explicación de la espera individual apenas 3,7 puntos, frente a 7,0 de la edad, el sexo "
                   "y el tipo de visita. Además, en adultos la cola nunca está vacía: hay poco contraste entre «pico» y «no pico»."),
         ]),
-        bloque("Días de alta demanda", "Días en que llegaron más pacientes de lo normal para ese día de la semana"),
-        html.Div(className="card aviso", children=[
-            html.B(f"{len(DIAS)} de 1.164 días ({100 * len(DIAS) / 1164:.0f} %), más o menos 1 de cada 6: no es un evento raro. "),
-            "Una advertencia que no es letra pequeña: ya se probó que ", html.B("ningún día tuvo una espera más alta de lo esperado"),
-            ". El problema de la espera es crónico y de cola larga, no de días puntuales. Esta lista dice únicamente que ese día llegó más gente; "
-            "no es un «día de cuello de botella»."]),
-        html.Div(className="card", style={"marginTop": "12px"}, children=[dash_table.DataTable(
-            id="perf-tabla-dias", data=DIAS.sort_values("fecha", ascending=False).to_dict("records"),
-            columns=[{"name": nombre, "id": c} for c, nombre in [("fecha", "Fecha"), ("llegadas", "Llegadas"),
-                     ("umbral_p90_mismo_dia_semana", "Umbral (percentil 90)"), ("pct_sobre_umbral", "% sobre el umbral")]],
-            sort_action="native", page_size=12, style_table={"overflowX": "auto"},
-            style_cell={"fontSize": "13px", "padding": "6px", "textAlign": "center", "backgroundColor": "transparent", "color": "inherit"},
-            style_header={"fontWeight": 700, "backgroundColor": "transparent"})]),
         mensaje("**La carga alarga la espera en los perfiles de urgencias más comunes, entre 30 y 70 %, pero no cambia quién llega ni cuánto se queda "
                 "en cama.** Los picos no se resuelven con más personal un día puntual: la espera larga es crónica, y por eso valen todos los días las "
                 "acciones de fondo (asignar rápido la cama que se libera, adelantar altas, pedir antes la cama de quien llega por la tarde)."),
@@ -210,3 +197,31 @@ def g1(tema):
 @callback(Output("perf-g2", "figure"), Input("theme-store", "data"))
 def g2(tema):
     return _barras(grandes(OCUP) if DATOS_OK else pd.DataFrame(), tema)
+
+
+@callback(Output("perf-tray", "figure"), Input("theme-store", "data"))
+def figura_trayectorias(tema):
+    fig, tray = go.Figure(), leer("perfiles_trayectorias.csv")
+    if tray is not None and not tray.empty:
+        t = tray.sort_values("pct", ascending=False).head(6).iloc[::-1]
+        fig.add_trace(go.Bar(y=[_ruta_txt(r) for r in t.ruta], x=t.pct, orientation="h", marker_color=[AZUL if i == len(t) - 1 else TENUE for i in range(len(t))],
+                             text=[f"{coma(p, 1)} %" for p in t.pct], textposition="outside", cliponaxis=False, customdata=t.episodios,
+                             hovertemplate="%{y}<br>%{x:.1f} % · %{customdata:,.0f} episodios<extra></extra>"))
+        estilo(fig, tema).update_xaxes(type="log", range=[-1.3, 2.3], tickvals=[0.1, 1, 10, 100], ticktext=["0,1 %", "1 %", "10 %", "100 %"], showgrid=True,
+                                       title_text="escala logarítmica (cada marca vale 10 veces la anterior)")
+        fig.update_layout(bargap=0.3, margin=dict(l=10, r=40, t=6, b=58))
+        fig.update_yaxes(automargin=True, showgrid=False)
+    return fig
+
+
+@callback(Output("perf-dias", "figure"), Input("theme-store", "data"))
+def figura_dias(tema):
+    fig = go.Figure()
+    if DATOS_OK:
+        a = pd.to_datetime(DIAS.fecha).dt.year.value_counts().sort_index()
+        x = [str(y) + (" (hasta el 9 de abril)" if y == 2026 else "") for y in a.index]
+        fig.add_trace(go.Bar(x=x, y=a.values, marker_color=[TENUE] * (len(a) - 1) + [AZUL], text=[str(v) for v in a.values], textposition="outside", cliponaxis=False,
+                             hovertemplate="%{x}: %{y} días de alta demanda<extra></extra>"))
+        estilo(fig, tema).update_yaxes(rangemode="tozero", range=[0, a.max() * 1.2], title_text="días")
+        fig.update_layout(bargap=0.5)
+    return fig

@@ -1729,3 +1729,27 @@ button, .btn-primary {
 .page-container .dash-input-element { background: transparent !important; color: var(--ink) !important; border: 0 !important; }
 .page-container .dash-input-stepper { background: transparent !important; color: var(--brand-strong) !important; border: 0 !important; border-radius: 0; box-shadow: none !important; min-width: 30px; padding: 0 10px; }
 .page-container .dash-input-stepper:hover { background: rgba(0, 147, 208, .14) !important; }
+
+/* ---------- 17-nov-2026: documentacion unica dentro del panel, graficas en tarjeta, carrusel del Resumen, icono de periodo ---------- */
+.doc-rel--dentro { width: 100%; max-width: none; margin: 16px 0 0; background: var(--surface-2); }
+.tarjeta-grafica { margin-bottom: 14px; }
+.tarjeta-grafica .bloque-titulo { margin-top: 0; }
+.tarjeta-grafica .bloque-bajada { margin-bottom: 8px; }
+
+/* tarjetas deslizables: una fila que se desplaza de lado y se ajusta a cada tarjeta */
+.carrusel { display: flex; gap: 14px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 4px 2px 14px; margin-bottom: 14px; scrollbar-width: thin; }
+.carrusel > .hecho { flex: 0 0 min(330px, 82%); scroll-snap-align: start; margin: 0; display: flex; flex-direction: column; gap: 8px; }
+.carrusel__ayuda { font-size: 12.5px; color: var(--muted); margin: -4px 0 6px; }
+
+/* icono propio de «Diagnóstico por periodo» (calendario con lupa), distinto del de «Comparar años» */
+.ico-period { --i: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v13c0 1.1.9 2 2 2h6.3A6.5 6.5 0 0 1 11 16.5c0-3.6 2.9-6.5 6.5-6.5.5 0 1 .1 1.5.2V6c0-1.1-.9-2-2-2zM5 8h14v1.6A6.5 6.5 0 0 0 11 16c0 .7.1 1.4.3 2H5V8z'/><path d='M17.5 11a4.5 4.5 0 1 0 2.6 8.2l2.4 2.4 1.4-1.4-2.4-2.4A4.5 4.5 0 0 0 17.5 11zm0 2a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5z'/></svg>"); -webkit-mask-image: var(--i); mask-image: var(--i); }
+.eleccion__lista { margin: 4px 0 12px; padding-left: 18px; font-size: 13.5px; line-height: 1.55; color: var(--muted); }
+.eleccion__lista b { color: var(--brand-ink); }
+.eleccion__eligio { color: var(--brand-strong); }
+.rec-corta__chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 2px; }
+.rec-corta__cab { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.rec-corta__rotulo { font-size: 11.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--brand-strong); margin: 10px 0 4px; display: block; }
+.rec-corta__pasos { margin: 0 0 4px; padding-left: 20px; font-size: 14px; line-height: 1.5; color: var(--brand-ink); }
+.rec-corta__pasos li { margin-bottom: 4px; }
+.rec-corta__meta { display: flex; flex-direction: column; margin: 8px 0 2px; padding: 8px 12px; border-left: 3px solid var(--accent); background: var(--surface-2); border-radius: 0 var(--r-sm) var(--r-sm) 0; font-size: 13.5px; }
+.rec-corta__meta .rec-corta__rotulo { margin: 0 0 2px; }

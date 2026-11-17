@@ -50,7 +50,8 @@ import estimador_tiempos as et  # noqa: E402
 import tema_graficos as tg  # noqa: E402
 from componentes import mensaje, metodo  # noqa: E402
 
-from eleccion_modelos import eleccion_modelo  # noqa: E402
+from eleccion_modelos import tarjeta_eleccion  # noqa: E402
+from componentes import ETAPAS_Y_PRUEBAS, secciones  # noqa: E402
 dash.register_page(__name__, path="/paciente", name="Paciente en espera", title="¿Cuándo recibirá cama? - HUN", order=2)
 
 GRIS, AZUL, NARANJA, VERDE, ROSA = "#6b6b6b", "#2a6fb0", "#eb6834", "#2e9b5b", "#d6336c"
@@ -530,10 +531,10 @@ def layout():
                 dcc.Store(id="pac-ventanas-datos"),
             ]),
         ]),
+        tarjeta_eleccion("/paciente"),
         mensaje("**Es el rango de pacientes parecidos, no una promesa para una persona.** Sirve para responder al paciente y a su familia en qué "
                 "momento del día es más probable la cama, para el censo de la reunión de camas (cuántos de los que esperan tendrán cama en 12 o 24 h) "
                 "y para avisar a las 12 h quién seguirá sin cama a las 48. Solo aplica a pacientes que ya tienen orden de hospitalización."),
-        panel_interpretacion(),
         metodo("Para cada hora de espera, el modelo estima la probabilidad de recibir cama en la hora siguiente según la hora del reloj, el día, la "
                "ocupación, la edad, el sexo, el tipo de visita, el historial del paciente, su recorrido en urgencias y, desde las 6 h, sus "
                "laboratorios. Encadenando esas probabilidades sale el rango completo de lo que falta. Se entrena con las estancias de feb-2023 a "
@@ -543,9 +544,8 @@ def layout():
                "conoce el triage, el servicio ni el tipo de cama, que es de lo que más depende la espera: con esos datos la mejora se duplicaría. La "
                "«cama» es la asignación administrativa, que puede ser una camilla de apoyo. En las primeras horas, parte de la probabilidad refleja "
                "el trámite de registro, no una predicción.",
-               "Fuente: src/estimador_tiempo_restante.py (modelo guardado, versión 9) y las tablas de src/utilidad_estimador.py. Detalle: documentación, sección 6.4, y docs/estimador_tiempos.md.", ruta="/paciente"),
-        eleccion_modelo("/paciente"),
-        panel_tecnico(),
+               "Fuente: src/estimador_tiempo_restante.py (modelo guardado, versión 9) y las tablas de src/utilidad_estimador.py. Detalle: documentación, sección 6.4, y docs/estimador_tiempos.md.", ruta="/paciente",
+               antes=secciones(panel_interpretacion(), solo=("Qué estás viendo", "Qué significa cada cosa del gráfico")) + [html.Div([html.Div("Avisos de esta estimación", className="metodo__rotulo"), html.Div(id="pac-nota")])], despues=secciones(panel_tecnico(), solo=ETAPAS_Y_PRUEBAS), pasos=False, modelo=False),
     ])
 
 

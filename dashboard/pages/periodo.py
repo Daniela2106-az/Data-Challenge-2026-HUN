@@ -4,7 +4,8 @@ El reporte de cinco pasos del diagnostico de cuello de botella para el periodo q
 demas paginas de Resultados: una tarjeta numerada por resultado, con su titular, una frase, un dato y la grafica que lo muestra.
 
 TARJETAS  1 dónde está el cuello de botella · 2 cuánto cambió frente a la referencia (solo si se compara con otro periodo) · 3 qué se dispara
-          (cola larga) · 4 qué estancias esperan muchísimo · 5 qué tienen en común · 6 camas y altas del periodo · «Qué hacer» en tarjetas de dato.
+          (cola larga) · 4 qué estancias esperan muchísimo · 5 qué tienen en común · 6 camas y altas del periodo, y las cuatro tarjetas de las camas del periodo.
+          Las acciones que sugiere cada periodo («Qué hacer») ya no se muestran aqui: viven en la pagina de Recomendaciones.
 DATOS     datos/tablas_dashboard/cuello_botella_reportes.csv (src/exportar_reportes_periodo.py, que corre src/diagnostico_cuello_botella.py de antemano
           para cada periodo y referencia; el diagnostico parte de tablas por episodio que no se publican). Cada reporte guarda sus tablas como texto:
           aqui se leen y se dibujan, asi que no hay cifras escritas a mano. Se ofrecen años y semestres, no un rango libre.
@@ -19,8 +20,7 @@ import plotly.graph_objects as go
 from dash import Input, Output, callback, dcc, html
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from componentes import (AZUL, PIZARRA, TENUE, aviso_datos, bloque, cifra, coma, estilo, filtro, hecho, lamina, leer, mensaje,  # noqa: E402
-                         metodo, pagina, portada)
+from componentes import AZUL, PIZARRA, TENUE, aviso_datos, cifra, coma, estilo, filtro, lamina, leer, mensaje, metodo, pagina, portada, tarjetas  # noqa: E402
 
 dash.register_page(__name__, path="/periodo", name="Diagnóstico por periodo", title="Diagnóstico por periodo - HUN", order=9)
 
@@ -28,10 +28,8 @@ PERIODOS = [("todo", "Todo el periodo"), ("2023", "2023"), ("2024", "2024"), ("2
             ("2023s1", "Feb a jun 2023"), ("2023s2", "Jul a dic 2023"), ("2024s1", "Ene a jun 2024"), ("2024s2", "Jul a dic 2024"),
             ("2025s1", "Ene a jun 2025"), ("2025s2", "Jul a dic 2025")]
 NOMBRE = dict(PERIODOS)
-TITULO = "El cuello de botella de cada periodo, en cinco pasos"
+TITULO = "El cuello de botella de cada periodo, paso a paso"
 CAMAS_HUN = 106
-# titulo corto de cada accion de «Qué hacer», segun una palabra de su frase en negrita (si no coincide, se usa la frase tal cual)
-TITULOS_ACCION = {"dentro de urgencias": "Acelerar la asignación de cama"}
 # los nombres de grupo vienen sin tildes de las tablas del diagnostico
 ACENTOS = {"Cancer y tumores": "Cáncer y tumores", "Endocrino y metabolico": "Endocrino y metabólico", "Musculoesqueletico y dolor": "Musculoesquelético y dolor",
            "Sin diagnostico": "Sin diagnóstico", "manana 6-11": "mañana 6–11", "tarde 12-17": "tarde 12–17"}
@@ -46,7 +44,7 @@ def layout():
         return pagina(aviso_datos("Diagnóstico por periodo", ["cuello_botella_reportes.csv"]))
     return pagina(
         portada("Resultados · Diagnóstico por periodo", TITULO,
-                "Elige un periodo y con cuál compararlo. Verás dónde se pierde el tiempo, qué se dispara, qué estancias esperan muchísimo, qué tienen en común y qué hacer, "
+                "Elige un periodo y con cuál compararlo. Verás dónde se pierde el tiempo, qué se dispara, qué estancias esperan muchísimo y qué tienen en común, "
                 "y si el cuello de botella cambió frente a la referencia.", id_cifras="per-cifras"),
         html.Div(className="filtros", children=[filtro("per-periodo", "Periodo", PERIODOS, "2025"), filtro("per-ref", "Comparar con", PERIODOS, "2023")]),
         html.Div(id="per-reporte"),
@@ -163,12 +161,12 @@ def _fig_altas(antes, tarde, tema):
 def _cuerpo(r, per, ref, tema):
     t = {int(f.paso): f.texto for f in r.itertuples()}
     p1 = r.iloc[0]
-    tarjetas, n = [], 0
+    laminas, n = [], 0
 
     def nueva(*a, **k):
         nonlocal n
         n += 1
-        tarjetas.append(lamina(n, *a, invertida=(n % 2 == 0), **k))
+        laminas.append(lamina(n, *a, invertida=(n % 2 == 0), **k))
 
     # 1. dónde está el cuello de botella
     cab, filas = _tabla(t[1])
@@ -240,25 +238,15 @@ def _cuerpo(r, per, ref, tema):
               f"En {per} hubo en promedio **{coma(media, 0)} camas ocupadas** (máximo {coma(maximo, 0)}) y en el {_pct(sobre)} de las horas se superaron las {CAMAS_HUN} camas "
               f"que dio el HUN. Solo el {_pct(antes)} de las altas ocurre antes del mediodía. {nota}",
               _grafica(_fig_altas(antes, tarde, tema), 280), dato=(_pct(sobre), f"de las horas con más de {CAMAS_HUN} camas ocupadas"))
-    salida = list(tarjetas)
+    salida = list(laminas)
     if camas and little:
         ing, est, lit = (_num(x) for x in little.groups())
-        salida += [html.Div(className="hechos", children=[
-            hecho(coma(media, 0), "Camas ocupadas, en promedio", f"Con un máximo de {coma(maximo, 0)}. El HUN informó {CAMAS_HUN} camas de hospitalización."),
-            hecho(coma(ing, 1), "Ingresos a cama por día", "Pacientes que reciben cama cada día, contando cada estancia una vez."),
-            hecho(f"{coma(est, 2)} días", "Estancia media en cama", "Lo que dura, en promedio, una hospitalización."),
-            hecho(coma(lit, 0), "Camas que explican los ingresos", "Ingresos por día × estancia media: debe parecerse a las camas ocupadas.")])]
+        salida.append(tarjetas("Las camas del periodo", f"Cuatro cifras de la ocupación de {per}",
+                               (coma(media, 0), "Camas ocupadas, en promedio", f"Con un máximo de {coma(maximo, 0)}. El HUN informó {CAMAS_HUN} camas de hospitalización."),
+                               (coma(ing, 1), "Ingresos a cama por día", "Pacientes que reciben cama cada día, contando cada estancia una vez."),
+                               (f"{coma(est, 2)} días", "Estancia media en cama", "Lo que dura, en promedio, una hospitalización."),
+                               (coma(lit, 0), "Camas que explican los ingresos", "Ingresos por día × estancia media: debe parecerse a las camas ocupadas.")))
 
-    # qué hacer
-    acciones = [ln[2:].strip() for ln in t[5].splitlines() if ln.startswith("- ")]
-    if acciones:
-        cartas = []
-        for i, a in enumerate(acciones, 1):
-            negrita = re.search(r"\*\*([^*]+)\*\*", a)
-            frase = negrita.group(1) if negrita else "Acción"
-            titulo = next((v for k, v in TITULOS_ACCION.items() if k in frase.lower()), frase.capitalize())
-            cartas.append(hecho(str(i), titulo, a.replace("**", "")))
-        salida += [bloque("Qué hacer", "Las acciones que sugiere este periodo, según dónde se pierde el tiempo"), html.Div(className="hechos", children=cartas)]
     return salida
 
 
@@ -287,4 +275,9 @@ def reporte(periodo, referencia, tema):
         f48 = next((f for f in cola if f[0].startswith("48")), cola[-1])
         cifras += [cifra(f"{_pct(_num(f48[1]))}", "de los pacientes espera más de 48 horas"), cifra(f"{_pct(_num(f48[2]))}", "de las horas en exceso viene de esas esperas")]
     cuerpo = _cuerpo(r, per, ref, tema)
-    return cifras, [mensaje(f"**Cuello de botella de {per}: {p1.cuello}.** {titular}", titulo="En una frase"), *cuerpo]
+    significa = []
+    if cola:
+        f48 = next((f for f in cola if f[0].startswith("48")), cola[-1])
+        significa = [mensaje(f"En {per}, **el {_pct(_num(f48[1]))} de los pacientes espera más de 48 horas y suma el {_pct(_num(f48[2]))} de las horas perdidas**: el problema está en las "
+                             "esperas de varios días, no en la espera típica. Las acciones que se derivan de esto están en la página de Recomendaciones.")]
+    return cifras, [mensaje(f"**Cuello de botella de {per}: {p1.cuello}.** {titular}", titulo="En una frase"), *cuerpo, *significa]
