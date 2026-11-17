@@ -84,3 +84,4 @@ los grupos con menos de 30 estancias salen vacíos. Periodo: 1-feb-2023 a 9-abr-
 ## Tablas que faltan (dependen de análisis pendientes)
 Perfiles de pacientes (A1), factores de la estancia y estancias que se disparan (A2, A2b), modelo explicativo mejorado (A4) y bandas Monte Carlo de camas (A5). Cada una se agregará al paquete
 con su propio script; el diccionario se actualiza entonces.
+- `asignacion_cama_por_hora_llegada.csv` (16-nov): por hora de llegada, de los hospitalizados que esperaron cama, % que la recibe el mismo día y % al día siguiente o después, con n y mediana de la espera. La genera `src/altas_y_factores.py` (sección 3). La lee `/altas`.

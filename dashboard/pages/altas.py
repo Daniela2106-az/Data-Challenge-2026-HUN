@@ -51,14 +51,25 @@ def _horas():
     return None if t is None or t.empty else t
 
 
+def _asignacion():
+    t = leer("asignacion_cama_por_hora_llegada.csv")
+    return None if t is None or t.empty else t
+
+
 def _laminas_extra():
-    out, t, h = [], _tipos(), _horas()
+    out, t, h, a = [], _tipos(), _horas(), _asignacion()
     if t is not None and {"dia habil", "festivo entre semana"} <= set(t.index):
         hab, fes, fin = t.altas_por_100_camas["dia habil"], t.altas_por_100_camas["festivo entre semana"], t.altas_por_100_camas["fin de semana"]
         out.append(lamina(4, f"En los festivos se dan {coma(100 * (1 - fes / hab), 0)} % menos altas que en un día hábil",
                           f"Altas por cada 100 camas: **{coma(hab, 0)}** en un día hábil, **{coma(fin, 0)}** en fin de semana y **{coma(fes, 0)}** en un festivo entre semana. "
                           "Es probable que las camas que no se liberan esos días lleguen ocupadas al lunes. El efecto estimado en camas es pequeño (1 a 2 camas equivalentes), pero es de bajo costo.",
                           grafico("alt-tipodia", alto=300), dato=(f"−{coma(100 * (1 - fes / hab), 0)} %", "de altas en festivos frente a un día hábil"), invertida=True))
+    if a is not None and {8, 16} <= set(a.hora_llegada):
+        p8, p16 = a.set_index("hora_llegada").pct_cama_dia_siguiente_o_mas[8], a.set_index("hora_llegada").pct_cama_dia_siguiente_o_mas[16]
+        out.append(lamina(6, f"De quienes llegan a las 16 h, {coma(p16, 0)} % recibe la cama al día siguiente; a las 8 h, {coma(p8, 0)} %",
+                          "Porcentaje de pacientes hospitalizados que recibe la cama un día después de llegar o más tarde, según la hora de llegada. "
+                          "Solo cuenta a quienes esperaron cama. Es una asociación: a esa hora también cambian el tipo de paciente y la carga.",
+                          grafico("alt-diasig", alto=300), dato=(f"+{coma(p16 - p8, 0)} puntos", "entre llegar a las 16 h y a las 8 h")))
     if h is not None:
         mx, mn = h.loc[h.ocupacion_base.idxmax()], h.loc[h.ocupacion_base.idxmin()]
         out.append(lamina(5, f"La ocupación baja de {coma(mx.ocupacion_base, 0)} a {coma(mn.ocupacion_base, 0)} camas después de las altas de la tarde",
@@ -147,9 +158,14 @@ def actualizar(anio, tema):
             f"El domingo se dan {coma(menos, 0)} % menos altas que entre semana", semana, festivo)
 
 
-@callback(Output("alt-tipodia", "figure"), Output("alt-ocuphora", "figure"), Input("theme-store", "data"))
+@callback(Output("alt-tipodia", "figure"), Output("alt-ocuphora", "figure"), Output("alt-diasig", "figure"), Input("theme-store", "data"))
 def figuras_extra(tema):
-    tip, hor, t, h = go.Figure(), go.Figure(), _tipos(), _horas()
+    tip, hor, sig, t, h, a = go.Figure(), go.Figure(), go.Figure(), _tipos(), _horas(), _asignacion()
+    if a is not None:
+        sig.add_trace(go.Bar(x=a.hora_llegada, y=a.pct_cama_dia_siguiente_o_mas, customdata=a.n, marker_color=[AZUL if h_ in TARDE else TENUE for h_ in a.hora_llegada],
+                             hovertemplate="Llega a las %{x}:00 · %{y:.0f} % recibe la cama al día siguiente o después · n = %{customdata}<extra></extra>"))
+        estilo(sig, tema).update_yaxes(ticksuffix=" %", range=[0, 100])
+        horas_eje(sig).update_layout(bargap=0.35)
     if t is not None:
         orden = [k for k in DIAS_TIPO if k in t.index]
         v = t.altas_por_100_camas.reindex(orden)
@@ -163,4 +179,4 @@ def figuras_extra(tema):
                                  hovertemplate="%{x} h: %{y:.0f} camas ocupadas<extra></extra>"))
         estilo(hor, tema).update_yaxes(title_text="Camas ocupadas", range=[h.ocupacion_base.min() - 5, h.ocupacion_base.max() + 4])
         hor.update_xaxes(title_text="Hora del día", dtick=3)
-    return tip, hor
+    return tip, hor, sig

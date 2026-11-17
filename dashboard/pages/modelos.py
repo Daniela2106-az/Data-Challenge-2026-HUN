@@ -42,6 +42,10 @@ MODELOS = [
      "Modelo de flujo: entradas y salidas de la cola",
      "Un tercio menos de error que suponer que todo sigue igual.",
      "Suponer que la cola no cambia y usar la tasa típica."),
+    ("¿Qué días fueron atípicos?",
+     "La distancia de cada día frente al pronóstico del modelo de demanda (más de 3 desviaciones)",
+     "Con el calendario ya modelado, lo que sobra no se explica por festivos ni por el día de la semana: solo 3 de los 14 días de llegadas tienen causa de calendario.",
+     "Una regla por rango intercuartil (IQR): marcaba demasiados casos por la asimetría de los datos."),
 ]
 
 VALIDACION = [
@@ -69,7 +73,7 @@ def layout():
         portada("Documentación · Elección de modelos", "Para cada pregunta, el modelo más simple que acertó en datos que no había visto",
                 "Ningún modelo se eligió por ser sofisticado. Cada uno se comparó con una referencia sencilla y solo se quedó si la superaba "
                 "en meses que nunca vio.",
-                [cifra("6", "preguntas del hospital, cada una con su modelo"), cifra("7,9 %", "de error al pronosticar las llegadas a una semana"),
+                [cifra("7", "preguntas del hospital, cada una con su modelo"), cifra("7,9 %", "de error al pronosticar las llegadas a una semana"),
                  cifra("87 %", "de los días congestionados se detecta a mediodía")]),
         bloque("Una pregunta, un modelo", "Qué se eligió, por qué y qué alternativas se descartaron"),
         html.Div(className="hechos hechos--2", children=[_tarjeta(i, *m) for i, m in enumerate(MODELOS, 1)]),
