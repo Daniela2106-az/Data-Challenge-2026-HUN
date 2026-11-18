@@ -1,9 +1,9 @@
 # ¿Por qué se espera tanto por una cama?
 ## Flujo de pacientes, cuellos de botella y anticipación en el Hospital Universidad del Norte
 
-**Data Challenge HUN 2026** · Hospital Universidad del Norte (HUN) y pregrado de Ciencia de Datos, Universidad del Norte
-**Equipo:** Daniela (coordinación, datos y análisis), Samuel (estimador de tiempos, recomendaciones y dashboard), Anthony (modelo explicativo y simulación de camas)
-**Versión:** versión del 17-nov-2026 (estacionalidad anual completa, ficha A9: dengue, IRA y EDA del SIVIGILA; recomendaciones con 38 fuentes verificadas; capítulo 3 reorganizado: tablas y columnas de la base, exploración y limpieza paso a paso, variables y herramientas) · **Entregables:** este documento, el repositorio en GitHub y el dashboard interactivo
+**Data Challenge HUN 2026** · Hospital Universidad del Norte (HUN) y pregrado de Ciencia de Datos, Universidad del Norte  
+**Equipo:** Daniela (coordinación, datos y análisis), Samuel (estimador de tiempos, recomendaciones y dashboard), Anthony (modelo explicativo y simulación de camas)  
+**Versión:** versión del 17-nov-2026 (estacionalidad anual completa, ficha A9: dengue, IRA y EDA del SIVIGILA; recomendaciones con 38 fuentes verificadas; capítulo 3 reorganizado: tablas y columnas de la base, exploración y limpieza paso a paso, variables y herramientas) · **Entregables:** este documento, el repositorio en GitHub y el dashboard interactivo  
 
 > **Cómo leer este documento.** Cada cifra lleva al lado el documento del repositorio donde se calcula y el script que la produce. Casi todo
 > son **asociaciones y escenarios**, no causas probadas, y cada hallazgo lleva su limitación junto a él. Los datos clínicos no están en el
