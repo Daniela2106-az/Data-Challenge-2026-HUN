@@ -74,12 +74,12 @@ DOCUMENTACION = {
     "/perfiles": (5, "5.7 Quién es el paciente", "los perfiles, la brecha por sexo y la carga del momento"),
     "/pronostico": (6, "6.1 Pronóstico de demanda", "el modelo, su error por horizonte y la forma del año"),
     "/estacionalidad": (6, "6.1 La forma del año", "de dónde salen las curvas del año y cuánto mejoran el pronóstico"),
-    "/alertas": (6, "6.2 Alertas", "las tres alertas, cómo se probaron y qué tanto aciertan"),
+    "/alertas": (6, "6.2 Alertas", "las alertas, cómo se probaron, qué tanto aciertan y qué recomendación dispara cada una"),
     "/atipicos": (6, "6.3 Días atípicos", "cómo se detectan y qué dicen del problema de la espera"),
     "/paciente": (6, "6.4 Estimador de la espera de cada paciente", "qué usa, cómo se validó y sus límites"),
     "/camas": (6, "6.5 Simulación Monte Carlo de camas", "cómo funciona, su validación, los escenarios y la curva de capacidad"),
-    "/periodo": (6, "6.7 Diagnóstico repetible del cuello de botella", "el reporte de cinco pasos de cualquier periodo, comparado con una referencia"),
-    "/simulador": (6, "6.5 Simulación (motor integral)", "el motor de agentes que une demanda, cola de espera y ocupación sobre el Monte Carlo"),
+    "/periodo": (6, "6.7 Diagnóstico repetible del cuello de botella", "el diagnóstico de cualquier periodo comparado con una referencia: dónde está el cuello, qué se dispara y qué comparten las esperas largas"),
+    "/simulador": (6, "6.9 Simulador integral", "el motor de agentes, su validación, las palancas, las alertas con su recomendación y la operación óptima"),
     "/recomendaciones": (7, "Recomendaciones", "las siete acciones con su evidencia, su firmeza y lo que no recomendamos"),
 }
 

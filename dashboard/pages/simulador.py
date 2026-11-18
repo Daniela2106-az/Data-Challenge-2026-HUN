@@ -44,6 +44,7 @@ import simulador_integral as si  # noqa: E402  (import liviano: no corre backtes
 import simulacion_camas_montecarlo as scm  # noqa: E402
 import tema_graficos as tg  # noqa: E402
 import catalogo as _catalogo  # noqa: E402
+from componentes import mensaje, metodo, secciones  # noqa: E402
 
 dash.register_page(__name__, path="/simulador", name="Simulador integral", title="Simulador integral - HUN", order=7)
 
@@ -352,6 +353,20 @@ def _demo_camas():
         html.Div(celdas, className="simint-bedgrid"),
         html.Div("azul = cama ocupada · gris claro = cama libre · roja = por encima de la capacidad física",
                  style={"fontSize": "12px", "color": GRIS, "marginTop": "5px"}),
+    ])
+
+
+def _seccion_alertas():
+    """Como funcionan las alertas, la pausa y la operacion optima (se muestra dentro de la documentacion de la pagina)."""
+    return html.Div([
+        _titulo_interp("Alertas y operación óptima"),
+        html.Div(f"Mientras corre la simulación salta una tarjeta de alerta arriba del gráfico, siempre visible. Hay tres alertas: riesgo de saturar las camas (aviso desde {UMBRAL_ALERTA_MEDIA} % de "
+                 f"probabilidad de superar la capacidad a 48 h, crítico desde {UMBRAL_ALERTA} %), ocupación alta (aviso desde {UMBRAL_OCUPACION} camas, crítico desde {UMBRAL_OCUPACION_CRITICA}) y cola de espera larga "
+                 f"(aviso desde {UMBRAL_COLA} pacientes, crítico desde {UMBRAL_COLA_CRITICA}). Hay dos gravedades, aviso (amarillo) y crítico (rojo); las dos frenan la simulación, y cada alerta salta una sola vez por corrida. "
+                 "La tarjeta dice qué pasó y la recomendación de la que se deriva (con su primer paso), tiene flechas para ver las alertas anteriores y botones para ir a la alerta y a la recomendación."),
+        html.Div([html.B("Aplicar mejora y comparar: "), "el panel de configuración se abre, los controles se desplazan a la operación óptima (15 % menos en las estancias de más de 14 días y 30 % de las "
+                  "altas de la tarde adelantadas a la mañana), el panel se cierra y la simulación se repite desde el día 1 con la mejora en color y cómo iba antes («Antes de la mejora») en gris punteado. "
+                  "Las alertas anteriores siguen disponibles, marcadas como resueltas con la mejora. «Reiniciar» devuelve los controles a cero."], style={"marginTop": "8px"}),
     ])
 
 
@@ -977,8 +992,19 @@ def layout():
         dcc.Store(id="simint-datos"),
         dcc.Store(id="simint-filtro", data={}),
         dcc.Store(id="simint-sync-hover"),   # salida de callbacks cliente "silenciosos" (no se usa su valor)
-        html.Div(panel_interpretacion(), style={"marginTop": "40px"}),
-        panel_tecnico(),
+        mensaje("**Sirve para ver el efecto de una decisión sobre todo el flujo a la vez, no para adivinar un día.** Bajar la estancia descarga las camas; bajar la espera descarga "
+                "la sala de urgencias aunque las camas sigan igual de llenas; más demanda empuja las tres curvas. Cuando salta una alerta, el simulador dice qué hacer y permite "
+                "aplicar la operación óptima y compararla con cómo iba antes."),
+        metodo(
+            "Un motor de agentes montado sobre la simulación de Monte Carlo validada del planeador de camas: cada llegada simulada recibe un perfil real (edad × ruta), se hospitaliza "
+            f"con la probabilidad histórica de su perfil y, si va a cama, hereda la trayectoria completa (hora de llegada, espera y estancia) de un paciente real parecido. Se repite {N_REP_INTERACTIVO} "
+            "veces para ver el rango (las cifras oficiales usan 1.000). Parte del último dato confiable (9-abr-2026) con el censo y la cola reales de ese día.",
+            "No predice un día concreto ni un paciente concreto: reproduce patrones. La cola solo cuenta a quienes terminarán hospitalizados, así que es una **cota inferior** de la "
+            "presión real de urgencias. Las alertas y sus umbrales son criterios de esta página, no resultados validados. Es asociación proyectada sobre el patrón histórico, no una "
+            "garantía de que ese patrón se mantenga.",
+            "Fuente: src/simulador_integral.py y docs/simulador_integral.md.", ruta="/simulador",
+            antes=secciones(panel_interpretacion(), solo=("Qué estás viendo", "Cómo leer cada fila", "Los controles")) + [_seccion_alertas()],
+            despues=secciones(panel_tecnico()), pasos=False, modelo=False),
     ])
 
 

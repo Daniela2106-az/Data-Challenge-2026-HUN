@@ -19,7 +19,7 @@ RELACION = {
     "/estancia": ["/camas"],
     "/diagnosticos": ["/paciente"],
     "/perfiles": ["/paciente"],
-    "/alertas": ["/pronostico", "/paciente"],
+    "/alertas": ["/pronostico", "/paciente", "/simulador"],
 }
 MOTIVO = {  # (resultado, prediccion) -> por que se conectan
     ("/demanda", "/pronostico"): "las llegadas por hora y día son lo que el pronóstico proyecta",
@@ -35,6 +35,7 @@ MOTIVO = {  # (resultado, prediccion) -> por que se conectan
     ("/diagnosticos", "/paciente"): "el tipo de paciente cambia su tiempo de espera",
     ("/alertas", "/pronostico"): "el pronóstico de llegadas da el total esperado del día que la alerta compara",
     ("/alertas", "/paciente"): "el estimador hora a hora alimenta el aviso temprano de paciente sin cama",
+    ("/alertas", "/simulador"): "el simulador dispara estas alertas mientras corre y muestra la recomendación de cada una",
     ("/perfiles", "/paciente"): "los perfiles que esperan más son los que el estimador distingue",
 }
 
