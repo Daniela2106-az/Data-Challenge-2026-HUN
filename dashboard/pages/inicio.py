@@ -5,7 +5,7 @@ del hospital, un resumen de contexto y un menu de tarjetas para entrar a cada pa
 prediccion y propuestas) con la misma lista de la barra lateral (`dashboard/navegacion.py`).
 
 No carga datos ni se conecta a la base, asi que nunca falla el arranque. Las cifras del resumen son hechos ya
-documentados del proyecto (CLAUDE.md, docs/HALLAZGOS.md), presentados como contexto, no como un calculo en vivo.
+documentados del proyecto (docs/CONTEXTO_TECNICO.md, docs/HALLAZGOS.md), presentados como contexto, no como un calculo en vivo.
 """
 import sys
 from pathlib import Path

@@ -373,7 +373,7 @@ ep = ep.reset_index()
 ep["ruta_simple"] = ep.ruta.str.replace(r"^ER > ", "", regex=True)
 ep["hospitalizado"] = ep.ruta.str.contains("HOSP")
 # v3.7: ESTANCIAS GEMELAS. El 41 % de los episodios hospitalizados comparte exactamente el inicio y el fin de cama
-# (primera y ultima HOSP) con otro episodio: es la misma estancia replicada entre dos personas (CLAUDE.md 4.6).
+# (primera y ultima HOSP) con otro episodio: es la misma estancia replicada entre dos personas (docs/CONTEXTO_TECNICO.md 4.6).
 # `estancia_unica` = True para el episodio de menor visit_occurrence_id de cada estancia (y para los no hospitalizados).
 # Las tablas de espera de cama, tiempos por ruta, ocupacion e ingresos usan solo estancias unicas.
 _h = bloques[bloques.etapa == "HOSP"].groupby(K).agg(ini_hosp=("ini", "min"), fin_hosp=("fin", "max")).reset_index()
@@ -387,7 +387,7 @@ ep.loc[_hh.index[_hh.duplicated(["ini_hosp", "fin_hosp"], keep="first").values],
 # adicional al comienzo: el inicio total difiere pero comparten al menos un intervalo HOSP identico al segundo (dos pacientes distintos no
 # comparten un intervalo identico por casualidad). Ahora una ESTANCIA es el conjunto de episodios conectados por compartir el (inicio, fin) de
 # la cama o algun intervalo HOSP (union-find). Con la regla vieja la ocupacion media de 2025 salia 118,6 camas; el conteo directo de intervalos
-# distintos sobre la base daba 104,8 y el HUN dice que tiene 106 camas (CLAUDE.md 4.7 y 4.8).
+# distintos sobre la base daba 104,8 y el HUN dice que tiene 106 camas (docs/CONTEXTO_TECNICO.md 4.7 y 4.8).
 #   estancia_id          identificador de la estancia (el mismo para todos los registros gemelos)
 #   n_registros_estancia cuantos episodios tiene la estancia
 #   ini_hosp_est / fin_hosp_est   inicio y fin de cama de la estancia (el minimo y el maximo entre sus registros)

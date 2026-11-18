@@ -3,7 +3,7 @@
 
 **Data Challenge HUN 2026** · Hospital Universidad del Norte (HUN) y pregrado de Ciencia de Datos, Universidad del Norte
 **Equipo:** Daniela (coordinación, datos y análisis), Samuel (estimador de tiempos, recomendaciones y dashboard), Anthony (modelo explicativo y simulación de camas)
-**Versión:** borrador del 14-nov-2026 (estacionalidad anual completa, ficha A9: dengue, IRA y EDA del SIVIGILA; recomendaciones con 38 fuentes verificadas; capítulo 3 reorganizado: tablas y columnas de la base, exploración y limpieza paso a paso, variables y herramientas) · **Entregables:** este documento, el repositorio en GitHub y el dashboard interactivo
+**Versión:** versión del 17-nov-2026 (estacionalidad anual completa, ficha A9: dengue, IRA y EDA del SIVIGILA; recomendaciones con 38 fuentes verificadas; capítulo 3 reorganizado: tablas y columnas de la base, exploración y limpieza paso a paso, variables y herramientas) · **Entregables:** este documento, el repositorio en GitHub y el dashboard interactivo
 
 > **Cómo leer este documento.** Cada cifra lleva al lado el documento del repositorio donde se calcula y el script que la produce. Casi todo
 > son **asociaciones y escenarios**, no causas probadas, y cada hallazgo lleva su limitación junto a él. Los datos clínicos no están en el
@@ -104,7 +104,7 @@ El detalle de cada tabla y de sus columnas está en 3.2; cómo se limpió, en 3.
 
 ### 3.2 Las tablas y las columnas que usamos
 El esquema real tiene 8 tablas (no las 20 del instructivo). Esta es la lectura de cada una después de explorarla: qué es, qué columnas usamos y qué representan,
-y lo que hay que saber antes de confiar en ella. Detalle completo en `CLAUDE.md` 3 y 4.
+y lo que hay que saber antes de confiar en ella. Detalle completo en `docs/CONTEXTO_TECNICO.md` 3 y 4.
 
 | Tabla (filas) | Qué es | Columnas que usamos y qué representan | Lo que hay que saber |
 |---|---|---|---|
@@ -150,13 +150,13 @@ y lo que hay que saber antes de confiar en ella. Detalle completo en `CLAUDE.md`
 
 **Por qué importa:** sin esta limpieza el hospital parecía tener ~146 camas ocupadas y 27,7 ingresos por día; los valores reales son ~100 camas y
 ~20 ingresos. La auditoría directa en la base (2-nov) y la reproducción del pipeline en un clon limpio confirmaron las cifras.
-Detalle: `CLAUDE.md` 4.1–4.13; `docs/HALLAZGOS.md` 2; `src/analisis_etapas.py`, `src/preparar_variables.py`, `src/auditoria_bd.py`.
+Detalle: `docs/CONTEXTO_TECNICO.md` 4.1–4.13; `docs/HALLAZGOS.md` 2; `src/analisis_etapas.py`, `src/preparar_variables.py`, `src/auditoria_bd.py`.
 
 **Resultado:** 337.194 episodios (atención continua de un paciente; se corta tras 168 h sin etapas). En el periodo confiable, 22.819 estancias
 únicas con espera de cama medida.
 
 ### 3.4 El quiebre de abril de 2026 y lo que pasaba en el sistema de salud
-La auditoría en la base (`CLAUDE.md` 4.9) muestra que desde el 10-abr-2026 las visitas de urgencias **suben ~40 %** mientras el registro de etapas se
+La auditoría en la base (`docs/CONTEXTO_TECNICO.md` 4.9) muestra que desde el 10-abr-2026 las visitas de urgencias **suben ~40 %** mientras el registro de etapas se
 degrada: no es menos demanda. El hospital no explicó la causa. Para el contexto se revisaron prensa y actos de la Superintendencia de Salud
 (`docs/estacionalidad_anual.md`, cuarta ronda):
 - **Oct-2023:** abre el Hospital Juan Domínguez Romero en Soledad, el mismo municipio del HUN. **Ene-2025:** abre el Nuevo Hospital de Barranquilla
@@ -223,7 +223,7 @@ cama con su calendario y su forma del año. El diccionario de las tablas pequeñ
   que tienen hora de salida la subestima (`docs/supervivencia_urgencias.md`).
 - **Estancia en cama:** mediana de 71 h, percentil 90 de 280 h, media de 5,2 días.
 - **Entre etapas casi no hay tiempo muerto:** el «hueco sin registro» antes de la cama que se creía del 21 % resultó un artefacto de las estancias
-  duplicadas; en el registro de la persona real es ~1 % de las horas (`CLAUDE.md` 4.12).
+  duplicadas; en el registro de la persona real es ~1 % de las horas (`docs/CONTEXTO_TECNICO.md` 4.12).
 - **Reingresos depurados:** 5,3 % en 72 h y 14,1 % en 30 días (`docs/c4_reingresos_huecos_llegadas.md`).
 
 ![Mapa de calor de llegadas por día y hora](../resultados/graficos/mapa_calor_llegadas.png)
@@ -780,7 +780,7 @@ Los datos y las tablas de resultados **no** están en el repositorio porque son 
 | Tema | Documento |
 |---|---|
 | Todos los hallazgos con cifras | `docs/HALLAZGOS.md` |
-| Contexto técnico completo y decisiones | `CLAUDE.md` |
+| Contexto técnico completo y decisiones | `docs/CONTEXTO_TECNICO.md` |
 | Definición de cuello de botella y fases | `docs/plan_de_accion.md` |
 | Perfiles, estancia, estancias largas, diagnósticos | `docs/perfiles_pacientes.md`, `docs/factores_estancia.md`, `docs/estancias_disparadas.md`, `docs/diagnosticos_todos.md` |
 | Saturación, etapas de urgencias, laboratorios | `docs/saturacion_y_espera.md`, `docs/caracterizacion_etapas_tu.md`, `docs/espera_con_labs_y_severidad.md` |

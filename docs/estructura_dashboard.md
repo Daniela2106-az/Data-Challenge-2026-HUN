@@ -53,7 +53,7 @@ Las páginas de la Parte 1 y la Parte 5 son de **texto, tablas y figuras fijas**
 2. **Mostrar siempre el n** y **ocultar los grupos con menos de 30 casos**.
 3. **Periodo confiable de las etapas:** del 1-feb-2023 al 9-abr-2026 (explicación en la página 1.3). Lo posterior se dibuja en gris con la etiqueta «registro incompleto» o no se dibuja.
 4. **Una estancia = una vez** (las duplicadas ya vienen resueltas en las tablas).
-5. **Cifras vigentes:** las de `docs/HALLAZGOS.md` y de `CLAUDE.md` secciones 4.8 a 4.10. Las de documentos viejos (por ejemplo, las del 22-oct) están superadas.
+5. **Cifras vigentes:** las de `docs/HALLAZGOS.md` y de `docs/CONTEXTO_TECNICO.md` secciones 4.8 a 4.10. Las de documentos viejos (por ejemplo, las del 22-oct) están superadas.
 6. **Términos clínicos en palabras simples:** cada término raro lleva su explicación (glosario, página 5.2).
 7. **Privacidad:** solo tablas agregadas. Nada con una fila por paciente se publica ni se sube a GitHub. Nunca contraseñas en el código.
 8. **Una sola escala por gráfico** (sin dos ejes y), eje desde 0 en barras, azul = lo observado, naranja = referencia o escenario, gris = periodo no confiable.
@@ -76,7 +76,7 @@ Es la parte que explica **todo lo que no se ve en las gráficas pero que las sos
 ## 1.1 El reto y el alcance
 - **Lleva:** la pregunta central; los cuatro componentes del instructivo y **en qué página se contesta cada uno**; el equipo; las fechas.
 - **Figura:** línea de tiempo de la ruta del paciente (llegada → admisión → atención en urgencias → cama → alta) con el nombre que damos a cada etapa.
-- **Fuente:** `CLAUDE.md` sección 1; `docs/DATA CHALLENGE HUN 2026 (2).pdf`.
+- **Fuente:** `docs/CONTEXTO_TECNICO.md` sección 1; `docs/DATA CHALLENGE HUN 2026 (2).pdf`.
 
 ## 1.2 La base de datos y su exploración
 - **Lleva:**
@@ -85,20 +85,20 @@ Es la parte que explica **todo lo que no se ve en las gráficas pero que las sos
   - Las cuatro etapas de `visit_detail` y qué significa cada una; cuándo se registra la hospitalización (lo confirmó el HUN).
   - **Cómo se exploró:** consultas de solo lectura, la auditoría directa en la base y qué dudas resolvió.
 - **Figuras:** diagrama de tablas; barras de volumen por tabla; diagrama de las cuatro etapas.
-- **Fuente:** `CLAUDE.md` secciones 2 y 3; `docs/Diccionario_datos.md`; `docs/conexion_bd.md`.
+- **Fuente:** `docs/CONTEXTO_TECNICO.md` secciones 2 y 3; `docs/Diccionario_datos.md`; `docs/conexion_bd.md`.
 
 ## 1.3 Calidad de los datos y limpieza
 La página más importante del bloque: explica por qué las cifras del proyecto no coinciden con un conteo directo de la base. Una sección por problema, **cada una con cuatro partes: qué se vio, cuánto pesa, qué se decidió y qué efecto tuvo**.
 - **Problemas a cubrir:** visitas copia · estancias gemelas (la misma estancia registrada en dos personas distintas) · cuál es la persona real · etapas de urgencias sin hora de fin · etapas abiertas · visitas partidas · diagnósticos sin traducción y sin jerarquía · procedimientos sin fecha · el «hueco sin etapa» antes de la cama (era un artefacto de las estancias duplicadas) · caída total del sistema en dos días de marzo de 2026 · **el registro de etapas que se degrada desde el 10-abr-2026**.
 - **Explicación del periodo confiable (debe estar aquí, con su figura):** hasta el 9-abr-2026 el registro es estable: cerca de dos tercios de las visitas de urgencias tienen etapa de admisión (ER) y alrededor de un diez por ciento no tiene ninguna etapa. Desde el 10-abr las visitas registradas en la tabla de cabecera suben cerca de 40 % por día, pero la proporción de visitas con etapa ER baja y empeora más desde el 29-abr; los diagnósticos con código desaparecen desde mediados de mayo. Las visitas de cabecera no bajaron, por eso **no es que lleguen menos pacientes: falla el registro del detalle**. Como no se sabe la causa y los datos son estructuralmente distintos, esos días no se usan para estimar niveles, errores ni tendencias.
 - **Figuras obligatorias:** (1) embudo de datos de las etapas a las estancias únicas; (2) ocupación de camas antes y después de resolver las estancias gemelas; (3) visitas de urgencias frente a etapas ER por semana, con la línea vertical del 10-abr-2026.
-- **Fuente:** `CLAUDE.md` secciones 4.1 a 4.10; `docs/HALLAZGOS.md` sección 2; `datos/tablas_dashboard/embudo_datos.csv`.
+- **Fuente:** `docs/CONTEXTO_TECNICO.md` secciones 4.1 a 4.10; `docs/HALLAZGOS.md` sección 2; `datos/tablas_dashboard/embudo_datos.csv`.
 
 ## 1.4 Las variables
 - **Lleva:** un **diccionario de variables** con buscador. Columnas: *nombre · qué significa en palabras simples · cómo se calculó · de qué tabla sale · se conoce al llegar (sí/no) · limitación*.
 - **Grupos de variables:** unidades (visita, episodio, estancia) · tiempos (espera de cama, urgencias antes de la cama, hueco sin etapa —casi inexistente en el periodo confiable, ver 1.3—, estancia) · estado del episodio · ruta · calendario (hora, franja, día, festivos, Carnaval) · paciente (edad, sexo, tipo de visita) · carga del hospital (llegadas previas, ocupación) · clínicas (grupo de diagnóstico, laboratorios, procedimientos) · agregados diarios.
 - **Dos reglas que se explican aquí:** un modelo «al llegar» solo usa lo que se sabe al llegar; los totales de laboratorios y diagnósticos de una visita crecen con la estancia y por eso no se usan como factor.
-- **Fuente:** `CLAUDE.md` secciones 3, 5 y 7; `datos/tablas_dashboard/diccionario_tablas.md`.
+- **Fuente:** `docs/CONTEXTO_TECNICO.md` secciones 3, 5 y 7; `datos/tablas_dashboard/diccionario_tablas.md`.
 
 ## 1.5 Las tablas del dashboard
 - **Lleva:** una tabla de todos los archivos que alimentan el dashboard: nombre · una fila por… · qué contiene · script que lo genera · en qué página se usa. Una nota de cómo se regeneran.
@@ -106,7 +106,7 @@ La página más importante del bloque: explica por qué las cifras del proyecto 
 
 ## 1.6 Metodología
 - **Lleva:** definición de episodio y estancia; definición de **espera de cama** (llegada hasta asignación de cama; no separa la atención clínica de la espera pura); definición de **cuello de botella** (segmento con exceso sobre una referencia de «cuando funciona bien», alto impacto y que se agrava con la carga); cómo se tratan los atípicos; validación temporal (entrenar con el pasado, probar con el futuro); qué se puede y qué no se puede decir de una asociación.
-- **Fuente:** `CLAUDE.md` sección 5; `docs/plan_de_accion.md` sección 0; `docs/HALLAZGOS.md` sección 3.
+- **Fuente:** `docs/CONTEXTO_TECNICO.md` sección 5; `docs/plan_de_accion.md` sección 0; `docs/HALLAZGOS.md` sección 3.
 
 ---
 
@@ -122,7 +122,7 @@ La página más importante del bloque: explica por qué las cifras del proyecto 
 - **Controles:** año · rango de fechas · casilla «mostrar línea de las 106 camas del HUN».
 - **Gráficas:** camas ocupadas por día (media y máximo) con la línea de 106 y el periodo no confiable en gris; barras por año de ingresos por día, estancia media y ocupación media; % de horas por encima de 106; ocupación por tipo de paciente (adultos, niños, menores de 1 año) frente a las camas que dio el HUN; descomposición del aumento de ocupación por duración de estancia.
 - **Contexto:** la ocupación sube por la estancia, no por más ingresos; ley de Little en palabras simples; **las dos explicaciones posibles del exceso sobre 106 camas** (capacidad real mayor u operación con camas adicionales/camillas) y que los datos no las distinguen; las estancias largas son pacientes con actividad real; qué no dice (cuántas camas hay realmente; urgencias no se compara con las camillas).
-- **Fuente:** `panel_diario.csv`, `ocupacion_por_anio.csv`, `escenarios_little.csv`; `docs/factores_estancia.md`; `CLAUDE.md` 4.8.
+- **Fuente:** `panel_diario.csv`, `ocupacion_por_anio.csv`, `escenarios_little.csv`; `docs/factores_estancia.md`; `docs/CONTEXTO_TECNICO.md` 4.8.
 
 ## 2.3 Espera de cama y cuello de botella
 - **Controles:** año · tipo de visita · grupo de edad.
@@ -199,7 +199,7 @@ La página más importante del bloque: explica por qué las cifras del proyecto 
 
 ## 3.6 Cómo se eligieron los modelos
 - **Lleva:** una tabla de «alternativas probadas → resultado → decisión» por cada modelo: pronóstico de demanda, alertas, modelos explicativos, escenarios de camas, días atípicos. Incluye el piso de ruido de los conteos, las pruebas con meses conocidos y con 2026, la comparación de bandas con y sin la caída, y lo que se descartó.
-- **Fuente:** `src/modelo_pronostico.py`, `src/evaluacion_modelo.py`, `src/pruebas_ruido_pronostico.py`, `src/prueba_mes_conocido.py`, `src/prueba_2026.py`, `src/elegir_tau.py`; tablas `evaluacion_modelo.csv`, `pruebas_pronostico_resumen.csv`, `prueba_2026.csv`; `CLAUDE.md` 4.9 y 6b.
+- **Fuente:** `src/modelo_pronostico.py`, `src/evaluacion_modelo.py`, `src/pruebas_ruido_pronostico.py`, `src/prueba_mes_conocido.py`, `src/prueba_2026.py`, `src/elegir_tau.py`; tablas `evaluacion_modelo.csv`, `pruebas_pronostico_resumen.csv`, `prueba_2026.csv`; `docs/CONTEXTO_TECNICO.md` 4.9 y 6b.
 
 ---
 
@@ -215,7 +215,7 @@ La página más importante del bloque: explica por qué las cifras del proyecto 
 # PARTE 5 — ANEXOS
 
 ## 5.1 Limitaciones y preguntas abiertas
-Lista corta y honesta (de `CLAUDE.md` sección 9 y `docs/HALLAZGOS.md`): copias y estancias gemelas · etapas de urgencias sin hora de fin · diagnósticos tardíos y sin jerarquía · mapeo de diagnósticos sin validación clínica · número de camas del hospital sin fecha ni desglose · procedimientos sin fecha · sin signos vitales ni servicio · registro degradado desde el 10-abr-2026 · casi todo son asociaciones. **Hallazgos abiertos:** la ocupación sobre las 106 camas, la espera mayor de las mujeres, el crecimiento de las estancias muy largas, las estancias cortas sin huella en la base.
+Lista corta y honesta (de `docs/CONTEXTO_TECNICO.md` sección 9 y `docs/HALLAZGOS.md`): copias y estancias gemelas · etapas de urgencias sin hora de fin · diagnósticos tardíos y sin jerarquía · mapeo de diagnósticos sin validación clínica · número de camas del hospital sin fecha ni desglose · procedimientos sin fecha · sin signos vitales ni servicio · registro degradado desde el 10-abr-2026 · casi todo son asociaciones. **Hallazgos abiertos:** la ocupación sobre las 106 camas, la espera mayor de las mujeres, el crecimiento de las estancias muy largas, las estancias cortas sin huella en la base.
 
 ## 5.2 Glosario y preguntas frecuentes
 Términos en palabras simples (urgencias, estancia, espera de cama, mediana, percentil 90, ley de Little, intervalo de confianza, R², AUC, backtest, cultivo, gases arteriales, catéter central…). Preguntas frecuentes de `docs/HALLAZGOS.md`.

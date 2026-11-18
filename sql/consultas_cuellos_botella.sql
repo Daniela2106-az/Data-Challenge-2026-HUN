@@ -13,7 +13,7 @@ SET statement_timeout = 0;   -- sin limite de tiempo solo para esta sesion
 
 -- =====================================================================
 -- Q0) q0_reconciliacion.csv   (rapida, ~1-3 min, 10 filas)
---     Cuadra los conteos basicos de la base con lo que dice CLAUDE.md.
+--     Cuadra los conteos basicos de la base con lo que dice docs/CONTEXTO_TECNICO.md.
 --     Probada con los CSV locales (DuckDB): todo coincide salvo "copias de la misma persona",
 --     que da 238.632 y no 238.674 (la diferencia de 42 viene de las cadenas de copias con
 --     desfase 11.280-11.286, que esta consulta no usa). Esa diferencia es aceptable.
@@ -138,7 +138,7 @@ ORDER BY 1, 2;
 --     Por tipo de etapa y anio: cuantas, cuantas tienen inicio = fin, y percentiles de las que si
 --     tienen duracion. Valor esperado: TU con inicio = fin: 2023 41,6 %, 2024 38,4 %, 2025 35,8 %,
 --     2026 36,6 %; HOSP mediana ~46 h. La mediana de TU aqui (~3,3 h) es solo de las etapas que
---     SI tienen duracion; la de 1,2 h de CLAUDE.md incluye las de duracion cero.
+--     SI tienen duracion; la de 1,2 h de docs/CONTEXTO_TECNICO.md incluye las de duracion cero.
 --     Probada con los CSV locales: coincide (TU 41,6 / 38,4 / 35,8 / 36,8 %).
 -- =====================================================================
 SELECT CASE vd.visit_detail_concept_id WHEN 9203 THEN 'ER'
@@ -302,7 +302,7 @@ ORDER BY b.ini, b.visit_occurrence_id, b.episodio;   -- orden completo: sin esto
 --     Pacientes en cama (HOSP) y en TU con duracion, al FINAL de cada hora.
 --     Para "ocupacion al llegar" a la hora H usar la fila de la hora H-1.
 --     Se cuentan intervalos distintos (inicio, fin) para no contar dos veces un registro replicado.
---     Valor esperado: media ~100 (cuartiles de ocupacion 59-117 en CLAUDE.md), feb-2023 a may-2026;
+--     Valor esperado: media ~100 (cuartiles de ocupacion 59-117 en docs/CONTEXTO_TECNICO.md), feb-2023 a may-2026;
 --     antes de feb-2023 es menor porque los ingresados en 2022 no estan en la base.
 --     ALERTA (probada con los CSV locales): sin quitar intervalos repetidos la media seria ~280;
 --     con ellos ~100. La ocupacion del pipeline (~146) y la ley de Little (27,7 ingresos/dia x 5,2 dias

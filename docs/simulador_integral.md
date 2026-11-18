@@ -65,7 +65,7 @@ hallazgos ni A9/casos) pensado para la experiencia en vivo de corto plazo, no pa
 | Qué se consideró | Resultado | Por qué |
 |---|---|---|
 | Encadenar pronóstico → estimador de espera → Monte Carlo en serie | **No entra** | Cada módulo se construyó para una población distinta: el estimador A6 solo vio pacientes que recibieron cama (no sabe decir "este no necesita cama") y el ~87 % de las llegadas atendidas se va de alta desde urgencias. Encadenarlos rompía los supuestos de cada uno. |
-| Llenar una cuota diaria de camas con un ranking de probabilidad | **No entra** | Reinventa una fila de prioridad que los datos rechazan: el orden de llegada casi no predice el orden de cama (53 % de pares consecutivos en orden, azar 50 %, `CLAUDE.md` 6b) y la espera es individual, no del momento (el día de llegada explica el 0,1 % de la espera, `docs/estimador_tiempos.md` 1.1). |
+| Llenar una cuota diaria de camas con un ranking de probabilidad | **No entra** | Reinventa una fila de prioridad que los datos rechazan: el orden de llegada casi no predice el orden de cama (53 % de pares consecutivos en orden, azar 50 %, `docs/CONTEXTO_TECNICO.md` 6b) y la espera es individual, no del momento (el día de llegada explica el 0,1 % de la espera, `docs/estimador_tiempos.md` 1.1). |
 | "Pacientes sin cama" = llegadas − ingresos a cama | **No entra** | Esa resta no es la cola: es sobre todo gente que nunca iba a necesitar cama. La cola se construye agente por agente (de su llegada a su cama) y se valida contra la cola real. |
 | Usar el estimador A6 como predictor dentro del motor | **No entra** | Asignar a cada agente la predicción puntual comprime la varianza y daña las bandas. La espera se **sortea** de trayectorias reales; A6 sigue siendo la consulta para pacientes reales. |
 | Ingresos a cama **emergentes** de los agentes, calibrados (κ) | **Entra** | Opción B de la conversación: los conteos emergen de llegadas × P(cama\|perfil) × espera sorteada; un factor global κ los calibra contra el pronóstico validado de ingresos. κ salió ≈ 1,00 (1,002 en el backtest, 0,994 en la proyección): la P(cama\|perfil) de `tabla_episodios` ya era consistente con el pronóstico — señal de coherencia interna, no un parche. |
@@ -82,7 +82,7 @@ hallazgos ni A9/casos) pensado para la experiencia en vivo de corto plazo, no pa
    mediana 21,8 h contra 14,3 h en el pool 2024-2025, hallazgo abierto de A1). El sexo **no entra en ningún
    cálculo del motor** (P(cama), espera y estancia ya lo promedian dentro de cada perfil): los resultados son
    bit-idénticos con o sin él. **Raza y etnia no se asignan**: en la base la raza está 95 % sin dato y la
-   etnia es casi constante ("Hispanic or Latino", `CLAUDE.md` sección 3); si la vista las muestra, que diga
+   etnia es casi constante ("Hispanic or Latino", `docs/CONTEXTO_TECNICO.md` sección 3); si la vista las muestra, que diga
    "Sin dato en la base".
 3. Cada llegada **se hospitaliza** con probabilidad κ × P(cama|perfil), donde P viene de `tabla_episodios`
    (hospitalizado y `estancia_unica` entre TODOS los episodios de 2025: global 7,6 %; va de 5,1 % en adultos
@@ -126,7 +126,7 @@ los reales del periodo de backtest (`resultados/tablas/simint_distribuciones.csv
 | Estancia (h) | 1.756 | 75,2 / 69,6 | 149,1 / 141,6 | 283,8 / 260,6 | 125,9 / 116,9 |
 
 Los percentiles casi se calcan. Dos sesgos chicos y explicables: la cola alta de la **espera** real de 2026 es
-algo peor que el pool 2024-2025 (coherente con que los peores casos empeoran año a año, `CLAUDE.md` 6b), y la
+algo peor que el pool 2024-2025 (coherente con que los peores casos empeoran año a año, `docs/CONTEXTO_TECNICO.md` 6b), y la
 cola alta de la **estancia** real está algo recortada porque las estancias largas que entraron en el backtest y
 aún no tenían alta registrada quedan fuera del lado real (censura, no error del simulador).
 
@@ -185,14 +185,14 @@ después; la nota de la página lo advierte para que nadie lea "menos espera = c
 ## Límites (declarados también en la página)
 
 - **La cola es cota inferior:** solo contiene futuros hospitalizados. La congestión completa de urgencias no
-  se puede simular (36-42 % de las etapas TU sin hora de fin, `CLAUDE.md` 4.3).
+  se puede simular (36-42 % de las etapas TU sin hora de fin, `docs/CONTEXTO_TECNICO.md` 4.3).
 - **Fidelidad estadística, no bola de cristal:** reproduce patrones (cuántos, qué perfiles, qué tan lleno),
   no días concretos ni pacientes concretos.
 - P(cama|perfil) constante por día; κ global por corrida (no por día de semana). El patrón semanal de los
   ingresos emergentes hereda el de las llegadas suavizado por la espera (el backtest muestra que alcanza).
 - Los sembrados reciben tiempos completos del bootstrap (sin corregir el sesgo de selección); solo afecta los
   primeros días.
-- Las llegadas incluyen ~4 % de réplicas (cota conocida, `CLAUDE.md` 4.13).
+- Las llegadas incluyen ~4 % de réplicas (cota conocida, `docs/CONTEXTO_TECNICO.md` 4.13).
 - El ajuste por carga del día (16-nov) mueve la espera típica, no la media por día (que es plana en los datos);
   la retroalimentación ocupación → espera no se modela porque no es estimable del histórico (ver la subsección
   del backtest). Si la simulación sale muy lejos del régimen histórico de ocupación, las esperas no se alargan

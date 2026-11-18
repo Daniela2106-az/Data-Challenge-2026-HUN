@@ -2,12 +2,12 @@
 
 Idea de Anthony: mirar las estancias muy largas y ver qué tienen en común. Script: `src/estancias_disparadas.py`. Tablas (fuera de git): `resultados/tablas/disparadas_*.csv`. Gráfico: `resultados/graficos/estancias_disparadas.png`.
 
-**Reglas:** una fila por estancia (`estancia_id`), edad y sexo de la persona real (4.10 de `CLAUDE.md`), ingresos hasta el 9-abr-2026 con alta registrada antes del 10-abr. **Larga** = más de 14 días (1.515 de 23.405 estancias, 6,5 %). **Muy larga** = más de 30 días (277, 1,2 %). Todo son asociaciones, no causas.
+**Reglas:** una fila por estancia (`estancia_id`), edad y sexo de la persona real (4.10 de `docs/CONTEXTO_TECNICO.md`), ingresos hasta el 9-abr-2026 con alta registrada antes del 10-abr. **Larga** = más de 14 días (1.515 de 23.405 estancias, 6,5 %). **Muy larga** = más de 30 días (277, 1,2 %). Todo son asociaciones, no causas.
 
 ## 1. Cuándo
 - El % de largas por mes de ingreso sube de 5,5 % a 7,6 % (+0,06 puntos por mes, IC 95 % +0,02 a +0,10). Sube sobre todo desde el 4.º trimestre de 2024 (8,3 %).
 - No hay mes del año especial (rango 5,5–7,6 %). Solo 3 de 37 meses están por encima de lo esperado por azar: no hay "meses malos" puntuales; es un aumento gradual.
-- Coincide con lo de la ocupación (`CLAUDE.md` 4.8): las estancias de más de 30 días pasaron de 63 a 117 por año.
+- Coincide con lo de la ocupación (`docs/CONTEXTO_TECNICO.md` 4.8): las estancias de más de 30 días pasaron de 63 a 117 por año.
 
 ## 2. Quién
 - **Edad:** el % de largas es 3,5–4 % hasta los 29 años y llega a 11,6 % desde los 75. Frente a 15–29 años, la probabilidad de ser larga se multiplica por 2,0 (45–59), 2,5 (60–74) y 3,0 (75+).

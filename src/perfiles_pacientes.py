@@ -6,13 +6,13 @@ hospitaliza, la espera de cama, la estancia en cama y el reingreso. Cada diferen
 el total y la diferencia relativa es de 20 % o mas) o RUIDO (cualquier otra cosa), y las celdas con pocos casos no se interpretan.
 
 REGLAS
-  - Periodo confiable: llegadas del 2023-02-01 al 2026-04-09 (el registro de etapas se degrada desde el 10-abr-2026, CLAUDE.md 4.9).
+  - Periodo confiable: llegadas del 2023-02-01 al 2026-04-09 (el registro de etapas se degrada desde el 10-abr-2026, docs/CONTEXTO_TECNICO.md 4.9).
   - Espera y estancia en cama: solo el registro conservado de cada estancia (`estancia_unica`; una fila por estancia, identificada por `estancia_id`, el mismo
     identificador que usara A2b para cruzar perfil con "estancia disparada"). La espera es la de la estancia (`espera_cama_h`).
   - "Con atencion" = el episodio no es solo la etapa ER de admision (ruta distinta de "ER"). Los porcentajes de hospitalizacion se calculan sobre los episodios con atencion.
   - Edad "<1 ano" no se separa del grupo 0-4 (el grupo de edad ya viene asi en la tabla).
   - Diagnostico: solo entre quienes lo tienen (65 % de las estancias hospitalizadas, 20 % de las demas) y SIEMPRE con su cobertura; hasta el 30-abr (despues no hay codigo).
-  - Reingreso: `reingreso_72h` y `reingreso_30d` de tabla_episodios (sin validar; CLAUDE.md C4): se reportan, con esa advertencia.
+  - Reingreso: `reingreso_72h` y `reingreso_30d` de tabla_episodios (sin validar; docs/CONTEXTO_TECNICO.md C4): se reportan, con esa advertencia.
   - Minimos: celdas con menos de 100 episodios con atencion no se interpretan; esperas y estancias, menos de 30 estancias no se interpretan.
 
 ENTRADAS  datos/procesados/tabla_episodios.parquet

@@ -46,7 +46,7 @@ HISTORIAL Y RECORRIDO (se conocen en el momento, sin trampa)
   (el recorrido ya no suma: 6,8 frente a 6,6 % a las 12 h, 4,7 frente a 5,3 % a las 24 h). OJO: el corte de 12 h se eligio mirando la prueba.
 
 PROCEDIMIENTOS (si existe procedimientos_por_estancia.csv en HUN_CRUDOS; extraido por Daniela para A2b, lote 5)
-  1. Corrige la edad y el sexo de esas estancias con los de la persona real (CLAUDE.md 4.10), que trae el archivo.
+  1. Corrige la edad y el sexo de esas estancias con los de la persona real (docs/CONTEXTO_TECNICO.md 4.10), que trae el archivo.
   2. Marca la GRAVEDAD (UCI, gases arteriales, lactato, troponina, transfusion, cateter central, hemocultivos, TAC de cabeza, monitoreo cardiaco) y el
      SERVICIO que atendio al paciente (ginecobstetricia, cirugia general, urologia, ortopedia, psiquiatria, pediatria, endoscopia digestiva).
   Los procedimientos NO tienen fecha: pueden ser de despues de recibir cama. Solo se usan como ESCENARIO (src/procedimientos_escenario.py), no en el
@@ -65,7 +65,7 @@ COLA Y OCUPACION
   Por hora y por zona (adultos de 15 anos o mas, ninos), con estancias unicas: ocupacion = pacientes en cama; cola = pacientes que ya llegaron, se
   hospitalizaran y aun no tienen cama. OJO: la cola usa saber quien se hospitalizara despues; en el hospital equivale a los pacientes con orden de
   hospitalizacion pendiente, que si se conocen en el momento, pero aqui incluye tambien la atencion clinica previa a esa orden.
-  Para estimar hacia adelante, la cola y la ocupacion se dejan fijas en el ultimo valor conocido (persistencia, que fue lo mejor para camas, CLAUDE.md 6b).
+  Para estimar hacia adelante, la cola y la ocupacion se dejan fijas en el ultimo valor conocido (persistencia, que fue lo mejor para camas, docs/CONTEXTO_TECNICO.md 6b).
 
 ENTRADA  tabla_episodios.parquet en HUN_PROCESADOS y visit_detail.csv en HUN_CRUDOS (por defecto datos/crudos) ; SALIDAS en HUN_TABLAS: comparacion_estimadores_al_llegar.csv, comparacion_estimadores_en_espera.csv,
          comparacion_estimadores_ic.csv,

@@ -4,7 +4,7 @@ Tarea A6 (componente 3): estimar tiempos de atencion. Cuando llega un paciente, 
 cuanto se quedaria en cama y cuanto duraria en urgencias si no se hospitaliza?
 
 POR QUE ASI
-  Predecir el tiempo de UN paciente no funciona con lo que se sabe al llegar (esperar mas de 24 h: AUC 0,60; estancia: R2 cercano a 0; CLAUDE.md 6b).
+  Predecir el tiempo de UN paciente no funciona con lo que se sabe al llegar (esperar mas de 24 h: AUC 0,60; estancia: R2 cercano a 0; docs/CONTEXTO_TECNICO.md 6b).
   Por eso el estimador da un RANGO TIPICO de pacientes parecidos (percentiles 25, 50, 75 y 90) y una probabilidad, no un numero exacto
   (opcion 1 de A6 en docs/pendientes_y_reparto.md, con la opcion 3 sumada: probabilidad de hospitalizarse al llegar).
 
@@ -31,8 +31,8 @@ LIMITES
   - Urgencias: la mitad de los episodios no tiene ningun tiempo registrado y ningun metodo lo recupera (docs/supervivencia_urgencias.md); Kaplan-Meier
     supone que la falta de cierre no depende de la duracion.
   - Edad y sexo de las estancias gemelas: si faltan los CSV del lote 4 de auditoria_bd.py, preparar_variables.py conserva el registro con mas informacion,
-    que es el de la persona real en ~81-85 % de las gemelas (CLAUDE.md 4.10).
-  - Las llegadas incluyen >= 4 % de registros replica (CLAUDE.md 4.6), que pesan en la probabilidad de hospitalizarse.
+    que es el de la persona real en ~81-85 % de las gemelas (docs/CONTEXTO_TECNICO.md 4.10).
+  - Las llegadas incluyen >= 4 % de registros replica (docs/CONTEXTO_TECNICO.md 4.6), que pesan en la probabilidad de hospitalizarse.
 
 COMO CORRERLO  python3 src/estimador_tiempos.py
 """
@@ -49,7 +49,7 @@ RAIZ = Path(__file__).resolve().parent.parent
 PROC = Path(os.environ.get("HUN_PROCESADOS", RAIZ / "datos" / "procesados"))   # los datos pueden vivir fuera del proyecto
 TABLAS = Path(os.environ.get("HUN_TABLAS", RAIZ / "resultados" / "tablas"))
 GRAF = RAIZ / "resultados" / "graficos"
-DESDE, HASTA = pd.Timestamp("2023-02-01"), pd.Timestamp("2026-04-10")   # periodo confiable (CLAUDE.md 4.9)
+DESDE, HASTA = pd.Timestamp("2023-02-01"), pd.Timestamp("2026-04-10")   # periodo confiable (docs/CONTEXTO_TECNICO.md 4.9)
 CORTE = pd.Timestamp("2025-07-01")                                     # entrenar antes, probar despues
 HASTA_ESTANCIA_PRUEBA = pd.Timestamp("2026-01-10")                     # 90 dias antes del fin, para que las estancias largas terminen
 MIN_CASOS = 30

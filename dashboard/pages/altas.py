@@ -22,7 +22,7 @@ dash.register_page(__name__, path="/altas", name="Llegada y altas", title="Hora 
 
 TITULO = "Las altas salen por la tarde, y quien llega en la mañana espera hasta entonces"
 OLAS = set(range(15, 18)) | set(range(20, 24))            # 15-17 h y 20-23 h
-# Que pasaria si se adelantan las altas (CLAUDE.md 6b, simulacion de altas): cifras ya publicadas
+# Que pasaria si se adelantan las altas (docs/CONTEXTO_TECNICO.md 6b, simulacion de altas): cifras ya publicadas
 ESCENARIO = [
     ("5 camas", "Libres al mediodía", "Si el 30 % de las altas de la tarde saliera entre las 9 y las 12 h."),
     ("3 a 8 %", "Menos exceso de espera", "Estimación y tope máximo. Ayuda, pero no resuelve las esperas de varios días."),

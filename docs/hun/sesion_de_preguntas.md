@@ -1,6 +1,6 @@
 # Sesión de preguntas con el HUN (documento vivo)
 
-**Estado (29-oct-2026):** la sesión de preguntas **ya se hizo** (29-oct, por chat de reunión, con otros equipos presentes) y **no habrá más sesiones**. Se contestaron las preguntas 1, 3, 4, 5 (en parte) y 6; las demás (2, 7, 8 y las de organizadores) quedan sin respuesta y se declaran como limitaciones. Las respuestas ya están reflejadas en `CLAUDE.md` 4.7.
+**Estado (29-oct-2026):** la sesión de preguntas **ya se hizo** (29-oct, por chat de reunión, con otros equipos presentes) y **no habrá más sesiones**. Se contestaron las preguntas 1, 3, 4, 5 (en parte) y 6; las demás (2, 7, 8 y las de organizadores) quedan sin respuesta y se declaran como limitaciones. Las respuestas ya están reflejadas en `docs/CONTEXTO_TECNICO.md` 4.7.
 Fecha y hora de la sesión: ______________________  Quién asiste por el equipo: ______________________
 
 **Cómo usar este documento**
@@ -94,14 +94,14 @@ Las preguntas 1 a 8 de arriba resumen las siguientes del detalle: 1 = A1; 2 = A2
 | Si responden... | Actualizar |
 |---|---|
 | 1 / A1 (camas) | `docs/HALLAZGOS.md` 4.6 y 5.2, `docs/recomendaciones.md` (quitar "capacidad desconocida"); calcular % de ocupación y días saturados en `src/simulacion_altas.py` y `src/alertas.py` |
-| 2 / A2 (caída de llegadas) | `CLAUDE.md` (aviso de la sección 2), si es de registro: excluir los meses afectados en `src/` y repetir pronóstico y alertas |
-| 3 / A3 (gemelas) | `CLAUDE.md` 4.6; si dicen cuál es la persona real, ajustar la regla de qué episodio se conserva en `src/analisis_etapas.py` |
+| 2 / A2 (caída de llegadas) | `docs/CONTEXTO_TECNICO.md` (aviso de la sección 2), si es de registro: excluir los meses afectados en `src/` y repetir pronóstico y alertas |
+| 3 / A3 (gemelas) | `docs/CONTEXTO_TECNICO.md` 4.6; si dicen cuál es la persona real, ajustar la regla de qué episodio se conserva en `src/analisis_etapas.py` |
 | 4 y 5 / A4, A5 (etapas) | Reescribir la definición de espera de cama en `docs/plan_de_accion.md` sección 0 y repetir `src/construir_segmentos.py` y `src/ranking_cuellos.py` |
 | 8 / B3 (meta) | Agregar la referencia (c) en `src/ranking_cuellos.py` |
 | 7 / B9 (cuándo se registra el diagnóstico) | Ajustar `docs/diagnosticos_y_tiempos.md` y la advertencia de sesgo en `docs/HALLAZGOS.md` 4.5b |
 | 6 / B8 (horario de altas) | Matizar la explicación de altas tardías en `docs/recomendaciones.md` |
 | B5 (días extremos, solo si se pregunta) | Marcar esos días como fallas de datos en `docs/dias_atipicos.md` |
-| Cualquiera | Anotar la respuesta arriba, mover la pregunta en `CLAUDE.md` sección 8 a "respondida" y quitar el supuesto correspondiente de `docs/HALLAZGOS.md` sección 7 |
+| Cualquiera | Anotar la respuesta arriba, mover la pregunta en `docs/CONTEXTO_TECNICO.md` sección 8 a "respondida" y quitar el supuesto correspondiente de `docs/HALLAZGOS.md` sección 7 |
 
 ## Notas libres de la sesión
 

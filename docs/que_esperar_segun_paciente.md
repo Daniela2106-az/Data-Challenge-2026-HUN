@@ -16,7 +16,7 @@ Periodo confiable (1-feb-2023 a 9-abr-2026), estancias únicas hospitalizadas (2
 | **Año** | Mediana estable; los peores casos empeoran (p90 de 61 h a 80 h) | Media +16 % (4,57 a 5,31 días): la mitad es la cola de más de 30 días |
 | **Espera ↔ estancia** | — | +9 % de estancia por cada desviación estándar más de espera (asociación) |
 
-**Cuánto explica todo esto:** los factores observables explican **16 % de la espera y 8–11 % de la estancia** (`CLAUDE.md` 6b, `docs/factores_estancia.md`): el resto no está en los datos.
+**Cuánto explica todo esto:** los factores observables explican **16 % de la espera y 8–11 % de la estancia** (`docs/CONTEXTO_TECNICO.md` 6b, `docs/factores_estancia.md`): el resto no está en los datos.
 
 ## 2. Qué diagnóstico tiene (todos los diagnósticos, `docs/diagnosticos_todos.md`)
 El diagnóstico es lo que más mueve la espera (7,2 puntos de R² de la espera). **1.445 diagnósticos distintos**; 105 con n ≥ 30, de los cuales 74 se distinguen del resto en la espera y 55 en la estancia.

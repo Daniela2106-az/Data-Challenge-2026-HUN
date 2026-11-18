@@ -27,7 +27,7 @@ TITULO = "La mitad de los pacientes espera más de 18 horas por una cama, y los 
 EDADES = ["Niños (< 15)", "Adultos (15–59)", "Mayores (60+)"]
 TIPOS = ["Urgencias", "Ambulatorio", "Treatment urgency"]
 ULTIMO_MES = "2026-03"                                      # ultimo mes completo del periodo confiable (abril llega solo hasta el dia 9)
-# Donde se va el tiempo (CLAUDE.md 6b, 4.11 y 4.12): cifras ya publicadas
+# Donde se va el tiempo (docs/CONTEXTO_TECNICO.md 6b, 4.11 y 4.12): cifras ya publicadas
 TIEMPO = [
     ("98 %", "De la espera ocurre en urgencias", "Antes de que se asigne la cama. El tiempo sin ningún registro es apenas el 1 %."),
     ("83 %", "De las horas de espera", "Vienen de pacientes que esperan más de un día; el 57 %, de quienes esperan más de dos."),

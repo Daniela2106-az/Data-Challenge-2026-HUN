@@ -13,7 +13,7 @@ QUE HACE
 
 REGLAS
   - Periodo confiable: estancias que empiezan entre 2023-02-01 y 2026-04-09 y con alta registrada antes del 10-abr-2026 (`alta_completa`). Una fila por estancia (registro conservado, `estancia_id`).
-  - Edad y sexo son los de la persona real (CLAUDE.md 4.10).
+  - Edad y sexo son los de la persona real (docs/CONTEXTO_TECNICO.md 4.10).
   - Factores permitidos: lo que se sabe al ingresar o poco despues (edad, sexo, tipo de visita, franja y anio de llegada, espera de cama, laboratorios de las primeras 6 h, ocupacion al llegar) y,
     en el segundo modelo, el grupo de diagnostico (se registra durante la estancia: reverse causality parcial; no es causa). NO se usan los conteos totales de diagnosticos, procedimientos ni laboratorios
     (crecen con la estancia: causalidad inversa).

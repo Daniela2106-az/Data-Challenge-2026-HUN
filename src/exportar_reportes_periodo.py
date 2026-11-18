@@ -10,7 +10,7 @@ PERIODOS  todo el periodo confiable, cada año (2023 desde febrero; 2026 hasta e
 ENTRADA   datos/procesados/tabla_episodios.parquet (via src/diagnostico_cuello_botella.py, ~1 s por reporte; ~2 min en total)
 SALIDA    datos/tablas_dashboard/cuello_botella_reportes.csv  (una fila por periodo, referencia y paso; sin datos por paciente)
 COMO CORRERLO  python3 src/exportar_reportes_periodo.py
-LIMITES   Todo son asociaciones sobre datos historicos; el periodo confiable termina el 9-abr-2026 (CLAUDE.md 4.9).
+LIMITES   Todo son asociaciones sobre datos historicos; el periodo confiable termina el 9-abr-2026 (docs/CONTEXTO_TECNICO.md 4.9).
 """
 import re
 import subprocess

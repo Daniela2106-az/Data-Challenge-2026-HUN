@@ -43,7 +43,7 @@ SALIDAS   resultados/tablas/pronostico_metricas.csv, pronostico_diario_test.csv,
           resultados/graficos/pronostico_demanda.png
 
 OJO AL LEER
-  - `llegadas` cuenta todos los episodios (incluye al menos 4 % de replicas, ver CLAUDE.md 4.6). El nivel esta algo
+  - `llegadas` cuenta todos los episodios (incluye al menos 4 % de replicas, ver docs/CONTEXTO_TECNICO.md 4.6). El nivel esta algo
     inflado; la dinamica (dia de la semana, festivos, tendencia) no.
   - Los ingresos diarios son casi puro ruido de conteo (varianza = media): no hay mejora posible por el lado del modelo.
   - Es un pronostico de calendario y nivel: no anticipa brotes (dengue), eventos, cortes de sistema ni cambios de registro.

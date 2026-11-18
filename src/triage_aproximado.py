@@ -4,7 +4,7 @@ Tarea A6, cuarta parte: ¿cuanto mejoraria la estimacion de la espera de cama si
 
 POR QUE
   En urgencias la prioridad se define con el triage (I inmediata, II muy alta, III media, IV baja, V muy baja). La base NO trae el nivel de triage
-  (CLAUDE.md secciones 3 y 4.8; la etapa 9203 solo trae la hora). Se prueban dos aproximaciones dentro del modelo de tiempo restante (M1 de
+  (docs/CONTEXTO_TECNICO.md secciones 3 y 4.8; la etapa 9203 solo trae la hora). Se prueban dos aproximaciones dentro del modelo de tiempo restante (M1 de
   comparar_estimadores.py), sabiendo que ninguna es el triage:
     + laboratorios de las primeras 6 h (n_lab_6h): pedir examenes temprano indica urgencia o complejidad. Se conoce a las 6 h, asi que solo es valido
       para estimar desde las 6 h de espera en adelante.

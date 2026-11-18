@@ -7,7 +7,7 @@ Código: `src/capacidad_efectiva.py`. Tablas (fuera de git): `resultados/tablas/
 ## Resultado: el método no identifica un techo, y eso también es un hallazgo
 - **La cola nunca es cero:** en las 27.936 horas del periodo hay siempre pacientes en espera (media 26, percentil 90 de 34, 0 % de horas sin cola). Es lo esperable por la ley de Little: ~20 ingresos por día × ~29 h de espera media ≈ 24–26 pacientes en cola permanente.
 - **La cola no depende de la ocupación:** la pendiente es de 0,06 pacientes en cola por cada cama ocupada adicional y la correlación entre O y Q por año va de −0,16 a 0,01. No hay rodilla: con 80–90 camas ocupadas la cola es igual que con 110–115.
-- **Lectura:** la espera típica no se mueve con cuán llenas estén las camas en ese momento. Se confirma lo ya visto (la ocupación pesa poco en la espera; `CLAUDE.md` 6b) y apoya que la espera sea de **proceso** (hora de las altas, asignación de camas por la tarde) más que de un conteo de camas.
+- **Lectura:** la espera típica no se mueve con cuán llenas estén las camas en ese momento. Se confirma lo ya visto (la ocupación pesa poco en la espera; `docs/CONTEXTO_TECNICO.md` 6b) y apoya que la espera sea de **proceso** (hora de las altas, asignación de camas por la tarde) más que de un conteo de camas.
 - **Un dato que sí se mueve:** con la cola presente, la ocupación mediana sube cada año: ~95 camas (2023), ~101–102 (2024), ~105–106 (2025). Mientras tanto la **mediana de la espera casi no cambia** (19,5 → 18,3 → 17,4 h) aunque la ocupación sube ~11 camas, y solo el percentil 90 empeora. Es decir, tener 11 camas más ocupadas no alargó la espera típica.
 
 ## Qué se puede y qué no decir

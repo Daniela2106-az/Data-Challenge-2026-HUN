@@ -2,7 +2,7 @@
 dashboard/pages/estancia.py  -  pagina «Estancias largas» (13-nov-2026; pagina 2.7 de docs/estructura_dashboard.md; formato de presentacion)
 Por que subio la estancia media y que comparten las estancias que se disparan (tareas A2 y A2b).
 
-DATOS  Cifras ya publicadas (docs/factores_estancia.md, docs/estancias_disparadas.md y CLAUDE.md 4.8), escritas aqui como constantes.
+DATOS  Cifras ya publicadas (docs/factores_estancia.md, docs/estancias_disparadas.md y docs/CONTEXTO_TECNICO.md 4.8), escritas aqui como constantes.
        No lee ninguna tabla. Estancias unicas con alta completa; «larga» = mas de 14 dias en cama.
 """
 import sys
@@ -105,7 +105,7 @@ def layout():
             "predice una estancia individual.",
             "Los procedimientos tienen **sesgo de duración**: quien se queda más tiempo acumula más procedimientos, así que no son causas. "
             "Un cultivo temprano indica sospecha, no confirma una infección. El diagnóstico se registra tarde.",
-            "Fuente: docs/factores_estancia.md · docs/estancias_disparadas.md · CLAUDE.md 4.8 · asociación, no causa.", ruta="/estancia"))
+            "Fuente: docs/factores_estancia.md · docs/estancias_disparadas.md · docs/CONTEXTO_TECNICO.md 4.8 · asociación, no causa.", ruta="/estancia"))
 
 
 @callback(Output("lar-camas", "figure"), Output("lar-anio", "figure"), Output("lar-edad", "figure"), Output("lar-dx", "figure"),

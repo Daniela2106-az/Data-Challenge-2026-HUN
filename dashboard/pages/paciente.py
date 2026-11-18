@@ -307,7 +307,7 @@ def panel_interpretacion():
             html.Div([html.Div("Por qué el salto importa más que el nivel", className="metodo__rotulo"),
                       html.Div("La cama no depende tanto de cuánto lleva esperando el paciente sino de a qué hora del día "
                                "está esperando, porque las altas se concentran entre las 14:00 y las 18:59 (62,7 %, "
-                               "CLAUDE.md 4.8). Dos pacientes con las mismas 10 horas de espera pueden tener probabilidades "
+                               "docs/CONTEXTO_TECNICO.md 4.8). Dos pacientes con las mismas 10 horas de espera pueden tener probabilidades "
                                "muy distintas en la próxima hora según sean las 3 a.m. o las 3 p.m. Los tramos naranja y "
                                "gruesos de la vista acumulada son justamente esos saltos — la misma información de las "
                                "probabilidades a 6/12/24/48 h que usa el estimador por dentro (ver la tabla de alertas en "

@@ -504,7 +504,7 @@ def panel_tecnico():
                     html.Li("Los pacientes sembrados (ya en cama / ya esperando el día de corte) reciben tiempos "
                             "completos del bootstrap, sin corregir el sesgo de selección — solo afecta los "
                             "primeros días."),
-                    html.Li("Las llegadas incluyen ~4 % de réplicas conocidas (cota, CLAUDE.md 4.13); el nivel "
+                    html.Li("Las llegadas incluyen ~4 % de réplicas conocidas (cota, docs/CONTEXTO_TECNICO.md 4.13); el nivel "
                             "absoluto de llegadas es ligeramente alto, su variación no."),
                     html.Li("La vista horaria (3 días) usa un motor simplificado sin perfiles por radiografía "
                             "ni factores externos; la radiografía por perfil solo está disponible desde 1 "

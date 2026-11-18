@@ -5,7 +5,7 @@ computador pierde el internet normal (y con el la sesion de Claude Code). Se lan
 todas las consultas, guarda los resultados en CSV, avisa con una notificacion de macOS y termina. Entonces ya se puede desconectar la VPN.
 
 QUE BUSCA
-  1. El esquema real: todas las tablas y columnas (nunca se verifico contra la base; CLAUDE.md dice que no hay servicio, sede ni cama).
+  1. El esquema real: todas las tablas y columnas (nunca se verifico contra la base; docs/CONTEXTO_TECNICO.md dice que no hay servicio, sede ni cama).
   2. Si existen columnas de servicio, sede, cama u origen/destino (care_site_id, visit_detail_source_value, admitted_from_concept_id, etc.): los valores mas
      frecuentes de cada columna "categorica" de care_site, location, provider, visit_detail y visit_occurrence.
   3. El numero aproximado de filas de cada tabla.

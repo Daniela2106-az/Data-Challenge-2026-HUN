@@ -11,7 +11,7 @@ QUE CAMBIO EN v2 (22-oct): ESTANCIAS GEMELAS
   visit_occurrence_id) y n_registros indica cuantos registros tenia esa estancia. El panel diario cuenta
   ingresos, altas, hospitalizados, espera y ocupacion con esas estancias unicas.
   OJO: la columna `llegadas` sigue contando todos los episodios (puede incluir replicas de otras personas
-  que no tienen cama; ver CLAUDE.md, seccion 4.6).
+  que no tienen cama; ver docs/CONTEXTO_TECNICO.md, seccion 4.6).
 
 SALIDAS
   estancias_hospitalizacion.csv  una fila por ESTANCIA en cama: ingreso, alta, horas en cama, n_registros
@@ -76,7 +76,7 @@ d = pd.DataFrame(index=dias)
 d.index.name = "fecha"
 d["llegadas"] = sd.llegadas
 # llegadas con atencion: episodios que tienen TU u hospitalizacion (todos menos los que solo tienen la etapa ER de admision). El 29-abr-2026
-# cambia el registro de la etapa ER y esta serie depende menos de ella (CLAUDE.md 4.7)
+# cambia el registro de la etapa ER y esta serie depende menos de ella (docs/CONTEXTO_TECNICO.md 4.7)
 _con_at = ep[ep.ruta != "ER"].ini.dt.normalize().value_counts()
 d["llegadas_con_atencion"] = _con_at.reindex(dias, fill_value=0)
 d["hospitalizados"] = est.llegada.dt.normalize().value_counts().reindex(dias, fill_value=0)

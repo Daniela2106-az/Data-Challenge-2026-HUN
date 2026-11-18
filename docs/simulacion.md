@@ -57,7 +57,7 @@ corregir; eso requiere revisión clínica dentro del hospital (mismo límite que
 
 ## Supuestos y límites de cada escenario
 - **A:** la hora de alta de los demás pacientes no cambia; la capacidad total de camas se desconocía al momento
-  de ese análisis (ahora se sabe: 106); es una cota superior, no una predicción (`CLAUDE.md` 6b).
+  de ese análisis (ahora se sabe: 106); es una cota superior, no una predicción (`docs/CONTEXTO_TECNICO.md` 6b).
 - **B y C:** se aplican como un ajuste uniforme sobre todo el horizonte simulado (no varían por mes ni se
   combinan con un escenario de calendario distinto); no modelan que un aumento de ingresos pudiera, a su vez,
   cambiar la duración de la estancia (por ejemplo, por saturación de personal) — se tratan como independientes.

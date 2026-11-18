@@ -14,7 +14,7 @@ QUE ES Y QUE NO ES (decidido en la conversacion de diseno del 14-nov; ver docs/s
   - Los ingresos a cama diarios EMERGEN de los agentes (llegadas x P(cama|perfil) x espera sorteada) y se
     CALIBRAN (factor kappa) para que su nivel esperado coincida con el pronostico validado de ingresos a cama.
     No se fuerza una cuota diaria con un ranking: el orden de llegada casi no predice el orden de cama
-    (53 % de pares en orden, azar 50 % - CLAUDE.md 6b), asi que una fila de prioridad seria inventada.
+    (53 % de pares en orden, azar 50 % - docs/CONTEXTO_TECNICO.md 6b), asi que una fila de prioridad seria inventada.
   - La cola simulada es COTA INFERIOR de la presion real: solo contiene agentes que terminaran en cama (los
     que se van de alta desde urgencias no esperan cama y el 36-42 % de sus etapas no tiene hora de fin).
 
@@ -95,10 +95,10 @@ def titulo(t):
 # 1) Serie de llegadas (panel) y P(cama | perfil) + mezcla de llegadas (tabla_episodios)
 # ----------------------------------------------------------------------
 titulo("1. LLEGADAS: serie diaria, mezcla de perfiles y P(cama | perfil)")
-_panel = mp.cargar_panel()                                 # ya blanqueado desde el 10-abr-2026 (CLAUDE.md 4.9)
+_panel = mp.cargar_panel()                                 # ya blanqueado desde el 10-abr-2026 (docs/CONTEXTO_TECNICO.md 4.9)
 serie_llegadas = _panel["llegadas"].rename("llegadas")
 print(f"serie_llegadas: {serie_llegadas.dropna().index.min().date()} a {serie_llegadas.dropna().index.max().date()} "
-      f"(media 2025: {serie_llegadas['2025'].mean():.0f}/dia; incluye ~4 % de replicas, cota conocida - CLAUDE.md 4.13)")
+      f"(media 2025: {serie_llegadas['2025'].mean():.0f}/dia; incluye ~4 % de replicas, cota conocida - docs/CONTEXTO_TECNICO.md 4.13)")
 
 _ep = pd.read_parquet(PROC / "tabla_episodios.parquet",
                       columns=["fecha", "grupo_edad", "tipo_visita", "hospitalizado", "estancia_unica", "sexo"])
@@ -106,7 +106,7 @@ _ep = _ep[_ep.grupo_edad.notna() & _ep.tipo_visita.notna()].copy()
 _ep["ruta"] = _ep.tipo_visita.where(_ep.tipo_visita.isin(scm.TIPOS_VALIDOS), "Urgencias")  # mismo plegado que A5
 _ep["fecha"] = pd.to_datetime(_ep.fecha)
 _ep25 = _ep[(_ep.fecha >= VENTANA_MEZCLA_LLEGADAS[0]) & (_ep.fecha < VENTANA_MEZCLA_LLEGADAS[1])]
-# el numerador usa estancia_unica para no contar dos veces las estancias gemelas (CLAUDE.md 4.6/4.8); el
+# el numerador usa estancia_unica para no contar dos veces las estancias gemelas (docs/CONTEXTO_TECNICO.md 4.6/4.8); el
 # denominador (todas las llegadas) incluye las replicas igual que la serie del panel, asi ambos lados cuadran.
 _grupos = _ep25.groupby(["grupo_edad", "ruta"], observed=True)
 _tam = _grupos.size()
@@ -121,7 +121,7 @@ P_CAMA_VEC = np.array([P_CAMA[per] for per in PERFILES_LLEG])
 P_MEDIA = float((PROB_LLEG * P_CAMA_VEC).sum())
 
 # Sexo por perfil (16-nov-2026, para la vista de perfiles del dashboard): P(mujer | grupo_edad, ruta) entre
-# las llegadas de 2025 (sexo de la persona real tras la regla v4.0, CLAUDE.md 4.10). La mezcla NO es 50/50 ni
+# las llegadas de 2025 (sexo de la persona real tras la regla v4.0, docs/CONTEXTO_TECNICO.md 4.10). La mezcla NO es 50/50 ni
 # constante: va de 41 % (5-14, ambulatorio) a ~60 % (15-29 por urgencias, edad fertil); global 56 %. El sexo
 # NO entra en ninguna probabilidad del motor (P(cama), espera y estancia ya lo promedian dentro de cada
 # perfil): es una etiqueta para mostrar el perfil completo. Para agentes HOSPITALIZADOS usar el sexo que
@@ -129,7 +129,7 @@ P_MEDIA = float((PROB_LLEG * P_CAMA_VEC).sum())
 # mediana 21,8 h contra 14,3 h en el pool, y un sorteo independiente rompia esa coherencia). Para llegadas
 # sin cama (solo conteos) sortear con SEXO_LLEG. Raza y etnia NO se asignan: en la base la raza esta 95 %
 # sin dato y la etnia es casi constante ("Hispanic or Latino"), asi que no hay distribucion real que imitar
-# (CLAUDE.md seccion 3, person); si la vista las muestra, que diga "Sin dato en la base".
+# (docs/CONTEXTO_TECNICO.md seccion 3, person); si la vista las muestra, que diga "Sin dato en la base".
 _sx = _ep25[_ep25.sexo.isin(["Mujer", "Hombre"])]
 _p_mujer_celda = _sx.groupby(["grupo_edad", "ruta"], observed=True).sexo.apply(lambda s: float((s == "Mujer").mean()))
 P_MUJER_GLOBAL = float((_sx.sexo == "Mujer").mean())
@@ -155,7 +155,7 @@ print(pd.Series(P_CAMA).mul(100).round(1).unstack().to_string())
 # ----------------------------------------------------------------------
 # En los dias con mas llegadas la espera TIPICA de cama es mas larga: coeficiente de log(espera+1) sobre las
 # llegadas estandarizadas del dia de llegada = +4,7 % por desviacion (~37 llegadas), t ~ 4,5, estancias de
-# 2024-2025 (coherente con la Fase 4 de cuellos de botella: la carga mueve la espera, CLAUDE.md 6b). Cada dia
+# 2024-2025 (coherente con la Fase 4 de cuellos de botella: la carga mueve la espera, docs/CONTEXTO_TECNICO.md 6b). Cada dia
 # simulado multiplica las esperas sorteadas de sus llegadas por exp(beta x z) / C, con z acotado a +-3 (soporte
 # historico) y C el promedio historico del factor entre hospitalizados: el multiplicador queda CENTRADO y la
 # espera media poblacional no cambia (verificado: el backtest no se mueve y la media de 5b queda igual).
@@ -215,7 +215,7 @@ def trayectoria_para(grupo, ruta, rng, n, suavizar_espera=True):
     discreta 0-23). Conserva la correlacion espera-estancia del paciente real (los que esperan mas tienden a
     quedarse mas, docs/factores_estancia.md: +9 % por desviacion de espera). El sexo es el del MISMO paciente
     historico (16-nov-2026): asi la etiqueta que muestre el dashboard es coherente con la espera sorteada
-    (las mujeres esperan mas, CLAUDE.md 4.10-4.11); no entra en ningun calculo del motor.
+    (las mujeres esperan mas, docs/CONTEXTO_TECNICO.md 4.10-4.11); no entra en ningun calculo del motor.
 
     `suavizar_espera=False` (Etapa 6, vista horaria): SIN el ruido de Silverman sobre la espera, hora_llegada +
     espera reproduce EXACTO la hora del dia en que ese paciente real recibio la cama (las dos olas de
@@ -578,7 +578,7 @@ def _prob_lleg_ajustada(mezcla_edad=None, mezcla_ruta=None):
 
 
 # Adelantar altas a la manana (Etapa 5): efecto del escenario A YA MEDIDO (src/simulacion_altas.py,
-# CLAUDE.md 6b): adelantar el 30 % de las altas de la tarde evita ~3 % del exceso de espera (estimacion
+# docs/CONTEXTO_TECNICO.md 6b): adelantar el 30 % de las altas de la tarde evita ~3 % del exceso de espera (estimacion
 # central; cota maxima 8 %; con el 100 %, cota 27 %). Se aplica como reduccion proporcional de la espera
 # sorteada: 0,1 % de espera menos por cada punto de adelanto (30 % -> -3 %, 100 % -> -10 %, dentro de las
 # cotas). Es la ESTIMACION del escenario A inyectada al motor, no mecanica interna (las esperas del motor

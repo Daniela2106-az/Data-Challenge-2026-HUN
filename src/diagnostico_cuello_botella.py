@@ -43,7 +43,7 @@ PROC = RAIZ / "datos" / "procesados"
 TABLAS = RAIZ / "resultados" / "tablas"
 TABLAS.mkdir(parents=True, exist_ok=True)
 
-FIN_CONFIABLE = pd.Timestamp("2026-04-09")     # el registro de etapas se degrada desde el 10-abr-2026 (CLAUDE.md 4.9)
+FIN_CONFIABLE = pd.Timestamp("2026-04-09")     # el registro de etapas se degrada desde el 10-abr-2026 (docs/CONTEXTO_TECNICO.md 4.9)
 INICIO_CONFIABLE = pd.Timestamp("2023-02-01")
 CAMAS_HUN = 106                                 # dato del HUN, 29-oct-2026 (sin fecha ni desglose)
 MIN_N = 30                                      # grupos con menos casos no se interpretan
@@ -90,7 +90,7 @@ dice(f"Referencia ('cuando funciona bien'): llegadas del {args.ref_desde} al {ar
      f"Estancias en el periodo: {len(ventana)} (en la referencia: {len(refer)}). Una fila por estancia unica.")
 avisos = []
 if H > FIN_CONFIABLE + pd.Timedelta(days=1):
-    avisos.append("El periodo incluye dias posteriores al 9-abr-2026: el registro de etapas esta degradado (CLAUDE.md 4.9). "
+    avisos.append("El periodo incluye dias posteriores al 9-abr-2026: el registro de etapas esta degradado (docs/CONTEXTO_TECNICO.md 4.9). "
                   "Las esperas y las horas de esos dias no son confiables.")
 if D < INICIO_CONFIABLE:
     avisos.append("El periodo empieza antes de feb-2023: los primeros meses no ven los episodios anteriores.")

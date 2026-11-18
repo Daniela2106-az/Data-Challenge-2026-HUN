@@ -4,11 +4,11 @@ que_esperar.py  -  version 1 (10-nov-2026)
 parecidos, como RANGOS (percentiles 25, 50, 75 y 90), nunca como un valor unico. Las tablas son para el dashboard; la funcion `que_esperar()` es la consulta.
 
 COMO FUNCIONA
-  - Base: estancias unicas hospitalizadas del periodo confiable (1-feb-2023 a 9-abr-2026), edad y sexo de la persona real (CLAUDE.md 4.10). Espera = llegada a asignacion de cama.
+  - Base: estancias unicas hospitalizadas del periodo confiable (1-feb-2023 a 9-abr-2026), edad y sexo de la persona real (docs/CONTEXTO_TECNICO.md 4.10). Espera = llegada a asignacion de cama.
     Estancia = de la asignacion de cama al alta (solo estancias con alta registrada antes del 10-abr-2026).
   - Rango del perfil: percentiles de las estancias del mismo grupo de edad, sexo y tipo de visita (y del mismo grupo de diagnostico si se da). Si el grupo tiene menos de 30
     estancias se sube un nivel (se quita primero el sexo, luego el tipo de visita, luego el diagnostico, luego la edad) y se dice con cuanto detalle se calculo.
-  - "Raza" y "etnicidad" NO se usan: en PERSON el 95 % de la raza esta sin dato y la etnicidad es casi toda "Hispanic or Latino" (CLAUDE.md seccion 3). El perfil queda en edad, sexo y tipo de visita.
+  - "Raza" y "etnicidad" NO se usan: en PERSON el 95 % de la raza esta sin dato y la etnicidad es casi toda "Hispanic or Latino" (docs/CONTEXTO_TECNICO.md seccion 3). El perfil queda en edad, sexo y tipo de visita.
   - Procedimientos y laboratorios NO entran al perfil: los procedimientos no tienen hora y su cantidad crece con la estancia (causalidad inversa); los laboratorios solo se conocen despues de llegar
     (su aporte a la espera esta en docs/prueba_ultima_etapa.md).
 

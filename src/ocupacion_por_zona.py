@@ -6,7 +6,7 @@ PREGUNTA
   Comparar toda la ocupacion contra las 106 camas mezcla zonas. El HUN dio el desglose:
     camas de hospitalizacion: adultos 88 (piso 64 + intermedio 6 + intensiva 14 + TPR 4), ninos 18 (pediatrica 8 + neonatal 10).
     camillas de urgencias:    observacion pediatrica 14, adultos hombres 18, adultos mujeres 26.
-  Con edad y sexo de la persona real (CLAUDE.md 4.10) se puede ver en QUE zona se supera la capacidad y si el sexo
+  Con edad y sexo de la persona real (docs/CONTEXTO_TECNICO.md 4.10) se puede ver en QUE zona se supera la capacidad y si el sexo
   ayuda a entender por que las mujeres esperan mas cama (hallazgo abierto de A1).
 
 QUE HACE

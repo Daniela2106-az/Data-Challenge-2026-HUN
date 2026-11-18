@@ -5,7 +5,7 @@ Código: `src/factores_estancia.py`. Tablas: `resultados/tablas/factores_estanci
 
 ## Cómo se midió
 - **Estancias** del periodo confiable (empiezan del 1-feb-2023 al 9-abr-2026) con alta registrada antes del 10-abr: 23.405 estancias, una fila por estancia (registro conservado, `estancia_id`). Estancia media 4,93 días, mediana 69 h, p90 265 h.
-- **Edad y sexo** son los de la persona real (`CLAUDE.md` 4.10).
+- **Edad y sexo** son los de la persona real (`docs/CONTEXTO_TECNICO.md` 4.10).
 - **Modelo explicativo (no predictivo)** sobre el logaritmo de la estancia en horas. Factores permitidos: edad y sexo, tipo de visita, franja y año de llegada, espera de cama, laboratorios de las primeras 6 horas y ocupación al llegar. Se excluyen los totales de diagnósticos, procedimientos y laboratorios porque crecen con la estancia (causalidad inversa).
   Un segundo modelo (B), solo entre quienes tienen diagnóstico (68 % de las estancias, hasta el 30 de abril), suma el grupo de diagnóstico.
 
@@ -60,7 +60,7 @@ La respuesta depende de cómo se defina «tipo de paciente»:
 - **Resumen:** del +16 % de estancia media, aproximadamente **la mitad es la cola de estancias de más de 30 días** (de 54 a 117 por año) y, del resto, una parte importante es la **llegada de pacientes «Treatment urgency»**. La estancia típica casi no cambió (mediana +8 %).
 
 ## Qué significa para el hospital
-- Para bajar la estancia media, lo que más pesa son las **estancias largas**: unas 117 estancias de más de 30 días al año ocupan 13 camas (`CLAUDE.md` 4.8).
+- Para bajar la estancia media, lo que más pesa son las **estancias largas**: unas 117 estancias de más de 30 días al año ocupan 13 camas (`docs/CONTEXTO_TECNICO.md` 4.8).
 - El **flujo «Treatment urgency»** (sin etapa de admisión, 25–37 % se hospitaliza) crece rápido y se queda 60 % más que el resto, con la misma edad: merece revisión propia.
 - La **edad** es el factor que más se asocia a la estancia larga: los mayores de 60 años se quedan 33–46 % más.
 

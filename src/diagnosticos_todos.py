@@ -6,7 +6,7 @@ Espera de cama y estancia en cama para CADA diagnostico (concepto SNOMED) que ap
 COMO SE ARMA
   - Estancias unicas hospitalizadas del periodo confiable (1-feb-2023 a 9-abr-2026), edad y sexo de la persona real. Espera = llegada a asignacion de cama.
     Estancia = de la asignacion de cama al alta (fin_hosp_est), solo estancias con alta registrada antes del 10-abr-2026.
-  - Cada estancia "tiene" un diagnostico si lo trae alguna de sus visitas (los registros gemelos se unen, regla de CLAUDE.md 4.7) Y la persona dominante de los diagnosticos
+  - Cada estancia "tiene" un diagnostico si lo trae alguna de sus visitas (los registros gemelos se unen, regla de docs/CONTEXTO_TECNICO.md 4.7) Y la persona dominante de los diagnosticos
     de esa visita (P02 de auditoria_bd) es la persona real de la estancia: asi se descartan los diagnosticos que son de la otra persona del par. Se cuentan TODOS los
     diagnosticos distintos de la estancia, no solo el principal. Los diagnosticos se registran en cualquier momento de la visita (no solo durante la espera).
   - Por diagnostico: n, espera (p25, mediana, p75, p90), estancia (p25, mediana, p75, p90), % de estancias de mas de 14 dias y el EFECTO AJUSTADO (porcentaje de cambio de la

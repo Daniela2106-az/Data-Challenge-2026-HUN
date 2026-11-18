@@ -2,7 +2,7 @@
 
 Cada ficha dice **qué pregunta responde, con qué datos, qué se hace paso a paso, qué se entrega y cuándo está terminada**.
 Las de Persona 3 están escritas para pasarlas tal cual a la herramienta de IA que use.
-Contexto y decisiones de método: `CLAUDE.md`. Reparto y calendario: `docs/plan_de_accion.md`.
+Contexto y decisiones de método: `docs/CONTEXTO_TECNICO.md`. Reparto y calendario: `docs/plan_de_accion.md`.
 
 ## Por qué cambiaron los modelos (pruebas del 21-oct)
 Se probó el plan anterior con los datos y se ajustó:
@@ -11,7 +11,7 @@ Se probó el plan anterior con los datos y se ajustó:
 |---|---|---|
 | Predecir si un paciente espera más de 24 h usando solo lo que se sabe al llegar | AUC 0,60 (0,5 = azar) | No sirve como alerta individual; queda como análisis **explicativo** |
 | Lo mismo, usando diagnóstico y laboratorios | AUC 0,64 | Ni haciendo trampa mejora mucho |
-| ¿Cuántas altas hubo en el día explica la espera de ese día? | Correlación cercana a −0,06 | No se confirma a nivel diario. **(22-oct) Sí se sostiene dentro del día:** el 61 % de las altas es de 14 a 18:59 y la cama se asigna a las 17–18 h (ver `CLAUDE.md`, sección 6b) |
+| ¿Cuántas altas hubo en el día explica la espera de ese día? | Correlación cercana a −0,06 | No se confirma a nivel diario. **(22-oct) Sí se sostiene dentro del día:** el 61 % de las altas es de 14 a 18:59 y la cama se asigna a las 17–18 h (ver `docs/CONTEXTO_TECNICO.md`, sección 6b) |
 | Predecir cuánto se queda hospitalizado cada paciente | R² cercano a 0 | No se predice por paciente; se usa la **distribución real** |
 | Ley de Little: ingresos por día × estancia media = camas ocupadas | 27,7 × 5,2 días = 144 camas; observado 145. **(22-oct) Esas cifras contaban dos veces las estancias replicadas entre dos personas.** Con estancias únicas: ~22 × 5,2 ≈ 100 camas; observado 113 | **El modelo de camas es coherente con los datos** (con los números corregidos) |
 
@@ -111,7 +111,7 @@ individual y por qué (explica poco: el resto depende de procesos que la base no
 **Reasignada (23-oct): la lleva Samuel (Persona 2), no Anthony** (ver `docs/pendientes_y_reparto.md`, B2). Donde dice "Persona 3", leer Samuel.
 **Estado (22-oct):** Daniela dejó un borrador completo en `docs/recomendaciones.md` (7 recomendaciones con sus números, límites
 y fuentes). **Persona 3 lo revisa y lo amplía:** leer las fuentes originales (el borrador solo vio resúmenes de búsqueda), añadir
-5 a 8 prácticas si hacen falta y verificar que cada cifra coincide con `CLAUDE.md` 6b.
+5 a 8 prácticas si hacen falta y verificar que cada cifra coincide con `docs/CONTEXTO_TECNICO.md` 6b.
 **Datos:** resultados de las fichas 3.1 a 3.3, `factores_espera_cama.csv` y `altas_ingresos_por_hora.csv`.
 **Pasos:**
 1. Investigar 5 a 8 prácticas conocidas (altas antes del mediodía, gestión diaria de camas, unidades de decisión de
@@ -128,7 +128,7 @@ y fuentes). **Persona 3 lo revisa y lo amplía:** leer las fuentes originales (e
 Carpetas: `powerbi/`, `docs/hun/`.
 
 1. **Esta semana:**
-   - Enviar el correo al HUN con las preguntas de `CLAUDE.md`, sección 8, y guardar sus respuestas en `docs/hun/`
+   - Enviar el correo al HUN con las preguntas de `docs/CONTEXTO_TECNICO.md`, sección 8, y guardar sus respuestas en `docs/hun/`
      (Daniela las revisa con Claude).
    - Instalar Power BI y conectar `panel_diario.csv`, `serie_horaria.csv` y las tablas de factores (drive).
 2. **Páginas del dashboard:**
@@ -159,11 +159,11 @@ Carpetas: `src/`, `sql/`, `docs/`, `datos/referencia/`, `notebooks/modelos/`.
 4. Alerta: "día congestionado" = llegadas por encima del percentil 90 del entrenamiento; probabilidad para el día siguiente.
 **Entrega:** `notebooks/modelos/modelo_A_demanda.ipynb`, `docs/modelo_A.md`, `modelo_A_predicciones.csv` al drive.
 **Terminado cuando:** el modelo mejora las dos referencias en 2026 y la alerta reporta su precisión y falsas alarmas.
-**Hecho el 22-oct (`src/pronostico_demanda.py` v1.3, resultados en `CLAUDE.md` 6b):** las **llegadas** sí mejoran a las referencias
+**Hecho el 22-oct (`src/pronostico_demanda.py` v1.3, resultados en `docs/CONTEXTO_TECNICO.md` 6b):** las **llegadas** sí mejoran a las referencias
 (error 7,5 % a 1 día) y la alerta de un día antes tiene AUC 0,79 (la de media jornada, mucho mejor, está en `src/alertas.py`). Los **ingresos a cama diarios** NO se pueden
 pronosticar mejor que "día de la semana × nivel reciente" (error ~23 %, es ruido de conteo), pero **por semana el error baja a 9,5 %**:
 **para el modelo de camas (ficha 3.1) usar el pronóstico semanal de ingresos, repartido por día con el patrón del día de la semana**.
-Ojo: desde el 10 de abril de 2026 el registro de las etapas se degrada (no es menos demanda; `CLAUDE.md` 4.9); para el escenario base de
+Ojo: desde el 10 de abril de 2026 el registro de las etapas se degrada (no es menos demanda; `docs/CONTEXTO_TECNICO.md` 4.9); para el escenario base de
 camas conviene usar el nivel de 2025 (~20 ingresos por día) y el nivel reciente (~19 en ene–abr 2026) como escenario bajo.
 Los pronósticos de ingresos alimentan el modelo de camas de Persona 3.
 

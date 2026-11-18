@@ -41,7 +41,7 @@ las tres (evidencia inconsistente, efecto incierto en el HUN o acción más cost
 son de antes y después, sin grupo de comparación.
 
 **Cómo leerlo.** Todo son **asociaciones y escenarios con supuestos escritos**, no causas probadas. El HUN dio su número de camas el 29-oct (106 camas de
-hospitalización y 58 camillas de urgencias), sin decir a qué fecha corresponde; no tenemos el motivo clínico de cada espera. Donde un efecto no se puede calcular, se dice. Cifras propias: `docs/HALLAZGOS.md` y `CLAUDE.md` (secciones 4.8 a 4.11 y 6b).
+hospitalización y 58 camillas de urgencias), sin decir a qué fecha corresponde; no tenemos el motivo clínico de cada espera. Donde un efecto no se puede calcular, se dice. Cifras propias: `docs/HALLAZGOS.md` y `docs/CONTEXTO_TECNICO.md` (secciones 4.8 a 4.11 y 6b).
 
 **Términos usados:**
 - *Boarding*: tiempo que un paciente ya admitido pasa en urgencias esperando una cama de hospitalización.
@@ -53,7 +53,7 @@ hospitalización y 58 camillas de urgencias), sin decir a qué fecha corresponde
 | # | Hallazgo | Cifra | Fuente |
 |---|---|---|---|
 | 1 | Esperar cama es largo y los peores casos empeoran | Espera mediana 18,6 h, percentil 90 de 73,9 h; el exceso medio sube de 17,3 h (2023) a 23,8 h (ene–abr 2026), +38 % | HALLAZGOS 4.2 y 4.3 |
-| 2 | Casi todo el tiempo está dentro de urgencias, no en huecos entre etapas | 98 % de las horas de espera es tiempo en urgencias antes de la cama; el tiempo sin ninguna etapa registrada es ~1–3 % (corregido el 7-nov: el 21 % anterior era un artefacto de las estancias duplicadas, `CLAUDE.md` 4.12) | HALLAZGOS 4.2 |
+| 2 | Casi todo el tiempo está dentro de urgencias, no en huecos entre etapas | 98 % de las horas de espera es tiempo en urgencias antes de la cama; el tiempo sin ninguna etapa registrada es ~1–3 % (corregido el 7-nov: el 21 % anterior era un artefacto de las estancias duplicadas, `docs/CONTEXTO_TECNICO.md` 4.12) | HALLAZGOS 4.2 |
 | 3 | Las altas son tardías y la cama se asigna en dos olas | 62,7 % de las altas entre las 14:00 y las 18:59, solo 14 % antes del mediodía; el 61 % de las camas se asigna entre las 15 y las 17 h o entre las 20 y las 23 h, y solo el 9 % entre las 6 y las 11 h. Una cama que se libera en la mañana tarda una mediana de 1,8 h en volver a asignarse aunque haya ~26 pacientes esperando: además de faltar camas, hay un límite de proceso | HALLAZGOS 4.4; `docs/saturacion_y_espera.md` 3 y 4 |
 | 4 | Quien llega a media tarde espera más | Mediana de ~25 h al llegar entre las 13 y las 16 h contra 12–15 h de madrugada; a las 16 h, el 72 % recibe cama al día siguiente | HALLAZGOS 4.4 |
 | 5 | La ocupación sube por la estancia, no por más pacientes | Camas ocupadas 94 (2023) a 105 (2025); estancia media 4,57 a 5,31 días (+16 %); ingresos ~20 por día sin crecer | HALLAZGOS 4.6 |
@@ -84,7 +84,7 @@ cuello de botella sea un patrón conocido, no una rareza del HUN.
 - **Qué cambiar:** registrar la hora de salida de urgencias en todas las atenciones (hoy el 36–42 % de las etapas de urgencias no la tiene), registrar
   la hora en que se asigna la cama, y evitar que un mismo ingreso quede en dos pacientes.
 - **Por qué:** el 41 % de los episodios hospitalizados tenía una estancia duplicada en otra persona. Sin corregirlo se estimaban 27,7 ingresos por día
-  (son ~20) y ~146 camas ocupadas (son ~100). Desde el 10 de abril de 2026 el registro de las etapas se degrada: la auditoría en la base muestra que las visitas no bajaron en mayo, así que no es menos demanda, y esos días no se usan para estimar nivel ni evaluar. (HALLAZGOS 2; CLAUDE.md 4.6, 4.8 y 4.9)
+  (son ~20) y ~146 camas ocupadas (son ~100). Desde el 10 de abril de 2026 el registro de las etapas se degrada: la auditoría en la base muestra que las visitas no bajaron en mayo, así que no es menos demanda, y esos días no se usan para estimar nivel ni evaluar. (HALLAZGOS 2; docs/CONTEXTO_TECNICO.md 4.6, 4.8 y 4.9)
 - **Evidencia externa (verificada el 12-nov):**
   - **Imhoff y colegas** (*BMJ Open Quality* 2022, hospital académico urbano de EE. UU., 25.183 pacientes, antes y después): el primer obstáculo que
     encontraron fue que **no se registraba la hora de la decisión de ingreso**. Su primer paso fue crear una orden en la historia clínica que la
@@ -97,7 +97,7 @@ cuello de botella sea un patrón conocido, no una rareza del HUN.
   - El estudio de Bradford (sección 4) también encontró fechas de atención faltantes en el 23–43 % de los registros de urgencias: no es un problema
     exclusivo del HUN.
 - **Cómo medirla:** % de atenciones con hora de salida; número de registros duplicados.
-- **Límite:** el HUN dijo que las estancias gemelas son «lo más probable» duplicados. La persona real se dedujo de los datos (se identifica en el 97,6 % de las gemelas, `CLAUDE.md` 4.10); el hospital no lo ha confirmado.
+- **Límite:** el HUN dijo que las estancias gemelas son «lo más probable» duplicados. La persona real se dedujo de los datos (se identifica en el 97,6 % de las gemelas, `docs/CONTEXTO_TECNICO.md` 4.10); el hospital no lo ha confirmado.
 
 ### R2. Seguimiento mensual de indicadores (prioridad 2)
 Valores de partida con nuestros datos:
@@ -339,7 +339,7 @@ pacientes, LD.04.03.11: los líderes deben usar datos y métricas para gestionar
 La sesión del 29-oct fue la última, así que estos puntos se declaran como limitaciones:
 1. Desde cuándo rige el número de camas (106 y 58 camillas) y cuál es la meta de tiempo para asignar cama.
 2. Por qué se degrada el registro de las etapas desde el 10-abr-2026 (la auditoría del 2-nov descarta que sea menos demanda).
-3. Qué significa cada etapa de urgencias y qué pasa en la última, donde se va la mayor parte de las esperas largas con poca actividad registrada (`docs/caracterizacion_etapas_tu.md`). (La pregunta sobre el «tiempo sin etapa» antes de la cama perdió sentido el 7-nov: era un artefacto de las estancias duplicadas y solo afecta al 1,7 % de las estancias, `CLAUDE.md` 4.12.)
+3. Qué significa cada etapa de urgencias y qué pasa en la última, donde se va la mayor parte de las esperas largas con poca actividad registrada (`docs/caracterizacion_etapas_tu.md`). (La pregunta sobre el «tiempo sin etapa» antes de la cama perdió sentido el 7-nov: era un artefacto de las estancias duplicadas y solo afecta al 1,7 % de las estancias, `docs/CONTEXTO_TECNICO.md` 4.12.)
 
 ## 6. Fuentes y verificación (25-oct-2026; comprobaciones del 6-nov, 12-nov y 13-nov)
 

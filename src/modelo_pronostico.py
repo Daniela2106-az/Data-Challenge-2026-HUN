@@ -33,7 +33,7 @@ BANDA DEL 80 %
 LIMITES (decirlos siempre junto al grafico)
   - A mas de unas semanas solo hay calendario y nivel supuesto: NO sabe de brotes, cortes de sistema, estacionalidad anual ni de por
     que las llegadas caen desde abril de 2026. El escenario elegido decide casi todo el nivel.
-  - Las llegadas incluyen al menos 4 % de replicas (CLAUDE.md 4.6). Los ingresos diarios son casi ruido de conteo.
+  - Las llegadas incluyen al menos 4 % de replicas (docs/CONTEXTO_TECNICO.md 4.6). Los ingresos diarios son casi ruido de conteo.
 """
 import os
 from pathlib import Path
@@ -47,7 +47,7 @@ RAIZ = Path(__file__).resolve().parent.parent
 PANEL = Path(os.environ.get("HUN_PROCESADOS", RAIZ / "datos" / "procesados")) / "para_equipo" / "panel_diario.csv"   # HUN_PROCESADOS: datos fuera del proyecto
 OBJETIVOS = {"llegadas_con_atencion": "Llegadas con atención por día (TU u hospitalización)", "llegadas": "Llegadas por día (todas)",
              "ingresos_a_cama": "Ingresos a cama por día"}
-# Auditoria en la base (CLAUDE.md 4.9, 2-nov-2026): el registro de las etapas es confiable hasta el 9-abr-2026. Desde el 10-abr aparecen visitas de mas sin etapas
+# Auditoria en la base (docs/CONTEXTO_TECNICO.md 4.9, 2-nov-2026): el registro de las etapas es confiable hasta el 9-abr-2026. Desde el 10-abr aparecen visitas de mas sin etapas
 # y baja la proporcion de visitas con etapa ER (65 % -> 52 %); desde el 29-abr cae a ~30 %. Esos dias NO se usan para estimar nivel, calendario ni error.
 FIN_CONFIABLE = "2026-04-09"
 INICIO_QUIEBRE = "2026-04-10"

@@ -48,7 +48,7 @@ def main():
 
     # procedimientos (sin hora), de la persona real
     P = pd.read_csv(AUD / "Q01_procedimientos_por_estancia.csv").merge(vis, on="visit_occurrence_id").merge(cc[["estancia_id", "real"]], on="estancia_id")
-    # los procedimientos de una estancia gemela cuelgan sobre todo del OTRO registro (CLAUDE.md 4.10: el 88 % no es el conservado): no se filtra por persona,
+    # los procedimientos de una estancia gemela cuelgan sobre todo del OTRO registro (docs/CONTEXTO_TECNICO.md 4.10: el 88 % no es el conservado): no se filtra por persona,
     # se une lo de todas las visitas de la estancia (igual que n_proc_distintos del pipeline). Los laboratorios si se filtran por persona real.
     P = P[["estancia_id", "concepto"]].drop_duplicates()
 

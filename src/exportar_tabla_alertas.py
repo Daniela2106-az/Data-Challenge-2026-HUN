@@ -85,4 +85,4 @@ print(f"{SALIDA.relative_to(RAIZ)}: {len(tabla)} filas")
 print(tabla[["alerta_id", "momento", "recomendada", "alertas_por_dia", "precision_pct", "deteccion_pct", "auc"]].to_string(index=False))
 # comprobacion: la carga total del diseno recomendado (A1 a las 12 h + A2 persistencia + A3 a las 48 h) debe ser ~4,6 por dia
 rec = tabla[(tabla.recomendada == 1) & (tabla.alerta_id.isin(["A1", "A2", "A3"]))]
-print(f"\ncarga total del diseño recomendado (A1+A2+A3): {rec.alertas_por_dia.sum():.2f} alertas por día (CLAUDE.md 6b: ~4,6)")
+print(f"\ncarga total del diseño recomendado (A1+A2+A3): {rec.alertas_por_dia.sum():.2f} alertas por día (docs/CONTEXTO_TECNICO.md 6b: ~4,6)")

@@ -2,7 +2,7 @@
 
 > **Pendientes y reparto actual: `docs/pendientes_y_reparto.md`** (quién hace qué, con entrega y criterio de terminado).
 
-> **Estado:** las fases 0 a 7 del análisis de cuellos de botella están hechas (ver `CLAUDE.md` sección 9 y `docs/HALLAZGOS.md`). Quedan el dashboard, los notebooks del equipo, el documento final y la presentación. Esta página conserva el plan original; las secciones 2 a 5 (revisiones posibles, reparto y calendario) son de antes de terminar el análisis.
+> **Estado:** las fases 0 a 7 del análisis de cuellos de botella están hechas (ver `docs/CONTEXTO_TECNICO.md` sección 9 y `docs/HALLAZGOS.md`). Quedan el dashboard, los notebooks del equipo, el documento final y la presentación. Esta página conserva el plan original; las secciones 2 a 5 (revisiones posibles, reparto y calendario) son de antes de terminar el análisis.
 
 Equipo de 3: **Daniela**, **Samuel** (Persona 2) y **Anthony** (Persona 3). Daniela y Anthony usan Claude Code; Samuel trabaja con lo que ellos le pasan
 (tablas agregadas por un drive privado, nunca por git) y con las herramientas que ya tengan.
@@ -42,12 +42,12 @@ la base.
 | Fase | Qué se hace | Consulta | Puerta de decisión |
 |---|---|---|---|
 | 0 | Enviar al HUN: número de camas por año y meta de tiempo | — | — |
-| 1 | Cuadrar la base y confirmar dónde está el tiempo muerto entre etapas | Q0, Q1, Q2 | Q0 cuadra con CLAUDE.md; Q1 y Q2 dentro de los rangos esperados |
+| 1 | Cuadrar la base y confirmar dónde está el tiempo muerto entre etapas | Q0, Q1, Q2 | Q0 cuadra con docs/CONTEXTO_TECNICO.md; Q1 y Q2 dentro de los rangos esperados |
 | 2 | Construir episodios y segmentos; inventario: n, % medido, percentiles, sesgo de medición | Q3 | Elegir segmentos candidatos (≥ ~50 % medidos, sin sesgo claro) |
 | 3 | Referencias, exceso, impacto y ranking (con las tres referencias) | Q3 | ¿El orden se mantiene entre referencias? |
 | 4 | Dependencia de la carga y controles por edad y diagnóstico | Q3, Q4 | Clasificar cada segmento (capacidad, turnos, proceso) |
 | 5 | Altas tardías por hora; factores del exceso | Q3 (+ dx y laboratorios ya exportados) | ¿Se sostiene la hipótesis de altas tardías? |
-| 6 | Demanda, estancias, simulación de camas, escenarios | Q3, Q4 | La diferencia ocupación por horas (~100) frente a Little (~144) ya tiene explicación (21-oct): el 41 % de los episodios hospitalizados tiene una estancia "gemela" replicada entre dos personas. **Decidido el 22-oct: se cuenta cada estancia una vez** (~100 camas, ~20 ingresos/día; CLAUDE.md 4.6). Falta medir si las llegadas también están infladas |
+| 6 | Demanda, estancias, simulación de camas, escenarios | Q3, Q4 | La diferencia ocupación por horas (~100) frente a Little (~144) ya tiene explicación (21-oct): el 41 % de los episodios hospitalizados tiene una estancia "gemela" replicada entre dos personas. **Decidido el 22-oct: se cuenta cada estancia una vez** (~100 camas, ~20 ingresos/día; docs/CONTEXTO_TECNICO.md 4.6). Falta medir si las llegadas también están infladas |
 | 7 | Alertas de sistema y de paciente, probadas sobre días pasados | Q3, Q4 | Pocas alertas por día y con anticipación |
 | 8 | Power BI, documento, README | — | — |
 
@@ -114,6 +114,6 @@ Todos los frentes se alimentan de las tablas que Daniela exporta al drive privad
   `.pbix` están ignorados. Antes de cada commit: `git status` y comprobar que no hay `.csv`, `.parquet`, `.xlsx` ni `.pbix`.
   La única excepción es `datos/referencia/` (listas hechas a mano, como `mapeo_dx.csv`, sin datos de pacientes).
 - Las tablas agregadas se comparten por un drive privado del equipo, con el nombre y la fecha de la corrida.
-- Las decisiones de método viven en `CLAUDE.md` (sección 5); para cambiar una, se discute antes.
+- Las decisiones de método viven en `docs/CONTEXTO_TECNICO.md` (sección 5); para cambiar una, se discute antes.
 - Cada hallazgo en el documento lleva su limitación al lado (por ejemplo, la falta de hora de salida).
 - No pulir más la limpieza: lo que queda no cambia las medianas de la espera de cama.

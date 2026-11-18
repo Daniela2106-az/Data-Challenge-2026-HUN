@@ -8,7 +8,7 @@ PARTES
   1. CUANDO: por mes de ingreso (feb-2023 a 9-abr-2026): estancia mediana, p90, % de estancias largas y muy largas, y cuantas camas ocupan. ¿Se concentran en ciertos meses o es parejo?
   2. QUIEN: perfil de las largas frente a las demas (edad, sexo, tipo de visita, diagnostico, espera, hora de llegada) con razones de probabilidades ajustadas (regresion logistica) -> tabla de A2.
   3. QUE LES PASA (opcional, necesita la consulta del lote 5 de src/auditoria_bd.py): procedimientos y laboratorios de las PRIMERAS 48 HORAS de cada estancia (laboratorios con fecha; los
-     procedimientos no tienen fecha, se marcan como "durante la estancia" y pueden ser consecuencia de ella), solo de las filas de la persona real (CLAUDE.md 4.10).
+     procedimientos no tienen fecha, se marcan como "durante la estancia" y pueden ser consecuencia de ella), solo de las filas de la persona real (docs/CONTEXTO_TECNICO.md 4.10).
 
 REGLAS: periodo confiable (hasta el 9-abr-2026), una fila por estancia (`estancia_id`), edad y sexo de la persona real, alta registrada antes del 10-abr.
 

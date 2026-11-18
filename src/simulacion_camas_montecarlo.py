@@ -8,7 +8,7 @@ estocastica con bandas de probabilidad.
 QUE HACE
   1. Construye la serie de ingresos a cama y la ocupacion real DIRECTAMENTE desde estancias_hospitalizacion.csv
      (no necesita panel_diario.csv: sus columnas ingresos_a_cama/ocup_hosp_media/max se calculan exactamente
-     asi en exportar_para_equipo.py; se reprodujo y coincide con CLAUDE.md 4.8).
+     asi en exportar_para_equipo.py; se reprodujo y coincide con docs/CONTEXTO_TECNICO.md 4.8).
   2. Distribucion de estancias (horas_hosp) por grupo_edad, para el bootstrap.
   3. Motor de Monte Carlo: por cada repeticion, ingresos diarios ~ Poisson(pronostico de modelo_pronostico.py),
      a cada ingreso se le asigna un grupo_edad (mezcla historica reciente) y una estancia (bootstrap SUAVIZADO
@@ -28,13 +28,13 @@ QUE HACE
 ENTRADA  datos/procesados/para_equipo/estancias_hospitalizacion.csv
 SALIDAS  resultados/tablas/simcamas_*.csv ; resultados/graficos/simcamas_*.png
 
-CAPACIDAD DEL HUN (imagen compartida el 8-nov-2026; ya documentada en CLAUDE.md 4.7, aqui con el desglose)
+CAPACIDAD DEL HUN (imagen compartida el 8-nov-2026; ya documentada en docs/CONTEXTO_TECNICO.md 4.7, aqui con el desglose)
   Camas:    Pediatrica 8, Adultos 64, TPR 4, Intermedia Adultos 6, Intensiva Adultos 14, incubadoras neonatales
             6+3+1=10  ->  106 camas en total.
   Camillas: Observacion Pediatrica 14, Adultos Hombres 18, Adultos Mujeres 26  ->  58 camillas (no modeladas
-            aqui: la ocupacion de TU no es comparable 1 a 1 con camillas, CLAUDE.md 4.8).
-  Proxy ninos/adultos: la base NO tiene servicio/piso/cama (CLAUDE.md 4.8), asi que no se puede simular por
-  unidad exacta. Se reusa el proxy de edad que el equipo ya valido una vez a mano (CLAUDE.md 4.8, "Revision
+            aqui: la ocupacion de TU no es comparable 1 a 1 con camillas, docs/CONTEXTO_TECNICO.md 4.8).
+  Proxy ninos/adultos: la base NO tiene servicio/piso/cama (docs/CONTEXTO_TECNICO.md 4.8), asi que no se puede simular por
+  unidad exacta. Se reusa el proxy de edad que el equipo ya valido una vez a mano (docs/CONTEXTO_TECNICO.md 4.8, "Revision
   final de la ocupacion"): ninos = Pediatrica+neonatal = 8+10 = 18; adultos = Adultos+Intermedia+Intensiva+TPR
   = 64+6+14+4 = 88. Aqui "ninos" = grupo_edad en (0-4, 5-14); es mas grueso que el corte "menor de 1 ano" que
   se uso en esa revision puntual de la base (nuestros bins no llegan a ese detalle) - se declara como limite.
@@ -99,12 +99,12 @@ ocup_h = delta.cumsum()
 ocup_d = ocup_h.groupby(ocup_h.index.normalize()).agg(["mean", "max"]).reindex(dias_panel)
 print("ingresos_a_cama por anio (reproducido):", ingresos_a_cama.groupby(ingresos_a_cama.index.year).mean().round(1).to_dict())
 print("ocup_hosp_media por anio (reproducido):", ocup_d["mean"].groupby(ocup_d.index.year).mean().round(1).to_dict())
-print("(referencia CLAUDE.md 4.8: ingresos 20.6/20.8/19.8 y ocupacion 94/101/105 para 2023/2024/2025 - coincide)")
+print("(referencia docs/CONTEXTO_TECNICO.md 4.8: ingresos 20.6/20.8/19.8 y ocupacion 94/101/105 para 2023/2024/2025 - coincide)")
 
 serie_ingresos = ingresos_a_cama.asfreq("D").rename("ingresos_a_cama")
 ULTIMO_CONFIABLE = serie_ingresos.dropna().index.max()   # se usa en simular() y en quien importe el modulo (dashboard/camas.py)
 print(f"\nserie_ingresos: {serie_ingresos.index.min().date()} a {serie_ingresos.index.max().date()} "
-      f"(ya termina en {mp.FIN_CONFIABLE}, el ultimo dia confiable - CLAUDE.md 4.9; no hace falta blanquear nada mas)")
+      f"(ya termina en {mp.FIN_CONFIABLE}, el ultimo dia confiable - docs/CONTEXTO_TECNICO.md 4.9; no hace falta blanquear nada mas)")
 
 # ----------------------------------------------------------------------
 # 2) Distribucion de estancias por grupo_edad (para el bootstrap) y mezcla de edades
@@ -142,7 +142,7 @@ print(f"niños (0-4 + 5-14) de la mezcla: {100 * mezcla.reindex(GRUPOS_NINOS).su
 titulo("2b. BOOTSTRAP POR PERFIL (edad x ruta) Y MEZCLA CONJUNTA")
 # Treatment urgency se queda 63% mas que Urgencias (docs/factores_estancia.md): si no se reestratifica el
 # bootstrap por ruta, cambiar la mezcla de ruta en un escenario no moveria la ocupacion - pierde el sentido.
-TIPOS_VALIDOS = ["Urgencias", "Treatment urgency", "Ambulatorio"]  # Inpatient es <1% (casi desaparecio desde 2025, CLAUDE.md); se pliega a Urgencias
+TIPOS_VALIDOS = ["Urgencias", "Treatment urgency", "Ambulatorio"]  # Inpatient es <1% (casi desaparecio desde 2025, docs/CONTEXTO_TECNICO.md); se pliega a Urgencias
 PERFIL_MIN_CELDA = 30
 
 reciente_perfil = reciente.copy()
@@ -395,7 +395,7 @@ if __name__ == "__main__":
     esc.to_csv(TABLAS / "simcamas_escenarios.csv", index=False)
     print("\nguardado: resultados/tablas/simcamas_escenarios.csv")
     print("\nEscenario A (altas antes del mediodia) NO se recalcula aqui: ya esta en src/simulacion_altas.py")
-    print("(resultado ya documentado: max. 8 % del exceso de espera evitado, estimacion ~3 % - CLAUDE.md 6b).")
+    print("(resultado ya documentado: max. 8 % del exceso de espera evitado, estimacion ~3 % - docs/CONTEXTO_TECNICO.md 6b).")
 
     # ----------------------------------------------------------------------
     # 6b) MEJORA: curva de capacidad (no vuelve a simular - usa el censo de la proyeccion base ya calculada)

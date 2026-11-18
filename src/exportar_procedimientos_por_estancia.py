@@ -3,7 +3,7 @@ exportar_procedimientos_por_estancia.py  -  version 1 (7-nov-2026)
 Pedido de Samuel: un CSV que diga QUE procedimiento tuvo cada estancia (no cuantas veces).
 
 Una fila por (estancia, procedimiento). Sin conteos, sin visit_occurrence_id y sin person_id: solo el id de estancia (estancia_id, anonimo), el grupo de edad y el
-sexo de la persona real de la estancia (CLAUDE.md 4.10; son los mismos que corrigen P02 y P03) y el concepto con su nombre cuando se conoce.
+sexo de la persona real de la estancia (docs/CONTEXTO_TECNICO.md 4.10; son los mismos que corrigen P02 y P03) y el concepto con su nombre cuando se conoce.
 Solo cuentan las filas de procedimientos de la PERSONA REAL de la estancia (los procedimientos suelen colgar del registro gemelo: el 88 % no es el conservado).
 
 ENTRADAS  datos/crudos/auditoria_bd/Q01_procedimientos_por_estancia.csv, Q03_nombres_de_conceptos.csv (nombres conocidos),

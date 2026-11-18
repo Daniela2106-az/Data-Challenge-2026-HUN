@@ -2,16 +2,16 @@
 
 Este documento resume **todo lo que se averiguó**, con las cifras y la fuente de cada una. Está escrito para que una persona, o un
 Claude que abra este repositorio sin acceso a los datos, pueda contestar preguntas sin inventar nada. Detalle técnico completo:
-`CLAUDE.md`. Plan y fases: `docs/plan_de_accion.md`. Recomendaciones: `docs/recomendaciones.md`. Días atípicos: `docs/dias_atipicos.md`.
+`docs/CONTEXTO_TECNICO.md`. Plan y fases: `docs/plan_de_accion.md`. Recomendaciones: `docs/recomendaciones.md`. Días atípicos: `docs/dias_atipicos.md`.
 
-**Regla de oro al contestar:** si una cifra no está en este documento o en `CLAUDE.md`, no la afirmes; di que no está registrada y
+**Regla de oro al contestar:** si una cifra no está en este documento o en `docs/CONTEXTO_TECNICO.md`, no la afirmes; di que no está registrada y
 señala qué script o consulta la produciría. Distingue siempre *asociación* de *causa*, y di la limitación junto a cada hallazgo.
 
 ---
 
 ## 0. Resumen en 12 líneas
 
-> **Actualización del 1-nov-2026 (regla de estancia única v3.8):** se detectaron 2.179 estancias duplicadas más (ver `CLAUDE.md` 4.8). Todas las cifras de espera de cama, ingresos, camas y ocupación de este documento se recalcularon: ocupación media de 94 camas (2023) a 105 (2025), ~20 ingresos por día y espera de cama mediana de 18,6 h. Las que no cambian (calendario, pronóstico de llegadas, diagnósticos de A3) se marcan con su fecha. Respaldo de las cifras anteriores: `resultados/respaldo_dedup_v37/`.
+> **Actualización del 1-nov-2026 (regla de estancia única v3.8):** se detectaron 2.179 estancias duplicadas más (ver `docs/CONTEXTO_TECNICO.md` 4.8). Todas las cifras de espera de cama, ingresos, camas y ocupación de este documento se recalcularon: ocupación media de 94 camas (2023) a 105 (2025), ~20 ingresos por día y espera de cama mediana de 18,6 h. Las que no cambian (calendario, pronóstico de llegadas, diagnósticos de A3) se marcan con su fecha. Respaldo de las cifras anteriores: `resultados/respaldo_dedup_v37/`.
 
 
 1. **El reto** (Hospital Universidad del Norte, HUN + Ciencia de Datos Uninorte): entender, predecir y optimizar el flujo de pacientes
@@ -21,7 +21,7 @@ señala qué script o consulta la produciría. Distingue siempre *asociación* d
 3. **Cuello de botella (definición del proyecto):** un segmento donde el paciente espera un recurso, con exceso sobre una referencia
    de "cuando funciona bien", impacto alto (volumen × retraso) y que se agrava con la carga.
 4. **El principal cuello de botella es la espera de cama:** mediana de **18,6 h** y percentil 90 de **73,9 h** desde que llega el
-   paciente hasta que entra a cama. Casi todas esas horas (98 %) son tiempo en urgencias antes de que se asigne la cama; el tiempo sin ninguna etapa registrada es ~1 % (corregido el 7-nov, `CLAUDE.md` 4.12).
+   paciente hasta que entra a cama. Casi todas esas horas (98 %) son tiempo en urgencias antes de que se asigne la cama; el tiempo sin ninguna etapa registrada es ~1 % (corregido el 7-nov, `docs/CONTEXTO_TECNICO.md` 4.12).
 5. **Los peores casos empeoran:** la espera mediana casi no cambia (17–19 h) pero el percentil 90 sube de 61 h (2023) a 80 h (2026).
 6. **Las altas son tardías:** el 62,7 % de las altas ocurre entre las 14:00 y las 18:59 y solo el 14 % antes del mediodía; las camas
    se asignan a las 17–18 h. Quien llega a media tarde espera más (mediana de ~25 h frente a 12–15 h de madrugada).
@@ -35,7 +35,7 @@ señala qué script o consulta la produciría. Distingue siempre *asociación* d
     los ingresos diarios no (es ruido de conteo), pero por semana el error baja a **9,5 %**.
 11. **Alertas probadas sobre días pasados:** la de "día congestionado" a las 12 h detecta el 87 % de esos días (13 de 15 en la prueba; precisión 52 %); una alerta
     por paciente a las 48 h sin cama genera ~4 avisos por día. Carga total recomendada: ~5 alertas por día.
-12. **Desde el 10 de abril de 2026 el registro de las etapas se degrada** (auditoría directa en la base, `CLAUDE.md` 4.9): las visitas de urgencias no bajaron en mayo (+2 % frente a mayo de 2025) mientras las etapas ER bajaron 64 %; más visitas sin etapas, menos visitas con etapa de llegada, diagnósticos sin código desde el 11-may. Esos días no se usan para estimar nivel ni evaluar. El número de camas del hospital no se conoce, así que la capacidad se trabaja con escenarios.
+12. **Desde el 10 de abril de 2026 el registro de las etapas se degrada** (auditoría directa en la base, `docs/CONTEXTO_TECNICO.md` 4.9): las visitas de urgencias no bajaron en mayo (+2 % frente a mayo de 2025) mientras las etapas ER bajaron 64 %; más visitas sin etapas, menos visitas con etapa de llegada, diagnósticos sin código desde el 11-may. Esos días no se usan para estimar nivel ni evaluar. El número de camas del hospital no se conoce, así que la capacidad se trabaja con escenarios.
 
 ---
 
@@ -76,7 +76,7 @@ Esquema `uninorte_omop`, solo lectura, detrás de VPN. Tablas grandes: `measurem
 |---|---|---|
 | Visitas copia de la misma persona | ~238 mil visitas | Se borran y sus etapas pasan a la visita original |
 | Visitas replicadas entre dos personas | ~280 mil visitas | Se conservan; se quitan solo las etapas idénticas (episodios con todas sus etapas repetidas) |
-| **Estancias en cama gemelas** (misma estancia en dos personas) | **53 % de los episodios hospitalizados** (18.786 de 35.343) | Se cuenta cada estancia una vez (25.777 únicas; regla v3.8, ver `CLAUDE.md` 4.8). Evidencia: `person_id` difiere en ≤ 2 en el 78 % de los pares (azar: 0,005 %) |
+| **Estancias en cama gemelas** (misma estancia en dos personas) | **53 % de los episodios hospitalizados** (18.786 de 35.343) | Se cuenta cada estancia una vez (25.777 únicas; regla v3.8, ver `docs/CONTEXTO_TECNICO.md` 4.8). Evidencia: `person_id` difiere en ≤ 2 en el 78 % de los pares (azar: 0,005 %) |
 | Etapas TU sin hora de salida (inicio = fin) | 36–42 % de las etapas TU, estable por año | Se marcan "sin duración", no como 0 h; la duración de urgencias de quien se va de alta se trata solo como descriptiva |
 | Etapas abiertas (fin con milisegundos) | 2.053 | Se descartan: son pacientes aún hospitalizados al extraer |
 | `visit_end_datetime = visit_start_datetime` | 100 % | La duración sale de las etapas, no de la visita |
@@ -102,7 +102,7 @@ controles sobre la base y sobre los CSV exportados; Q1 y Q2 también coincidiero
 - **Urgencias sin hospitalizar (solo el 38 % tiene duración):** mediana 9,6 h, percentil 90 de 45 h. Está sesgada: los niños (30 % medidos) y las
   visitas ambulatorias (10 %) están subrepresentados frente a adultos mayores de 65 (48 %).
 - **Entre etapas casi no hay tiempo muerto:** ER>TU 99 % pegadas; HOSP>HOSP 99 %; TU>TU 94 %. La supuesta excepción TU>HOSP (23,8 % con más de 1 h sin etapa) **era un artefacto de las estancias duplicadas**: en el registro de la persona real solo el 1,7 % de las
-  estancias tiene más de 1 h sin etapa antes de la cama (`CLAUDE.md` 4.12).
+  estancias tiene más de 1 h sin etapa antes de la cama (`docs/CONTEXTO_TECNICO.md` 4.12).
 - **Hospitalizados:** ~20 ingresos a cama por día.
 
 ---
@@ -126,7 +126,7 @@ simulación de camas). Fuente: `src/construir_segmentos.py`, `src/ranking_cuello
 | Estancia en cama | 25.777 | 40,0 | 70,7 | 143,9 | 280,3 |
 
 - El 43,7 % espera más de 24 h y el 19 % más de 48 h.
-- Urgencias antes de la cama concentra el **98 %** de las horas de espera; el hueco, ~1–3 % (antes se decía 80 % y 21 %: corrección del 7-nov, `CLAUDE.md` 4.12). Lidera con las 4 referencias.
+- Urgencias antes de la cama concentra el **98 %** de las horas de espera; el hueco, ~1–3 % (antes se decía 80 % y 21 %: corrección del 7-nov, `docs/CONTEXTO_TECNICO.md` 4.12). Lidera con las 4 referencias.
 - Con la referencia de carga baja (mediana de 14,7 h), el **64 %** de las horas de espera de cama (518 mil de 812 mil horas-paciente) es exceso.
 
 ### 4.3 Tendencia: empeoran los peores casos
@@ -136,7 +136,7 @@ simulación de camas). Fuente: `src/construir_segmentos.py`, `src/ranking_cuello
 | 2024 | 18,3 | 36,5 | 69,7 | 18,6 |
 | 2025 | 17,4 | 40,8 | 80,2 | 23,8 |
 | 2026 (ene–abr) | 19,8 | 46,2 | 81,9 | 23,8 |
-Desde el 10-abr-2026 el registro está degradado (ver 4.9 de `CLAUDE.md`): lo que muestra la espera en esos meses no es confiable.
+Desde el 10-abr-2026 el registro está degradado (ver 4.9 de `docs/CONTEXTO_TECNICO.md`): lo que muestra la espera en esos meses no es confiable.
 
 ### 4.4 Carga, hora y altas tardías
 - **Carga:** la mediana de espera va de 14,2 h (decil con menos llegadas en 6 h) a 25,9 h (decil con más); con controles, +2,5 % por decil. La
@@ -149,7 +149,7 @@ Desde el 10-abr-2026 el registro está degradado (ver 4.9 de `CLAUDE.md`): lo qu
   relación no aparece: el mecanismo es dentro del día.
 - **El orden de llegada casi no predice el orden de cama** (53 % de pares consecutivos en orden; el azar sería 50 %).
 
-### 4.5 Qué explica la espera (modelo sobre log(espera + 1), R² = 16,0 %; recalculado el 8-nov con la persona real, CLAUDE.md 4.10, y el mapeo de diagnósticos final)
+### 4.5 Qué explica la espera (modelo sobre log(espera + 1), R² = 16,0 %; recalculado el 8-nov con la persona real, docs/CONTEXTO_TECNICO.md 4.10, y el mapeo de diagnósticos final)
 Pérdida de R² al quitar cada factor: diagnóstico 7,2 puntos (ojo: es en parte un dato administrativo; antes 3,9 con solo 38 % de cobertura), edad y sexo 4,1, tipo de visita 2,0 (por urgencias se
 espera más: ambulatorio −31 %, treatment urgency −39 %), hora de llegada 0,6, año 0,1, carga 0,1, laboratorios de 6 h 0,2,
 calendario ~0. **El 84 % de la variación no se explica con lo que se observa.** Un modelo "al llegar" para predecir si un paciente esperará
@@ -170,7 +170,7 @@ estocástica de pacientes llegando. La simulación Monte Carlo de camas (ficha 3
   añadiría ~10.
 - **Escenario "30 % de las altas de la tarde antes del mediodía"** (`src/simulacion_altas.py`): hasta 5,1 camas libres adicionales a las 12 h
   (~34 horas-cama por día). Traducido a espera: **como máximo ~8 % del exceso** (451 horas-paciente por día), estimación ~3 %. Con el 100 %:
-  máximo 27 %. Supuestos: el alta de los demás no cambia; es una cota, no una predicción. **Nota sobre la capacidad:** el HUN reportó 106 camas de hospitalización; la ocupación media fue 94 (2023), 101 (2024) y 105 (2025), y en 2025 superó las 106 camas el 42 % de las horas (en 2023, el 2 %). El exceso viene de estancias largas con actividad diaria de hospitalización (las de más de 30 días pasaron de 6 a 13 camas). Puede ser sobreocupación con camas adicionales o una capacidad real mayor; los datos no lo distinguen (`CLAUDE.md` 4.8).
+  máximo 27 %. Supuestos: el alta de los demás no cambia; es una cota, no una predicción. **Nota sobre la capacidad:** el HUN reportó 106 camas de hospitalización; la ocupación media fue 94 (2023), 101 (2024) y 105 (2025), y en 2025 superó las 106 camas el 42 % de las horas (en 2023, el 2 %). El exceso viene de estancias largas con actividad diaria de hospitalización (las de más de 30 días pasaron de 6 a 13 camas). Puede ser sobreocupación con camas adicionales o una capacidad real mayor; los datos no lo distinguen (`docs/CONTEXTO_TECNICO.md` 4.8).
 - El **83 % de las horas de espera** viene de esperas de más de 24 h y el 57 % de esperas de más de 48 h (el 19 % de los pacientes).
 
 ### 4.7 Días atípicos (`docs/dias_atipicos.md`)
@@ -274,7 +274,7 @@ otro hospital no halló efecto). Las 12 fuentes se comprobaron el 6-nov, 4 de el
 | ¿Cuánto espera un paciente por cama? | Mediana 18,6 h, percentil 90 73,9 h; el 44 % más de 24 h | 4.2; `src/construir_segmentos.py` |
 | ¿Dónde está el cuello de botella? | En la espera de cama, sobre todo en urgencias antes de la cama (77 % de las horas) | 4.1–4.2 |
 | ¿Está empeorando? | Sí, los peores casos: percentil 90 de 61 h (2023) a 80 h (2026); la mediana no | 4.3 |
-| ¿Faltan camas? | No se puede afirmar: la ocupación (99 % de las 106 camas reportadas en 2025, 42 % de las horas por encima) subió por las estancias largas (+16 % de estancia media), no por la demanda; sobreocupación o capacidad mayor, sin dato para distinguirlo | 4.6; `CLAUDE.md` 4.8 |
+| ¿Faltan camas? | No se puede afirmar: la ocupación (99 % de las 106 camas reportadas en 2025, 42 % de las horas por encima) subió por las estancias largas (+16 % de estancia media), no por la demanda; sobreocupación o capacidad mayor, sin dato para distinguirlo | 4.6; `docs/CONTEXTO_TECNICO.md` 4.8 |
 | ¿Adelantar altas resuelve? | Ayuda poco: como máximo ~8 % del exceso | 4.6; `src/simulacion_altas.py` |
 | ¿Se puede predecir la demanda? | Llegadas sí (7,5 % de error); ingresos diarios no, por semana 9,5 % | 5.1 |
 | ¿Qué alertas se proponen? | Día congestionado a las 12 h; ocupación alta; paciente a las 48 h sin cama | 5.2 |

@@ -1,7 +1,7 @@
 """
 dashboard/fichas_prediccion.py  -  «¿Cómo se interpreta?» y «Ficha técnica» de las paginas de Prediccion que no las tenian (14-nov-2026)
 Pronostico, Paciente en espera y Planeacion de camas traen las suyas propias (con graficos); aqui estan las de Alertas y Dias atipicos, con la misma forma, para que todas las paginas de Prediccion tengan interpretacion, documentacion y ficha tecnica.
-Cifras: docs/documento_final.md (6.2, 6.3, 6.8), CLAUDE.md 6b y docs/dias_atipicos.md.
+Cifras: docs/documento_final.md (6.2, 6.3, 6.8), docs/CONTEXTO_TECNICO.md 6b y docs/dias_atipicos.md.
 """
 FICHAS = {
     "/alertas": {

@@ -6,7 +6,7 @@ sueltas: con esta tabla se responde "que tan bien pronostica?" para cada serie y
 COMO SE MIDE (retroceso, o "backtest")
   Se vuelve al pasado muchas veces (cada 14 dias, desde el dia 400 de la serie), se pronostican los 365 dias siguientes usando solo lo que se
   sabia ese dia y se compara con lo que paso. Es la misma situacion de uso real. Los resultados se separan en:
-    - PRUEBA NORMAL: dias destino hasta el 9-abr-2026 (periodo confiable; el registro se degrada desde el 10-abr-2026, CLAUDE.md 4.9).
+    - PRUEBA NORMAL: dias destino hasta el 9-abr-2026 (periodo confiable; el registro se degrada desde el 10-abr-2026, docs/CONTEXTO_TECNICO.md 4.9).
     - DESDE EL 10-ABR-2026: aparte, como prueba de estres (esos datos ya no son confiables). Con el corte nuevo la serie limpia termina el 9-abr, asi que casi no hay destinos ahi.
 
 METRICAS (por serie y por plazo = cuantos dias antes se pronostico)

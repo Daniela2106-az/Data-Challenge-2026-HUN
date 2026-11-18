@@ -2,7 +2,7 @@
 dashboard/pages/factores.py  -  pagina «Qué influye en la espera» (13-nov-2026; pagina 2.5 de docs/estructura_dashboard.md; formato de presentacion)
 Cuanto de la espera de cama se explica con lo que se sabe del paciente (poco) y que factores pesan.
 
-DATOS  Peso de cada factor y demas cifras: ya publicadas (CLAUDE.md 6b y 4.10, docs/HALLAZGOS.md 4.5, docs/modelo_espera.md), escritas aqui
+DATOS  Peso de cada factor y demas cifras: ya publicadas (docs/CONTEXTO_TECNICO.md 6b y 4.10, docs/HALLAZGOS.md 4.5, docs/modelo_espera.md), escritas aqui
        como constantes. La grafica por tipo de visita y edad lee espera_cubo.csv (dashboard/preparar_datos.py).
 """
 import sys
@@ -33,7 +33,7 @@ OTROS = [
     ("4 de cada 10", "Falsas alarmas al predecir por paciente", "Un modelo que avise al llegar quién esperará más de un día marcaría al "
                                                                "44 % de los pacientes."),
 ]
-# (comparacion, cambio en la espera con todo lo demas igual, en %) - efectos del modelo (CLAUDE.md 6b y 4.10)
+# (comparacion, cambio en la espera con todo lo demas igual, en %) - efectos del modelo (docs/CONTEXTO_TECNICO.md 6b y 4.10)
 EFECTOS = [("Mujer, frente a hombre", 27), ("Cada escalón más de carga al llegar", 2.5), ("Visita ambulatoria, frente a urgencias", -31),
            ("«Treatment urgency», frente a urgencias", -39)]
 TIPOS = ["Urgencias", "Ambulatorio", "Treatment urgency"]
@@ -115,7 +115,7 @@ def layout():
             "de `espera_cubo.csv`.",
             "Que un factor pese no significa que cause la espera. El **diagnóstico es un dato administrativo**, se registra tarde y puede "
             "venir del registro duplicado. El grupo «treatment urgency» es una etiqueta de la base, no un servicio confirmado por el hospital.",
-            "Fuente: CLAUDE.md 6b y 4.10 · docs/HALLAZGOS.md 4.5 · docs/modelo_espera.md · espera_cubo.csv (dashboard/preparar_datos.py).", ruta="/factores"))
+            "Fuente: docs/CONTEXTO_TECNICO.md 6b y 4.10 · docs/HALLAZGOS.md 4.5 · docs/modelo_espera.md · espera_cubo.csv (dashboard/preparar_datos.py).", ruta="/factores"))
 
 
 @callback(Output("fac-peso", "figure"), Output("fac-grupos", "figure"), Output("fac-dato", "children"), Output("fac-efectos", "figure"),
