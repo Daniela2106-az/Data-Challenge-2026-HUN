@@ -4,8 +4,8 @@ Lista de lo que falta para cubrir el instructivo del Data Challenge (`docs/DATA 
 con qué insumos. **Prioridad actual: cubrir primero los huecos de análisis, modelos y predicciones; los entregables (dashboard, documento final,
 presentación) van al final.**
 
-**Equipo:** **Daniela** (coordina, scripts de datos y análisis, lleva Claude Code), **Samuel** (Persona 2) y **Anthony** (Persona 3). Anthony también
-usa Claude Code: su Claude debe leer `README.md` → `docs/HALLAZGOS.md` → este documento → la ficha de su tarea en `docs/fichas_de_tareas.md`.
+**Equipo:** **Daniela** (coordina, scripts de datos y análisis), **Samuel** (Persona 2) y **Anthony** (Persona 3). Quien tome una tarea
+debe leer `README.md` → `docs/HALLAZGOS.md` → este documento → la ficha de su tarea en `docs/fichas_de_tareas.md`.
 
 **Qué ya está hecho** (no repetir): limpieza y episodios, flujo del paciente, cuellos de botella (fases 0 a 5), ocupación y escenario de altas, pronóstico de
 demanda, alertas, días atípicos, borrador de recomendaciones y un repositorio reproducible. Todo con cifras en `docs/HALLAZGOS.md`.
@@ -72,10 +72,10 @@ demanda, alertas, días atípicos, borrador de recomendaciones y un repositorio 
 ### A3. Agrupar diagnósticos (`datos/referencia/mapeo_dx.csv`) · **Daniela**
 - **Qué:** los diagnósticos vienen en SNOMED sin jerarquía; agrupar los ~300 más frecuentes (`dx_nombre`, `categoria_dx`). Con la regla de estancia única del 29-oct (se conserva el registro con más información) el 39 % de las estancias no tiene
   diagnóstico traducido (antes 62 %) y el 88 % se registra tarde: sirve para explicar, no para predecir al llegar.
-- **Entrega:** `datos/referencia/mapeo_dx.csv` (sí se sube a git: no tiene datos de pacientes). Claude deja el borrador a partir de `dx_frecuencias.csv`; hay que
+- **Entrega:** `datos/referencia/mapeo_dx.csv` (sí se sube a git: no tiene datos de pacientes). El borrador sale a partir de `dx_frecuencias.csv`; hay que
   revisarlo con el navegador de SNOMED o con alguien del área de salud.
 - **Habilita:** A1, A2 y A4.
-- **Estado (26-oct): HECHA como borrador + análisis.** Mapeo por reglas (`src/generar_borrador_mapeo_dx.py`, 0,9 % sin clasificar) y análisis de tiempos por grupo (`src/diagnosticos_y_tiempos.py`, `docs/diagnosticos_y_tiempos.md`). Hallazgos: cardiovascular y neurológico reciben cama en ~4 h, musculoesquelético, renal, digestivo y cáncer esperan 22–32 h; y el diagnóstico se registra más cuando la cama llega rápido (sesgo; pregunta B9 al HUN). **3-nov: revisión completa del mapeo hecha por Claude (562 correcciones, `docs/revision_mapeo_dx.md`).** Falta: validación clínica del mapeo por alguien del área de salud (no se buscó cada diagnóstico en una fuente externa).
+- **Estado (26-oct): HECHA como borrador + análisis.** Mapeo por reglas (`src/generar_borrador_mapeo_dx.py`, 0,9 % sin clasificar) y análisis de tiempos por grupo (`src/diagnosticos_y_tiempos.py`, `docs/diagnosticos_y_tiempos.md`). Hallazgos: cardiovascular y neurológico reciben cama en ~4 h, musculoesquelético, renal, digestivo y cáncer esperan 22–32 h; y el diagnóstico se registra más cuando la cama llega rápido (sesgo; pregunta B9 al HUN). **3-nov: revisión completa del mapeo (562 correcciones, `docs/revision_mapeo_dx.md`).** Falta: validación clínica del mapeo por alguien del área de salud (no se buscó cada diagnóstico en una fuente externa).
 
 ### A4. Explicar mejor los retrasos (modelo explicativo de la espera) · **Anthony** — **HECHA el 8-nov-2026** (`docs/modelo_espera.md`, `src/modelo_espera_explicativo.py`)
 - **Qué pide el instructivo:** "qué características están asociadas a retrasos". Hoy todos los factores juntos explican solo el **16 %** de la variación de la espera.

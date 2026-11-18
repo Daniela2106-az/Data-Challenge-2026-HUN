@@ -129,7 +129,7 @@ Carpetas: `powerbi/`, `docs/hun/`.
 
 1. **Esta semana:**
    - Enviar el correo al HUN con las preguntas de `docs/CONTEXTO_TECNICO.md`, sección 8, y guardar sus respuestas en `docs/hun/`
-     (Daniela las revisa con Claude).
+     (Daniela las revisa).
    - Instalar Power BI y conectar `panel_diario.csv`, `serie_horaria.csv` y las tablas de factores (drive).
 2. **Páginas del dashboard:**
    1. **Llegadas:** por hora y día de la semana (mapa de calor), con filtros por año y tipo de visita.
@@ -144,7 +144,7 @@ Carpetas: `powerbi/`, `docs/hun/`.
 
 ---
 
-## DANIELA (con Claude) — Modelo A, días atípicos, datos y documento
+## DANIELA — Modelo A, días atípicos, datos y documento
 Carpetas: `src/`, `sql/`, `docs/`, `datos/referencia/`, `notebooks/modelos/`.
 
 ### Ficha D.1 — Modelo A ampliado: pronóstico de llegadas e ingresos y alerta de saturación
@@ -178,11 +178,11 @@ y describirlos en palabras simples.
 ### Ficha D.3 — Datos, coordinación y documento
 1. Correr los scripts y exportar al drive los martes y viernes: `python3 src/analisis_etapas.py`, luego
    `preparar_variables.py` y `exportar_para_equipo.py`.
-2. Correr en DBeaver las consultas pesadas que pida Claude (laboratorios con hora mínima y máxima; consultas filtradas
+2. Correr en DBeaver las consultas pesadas que se necesiten (laboratorios con hora mínima y máxima; consultas filtradas
    por persona).
 3. Revisar los *pull requests* y hacer los commits de cierre (sin datos y sin `.pbix`).
-4. **Documento:** Claude redacta contexto, metodología, limitaciones y componentes 1 y 2 desde los scripts; Daniela revisa.
-5. **`mapeo_dx.csv`:** Claude deja el borrador de los ~300 diagnósticos más frecuentes; Daniela lo revisa con el
+4. **Documento:** Se redactan contexto, metodología, limitaciones y componentes 1 y 2 desde los scripts; Daniela revisa.
+5. **`mapeo_dx.csv`:** El borrador de los ~300 diagnósticos más frecuentes queda listo; Daniela lo revisa con el
    navegador de SNOMED o con un docente de salud.
 6. Compilar las respuestas del HUN y ajustar las limitaciones del documento.
 
