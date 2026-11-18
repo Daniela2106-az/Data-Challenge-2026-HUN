@@ -277,3 +277,25 @@ de abril de 2026; el efecto se aplica parejo durante todo el horizonte.
 Código: `src/simulador_integral.py` (sección «Modelos de la ficha A9 y casos»: `MODELOS_A9`, `CASOS`, `EFECTO_CASOS`, `ERROR_MODELOS`,
 `pronostico_entrenado`, `efecto_aplicado`, `factor_casos`; `simular_integral(..., modelos=, casos=)`), `src/medir_casos.py` y
 `dashboard/pages/simulador.py`. Si `casos_efecto.csv` y `modelos_error.csv` no están, el motor usa los valores de la última corrida.
+
+## Alertas y operación óptima durante la simulación (18-nov-2026)
+
+La simulación se reproduce siempre como «hoy». Mientras corre, salta una tarjeta arriba del gráfico (dentro del flujo de la página, sin tapar nada) con la etiqueta **Alerta**, su gravedad, **qué pasó** y la **recomendación** (con su primer paso). Tiene flechas ◀ ▶ para recorrer las alertas anteriores sin interrumpir la reproducción, y enlaces a **la alerta** (`/alertas#alerta-A2`) y a **la recomendación** (`/recomendaciones#rec-R4`) que abren la página y llevan a esa tarjeta, resaltada un momento.
+
+**Calibración.** En un caso normal de la propia simulación (90 días, sin palancas) la probabilidad de superar las 106 camas tiene mediana 68 % y casi nunca pasa de 84 %; las camas ocupadas, mediana 111 y p90 114,5; la cola, mediana 25 y p99 28. Superar las 106 camas es lo normal en esta simulación: por eso esa condición avisa **una sola vez** y lo que **frena** la simulación es lo crítico, por encima de lo típico. Los primeros 7 días (4 si el plazo es de 2 semanas o menos; 12 horas en la vista horaria), que vienen de la siembra con el censo real, no generan alertas. Si los controles mejoran claramente al hospital (por ejemplo, estancia −10 %), no saltan alertas porque ya no hay riesgo.
+
+**Gravedades y pausa.** Hay dos gravedades: aviso (media) y crítico (alta). **Las dos frenan la simulación**, para poder revisarlas y aplicar la mejora antes de que la condición escale; cada alerta (tipo y gravedad) se muestra una sola vez por corrida, así que en total hay como mucho 6 pausas (3 tipos × 2 gravedades). Cada alerta (tipo y gravedad) se muestra **una sola vez por corrida**: después queda como procesada y no vuelve a saltar; solo escala si pasa de aviso a crítica. Un aviso (gravedad media) también frena la simulación y ofrece «Aplicar mejora y comparar», para corregir antes de que escale.
+
+| Alerta | Aviso (gravedad media) | Crítico (gravedad alta) | Recomendación | Alerta en Resultados |
+|---|---|---|---|---|
+| Riesgo de saturar las camas (probabilidad de superar la capacidad a 48 h) | desde 50 % | desde 84 % | R4 y R7 | A2 |
+| Ocupación alta (camas ocupadas, mediana) | desde 107 (la alerta A2) | desde 118 | R3 y R4 | A2 |
+| Cola de espera larga (pacientes a la vez) | desde 28 | desde 33 (el percentil 90 real) | R5 y R6 | S1 |
+
+La tarjeta apila sus botones de arriba abajo: Continuar, Aplicar mejora y comparar, Ver más sobre esta alerta y Ver recomendación. La reproducción nueva arranca cuando la figura nueva ya está dibujada, para que el gráfico no parpadee al reiniciar.
+
+Los umbrales son criterios de esta página, no resultados validados como los de `docs/recomendaciones.md`. Si coinciden varias, gana la más grave.
+
+Al aplicar la mejora, las alertas de la corrida anterior **no desaparecen**: siguen consultables con las flechas, marcadas como «resuelta con la mejora», y las nuevas se suman al historial.
+
+**Una sola acción: «Aplicar mejora y comparar».** Se frena la reproducción, el panel de configuración se abre y los controles se desplazan, uno tras otro, a la operación óptima (R7: 15 % menos en las estancias de más de 14 días; R4: 30 % de las altas de la tarde adelantadas a la mañana). El panel se enfoca en las dos palancas que cambian, se mueven una tras otra y, cuando terminan, **se cierra solo y la vista baja al gráfico**. Entonces la simulación se **repite desde el día 1** con la operación óptima a todo color y cómo iba antes («Antes de la mejora») en gris punteado, durante toda la corrida. La alerta de cola no ofrece la mejora, porque la operación óptima no la mueve directamente. «Reiniciar» devuelve los controles a cero.

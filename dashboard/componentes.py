@@ -110,14 +110,14 @@ def dato(valor, texto):
     return [html.B(valor), html.Span(texto)]
 
 
-def lamina(numero, titular, texto, *grafica, dato=None, id_dato=None, invertida=False, controles=None):
+def lamina(numero, titular, texto, *grafica, dato=None, id_dato=None, invertida=False, controles=None, ancla=None):
     """Una idea por bloque. `titular` es la afirmacion (un texto, o un html.Span con id si cambia con los filtros); `texto`, una o
     dos frases en Markdown; `dato`, un par (cifra, que es); `id_dato`, si lo llena un callback; `controles`, un filtro de esta grafica."""
     hijos_dato = [html.B(dato[0]), html.Span(dato[1])] if dato else []
     lado = [html.Div(f"{numero:02d}", className="lamina__num"), html.H3(titular, className="lamina__titular"),
             dcc.Markdown(texto, className="lamina__p"), controles,
             html.Div(hijos_dato, className="lamina__dato", **({"id": id_dato} if id_dato else {}))]
-    return html.Section(className="card lamina" + (" lamina--inv" if invertida else ""), children=[
+    return html.Section(**({"id": ancla} if ancla else {}), className="card lamina" + (" lamina--inv" if invertida else ""), children=[
         html.Div([x for x in lado if x is not None], className="lamina__texto"), html.Div(list(grafica), className="lamina__grafica")])
 
 

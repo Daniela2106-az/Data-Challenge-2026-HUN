@@ -2075,3 +2075,113 @@ button, .btn-primary {
 .simint-chip.is-active { background: var(--brand-strong); border-color: var(--brand-strong); color: #fff; }
 .simint-chip--icon { padding: 3px 11px; }
 .simint-chip__swatch { display: inline-block; width: 9px; height: 9px; border-radius: 3px; }
+
+/* ---------- Simulador integral: escenarios, alertas por gravedad y panel que se abre al cambiar de escenario ---------- */
+.simint-escenario { margin: 6px 0 10px; padding: 14px 18px; border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: var(--r-md); background: var(--surface); }
+.simint-escenario__titulo { font-size: 16px; font-weight: 700; color: var(--brand-ink); }
+.simint-escenario__texto { margin: 4px 0 8px; font-size: 14px; line-height: 1.5; color: var(--ink); max-width: 900px; }
+.simint-escenario__rotulo { font-size: 11.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--brand-strong); margin-right: 8px; }
+.simint-escenario__palancas { font-size: 13.5px; }
+.simint-escenario__nota { margin-top: 6px; font-size: 12.5px; color: var(--muted); }
+.simint-comparar--visible { margin: 0 0 12px; }
+.simint-config--abierto .simint-config-inner { max-height: 900px; overflow-y: auto; padding: 16px; opacity: 1; pointer-events: auto; }
+.simint-config--abierto .simint-config-tab { opacity: 0; }
+.simint-config-inner .dash-slider-thumb, .simint-config-inner .dash-slider-range { transition: left .8s ease, width .8s ease; }
+.simint-alerta__cuerpo { flex: 1 1 380px; color: var(--ink); font-weight: 500; }
+.simint-alerta__cab { display: flex; align-items: center; gap: 10px; }
+.simint-alerta__titulo { font-size: 15.5px; font-weight: 700; color: var(--brand-ink); }
+.simint-alerta__detalle { margin: 4px 0 6px; font-size: 13.5px; line-height: 1.45; }
+.simint-alerta__acciones { font-size: 12.5px; color: var(--muted); }
+.simint-alerta__rotulo { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--brand-strong); margin-right: 8px; }
+.simint-alerta--alta.alert-inline { background: rgba(192, 57, 43, .12); border-color: #c0392b; color: var(--ink); }
+.simint-alerta--media.alert-inline { background: rgba(235, 164, 52, .13); border-color: #e0a030; color: var(--ink); }
+.simint-alerta--alta .rec-chip { background: #c0392b; color: #fff; }
+.simint-alerta--media .rec-chip { background: #e0a030; color: #1b1b1b; }
+.simint-alerta__link { align-self: center; padding: 5px 12px; font-size: 12px; font-weight: 600; border-radius: var(--r-sm); border: 1px solid var(--accent); color: var(--accent); text-decoration: none; white-space: nowrap; }
+.simint-alerta__link:hover { background: var(--accent); color: #fff; }
+
+/* alerta flotante arriba del grafico del simulador (se queda a la vista aunque se desplace la pagina) */
+.simint-alerta.alert-inline { position: fixed; top: 82px; right: 28px; z-index: 70; width: min(620px, calc(100vw - 330px)); margin: 0; box-shadow: 0 12px 32px rgba(0, 0, 0, .35); }
+.simint-alerta .simint-alerta__botones { flex-wrap: wrap; margin-left: 0; }
+.simint-optima-fila { display: flex; gap: 10px; flex-wrap: wrap; margin: 4px 0 10px; }
+.simint-alerta--alta.alert-inline { background: color-mix(in srgb, #c0392b 16%, var(--surface)); }
+.simint-alerta--media.alert-inline { background: color-mix(in srgb, #e0a030 16%, var(--surface)); }
+
+/* alerta del simulador: dentro del flujo de la pagina, arriba del grafico, sin tapar nada ni salirse de su caja */
+.simint-alerta.alert-inline { position: static; width: auto; max-width: 100%; margin: 0 0 14px; box-shadow: var(--sh-2); display: flex; flex-wrap: wrap; align-items: flex-start; gap: 12px 18px; box-sizing: border-box; }
+.simint-alerta__cuerpo { flex: 1 1 360px; min-width: 0; }
+.simint-alerta .simint-alerta__botones { flex: 0 1 auto; flex-wrap: wrap; justify-content: flex-start; margin-left: auto; max-width: 100%; }
+.simint-alerta__paso { margin: 4px 0 6px; font-size: 13px; line-height: 1.45; color: var(--brand-ink); font-weight: 600; }
+.simint-alerta__link { white-space: normal; }
+
+/* ---------- 18-nov-2026 (2): tarjeta de alerta con historial, panel de configuracion sin cortes, tarjetas de recomendaciones estables ---------- */
+.simint-alerta__cab { flex-wrap: wrap; row-gap: 6px; }
+.simint-alerta__etiqueta { font-size: 11px; font-weight: 800; letter-spacing: .14em; color: var(--brand-strong); padding: 2px 8px; border: 1px solid currentColor; border-radius: 4px; }
+.simint-alerta__hist { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
+.simint-alerta__flecha { width: 26px; height: 26px; padding: 0; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); color: var(--brand-ink); cursor: pointer; font-size: 11px; line-height: 1; }
+.simint-alerta__flecha:hover { border-color: var(--accent); color: var(--accent); }
+.simint-alerta__bloque { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; margin: 6px 0 0; font-size: 13.5px; line-height: 1.45; font-weight: 500; }
+.simint-alerta__bloque .simint-alerta__rotulo { flex: 0 0 auto; min-width: 104px; }
+.simint-alerta__paso { display: block; flex: 1 0 100%; margin-left: 112px; font-weight: 600; color: var(--brand-ink); }
+.simint-alerta__acciones, .simint-alerta__detalle { display: none; }
+.simint-alerta__link { align-self: center; }
+
+/* panel de configuracion: segunda columna completa, sin quedar pegada al borde ni cortada */
+.simint-config-inner { box-sizing: border-box; width: min(760px, calc(100vw - 340px)); grid-template-columns: repeat(2, minmax(0, 1fr)); padding-left: 0; padding-right: 0; }
+.simint-config-sidebar:hover .simint-config-inner, .simint-config-sidebar:focus-within .simint-config-inner, .simint-config--abierto .simint-config-inner { padding: 18px 30px 18px 24px; overflow-x: hidden; }
+.simint-config-inner > * { min-width: 0; }
+.simint-config-section { padding-right: 6px; }
+
+/* tarjetas de recomendaciones: aparecen una vez y se quedan; el ciclo repetido de .hechos .hecho no se aplica aqui */
+.hechos .hecho.rec-corta { animation: recAparece .5s ease both; scroll-margin-top: 92px; }
+@keyframes recAparece { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.ancla-destacada { outline: 3px solid var(--accent); outline-offset: 3px; transition: outline-color 1s ease; border-radius: var(--r-md); }
+.simint-alerta .simint-alerta__flecha { width: 26px; height: 26px; min-width: 0; padding: 0; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); color: var(--brand-ink); box-shadow: none; font-size: 11px; line-height: 1; }
+.simint-alerta .simint-alerta__flecha:hover { border-color: var(--accent); color: var(--accent); background: var(--surface); }
+.simint-alerta__bloque { display: block; margin: 8px 0 0; }
+.simint-alerta__bloque .simint-alerta__rotulo { display: block; min-width: 0; margin: 0 0 2px; }
+.simint-alerta__paso { display: block; margin: 4px 0 0; }
+
+/* ---------- 19-nov-2026: flechas con chevron, botones de la alerta apilados, grafico estable ---------- */
+.chev { display: block; width: 14px; height: 14px; background: currentColor; -webkit-mask: var(--chev) center / contain no-repeat; mask: var(--chev) center / contain no-repeat; }
+.chev--izq { --chev: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><polyline points='15 5 8 12 15 19'/></svg>"); }
+.chev--der { --chev: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><polyline points='9 5 16 12 9 19'/></svg>"); }
+.simint-alerta .simint-alerta__flecha { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 8px; padding: 0; }
+.simint-alerta .simint-alerta__botones { display: flex; flex-direction: column; align-items: stretch; gap: 8px; flex: 0 0 230px; margin-left: auto; }
+.simint-alerta__btn { display: block; box-sizing: border-box; width: 100%; padding: 8px 14px; font-size: 13px; font-weight: 600; text-align: center; border-radius: var(--r-sm); text-decoration: none; }
+.simint-alerta__link.simint-alerta__btn { border: 1px solid var(--accent); color: var(--accent); background: transparent; white-space: normal; }
+.simint-alerta__link.simint-alerta__btn:hover { background: var(--accent); color: #fff; }
+.simint-alerta__nota { font-size: 12px; color: var(--muted); text-align: center; line-height: 1.35; }
+.simint-alerta__nota:empty { display: none; }
+#simint-grafico { scroll-margin-top: 84px; }
+@media (max-width: 900px) { .simint-alerta .simint-alerta__botones { flex: 1 1 100%; } }
+.simint-alerta .simint-alerta__flecha { color: var(--accent); border-color: var(--accent); background: transparent; }
+.simint-alerta .simint-alerta__flecha:hover { background: var(--accent); color: #fff; }
+.simint-alerta .simint-alerta__flecha .chev { width: 16px; height: 16px; }
+.simint-alerta .simint-alerta__flecha { width: 30px !important; min-width: 30px !important; max-width: 30px !important; height: 30px !important; padding: 0 !important; gap: 0; }
+.simint-alerta .simint-alerta__flecha .chev { flex: 0 0 16px; width: 16px !important; min-width: 16px; height: 16px !important; }
+.simint-alerta--resuelta.alert-inline { background: color-mix(in srgb, #2e8b57 14%, var(--surface)); border-color: #2e8b57; color: var(--ink); }
+.simint-alerta--resuelta .rec-chip { background: #2e8b57; color: #fff; }
+
+/* la tarjeta de alerta nunca se oculta: tamano fijo para que el grafico no suba ni baje */
+.simint-alerta.alert-inline { min-height: 214px; align-items: stretch; }
+.simint-alerta--idle.alert-inline { background: var(--surface); border-color: var(--line); color: var(--muted); }
+.simint-alerta--idle .simint-alerta__titulo { color: var(--muted); }
+.simint-alerta--idle .simint-alerta__bloque:nth-of-type(n+2), .simint-alerta--idle .simint-alerta__hist, .simint-alerta--idle .rec-chip, .simint-alerta--idle .simint-alerta__etiqueta { visibility: hidden; }
+.simint-alerta--idle .simint-alerta__botones { visibility: hidden; }
+.simint-alerta.alert-inline { min-height: 262px; }
+.simint-alerta--idle .simint-alerta__bloque:nth-of-type(n+2) { visibility: visible; }
+.simint-alerta--idle .simint-alerta__bloque:nth-of-type(n+3) { visibility: hidden; }
+
+/* tarjeta de alerta en espera: se ve completa y tranquila, no vacia */
+.simint-alerta__espera { display: none; align-items: center; gap: 18px; flex: 1 1 100%; }
+.simint-alerta--idle .simint-alerta__espera { display: flex; }
+.simint-alerta--idle .simint-alerta__cuerpo, .simint-alerta--idle .simint-alerta__botones { display: none; }
+.simint-alerta--idle.alert-inline { align-items: center; border-left: 4px solid #2e8b57; background: color-mix(in srgb, #2e8b57 7%, var(--surface)); border-color: color-mix(in srgb, #2e8b57 45%, var(--line)); color: var(--ink); }
+.simint-alerta__espera-ico { flex: 0 0 44px; width: 44px; height: 44px; color: #2e8b57; opacity: .9; }
+.simint-alerta__espera-titulo { font-size: 16px; font-weight: 700; color: var(--brand-ink); }
+.simint-alerta__espera-p { margin: 4px 0 12px; font-size: 13.5px; line-height: 1.5; color: var(--muted); max-width: 760px; }
+.simint-alerta__vigila { display: flex; flex-wrap: wrap; gap: 8px; }
+.simint-alerta__vigila-item { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; font-size: 12.5px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--ink); }
+.simint-alerta__vigila-item i { width: 8px; height: 8px; border-radius: 50%; background: #2e8b57; flex: 0 0 8px; }
+.simint-alerta--idle .simint-alerta__bloque, .simint-alerta--idle .simint-alerta__hist, .simint-alerta--idle .rec-chip, .simint-alerta--idle .simint-alerta__etiqueta { visibility: visible; }

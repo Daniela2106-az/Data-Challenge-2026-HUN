@@ -319,7 +319,13 @@ app.clientside_callback(
             if (parar || Date.now() - t0 > 20000) { clearInterval(timer); return; }
             if (el) {
                 if (Math.abs(el.getBoundingClientRect().top - 80) > 24) { el.scrollIntoView({block: 'start'}); }
-                else if (Date.now() - t0 > 2500) { clearInterval(timer); }
+                else if (Date.now() - t0 > 2500) {
+                    clearInterval(timer);
+                    if (/^(rec-R|alerta-)/.test(id)) {       // tarjeta de una recomendacion o alerta: se resalta un momento para ubicarla
+                        el.classList.add('ancla-destacada');
+                        setTimeout(function() { el.classList.remove('ancla-destacada'); }, 3500);
+                    }
+                }
             }
         }, 300);
         return '';

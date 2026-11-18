@@ -108,7 +108,7 @@ def carta(r):
     """Una recomendacion como tarjeta operativa: que cambiar (tres pasos), la meta con la que se sabe que funciono y por que importa."""
     n = int(r.prioridad)
     pasos = [x for x in str(r.que_cambiar).split("|") if x]
-    return html.Div(className="hecho rec-corta", children=[
+    return html.Div(id=f"rec-R{n}", className="hecho rec-corta", children=[
         html.Div(className="rec-corta__cab", children=[html.Div(f"R{n}", className="hecho__num"),
                                                        html.Div([html.Span(TIPO.get(n, ""), className="rec-chip"), chip(r.firmeza)], className="rec-corta__chips")]),
         html.Div(r.titulo_accion, className="hecho__titulo"),
