@@ -62,7 +62,7 @@ CAPITULOS = {1: "Resumen ejecutivo", 2: "El reto y qué abordamos", 3: "Los dato
 # ruta -> (capitulo, subseccion o tema, que se encuentra alli)
 DOCUMENTACION = {
     "/resumen": (1, "Resumen ejecutivo", "los ocho hallazgos y lo que se propone, con sus cifras"),
-    "/datos": (3, "3.1 a 3.7", "la base tabla por tabla, la exploración y la limpieza paso a paso, las variables construidas y las herramientas"),
+    "/datos": (3, "3.1 a 3.8", "la base, cómo se extrajeron los datos, tabla por tabla, la exploración y la limpieza paso a paso, las variables construidas y las herramientas"),
     "/demanda": (4, "Cómo fluye el paciente", "llegadas por hora y por día, el recorrido, la estancia y los reingresos"),
     "/ocupacion": (5, "5.5 La saturación y la ocupación", "por qué sube la ocupación, la ley de Little y el exceso sobre las 106 camas"),
     "/espera": (5, "5.1 a 5.3 La espera de cama", "la definición de cuello de botella, el exceso y por qué empeoran los peores casos"),

@@ -2,7 +2,7 @@
 ## Flujo de pacientes, cuellos de botella y anticipación en el Hospital Universidad del Norte
 
 **Data Challenge HUN 2026** · Hospital Universidad del Norte (HUN) y pregrado de Ciencia de Datos, Universidad del Norte  
-**Equipo:** Daniela (coordinación, datos y análisis), Samuel (estimador de tiempos, recomendaciones y dashboard), Anthony (modelo explicativo y simulación de camas)  
+**Equipo:** Daniela Amaya (coordinación, datos y análisis), Samuel Amador (estimador de tiempos, recomendaciones y dashboard), Anthony Amaya (modelo explicativo y simulación de camas)  
 **Versión:** versión del 17-nov-2026 (estacionalidad anual completa, ficha A9: dengue, IRA y EDA del SIVIGILA; recomendaciones con 38 fuentes verificadas; capítulo 3 reorganizado: tablas y columnas de la base, exploración y limpieza paso a paso, variables y herramientas) · **Entregables:** este documento, el repositorio en GitHub y el dashboard interactivo  
 
 > **Cómo leer este documento.** Cada cifra lleva al lado el documento del repositorio donde se calcula y el script que la produce. Casi todo
@@ -76,13 +76,29 @@ documentación, el repositorio en GitHub y el enlace a un dashboard interactivo 
 | 4. Propuestas accionables | Siete recomendaciones con su cifra, su evidencia externa verificada y su límite | Sección 7 |
 
 **Decisión de enfoque:** la profundidad va en la espera de cama (componente 2) y en los modelos (componente 3); el componente 1 da el contexto y
+
+**La ruta del proyecto, de punta a punta.** Este documento sigue el orden en que se trabajó:
+
+| Etapa | Qué se hizo | Dónde está |
+|---|---|---|
+| Contexto | El reto, lo que pide el instructivo y las decisiones de enfoque | Sección 2 |
+| Extracción | Cómo se obtuvieron los datos de la base del hospital | 3.2 |
+| Exploración | Qué hay en la base, tabla por tabla, y qué no trae | 3.1 y 3.3 |
+| Limpieza | Visitas copia, estancias duplicadas, etapas abiertas, episodios y la persona real | 3.4 |
+| Calidad y validación | El quiebre de abril de 2026 y lo que respondió el hospital | 3.5 y 3.6 |
+| Construcción de variables | Calendario, carga, ocupación, diagnóstico y laboratorios | 3.7 |
+| Flujo y cuello de botella | Cómo fluye el paciente, dónde se pierde el tiempo y qué factores se asocian | Secciones 4 y 5 |
+| Modelos y simulación | Pronóstico, alertas, días atípicos, estimador, simulación de camas y simulador integral | Sección 6 |
+| Recomendaciones | Siete acciones con su evidencia y su meta | Sección 7 |
+| Dashboard | Cómo se presenta todo al hospital | Sección 8 |
+| Límites y futuro | Lo que no sabemos y lo que sigue | Secciones 9 y 10 |
 el 4 sale de los dos anteriores.
 
 ---
 
 ## 3. Los datos y su calidad
 
-Este capítulo describe la base tal como es, qué columnas usamos y qué representa cada una, cómo se exploró y se limpió paso a paso, qué variables se construyeron y con qué herramientas. Es la parte **previa a cualquier resultado**: sin ella, las cifras del hospital salían infladas cerca de 40 %.
+Este capítulo sigue el orden en que se trabajó: qué es la base (3.1), cómo se extrajeron los datos (3.2), qué tablas y columnas se usaron (3.3), cómo se exploró y se limpió paso a paso (3.4), qué pasó con el registro en abril de 2026 (3.5), lo que dijo el hospital (3.6), qué variables se construyeron (3.7) y con qué herramientas (3.8). Es la parte **previa a cualquier resultado**: sin ella, las cifras del hospital salían infladas cerca de 40 %.
 
 ### 3.1 La base
 Base PostgreSQL en el esquema estándar **OMOP** (`uninorte_omop`), de solo lectura y detrás de VPN. Tablas: `visit_occurrence` (1,7 millones de
@@ -100,9 +116,21 @@ procedimientos (la columna está vacía en toda la tabla); diagnóstico principa
 | 9201 | Cama (HOSP) | Hospitalización; según el HUN, se registra **al asignar la cama** |
 | 581479 | Ambulatorio (AMB) | Evento administrativo de duración cero; se descarta |
 
-El detalle de cada tabla y de sus columnas está en 3.2; cómo se limpió, en 3.3.
+Cómo se obtuvieron los datos está en 3.2; el detalle de cada tabla y de sus columnas, en 3.3; cómo se exploró y se limpió, en 3.4.
 
-### 3.2 Las tablas y las columnas que usamos
+### 3.2 Cómo se extrajeron los datos
+**Acceso.** La base es de **solo lectura** y está detrás de una VPN del hospital; las credenciales viven fuera del proyecto y nunca se guardan en el repositorio. Solo existen índices de llave primaria, así que las consultas pesadas
+tardan entre 10 y 30 minutos, y como la VPN corta el internet del computador, las consultas largas se corren en segundo plano. La conexión no permite crear tablas temporales: las consultas se escriben con expresiones `WITH`.
+
+**Dos vías de extracción.**
+1. **Exportaciones en CSV** con consultas de la carpeta `sql/` (por ejemplo `sql/exportaciones_base.sql` y `sql/consultas_semana1.sql`): las etapas de visita (`visit_detail`), las visitas, las personas, los diagnósticos, procedimientos y laboratorios resumidos **por visita**
+   (en SQL, en lugar de exportar las tablas enteras, que pesan decenas de gigabytes) y las consultas de personas y diagnósticos de apoyo.
+2. **Revisiones directas de solo lectura** con `src/explorar_bd.py` y `src/auditoria_bd.py` (sobre `src/conexion_bd.py`): sirvieron para comprobar en la base, y no solo en los CSV, hallazgos como el quiebre de abril de 2026 (3.5) o los duplicados.
+
+**Comprobación.** Las exportaciones se verificaron contra la base: las filas y las sumas de los CSV coinciden con las de la base (por ejemplo, 566.004 visitas con diagnósticos y 662.783 con procedimientos, con 38.636.063 y 47.042.032 registros).
+**Qué no se publica:** los datos son clínicos, por eso en el repositorio solo hay código, consultas, documentos, gráficos y tablas agregadas.
+
+### 3.3 Las tablas y las columnas que usamos
 El esquema real tiene 8 tablas (no las 20 del instructivo). Esta es la lectura de cada una después de explorarla: qué es, qué columnas usamos y qué representan,
 y lo que hay que saber antes de confiar en ella. Detalle completo en `docs/CONTEXTO_TECNICO.md` 3 y 4.
 
@@ -117,7 +145,7 @@ y lo que hay que saber antes de confiar en ella. Detalle completo en `docs/CONTE
 | `concept` (10 M) | Diccionario de códigos | `concept_id`, `concept_name`, `domain_id`, `vocabulary_id` | Sin índices y sin `concept_code`; no hay `concept_ancestor`, así que los diagnósticos se agruparon a mano en 19 grupos (`datos/referencia/mapeo_dx.csv`). |
 | `cups` (94 mil) | Catálogo nacional de procedimientos | — | No enlaza con `procedure_occurrence` (sus códigos son SNOMED, LOINC o ICD9Proc). |
 
-### 3.3 Cómo exploramos y limpiamos la base, paso a paso
+### 3.4 Cómo exploramos y limpiamos la base, paso a paso
 1. **Exploración por agregados.** La base es lenta (consultas de 10 a 30 minutos, solo índices de llave primaria), así que nunca se bajaron tablas enteras: cada
    pregunta se resolvió con una consulta agregada por visita en SQL (`sql/`), exportada a CSV y analizada en Python. Antes de usar cada tabla se contaron sus filas,
    sus conceptos, sus fechas nulas y sus rangos; así aparecieron, por ejemplo, el 100 % de procedimientos sin fecha y los 80 diagnósticos con fecha futura. Desde
@@ -155,7 +183,7 @@ Detalle: `docs/CONTEXTO_TECNICO.md` 4.1–4.13; `docs/HALLAZGOS.md` 2; `src/anal
 **Resultado:** 337.194 episodios (atención continua de un paciente; se corta tras 168 h sin etapas). En el periodo confiable, 22.819 estancias
 únicas con espera de cama medida.
 
-### 3.4 El quiebre de abril de 2026 y lo que pasaba en el sistema de salud
+### 3.5 El quiebre de abril de 2026 y lo que pasaba en el sistema de salud
 La auditoría en la base (`docs/CONTEXTO_TECNICO.md` 4.9) muestra que desde el 10-abr-2026 las visitas de urgencias **suben ~40 %** mientras el registro de etapas se
 degrada: no es menos demanda. El hospital no explicó la causa. Para el contexto se revisaron prensa y actos de la Superintendencia de Salud
 (`docs/estacionalidad_anual.md`, cuarta ronda):
@@ -170,12 +198,12 @@ degrada: no es menos demanda. El hospital no explicó la causa. Para el contexto
 fechas no coinciden exactamente (10-abr frente a 22-abr) y no se puede comprobar con los datos. Queda como hipótesis, no como causa; la decisión de
 usar solo el periodo confiable no cambia.
 
-### 3.5 Lo que dijo el hospital (sesión del 29-oct-2026)
+### 3.6 Lo que dijo el hospital (sesión del 29-oct-2026)
 106 camas de hospitalización (88 de adultos y 18 de niños) y 58 camillas de urgencias; la hospitalización se registra al asignar la cama; las
 estancias en dos personas «probablemente son duplicados»; hay horarios y costumbres de alta. No dieron la meta de tiempos ni la causa del cambio
 de registro de abril de 2026. No hubo más sesiones.
 
-### 3.6 Las variables que construimos y qué representa cada una
+### 3.7 Las variables que construimos y qué representa cada una
 Todo sale de `src/analisis_etapas.py` y `src/preparar_variables.py` en una tabla con una fila por episodio (`tabla_episodios`). Las columnas que más se usan:
 
 | Variable (columna) | Cómo se calcula | Qué representa | Qué peso tiene en los resultados |
@@ -199,7 +227,7 @@ Además de la tabla hay variables que se calculan **en el momento**, para los mo
 laboratorio** de las primeras 6 h (11 valores con punto de corte clínico) y, para el pronóstico, las series diarias de llegadas, llegadas con atención e ingresos a
 cama con su calendario y su forma del año. El diccionario de las tablas pequeñas que alimentan el dashboard está en `datos/tablas_dashboard/diccionario_tablas.md`.
 
-### 3.7 Herramientas y por qué estas
+### 3.8 Herramientas y por qué estas
 | Herramienta | Para qué | Por qué esta |
 |---|---|---|
 | PostgreSQL con SQL (CTE), DBeaver al inicio y después SQLAlchemy + psycopg desde Python | Consultas agregadas de solo lectura, en segundo plano por la VPN | La base no permite tablas temporales y es lenta: agregar en SQL y exportar lo mínimo evita bajar tablas de 15 GB |
