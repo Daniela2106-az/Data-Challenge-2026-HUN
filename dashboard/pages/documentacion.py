@@ -33,5 +33,5 @@ def layout():
                 "de predicción y simulación, las recomendaciones, las limitaciones y las referencias. Los capítulos también están en el menú de la izquierda.",
                 [cifra(str(len(caps)), "capítulos, del reto a los anexos"), cifra("7", "recomendaciones para el hospital"),
                  cifra(str(referencias(caps)), "referencias, listadas en los anexos")],
-                accion=html.A("Descargar el documento en PDF", href="/documento_final.pdf", className="doc-pdf", download="documento_final_HUN.pdf")),
+                accion=html.A("Descargar el documento en PDF", href="/documento_final.pdf", className="doc-pdf", download="Documentacion_Data_Challenge_HUN_2026.pdf")),
         html.Div(className="doc-cards", children=tarjetas)])
