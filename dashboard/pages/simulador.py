@@ -51,24 +51,13 @@ dash.register_page(__name__, path="/simulador", name="Simulador integral", title
 GRIS, AZUL, NARANJA, VERDE, ROJO, ROSA = "#6b6b6b", "#2a6fb0", "#eb6834", "#2e8b57", "#c0392b", "#c2185b"
 N_REP_INTERACTIVO = 200
 N_REP_HORARIO = 300
-# Alertas del simulador. Hay dos gravedades: AVISO (media) y CRITICO (alta). Las dos frenan la simulacion, pero cada alerta (tipo y gravedad) se muestra UNA SOLA VEZ por corrida.
-# Como cada alerta se muestra una sola vez por corrida, una condicion que dura casi todo el tiempo (superar las 106 camas es lo normal en esta simulacion: la probabilidad
-# tiene mediana 68 %) avisa una vez y no vuelve a molestar; lo critico esta por encima de lo tipico (en un caso normal de 90 dias:
-# probabilidad casi nunca mayor de 84 %, camas ocupadas mediana 111 y p90 114,5, cola mediana 25 y p99 28). Criterios de esta pagina, no cifras validadas.
-UMBRAL_ALERTA_MEDIA = 50                 # saturacion: aviso cuando es mas probable que si superar la capacidad a 48 h
-UMBRAL_ALERTA = 84                       # saturacion: critico (solo se alcanza en los picos de un caso normal)
-UMBRAL_OCUPACION = 107                   # ocupacion: aviso (camas ocupadas, mediana de las repeticiones; alerta A2: 107 a 109 camas)
-UMBRAL_OCUPACION_CRITICA = 118           # ocupacion: critico
-UMBRAL_COLA = 28                         # cola: aviso (pacientes esperando cama a la vez; lo habitual son ~25)
-UMBRAL_COLA_CRITICA = 33                 # cola: critico (el percentil 90 real de la cola es 33)
-ARRANQUE_SIN_ALERTAS = 7                 # los primeros dias vienen de la siembra con el censo real y no generan alertas: 7 (4 si el plazo es de 2 semanas o menos, porque la siembra deja las camas por encima de 118 los primeros 3 dias; 12 h en la vista horaria)
+from umbrales_alertas import (ARRANQUE_SIN_ALERTAS, UMBRAL_ALERTA, UMBRAL_ALERTA_MEDIA, UMBRAL_COLA, UMBRAL_COLA_CRITICA, UMBRAL_FALTAN,  # noqa: E402,F401
+                              UMBRAL_FALTAN_CRITICO)
 
 # Escenarios con nombre: cada uno fija las palancas (el simulador mueve los controles y despues recalcula). Los factores externos no cambian.
 PALANCAS_CERO = {"llegadas": 0, "estancia": 0, "espera": 0, "capacidad": 106, "estres": 0, "recorte": 0, "adelanto": 0}
 ESCENARIOS = {
     "hoy": ("Hoy (sin cambios)", "", {}),
-    "optimo": ("Operación óptima", "Aplica dos recomendaciones a la vez: revisar las estancias de más de 14 días (R7, 15 % menos en ellas) y adelantar a la mañana el 30 % "
-                                    "de las altas de la tarde (R4). No cambia la demanda ni la estancia del resto de pacientes.", {"recorte": 15, "adelanto": 30}),
 }
 ETIQUETA_PALANCA = {"llegadas": "Demanda de llegadas", "estancia": "Estancia en cama", "espera": "Espera de cama", "estres": "Perfiles de estrés",
                     "recorte": "Recorte de estancias largas", "adelanto": "Adelanto de altas a la mañana"}
@@ -87,41 +76,96 @@ def _recomendaciones_por_numero():
         return {}
 
 
-def _alertas_dia(fechas, total_p50, cola_p50, probs48, capacidad, horas=False):
-    """Reglas de negocio sobre las series simuladas: la alerta de cada dia (o de cada hora), o None. Cada una dice su tipo, su gravedad (media: aviso;
-    alta: critica, frena la reproduccion), por que salto y la recomendacion de la que se deriva (con su primer paso).
-    Saturacion de camas (probabilidad de superar la capacidad a 48 h): aviso desde 50 %, critica desde 84 % (R4 y R7). Ocupacion: aviso desde 107 camas y critica
-    desde 118 (R3 y R4). Cola de espera: aviso desde 28 pacientes y critica desde 33 (R5 y R6). Si varias coinciden, gana la mas grave."""
-    rec = _recomendaciones_por_numero()
-    acc = lambda *ns: [f"R{n} · {rec.get(n, ('',))[0]}".rstrip(" ·") for n in ns]
-    paso = lambda n: rec.get(n, ("", ""))[1]
+def _estancias_largas():
+    """Que pesan las estancias de mas de 14 dias en el propio simulador (pool de trayectorias reales 2024-2025):
+    (parte de los dias-cama que ocupan, duracion media en dias, % de las estancias)."""
+    try:
+        est = np.asarray(si.TRAY_GLOBAL[2], float)
+        larga = est > si.UMBRAL_LARGA_H
+        return float(est[larga].sum() / est.sum()), float(est[larga].mean() / 24), float(100 * larga.mean())
+    except Exception:
+        return 0.32, 23.8, 6.9
+
+
+PARTE_CAMAS_LARGAS, DIAS_MEDIA_LARGA, PCT_ESTANCIAS_LARGAS = _estancias_largas()
+PARTE_ALTAS_TARDE = 0.627                    # 62,7 % de las altas ocurre entre las 14:00 y las 18:59 (docs/HALLAZGOS.md 4.4)
+ADELANTO_ALTAS = 30                          # % de las altas de la tarde que pasan a la manana (R4: meta de 25-30 % de altas antes de las 12 h)
+ESPERA_PEDIR_ANTES = -5                      # % de espera que se ahorra al pedir antes la cama de quien llega por la tarde (R6: 2 a 11 % del exceso)
+
+
+def _a5(x):
+    """Sube al multiplo de 5 mas cercano hacia arriba (los controles avanzan de 5 en 5)."""
+    return int(5 * np.ceil(x / 5))
+
+
+def _perfiles_con_mas_camas(comp, perfiles, i, n=2):
+    """Los grupos (edad y ruta) que mas camas ocupan ese dia en la simulacion: [(texto, camas)]."""
+    try:
+        cuentas = [(sum(v), f"{g} años · {r.lower()}") for (g, r), v in zip(perfiles, comp[i])]
+        return [(t, c) for c, t in sorted(cuentas, reverse=True)[:n]]
+    except Exception:
+        return []
+
+
+def _plan_de_mejora(tipo, o, cap, c, altas_dia, perfiles_top):
+    """Recomendacion ESPECIFICA de cada alerta, con las cifras de la propia simulacion, y las palancas que la aplican (iguales a lo que dice la recomendacion).
+    Faltaran camas (antes eran dos alertas, saturacion y ocupacion alta): reunion de camas (R3), adelantar altas (R4, que descarga la cola y suaviza el pico pero no baja el nivel)
+    y gestion de casos de las estancias de mas de 14 dias (R7, que libera cama; la dosis sale de cuantas camas faltan). Cola: pedir antes la cama (R6) y responsable por paciente (R5)."""
+    larga_camas = PARTE_CAMAS_LARGAS * o                          # pacientes con mas de 14 dias que hay en cama a la vez
+    falta = max(o - cap, 0.0)
+    dosis = min(30, max(10, _a5(100 * falta / larga_camas))) if larga_camas else 15
+    libres, dias_menos = dosis / 100 * larga_camas, dosis / 100 * DIAS_MEDIA_LARGA
+    altas_tarde = altas_dia * PARTE_ALTAS_TARDE
+    r7 = (f"**R7 · Gestión de casos en estancias largas.** Revisar caso por caso a los ~{larga_camas:.0f} pacientes con más de 14 días de estancia "
+          f"({100 * PARTE_CAMAS_LARGAS:.0f} % de los días-cama) y coordinar su plan de salida (alta, traslado o cuidados en casa) para que su estancia dure {dosis} % menos "
+          f"(≈{f"{dias_menos:.1f}".replace(".", ",")} días por paciente): libera ~{libres:.0f} camas.")
+    donde = [f"**Dónde empezar.** Los grupos que más camas ocupan ese día: {perfiles_top[0][0]} (~{perfiles_top[0][1]:.0f}) y {perfiles_top[1][0]} (~{perfiles_top[1][1]:.0f})."] if len(perfiles_top) > 1 else []
+    if tipo == "saturacion":
+        resto = f" Con esa meta se liberan ~{libres:.0f} de las ~{falta:.0f} camas que faltan; el resto necesita otras medidas." if libres < falta - 0.5 else ""
+        situacion = f"se esperan ~{o:.0f} camas ocupadas, ~{falta:.0f} por encima de las {cap}" if falta >= UMBRAL_FALTAN else f"se esperan ~{o:.0f} camas ocupadas, al límite de las {cap}"
+        r3 = f"**R3 · Reunión de camas.** Reunir antes del mediodía a camas, urgencias y pisos: {situacion}; listar a los ~{larga_camas:.0f} pacientes con más de 14 días."
+        r4 = (f"**R4 · Adelantar altas.** Pasar el {ADELANTO_ALTAS} % de las altas de la tarde a la mañana (≈{altas_tarde * ADELANTO_ALTAS / 100:.0f} de las ~{altas_tarde:.0f} altas diarias de la tarde): "
+              "ronda médica a primera hora, alta preparada el día anterior y la cama liberada asignada enseguida.")
+        return [r3, r4, r7 + resto, *donde], {"recorte": dosis, "adelanto": ADELANTO_ALTAS}
+    r5 = "**R5 · Responsable por turno.** Dar a una persona por turno la lista diaria de pacientes con 48 h sin cama (unos 4 por día) y revisar cada caso uno por uno."
+    r6 = (f"**R6 · Pedir antes la cama.** Para quien llega entre las 13 y las 18 h, solicitarla en cuanto se decide hospitalizarlo, sin esperar el ciclo de altas del día siguiente: "
+          f"en la simulación equivale a bajar la espera {abs(ESPERA_PEDIR_ANTES)} % (≈{f"{abs(ESPERA_PEDIR_ANTES) / 100 * c:.1f}".replace(".", ",")} pacientes menos en la cola).")
+    return [r5, r6], {"espera": ESPERA_PEDIR_ANTES}
+
+
+def _alertas_dia(fechas, total_p50, cola_p50, probs48, capacidad, horas=False, altas_dia=19.6, comp=None, perfiles=None):
+    """Reglas de negocio sobre las series simuladas: la alerta de cada dia (o de cada hora), o None. Cada una dice su tipo, su gravedad (media: aviso; alta: critica),
+    por que salto, la recomendacion especifica con cifras de la simulacion y las palancas que la aplican (`_plan_de_mejora`).
+    Faltaran camas (se necesitaran mas de las 106; fusiona las antiguas saturacion y ocupacion alta, que decian lo mismo): aviso desde 50 % de probabilidad de superar la capacidad a 48 h
+    o desde 1 cama que falta; critica desde 84 % o desde 12 camas que faltan (118 ocupadas). Cola de espera: aviso desde 28 pacientes y critica desde 33. Si varias coinciden, se encolan (la mas grave primero)."""
     salida = []
     for i, f in enumerate(fechas):
         p, o, c = float(probs48[i]), float(total_p50[i]), float(cola_p50[i])
         cand = []
         if i < (12 if horas else (ARRANQUE_SIN_ALERTAS if len(fechas) > 14 else 4)):
-            salida.append(None)
+            salida.append([])
             continue
-        if p >= UMBRAL_ALERTA_MEDIA:
-            cand.append(("Alta" if p >= UMBRAL_ALERTA else "Media", 0, {
-                "tipo": "saturacion", "titulo": "Riesgo de saturar las camas",
-                "texto": f"{p:.0f} % de probabilidad de superar las {capacidad} camas dentro de 48 {'horas' if horas else 'horas (pasado mañana)'}.",
-                "acciones": acc(4, 7), "paso": paso(4), "mejora": True, "rec": 4, "alerta": "A2"}))
-        if o >= UMBRAL_OCUPACION:
-            cand.append(("Alta" if o >= UMBRAL_OCUPACION_CRITICA else "Media", 1, {
-                "tipo": "ocupacion", "titulo": "Ocupación alta",
-                "texto": f"Se esperan unas {o:.0f} camas ocupadas, por encima de las {capacidad} del hospital.",
-                "acciones": acc(3, 4), "paso": paso(3), "mejora": True, "rec": 3, "alerta": "A2"}))
+        top = _perfiles_con_mas_camas(comp, perfiles, i) if (comp is not None and perfiles) else []
+        falta = o - capacidad
+        if p >= UMBRAL_ALERTA_MEDIA or falta >= UMBRAL_FALTAN:
+            ac, pal = _plan_de_mejora("saturacion", o, capacidad, c, altas_dia, top)
+            cuando = f"{p:.0f} % de probabilidad de superar las {capacidad} camas dentro de 48 {'horas' if horas else 'horas (pasado mañana)'}"
+            cuanto = (f"faltarían unas {falta:.0f} camas (se esperan ~{o:.0f} ocupadas)" if round(falta) != 1 else f"faltaría 1 cama (se esperan ~{o:.0f} ocupadas)") if falta >= UMBRAL_FALTAN else f"se esperan ~{o:.0f} camas ocupadas, al límite de la capacidad"
+            cand.append(("Alta" if (p >= UMBRAL_ALERTA or falta >= UMBRAL_FALTAN_CRITICO) else "Media", 0, {
+                "tipo": "saturacion", "titulo": "Faltarán camas",
+                "texto": f"{cuando}; {cuanto}.",
+                "acciones": ac, "palancas": pal, "mejora": True, "rec": 3, "alerta": "A2"}))
         if c >= UMBRAL_COLA:
-            cand.append(("Alta" if c >= UMBRAL_COLA_CRITICA else "Media", 2, {
+            ac, pal = _plan_de_mejora("cola", o, capacidad, c, altas_dia, top)
+            cand.append(("Alta" if c >= UMBRAL_COLA_CRITICA else "Media", 1, {
                 "tipo": "cola", "titulo": "Cola de espera larga",
                 "texto": f"Unos {c:.0f} pacientes esperando cama a la vez, más de lo habitual (cerca de 26).",
-                "acciones": acc(5, 6), "paso": paso(5), "mejora": False, "rec": 5, "alerta": "S1"}))
+                "acciones": ac, "palancas": pal, "mejora": True, "rec": 5, "alerta": "S1"}))
         if not cand:
-            salida.append(None)
+            salida.append([])
             continue
-        g, _, a = sorted(cand, key=lambda x: (x[0] != "Alta", x[1]))[0]
-        salida.append({**a, "gravedad": g})
+        # 19-nov-2026: todas las alertas del dia (no solo la mas grave), para encolarlas: se muestran una despues de otra
+        salida.append([{**a, "gravedad": g} for g, _, a in sorted(cand, key=lambda x: (x[0] != "Alta", x[1]))])
     return salida
 
 
@@ -156,10 +200,10 @@ INFO_SLIDER = {
     "espera": "Sube o baja la espera de cama de cada paciente un % fijo. OJO: mueve la COLA (cuántos esperan a "
               "la vez), no la ocupación de camas — la cama se ocupa igual, solo que antes o después. Sirve para "
               "ver cuánta presión de sala de espera quitaría reducir la espera.",
-    "recorte_largas": "R7 (recomendaciones): reduce ese % SOLO a las estancias de más de 14 días (revisión "
-                      "semanal con gestión de casos). Son el 7 % de las estancias pero ocupan ~36 camas (34 % de "
-                      "la ocupación, página Estancia). Recortarlas 15 % libera ~4-5 camas — comparable a bajar "
-                      "TODAS las estancias 5 %, pero actuando solo sobre los largos.",
+    "recorte_largas": "R7 (recomendaciones): gestión de casos en las estancias de más de 14 días. No es dar de alta a nadie antes de tiempo: es coordinar, caso por caso, el plan de salida "
+                      "(alta, traslado o cuidados en casa) de pacientes que ya no necesitan cuidado agudo, para que su estancia dure ese % menos. Son el 7 % de las estancias pero ocupan ~32 % "
+                      "de los días-cama (~36 camas, página Estancias largas). Con 15 % se liberan ~4-5 camas: comparable a bajar TODAS las estancias 5 %, pero actuando solo sobre las largas. "
+                      "La evidencia externa reporta reducciones mayores (de 15,5 a 9 días en pacientes con alta demorada).",
     "adelanto_altas": "Escenario A (página Altas): % de las altas de la tarde que pasan a la mañana. Efecto "
                       "INYECTADO del análisis ya medido (adelantar 30 % evita ~3 % del exceso de espera, cota "
                       "máx. 8 %): descarga la COLA, no libera camas — el motor no modela la mecánica interna "
@@ -360,12 +404,14 @@ def _seccion_alertas():
     """Como funcionan las alertas, la pausa y la operacion optima (se muestra dentro de la documentacion de la pagina)."""
     return html.Div([
         _titulo_interp("Alertas y operación óptima"),
-        html.Div(f"Mientras corre la simulación salta una tarjeta de alerta arriba del gráfico, siempre visible. Hay tres alertas: riesgo de saturar las camas (aviso desde {UMBRAL_ALERTA_MEDIA} % de "
-                 f"probabilidad de superar la capacidad a 48 h, crítico desde {UMBRAL_ALERTA} %), ocupación alta (aviso desde {UMBRAL_OCUPACION} camas, crítico desde {UMBRAL_OCUPACION_CRITICA}) y cola de espera larga "
+        html.Div(f"Mientras corre la simulación salta una tarjeta de alerta arriba del gráfico, siempre visible. Hay dos alertas: faltarán camas (se necesitarán más de las 106; aviso desde {UMBRAL_ALERTA_MEDIA} % de "
+                 f"probabilidad de superar la capacidad a 48 h o desde {UMBRAL_FALTAN} cama que falta, crítico desde {UMBRAL_ALERTA} % o desde {UMBRAL_FALTAN_CRITICO} camas que faltan) y cola de espera larga "
                  f"(aviso desde {UMBRAL_COLA} pacientes, crítico desde {UMBRAL_COLA_CRITICA}). Hay dos gravedades, aviso (amarillo) y crítico (rojo); las dos frenan la simulación, y cada alerta salta una sola vez por corrida. "
                  "La tarjeta dice qué pasó y la recomendación de la que se deriva (con su primer paso), tiene flechas para ver las alertas anteriores y botones para ir a la alerta y a la recomendación."),
-        html.Div([html.B("Aplicar mejora y comparar: "), "el panel de configuración se abre, los controles se desplazan a la operación óptima (15 % menos en las estancias de más de 14 días y 30 % de las "
-                  "altas de la tarde adelantadas a la mañana), el panel se cierra y la simulación se repite desde el día 1 con la mejora en color y cómo iba antes («Antes de la mejora») en gris punteado. "
+        html.Div([html.B("Recomendación específica y mejora: "), "cada alerta calcula su recomendación con las cifras de la propia simulación (cuántas camas faltan, cuántos pacientes llevan más de 14 días, cuántas altas "
+                  "de la tarde hay, qué grupos ocupan más camas). «Aplicar mejora y comparar» abre el panel y mueve, uno tras otro, SOLO los controles de esa recomendación: en faltarán camas, adelantar el 30 % de las altas de la tarde (R4) y la "
+                  "gestión de casos en las estancias largas (R7), además de la reunión de camas (R3); en cola larga, pedir antes la cama (R6, espera −5 %). La dosis de la gestión de casos sale de cuántas camas faltan (de 10 a 30 % menos de duración). "
+                  "Los demás controles quedan como estaban. Luego la simulación se repite desde el día 1 con la mejora en color y cómo iba antes («Antes de la mejora») en gris punteado. "
                   "Las alertas anteriores siguen disponibles, marcadas como resueltas con la mejora. «Reiniciar» devuelve los controles a cero."], style={"marginTop": "8px"}),
     ])
 
@@ -406,7 +452,8 @@ def panel_interpretacion():
                                "muestran en qué momento está parada la simulación."]),
                       html.Div([html.B("Todo / Flujo / Camas / Espera"), ", arriba de la radiografía, eligen "
                                "qué filas mostrar. En «Camas» aparece además el Tablero de camas, con una "
-                               "celda por cama (grupo Adultos y grupo Niños):"]),
+                               "celda por cama (grupo Adultos y grupo Niños); en «Flujo», las llegadas por franja del día "
+                               "(madrugada, mañana, tarde y noche):"]),
                       _demo_camas(),
                       html.Div([html.B("Los filtros"), " de edad, ruta y sexo (debajo de los controles de la "
                                "izquierda) resaltan solo esos pacientitos en la radiografía — el gráfico de la "
@@ -665,6 +712,51 @@ def modulo_tablero_camas(ocup_adultos, ocup_ninos):
     ])
 
 
+FRANJA_HORAS = {"madrugada": "0–7 h", "mañana": "7–14 h", "tarde": "14–19 h", "noche": "19–24 h"}
+FRANJA_COLOR = {"madrugada": "#4a5fa8", "mañana": "#e0a82a", "tarde": "#e0862a", "noche": "#2a3f7a"}
+
+
+_SVG_TRAZO = "stroke='black' stroke-width='2' stroke-linecap='round' fill='none'"
+FRANJA_ICONO_SVG = {     # iconos de 24x24 recortados con mascara (mismo estilo que los de theme.css): estrella, amanecer, sol y luna
+    "madrugada": "<path d='M12 2l2.4 7.6L22 12l-7.6 2.4L12 22l-2.4-7.6L2 12l7.6-2.4z'/>",
+    "mañana": f"<path d='M6 17a6 6 0 0 1 12 0z'/><path d='M12 4v3M4.2 8.2l2 2M19.8 8.2l-2 2M2 20h20' {_SVG_TRAZO}/>",
+    "tarde": f"<circle cx='12' cy='12' r='4.5'/><path d='M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9L7 7M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1' {_SVG_TRAZO}/>",
+    "noche": "<path d='M9 2a10 10 0 1 0 13 13A9 9 0 0 1 9 2z'/>",
+}
+
+
+def icono_franja(nombre):
+    """Icono de la franja (mascara SVG pintada con el color de la franja), en lugar de un emoji."""
+    url = "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'>" + FRANJA_ICONO_SVG[nombre] + "</svg>\")"
+    return html.Span(style={"display": "inline-block", "width": "16px", "height": "16px", "verticalAlign": "-3px", "marginRight": "6px",
+                            "background": FRANJA_COLOR[nombre], "WebkitMaskImage": url, "maskImage": url, "WebkitMaskSize": "contain", "maskSize": "contain",
+                            "WebkitMaskRepeat": "no-repeat", "maskRepeat": "no-repeat", "WebkitMaskPosition": "center", "maskPosition": "center"})
+
+
+def modulo_llegadas_franja(llegadas_franja, ini, fin):
+    """Modulo de la vista "Flujo" (21-nov): de las llegadas al hospital de la ventana, cuantas caen en la madrugada,
+    la manana, la tarde y la noche. Suma los dias de la ventana [ini, fin); el reparto es el historico real por dia de
+    la semana (src/simulador_integral.py, repartir_por_franja), no cambia con los filtros de edad/ruta/sexo."""
+    cifras = {n: float(np.sum(v[ini:fin])) if v else 0.0 for n, v in (llegadas_franja or {}).items()}
+    total = sum(cifras.values())
+    tarjetas = []
+    for nombre in ("madrugada", "mañana", "tarde", "noche"):
+        n = cifras.get(nombre, 0.0)
+        pct = 100 * n / total if total > 0 else 0.0
+        tarjetas.append(html.Div(style={"minWidth": 0}, title=f"{nombre.capitalize()} ({FRANJA_HORAS[nombre]}): {pct:.0f} % de las llegadas", children=[
+            html.Div([icono_franja(nombre), html.B(nombre.capitalize()), html.Span(f"  {FRANJA_HORAS[nombre]}", style={"opacity": .65, "fontSize": "11px"})], className="simint-radio__cap"),
+            html.Div(f"{n:.0f}", className="simint-radio__num"),
+            html.Div(style={"height": "8px", "borderRadius": "4px", "background": "var(--line)", "marginTop": "4px", "overflow": "hidden"},
+                     children=html.Div(style={"width": f"{pct:.0f}%", "height": "100%", "background": FRANJA_COLOR[nombre]})),
+            html.Div(f"{pct:.0f} % de las llegadas", className="simint-radio__cap"),
+        ]))
+    return html.Div(className="simint-radio__modulo", children=[
+        html.Div("Llegadas por franja del día", className="simint-radio__modulo-titulo"),
+        html.Div(style={"display": "grid", "gridTemplateColumns": "repeat(2, minmax(0, 1fr))", "gap": "16px", "marginTop": "10px"}, children=tarjetas),
+        html.Div("Reparto según la hora real de llegada de 2024–2025 (por día de la semana).", className="simint-radio__cap", style={"marginTop": "8px"}),
+    ])
+
+
 def _agregar(etapa, comp_etapa, ini, fin):
     """Suma (conteos: llegadas/ingresos/altas) o promedia (stock: en_cama/esperando) la composicion por
     perfil x sexo en la ventana [ini, fin) de dias — la ventana depende de la granularidad (dia/semana/mes)."""
@@ -808,17 +900,19 @@ def panel_filtros(filtro):
     ])
 
 
-def _descripcion_escenario(clave, dia=None):
-    """Que se aplico y como leer el grafico, solo despues de aplicar la mejora desde una alerta."""
-    if clave != "optimo":
+def _descripcion_escenario(palancas, titulo="", dia=None):
+    """Que se aplico y como leer el grafico, solo despues de aplicar la mejora desde una alerta: una linea por cada control que cambia."""
+    textos = {"recorte": lambda v: f"Gestión de casos en las estancias de más de 14 días: {v} % menos de duración (R7)",
+              "adelanto": lambda v: f"{v} % de las altas de la tarde pasan a la mañana (R4)",
+              "espera": lambda v: f"Pedir antes la cama de quien llega por la tarde: espera {v} % (R6)"}
+    lista = [textos[k](v) for k, v in (palancas or {}).items() if k in textos]
+    if not lista:
         return []
-    texto_palanca = {"recorte": lambda v: f"estancias de más de 14 días {v} % más cortas (R7)", "adelanto": lambda v: f"{v} % de las altas de la tarde adelantadas a la mañana (R4)"}
-    lista = [texto_palanca[k](v) for k, v in ESCENARIOS["optimo"][2].items()]
-    return [html.Div("Operación óptima aplicada desde el día 1", className="simint-escenario__titulo"),
-            html.Div([html.Span("Qué cambió", className="simint-escenario__rotulo"), html.Span(" y ".join(lista))], className="simint-escenario__palancas"),
+    return [html.Div("Mejora aplicada" + (f" a la alerta «{titulo}»" if titulo else "") + (f", desde el día {dia}" if dia else ", desde el día 1"), className="simint-escenario__titulo"),
+            html.Div([html.Span("Qué cambió", className="simint-escenario__rotulo"), html.Span(" · ".join(lista))], className="simint-escenario__palancas"),
             html.Div([html.Span("Cómo leer el gráfico", className="simint-escenario__rotulo"),
-                      html.Span("la simulación se repite desde el día 1: las líneas de color son la operación óptima y las grises punteadas, cómo iba antes de aplicarla.")],
-                     className="simint-escenario__palancas")]
+                      html.Span("la simulación se repite desde el día 1: las líneas de color son con la mejora y las grises punteadas, cómo iba antes de aplicarla. "
+                                "Solo se mueven los controles de la recomendación; los demás quedan como los tenías.")], className="simint-escenario__palancas")]
 
 
 def layout():
@@ -834,12 +928,14 @@ def layout():
         html.Div(className="control-row", children=[
             html.Div(className="control-group", children=[
                 html.Span("¿Hasta cuándo quieres ver?", className="control-group__label"),
-                dcc.RadioItems(id="simint-plazo", className="pill-switch",
+                dcc.RadioItems(id="simint-plazo", persistence=True, persistence_type="session", className="pill-switch",
                                options=[{"label": n, "value": d} for n, d in PLAZOS], value=90)]),
         ]),
         html.Div(id="simint-escenario-desc", className="simint-escenario", style={"display": "none"}),
-        dcc.Checklist(id="simint-comparar", value=["si"], className="simint-comparar simint-comparar--visible",
-                      options=[{"label": "Al aplicar una mejora, mostrar en gris punteado cómo iba antes, junto a la simulación nueva en color", "value": "si"}]),
+        dcc.Checklist(id="simint-comparar", persistence=True, persistence_type="session", value=["si"], className="simint-comparar simint-comparar--visible",
+                      options=[{"label": "Mostrar la línea gris punteada: cómo habría seguido sin la mejora de la alerta", "value": "si"}]),
+        dcc.Checklist(id="simint-mostrar-cfg", persistence=True, persistence_type="session", value=["si"], className="simint-comparar simint-comparar--visible",
+                      options=[{"label": "Mostrar la línea morada: cómo habría seguido sin los cambios de configuración", "value": "si"}]),
         # El boton de configuracion vive EN LA FILA del reproductor (a la izquierda de "Reproducir", con el
         # margen del propio gap de .simint-player) — no flota sobre la pagina; solo el PANEL que emerge al
         # pasar el mouse es absolute y SI se superpone sobre el contenido de abajo (eso si es lo esperado).
@@ -853,28 +949,31 @@ def layout():
                         html.P("Una alerta aparecerá aquí en cuanto se detecte un riesgo. La simulación se detiene para que la revises, puedas ver qué hacer y aplicar la mejora; "
                                "la tarjeta se queda a la vista todo el tiempo.", className="simint-alerta__espera-p"),
                         html.Div(className="simint-alerta__vigila", children=[
-                            html.Span([html.I(), f"Riesgo de saturar las camas · aviso desde {UMBRAL_ALERTA_MEDIA} %, crítico desde {UMBRAL_ALERTA} %"], className="simint-alerta__vigila-item"),
-                            html.Span([html.I(), f"Ocupación alta · aviso desde {UMBRAL_OCUPACION} camas, crítico desde {UMBRAL_OCUPACION_CRITICA}"], className="simint-alerta__vigila-item"),
+                            html.Span([html.I(), f"Faltarán camas · aviso desde {UMBRAL_ALERTA_MEDIA} % o {UMBRAL_FALTAN} cama que falta, crítico desde {UMBRAL_ALERTA} % o {UMBRAL_FALTAN_CRITICO} camas"], className="simint-alerta__vigila-item"),
                             html.Span([html.I(), f"Cola de espera larga · aviso desde {UMBRAL_COLA} pacientes, crítico desde {UMBRAL_COLA_CRITICA}"], className="simint-alerta__vigila-item")])])]),
                 html.Div(className="simint-alerta__cuerpo", children=[
                     html.Div(className="simint-alerta__cab", children=[
-                        html.Span("ALERTA", className="simint-alerta__etiqueta"),
                         html.Span(id="simint-alerta-grav", className="rec-chip"), html.Span("Sin alertas por ahora", id="simint-alerta-titulo", className="simint-alerta__titulo"),
-                        html.Span(className="simint-alerta__hist", children=[
-                            html.Button(html.Span(className="chev chev--izq"), id="simint-alerta-prev", n_clicks=0, className="simint-alerta__flecha", title="Alerta anterior"),
-                            html.Span(id="simint-alerta-pos", className="simint-alerta__pos"),
-                            html.Button(html.Span(className="chev chev--der"), id="simint-alerta-next", n_clicks=0, className="simint-alerta__flecha", title="Alerta siguiente")])]),
+                        html.Span(id="simint-alerta-fecha", className="simint-alerta__fecha")]),
                     html.Div(className="simint-alerta__bloque", children=[html.Span("Qué pasó", className="simint-alerta__rotulo"), html.Span("Las alertas saltarán aquí mientras corre la simulación, y la tarjeta se queda a la vista.", id="simint-alerta-detalle")]),
                     html.Div(className="simint-alerta__bloque", children=[html.Span("Recomendación", className="simint-alerta__rotulo"),
-                                                                           html.Span(id="simint-alerta-acciones"), html.Span(id="simint-alerta-paso", className="simint-alerta__paso")]),
+                                                                           dcc.Markdown(id="simint-alerta-acciones", className="simint-alerta__vinetas"), html.Span(id="simint-alerta-paso", className="simint-alerta__paso")]),
                     html.Span(id="simint-alerta-texto", style={"display": "none"}),
                 ]),
                 html.Div(className="simint-alerta__botones", children=[
                     html.Button("Continuar", id="simint-continuar", n_clicks=0, className="btn-primary simint-alerta__btn"),
                     html.Button("Aplicar mejora y comparar", id="simint-aplicar", n_clicks=0, className="btn-primary simint-alerta__btn simint-alerta__btn--mejora",
                                 title="Aplica la operación óptima: los controles se mueven y se vuelve a simular desde el día 1, comparando con cómo iba antes"),
-                    dcc.Link("Ver más sobre esta alerta", id="simint-alerta-link-alerta", href="/alertas", refresh=True, className="simint-alerta__btn simint-alerta__link"),
-                    dcc.Link("Ver recomendación", id="simint-alerta-link-rec", href="/recomendaciones", refresh=True, className="simint-alerta__btn simint-alerta__link"),
+                    dcc.Link("Ver más sobre esta alerta", id="simint-alerta-link-alerta", href="/alertas", refresh=False, className="simint-alerta__btn simint-alerta__link"),
+                    html.Div(className="simint-alerta__col-rec", children=[
+                        dcc.Link("Ver recomendación", id="simint-alerta-link-rec", href="/recomendaciones", refresh=False, className="simint-alerta__btn simint-alerta__link"),
+                    html.Div(className="simint-alerta__navegacion", children=[
+                            html.Span(className="simint-alerta__hist", children=[
+                                html.Button(html.Span(className="chev chev--izq"), id="simint-alerta-prev", n_clicks=0, className="simint-alerta__flecha", title="Alerta anterior"),
+                                html.Span(id="simint-alerta-pos", className="simint-alerta__pos"),
+                                html.Button(html.Span(className="chev chev--der"), id="simint-alerta-next", n_clicks=0, className="simint-alerta__flecha", title="Alerta siguiente")]),
+                    ]),
+                    ]),
                     html.Span(id="simint-alerta-nota", className="simint-alerta__nota"),
                 ]),
             ]),
@@ -888,16 +987,16 @@ def layout():
                     html.Div(className="simint-config-section", children=[
                         encabezado_grupo("Operación"),
                         campo_slider("Demanda de llegadas (%)", "llegadas",
-                                     dcc.Slider(id="simint-ajuste_llegadas", min=-30, max=30, step=5, value=0,
+                                     dcc.Slider(id="simint-ajuste_llegadas", persistence=True, persistence_type="session", min=-30, max=30, step=5, value=0,
                                                marks={-30: "-30", 0: "0", 30: "30"})),
                         campo_slider("Estancia en cama (%)", "estancia",
-                                     dcc.Slider(id="simint-ajuste_estancia", min=-20, max=20, step=5, value=0,
+                                     dcc.Slider(id="simint-ajuste_estancia", persistence=True, persistence_type="session", min=-20, max=20, step=5, value=0,
                                                marks={-20: "-20", 0: "0", 20: "20"})),
                         campo_slider("Espera de cama (%)", "espera",
-                                     dcc.Slider(id="simint-ajuste_espera", min=-30, max=30, step=5, value=0,
+                                     dcc.Slider(id="simint-ajuste_espera", persistence=True, persistence_type="session", min=-30, max=30, step=5, value=0,
                                                marks={-30: "-30", 0: "0", 30: "30"})),
                         campo_slider("Capacidad hipotética (camas)", "capacidad",
-                                     dcc.Slider(id="simint-capacidad", min=96, max=130, step=2, value=106,
+                                     dcc.Slider(id="simint-capacidad", persistence=True, persistence_type="session", min=96, max=130, step=2, value=106,
                                                 marks={96: "96", 106: "106", 116: "116", 126: "126"})),
                     ]),
 
@@ -905,18 +1004,18 @@ def layout():
                     html.Div(className="simint-config-section", children=[
                         encabezado_grupo("Estrés"),
                         campo_slider("Perfiles de estrés (%)", "mezcla_estres",
-                                     dcc.Slider(id="simint-mezcla_estres", min=0, max=100, step=10, value=0,
+                                     dcc.Slider(id="simint-mezcla_estres", persistence=True, persistence_type="session", min=0, max=100, step=10, value=0,
                                                marks={0: "0", 50: "50", 100: "100"})),
                     ]),
 
                     # Sección 3: Optimización
                     html.Div(className="simint-config-section", children=[
                         encabezado_grupo("Optimización"),
-                        campo_slider("Recortar estancias largas (%)", "recorte_largas",
-                                     dcc.Slider(id="simint-recorte_largas", min=0, max=50, step=5, value=0,
+                        campo_slider("Gestión de casos en estancias largas (% menos de duración)", "recorte_largas",
+                                     dcc.Slider(id="simint-recorte_largas", persistence=True, persistence_type="session", min=0, max=50, step=5, value=0,
                                                marks={0: "0", 25: "25", 50: "50"})),
                         campo_slider("Adelantar altas a la mañana (%)", "adelanto_altas",
-                                     dcc.Slider(id="simint-adelanto_altas", min=0, max=100, step=10, value=0,
+                                     dcc.Slider(id="simint-adelanto_altas", persistence=True, persistence_type="session", min=0, max=100, step=10, value=0,
                                                marks={0: "0", 50: "50", 100: "100"})),
                     ]),
 
@@ -945,7 +1044,7 @@ def layout():
                     html.Button("↺ Reiniciar", id="simint-play-reiniciar", n_clicks=0,
                                 className="simint-player__split-btn", title="Reiniciar la simulación desde el comienzo"),
                 ]),
-                dcc.RadioItems(id="simint-velocidad", className="pill-switch",
+                dcc.RadioItems(id="simint-velocidad", persistence=True, persistence_type="session", className="pill-switch",
                                options=[{"label": "1 día", "value": 1}, {"label": "1 semana", "value": 7},
                                        {"label": "1 mes", "value": 30}], value=7),
                 html.Div(className="simint-player__track",
@@ -965,7 +1064,7 @@ def layout():
                         html.Div(className="simint-radio__header", children=[
                             html.Div([html.Span(id="simint-radiografia-titulo", className="simint-radio__titulo"),
                                      info_badge(INFO_RADIOGRAFIA)], style={"display": "flex", "alignItems": "center", "gap": "8px"}),
-                            dcc.RadioItems(id="simint-vista-radio", className="pill-switch pill-switch--compact", value="todo",
+                            dcc.RadioItems(id="simint-vista-radio", persistence=True, persistence_type="session", className="pill-switch pill-switch--compact", value="todo",
                                           options=[{"label": "Todo", "value": "todo"}, {"label": "Flujo", "value": "flujo"},
                                                    {"label": "Camas", "value": "camas"}, {"label": "Espera", "value": "espera"}]),
                         ]),
@@ -987,10 +1086,11 @@ def layout():
         dcc.Interval(id="simint-tick", interval=50, disabled=True),
         dcc.Store(id="simint-escenario", data={"clave": "hoy", "n": 0}),
         dcc.Store(id="simint-pendiente"),
+        dcc.Store(id="simint-alerta-palancas"),
         html.Div(id="simint-dummy-cfg", style={"display": "none"}),
-        dcc.Store(id="simint-cursor"),
-        dcc.Store(id="simint-datos"),
-        dcc.Store(id="simint-filtro", data={}),
+        dcc.Store(id="simint-cursor", storage_type="session"),
+        dcc.Store(id="simint-datos", storage_type="session"),
+        dcc.Store(id="simint-filtro", data={}, storage_type="session"),
         dcc.Store(id="simint-sync-hover"),   # salida de callbacks cliente "silenciosos" (no se usa su valor)
         mensaje("**Sirve para ver el efecto de una decisión sobre todo el flujo a la vez, no para adivinar un día.** Bajar la estancia descarga las camas; bajar la espera descarga "
                 "la sala de urgencias aunque las camas sigan igual de llenas; más demanda empuja las tres curvas. Cuando salta una alerta, el simulador dice qué hacer y permite "
@@ -1008,7 +1108,7 @@ def layout():
     ])
 
 
-def _ejecutar(dias, pct_lleg, pct_est, pct_esp, recorte, adelanto, estres, comparar, valores_casos, ids_casos):
+def _ejecutar(dias, pct_lleg, pct_est, pct_esp, recorte, adelanto, estres, comparar, valores_casos, ids_casos, cambios=None):
     """Cuerpo de la simulacion (compartido por el boton Reproducir y por Intervenir, para que Intervenir no
     dependa de leer los sliders como State justo despues de que otro callback los acaba de cambiar — evita la
     condicion de carrera de Dash entre dos callbacks disparados por el mismo click). Los 4 factores externos
@@ -1037,7 +1137,8 @@ def _ejecutar(dias, pct_lleg, pct_est, pct_esp, recorte, adelanto, estres, compa
         idx48 = np.minimum(np.arange(len(fechas)) + 48, len(fechas) - 1)     # 48 h = 48 pasos (la unidad es la hora)
         data["prob_sat_48h"] = np.round(probs[idx48], 1).tolist()
         data["umbral_alerta"] = UMBRAL_ALERTA
-        data["alertas_dia"] = _alertas_dia(data["fechas"], data["total_p50"], data["cola_p50"], data["prob_sat_48h"], scm.CAPACIDAD["total"], horas=True)
+        data["alertas_dia"] = _alertas_dia(data["fechas"], data["total_p50"], data["cola_p50"], data["prob_sat_48h"], scm.CAPACIDAD["total"], horas=True,
+                                           altas_dia=data["medias"]["altas"] * 24)
         data["sat_por_capacidad"] = {str(c): round(100 * float((out["total"] > c).mean()), 1) for c in range(96, 131, 2)}
         nota_casos = html.Div([html.B("Vista horaria: "), "motor simplificado (sin factores externos, R7, "
                                "adelanto de altas, perfiles de estrés ni radiografía por perfil) — pensada "
@@ -1051,8 +1152,12 @@ def _ejecutar(dias, pct_lleg, pct_est, pct_esp, recorte, adelanto, estres, compa
                                             ajuste_espera=1 + pct_esp / 100, n_rep=N_REP_INTERACTIVO,
                                             modelos=MODELOS_FIJOS, casos=casos, con_composicion=True,
                                             recorte_largas_pct=recorte or 0, adelanto_altas_pct=adelanto or 0,
-                                            mezcla_edad=me, mezcla_ruta=mr)
+                                            mezcla_edad=me, mezcla_ruta=mr, acoplar_estancia=True, cambios=[{"dia": c["dia"], "valores": c["valores"]} for c in cambios] if cambios else None)
     data = {"fechas": [str(f.date()) for f in fechas], "es_horario": False}
+    # Los controles con los que arranco esta corrida y los que valen ahora (si hubo cambios a mitad de camino): sirven para saber, al continuar, si el usuario cambio algo.
+    data["controles_ini"] = {"llegadas": pct_lleg or 0, "estancia": pct_est or 0, "espera": pct_esp or 0, "recorte": recorte or 0, "adelanto": adelanto or 0, "estres": estres or 0}
+    data["cambios"] = cambios or []
+    data["controles"] = {**data["controles_ini"], **(cambios[-1]["pct"] if cambios else {})}
     for s in SERIES:
         for p in (10, 50, 90):
             data[f"{s}_p{p}"] = np.percentile(out[s], p, axis=0).tolist()
@@ -1060,17 +1165,39 @@ def _ejecutar(dias, pct_lleg, pct_est, pct_esp, recorte, adelanto, estres, compa
     data["pct_sat"] = round(100 * float((out["total"] > scm.CAPACIDAD["total"]).mean()), 1)
     data["perfiles"] = info["perfiles"]
     data["composicion"] = info["composicion"]
+    data["llegadas_franja"] = {k: v["media"] for k, v in info["llegadas_franja"].items()}     # llegadas medias por dia y franja del dia
     probs = 100 * (out["total"] > scm.CAPACIDAD["total"]).mean(axis=0)
     idx48 = np.minimum(np.arange(len(fechas)) + 2, len(fechas) - 1)
     data["prob_sat_48h"] = np.round(probs[idx48], 1).tolist()
     data["umbral_alerta"] = UMBRAL_ALERTA
-    data["alertas_dia"] = _alertas_dia(data["fechas"], data["total_p50"], data["cola_p50"], data["prob_sat_48h"], scm.CAPACIDAD["total"])
+    data["alertas_dia"] = _alertas_dia(data["fechas"], data["total_p50"], data["cola_p50"], data["prob_sat_48h"], scm.CAPACIDAD["total"],
+                                       altas_dia=data["medias"]["altas"], comp=data["composicion"]["en_cama"], perfiles=data["perfiles"])
     data["sat_por_capacidad"] = {str(c): round(100 * float((out["total"] > c).mean()), 1) for c in range(96, 131, 2)}
     hay_palancas = any([pct_lleg, pct_est, pct_esp, recorte, adelanto, estres, casos])
-    if comparar and "si" in comparar and hay_palancas:
-        _, out_b, _ = si.simular_integral(scm.ULTIMO_CONFIABLE, dias, n_rep=N_REP_INTERACTIVO)
-        for s in ("ingresos_cama", "total", "cola"):
-            data[f"base_{s}_p50"] = np.percentile(out_b[s], 50, axis=0).tolist()
+    cambios_l = list(cambios or [])
+    if comparar and "si" in comparar and (cambios_l or hay_palancas):
+        ini = {"llegadas": pct_lleg or 0, "estancia": pct_est or 0, "espera": pct_esp or 0, "recorte": recorte or 0, "adelanto": adelanto or 0}
+
+        def _sin(start, lista):
+            """Corrida con los controles de `start` y solo los cambios de `lista`: mismos numeros aleatorios que la corrida principal."""
+            _, o, _ = si.simular_integral(scm.ULTIMO_CONFIABLE, dias, ajuste_llegadas=1 + start["llegadas"] / 100, ajuste_estancia=1 + start["estancia"] / 100,
+                                          ajuste_espera=1 + start["espera"] / 100, n_rep=N_REP_INTERACTIVO, modelos=MODELOS_FIJOS, casos=casos,
+                                          recorte_largas_pct=start["recorte"], adelanto_altas_pct=start["adelanto"], mezcla_edad=me, mezcla_ruta=mr, acoplar_estancia=True,
+                                          cambios=[{"dia": c["dia"], "valores": c["valores"]} for c in lista] or None)
+            return o
+
+        # sin los cambios de configuracion: arranca sin palancas y conserva solo las mejoras de alerta (o la linea de sin palancas si no hay cambios)
+        cfg_claves = {k for c in cambios_l if c.get("origen") == "config" for k in c.get("claves", [])}
+        alerta_claves = {k for c in cambios_l if c.get("origen") == "alerta" for k in c.get("claves", [])}
+        if cfg_claves - alerta_claves:           # solo si cambiaste sliders que la mejora de la alerta no toca
+            o_conf = _sin({k: 0 for k in ini}, [c for c in cambios_l if c.get("origen") == "alerta"])
+            for s_ in ("llegadas", "ingresos_cama", "total", "cola"):
+                data[f"sinconf_{s_}_p50"] = np.percentile(o_conf[s_], 50, axis=0).tolist()
+        if any(c.get("origen") == "alerta" for c in cambios_l):
+            # sin la mejora de la alerta: los controles tal como arrancaron, con solo los cambios de configuracion
+            o_mej = _sin(ini, [c for c in cambios_l if c.get("origen") != "alerta"])
+            for s_ in ("llegadas", "ingresos_cama", "total", "cola"):
+                data[f"sinmej_{s_}_p50"] = np.percentile(o_mej[s_], 50, axis=0).tolist()
 
     resumen = []
     if casos:
@@ -1090,27 +1217,44 @@ def _ejecutar(dias, pct_lleg, pct_est, pct_esp, recorte, adelanto, estres, compa
                          "simulación A5); la palanca más barata antes de ampliar capacidad."],
                         style={"border": f"1px solid {VERDE}", "borderRadius": "6px", "padding": "6px 10px"})
     elif recorte:
-        nota = html.Div([html.B("R7 en acción: "), "estás recortando solo las estancias de más de 14 días (el 7 % "
-                         "de las estancias que ocupa ~34 % de las camas) — gestión de casos, no un recorte parejo. "
+        nota = html.Div([html.B("R7 en acción: "), "estás aplicando gestión de casos solo a las estancias de más de 14 días (el 7 % "
+                         "de las estancias, que ocupa ~32 % de los días-cama): coordinar su plan de salida, no dar altas antes de tiempo. "
                          "Adelantar altas, en cambio, descarga la cola pero no libera camas: suaviza el pico, no "
                          "baja el nivel."],
                         style={"border": f"1px solid {VERDE}", "borderRadius": "6px", "padding": "6px 10px"})
     return data, (html.Div([nota_casos, nota]) if (nota_casos != "" and nota != "") else (nota_casos or nota))
 
 
+def _reanudable_py(datos, cursor, lleg, est, esp, rec, adel, estr, dias):
+    """Hay una corrida a medias y los controles siguen como estaban: se reanuda desde ese dia (ver simintReanudable en assets/simint_cola.js)."""
+    if not datos or datos.get("es_horario") or not isinstance(cursor, int) or not datos.get("controles"):
+        return False
+    fechas = datos.get("fechas") or []
+    try:
+        if len(fechas) != int(dias) or not (0 <= cursor < len(fechas) - 1):
+            return False
+    except (TypeError, ValueError):
+        return False
+    v = datos["controles"]
+    ahora = {"llegadas": lleg or 0, "estancia": est or 0, "espera": esp or 0, "recorte": rec or 0, "adelanto": adel or 0, "estres": estr or 0}
+    return all((v.get(k) or 0) == ahora[k] for k in ahora)
+
+
 @callback(Output("simint-datos", "data"), Output("simint-nota", "children"),
           Input("simint-play", "n_clicks"),
-          State("simint-tick", "disabled"),
+          State("simint-tick", "disabled"), State("simint-datos", "data"), State("simint-cursor", "data"),
           State("simint-ajuste_llegadas", "value"), State("simint-ajuste_estancia", "value"),
           State("simint-ajuste_espera", "value"), State("simint-plazo", "value"),
           State("simint-recorte_largas", "value"), State("simint-adelanto_altas", "value"),
           State("simint-mezcla_estres", "value"), State("simint-comparar", "value"),
           State({"type": "simint-caso", "caso": ALL}, "value"), State({"type": "simint-caso", "caso": ALL}, "id"),
           prevent_initial_call=True)
-def correr_simulacion(_, tick_disabled, pct_lleg, pct_est, pct_esp, dias, recorte, adelanto, estres,
+def correr_simulacion(_, tick_disabled, datos, cursor, pct_lleg, pct_est, pct_esp, dias, recorte, adelanto, estres,
                       comparar, valores_casos, ids_casos):
     if tick_disabled is False:
         raise dash.exceptions.PreventUpdate      # el click fue para PAUSAR: no se vuelve a simular
+    if _reanudable_py(datos, cursor, pct_lleg, pct_est, pct_esp, recorte, adelanto, estres, dias):
+        raise dash.exceptions.PreventUpdate      # se reanuda en la cola de reproduccion (clientside), sin volver a simular
     return _ejecutar(dias, pct_lleg, pct_est, pct_esp, recorte, adelanto, estres, comparar,
                      valores_casos, ids_casos)
 
@@ -1134,16 +1278,23 @@ def _palancas(clave):
 
 @callback(Output("simint-pendiente", "data"), Output("simint-comparar", "value"),
           Output("simint-escenario-desc", "children"), Output("simint-escenario-desc", "style"),
-          Input("simint-aplicar", "n_clicks"), State("simint-pendiente", "data"), prevent_initial_call=True)
-def aplicar_mejora(_n, anterior):
-    """Unica accion de la alerta: aplicar la operacion optima. Solo prepara el aviso y activa la comparacion; lo que se ve (el panel que se abre, los controles
-    que se desplazan a sus valores y despues el calculo) lo hace `animar_mejora` en el navegador, en ese orden."""
-    return {"n": (anterior or {}).get("n", 0) + 1, "palancas": _palancas("optimo")}, ["si"], _descripcion_escenario("optimo"), {"display": "block"}
+          Input("simint-aplicar", "n_clicks"), State("simint-pendiente", "data"), State("simint-alerta-palancas", "data"),
+          State("simint-ajuste_llegadas", "value"), State("simint-ajuste_estancia", "value"), State("simint-ajuste_espera", "value"),
+          State("simint-mezcla_estres", "value"), State("simint-recorte_largas", "value"), State("simint-adelanto_altas", "value"),
+          State("simint-cursor", "data"), prevent_initial_call=True)
+def aplicar_mejora(_n, anterior, alerta, lleg, estancia, espera, estres, recorte, adelanto, cursor):
+    """Unica accion de la alerta: aplicar SU mejora, la de la recomendacion que se esta viendo. Aqui se guardan los controles tal como estan (para que la linea de «antes» salga con ellos);
+    lo que se ve (el panel que se abre, los controles que se desplazan y despues el calculo) lo hace el navegador, en ese orden."""
+    alerta = alerta or {}
+    pal = alerta.get("palancas") or {}
+    previos = {"llegadas": lleg or 0, "estancia": estancia or 0, "espera": espera or 0, "estres": estres or 0, "recorte": recorte or 0, "adelanto": adelanto or 0}
+    return ({"n": (anterior or {}).get("n", 0) + 1, "palancas": pal, "previos": previos}, ["si"], _descripcion_escenario(pal, alerta.get("titulo", ""), (cursor + 1 if isinstance(cursor, int) else None)), {"display": "block"})
 
 
 clientside_callback(
     """
     function(p) {
+        window._simintEsperandoContinuacion = true;   // lo pidio el usuario (Aplicar mejora)
         // En vivo y en orden: 1) se frena la reproduccion y se abre el panel, 2) cada control se desliza hasta su valor optimo (uno tras otro),
         // 3) cuando ya se vieron moverse, se vuelve a simular desde el dia 1.
         if (!p || !p.n) { return ''; }
@@ -1154,11 +1305,10 @@ clientside_callback(
         clearTimeout(window._simintCfgT);
         var ids = {recorte: 'simint-recorte_largas', adelanto: 'simint-adelanto_altas', llegadas: 'simint-ajuste_llegadas', estancia: 'simint-ajuste_estancia',
                    espera: 'simint-ajuste_espera', estres: 'simint-mezcla_estres', capacidad: 'simint-capacidad'};
-        var orden = ['recorte', 'adelanto'], espera = 1000, DESLIZA = 1100;           // se mueven uno por uno; cada uno tarda ~1 s en deslizarse
-        var mover = document.getElementById(ids.recorte);
-        if (mover && mover.scrollIntoView) { setTimeout(function() { mover.scrollIntoView({block: 'center', behavior: 'smooth'}); }, 450); }   // enfoca las palancas que cambian
+        var orden = ['recorte', 'adelanto', 'espera'].filter(function(k) { return p.palancas && p.palancas[k] !== undefined; }), espera = 1000, DESLIZA = 1100;   // se mueven uno por uno; cada uno tarda ~1 s
+        var mover = orden.length ? document.getElementById(ids[orden[0]]) : null;
+        if (mover && mover.scrollIntoView) { setTimeout(function() { mover.scrollIntoView({block: 'center', behavior: 'smooth'}); }, 450); }   // enfoca el primer control que cambia
         orden.forEach(function(k) {
-            if (p.palancas[k] === undefined) { return; }
             setTimeout(function() { set(ids[k], {value: p.palancas[k]}); }, espera);
             espera += DESLIZA + 300;
         });
@@ -1168,7 +1318,7 @@ clientside_callback(
             var g = document.getElementById('simint-grafico');
             if (g && g.scrollIntoView) { g.scrollIntoView({behavior: 'smooth', block: 'start'}); }
         }, fin);
-        setTimeout(function() { set('simint-escenario', {data: {clave: 'optimo', n: p.n}}); }, fin + 700);
+        setTimeout(function() { set('simint-escenario', {data: {n: p.n, palancas: p.palancas, previos: p.previos}}); }, fin + 700);
         return '';
     }
     """,
@@ -1186,13 +1336,75 @@ def volver_a_hoy(_n):
 @callback(Output("simint-datos", "data", allow_duplicate=True), Output("simint-nota", "children", allow_duplicate=True),
           Input("simint-escenario", "data"), State("simint-plazo", "value"),
           State({"type": "simint-caso", "caso": ALL}, "value"), State({"type": "simint-caso", "caso": ALL}, "id"),
-          prevent_initial_call=True)
-def aplicar_escenario(estado, dias, valores_casos, ids_casos):
-    """Vuelve a simular desde el dia 1 con la operacion optima (usa sus valores directamente), con el estado anterior en gris punteado y la mejora en color."""
-    p = _palancas(estado["clave"])
-    data, nota = _ejecutar(dias, p["llegadas"], p["estancia"], p["espera"], p["recorte"], p["adelanto"], p["estres"], ["si"], valores_casos, ids_casos)
-    data["conserva_historial"] = True          # las alertas de la corrida anterior siguen a la vista (marcadas como resueltas con la mejora)
+          State("simint-datos", "data"), State("simint-cursor", "data"), prevent_initial_call=True)
+def aplicar_escenario(estado, dias, valores_casos, ids_casos, datos, cursor):
+    """Aplicar la mejora de una alerta NO reinicia: continua desde donde iba, con la mejora como un cambio mas (origen alerta)."""
+    if not datos or datos.get("es_horario") or not isinstance(cursor, int) or not datos.get("controles") or cursor >= len(datos["fechas"]) - 1:
+        raise dash.exceptions.PreventUpdate
+    pal = (estado or {}).get("palancas") or {}
+    ahora = {**datos["controles"], **{k: v for k, v in pal.items() if k in CONTROLES_EN_VIVO}}
+    data, nota = _continuar(datos, cursor, dias, ahora, "alerta", valores_casos, ids_casos, [k for k in pal if k in CONTROLES_EN_VIVO])
+    data["conserva_historial"] = True          # las alertas anteriores siguen a la vista (marcadas como resueltas)
     return data, nota
+
+
+def _continuar(datos, cursor, dias, ahora, origen, valores_casos, ids_casos, claves):
+    """Continua la simulacion desde el dia `cursor` con un cambio nuevo (de configuracion o de una alerta): no reinicia; lo anterior queda igual."""
+    ini = datos["controles_ini"]
+    cambios = list(datos.get("cambios") or []) + [{"dia": cursor + 1, "origen": origen, "valores": _valores_motor(ahora), "pct": ahora, "claves": list(claves)}]
+    data, nota = _ejecutar(dias, ini["llegadas"], ini["estancia"], ini["espera"], ini["recorte"], ini["adelanto"], ini.get("estres", 0), ["si"],
+                           valores_casos, ids_casos, cambios=cambios)
+    data["cursor_inicial"] = cursor            # sigue en el mismo dia, sin reiniciar
+    data["pausado"] = False
+    return data, nota
+
+
+CONTROLES_EN_VIVO = ("llegadas", "estancia", "espera", "recorte", "adelanto")      # los que se pueden cambiar a mitad de la simulacion (la mezcla de estres solo vale desde el dia 1)
+NOMBRES_CONTROL = {"llegadas": "Llegadas de pacientes", "estancia": "Estancia en cama", "espera": "Espera de cama",
+                   "recorte": "Gestión de casos en las estancias de más de 14 días (menos duración)", "adelanto": "Altas de la tarde que pasan a la mañana"}
+
+
+def _valores_motor(pct):
+    """Controles en % (los de los sliders) -> valores del motor (ver `cambios` en si.simular_integral)."""
+    return {"ajuste_llegadas": 1 + (pct.get("llegadas") or 0) / 100, "ajuste_estancia": 1 + (pct.get("estancia") or 0) / 100,
+            "ajuste_espera": 1 + (pct.get("espera") or 0) / 100, "recorte_largas_pct": pct.get("recorte") or 0, "adelanto_altas_pct": pct.get("adelanto") or 0}
+
+
+def _descripcion_cambio(fecha, dia, antes, ahora):
+    """Aviso de que se cambiaron controles a mitad de la simulacion: desde que dia, que cambio y como leer el grafico."""
+    def pct(v):
+        return f"{'+' if v > 0 else '−' if v < 0 else ''}{abs(v):g} %"
+    lista = [f"{NOMBRES_CONTROL[k]}: {pct(antes.get(k) or 0)} → {pct(ahora.get(k) or 0)}" for k in CONTROLES_EN_VIVO if (antes.get(k) or 0) != (ahora.get(k) or 0)]
+    return [html.Div(f"Cambio aplicado desde el día {dia + 1} ({fecha})", className="simint-escenario__titulo"),
+            html.Div([html.Span("Qué cambió", className="simint-escenario__rotulo"), html.Span(" · ".join(lista))], className="simint-escenario__palancas"),
+            html.Div([html.Span("Cómo leer el gráfico", className="simint-escenario__rotulo"),
+                      html.Span("la simulación no se reinició: hasta ese día todo sigue igual y el cambio se aplica a los pacientes que llegan después. "
+                                "La línea azul-gris de guiones es cómo habría seguido sin estos cambios de configuración; la gris punteada, la de las mejoras de alerta. Puedes volver a cambiar los controles y continuar otra vez.")],
+                     className="simint-escenario__palancas")]
+
+
+@callback(Output("simint-datos", "data", allow_duplicate=True), Output("simint-nota", "children", allow_duplicate=True),
+          Output("simint-escenario-desc", "children", allow_duplicate=True), Output("simint-escenario-desc", "style", allow_duplicate=True),
+          Input("simint-play-continuar", "n_clicks"), Input("simint-continuar", "n_clicks"),
+          State("simint-datos", "data"), State("simint-cursor", "data"), State("simint-plazo", "value"),
+          State("simint-ajuste_llegadas", "value"), State("simint-ajuste_estancia", "value"), State("simint-ajuste_espera", "value"),
+          State("simint-recorte_largas", "value"), State("simint-adelanto_altas", "value"), State("simint-mezcla_estres", "value"),
+          State("simint-comparar", "value"),
+          State({"type": "simint-caso", "caso": ALL}, "value"), State({"type": "simint-caso", "caso": ALL}, "id"),
+          prevent_initial_call=True)
+def cambiar_en_vivo(_n1, _n2, datos, cursor, dias, lleg, estancia, espera, recorte, adelanto, estres, comparar, valores_casos, ids_casos):
+    """Cambiar controles A MITAD de la simulacion, sin alerta (se pausa, se cambian los controles y se continua). No se reinicia: el cambio vale para los pacientes que llegan despues del
+    dia actual y todo lo anterior queda igual (mismos numeros aleatorios). La linea gris punteada es la corrida que ya estaba, o sea como habria seguido sin el cambio; si ya habia una
+    linea gris (de una mejora o de un cambio anterior) se conserva, para comparar siempre contra la operacion sin ninguno de los cambios."""
+    if not datos or datos.get("es_horario") or not isinstance(cursor, int) or not datos.get("controles"):
+        raise dash.exceptions.PreventUpdate
+    ahora = {"llegadas": lleg or 0, "estancia": estancia or 0, "espera": espera or 0, "recorte": recorte or 0, "adelanto": adelanto or 0}
+    vigentes = datos["controles"]
+    if all((vigentes.get(k) or 0) == ahora[k] for k in CONTROLES_EN_VIVO) or cursor >= len(datos["fechas"]) - 1:
+        raise dash.exceptions.PreventUpdate
+    claves = [k for k in CONTROLES_EN_VIVO if (vigentes.get(k) or 0) != ahora[k]]
+    data, nota = _continuar(datos, cursor, dias, ahora, "config", valores_casos, ids_casos, claves)
+    return data, nota, _descripcion_cambio(datos["fechas"][cursor + 1], cursor + 1, vigentes, ahora), {"display": "block"}
 
 
 @callback(Output("simint-filtro", "data"),
@@ -1237,8 +1449,8 @@ def _hover_tpl(etiqueta, gran, modo="suma"):
 
 @callback(Output("simint-grafico", "figure"),
           Input("simint-datos", "data"), Input("simint-capacidad", "value"), Input("simint-vista-radio", "value"),
-          Input("simint-velocidad", "value"), State("simint-cursor", "data"), State("theme-store", "data"))
-def mostrar(data, capacidad, vista, velocidad, cursor, tema):
+          Input("simint-velocidad", "value"), Input("simint-mostrar-cfg", "value"), State("simint-cursor", "data"), State("theme-store", "data"))
+def mostrar(data, capacidad, vista, velocidad, mostrar_cfg, cursor, tema):
     """Construye la figura YA RECORTADA segun el cursor actual (no dibuja el "futuro": ni siquiera existe en
     el trace, no es un velo encima). Cada trace recortable lleva su serie COMPLETA en `meta.fullY` (y la
     fecha completa en `layout.meta.fullX`) para que el clientside de reproduccion solo tenga que extenderla
@@ -1289,6 +1501,19 @@ def mostrar(data, capacidad, vista, velocidad, cursor, tema):
     def recorte(serie_completa):
         return serie_completa[:upto]
 
+    def trazo_base(serie, r, legend_id, leyenda=True):
+        """Dos lineas de comparacion por serie: morada = sin los cambios de configuracion (si el checkbox lo pide); gris punteada = sin la mejora de la alerta."""
+        if "si" in (mostrar_cfg or []) and f"sinconf_{serie}_p50" in data:
+            y = data[f"sinconf_{serie}_p50"]
+            fig.add_trace(go.Scatter(x=fechas_vis, y=recorte(y), mode="lines", line=dict(color="#8e44ad", width=1.8, dash="longdash"),
+                                     name="Sin los cambios de configuración", legend=legend_id, meta={"fullY": y},
+                                     legendgroup="cfg", showlegend=leyenda, hoverinfo="skip"), row=r, col=1)
+        if f"sinmej_{serie}_p50" in data:
+            y = data[f"sinmej_{serie}_p50"]
+            fig.add_trace(go.Scatter(x=fechas_vis, y=recorte(y), mode="lines", line=dict(color=GRIS, width=1.4, dash="dot"),
+                                     name="Sin la mejora de la alerta", legend=legend_id, meta={"fullY": y},
+                                     legendgroup="base", showlegend=leyenda, hoverinfo="skip"), row=r, col=1)
+
     # Leyenda POR fila (17-nov): antes era una sola leyenda horizontal debajo de los 3 graficos, mezclando
     # lineas de filas distintas y empujando el espacio de dibujo hacia arriba. Plotly >= 5.15 permite varias
     # leyendas (legend/legend2/legend3, una por fila via el atributo `legend` de cada trace); cada una se
@@ -1313,11 +1538,8 @@ def mostrar(data, capacidad, vista, velocidad, cursor, tema):
                                      line=dict(color=NARANJA, width=1.8), name="Salen de alta", legend=legend_id,
                                      meta={"fullY": data["altas_p50"]}, customdata=customdatas.get("altas_p50"),
                                      hovertemplate=_hover_tpl("altas", gran)), row=r, col=1)
-            if "base_ingresos_cama_p50" in data:
-                fig.add_trace(go.Scatter(x=fechas_vis, y=recorte(data["base_ingresos_cama_p50"]), mode="lines",
-                                         line=dict(color=GRIS, width=1.4, dash="dot"), name="Antes de la mejora",
-                                         legend=legend_id, meta={"fullY": data["base_ingresos_cama_p50"]},
-                                         legendgroup="base", showlegend=True, hoverinfo="skip"), row=r, col=1)
+            trazo_base("llegadas", r, legend_id)
+            trazo_base("ingresos_cama", r, legend_id, leyenda=False)
         elif clave == "camas":
             fig.add_trace(go.Scatter(x=fechas_vis, y=recorte(data["total_p90"]), mode="lines", line=dict(width=0),
                                      showlegend=False, meta={"fullY": data["total_p90"]}, hoverinfo="skip"), row=r, col=1)
@@ -1331,11 +1553,7 @@ def mostrar(data, capacidad, vista, velocidad, cursor, tema):
             fig.add_trace(go.Scatter(x=fechas, y=[cap] * len(fechas), mode="lines",   # linea constante: SIN recortar
                                      line=dict(color=NARANJA, dash="dash"), name=f"Capacidad HUN ({cap})", legend=legend_id,
                                      hoverinfo="skip"), row=r, col=1)
-            if "base_total_p50" in data:
-                fig.add_trace(go.Scatter(x=fechas_vis, y=recorte(data["base_total_p50"]), mode="lines",
-                                         line=dict(color=GRIS, width=1.4, dash="dot"), name="Antes de la mejora",
-                                         legend=legend_id, meta={"fullY": data["base_total_p50"]},
-                                         legendgroup="base", showlegend=True, hoverinfo="skip"), row=r, col=1)
+            trazo_base("total", r, legend_id)
         else:  # espera
             fig.add_trace(go.Scatter(x=fechas_vis, y=recorte(data["cola_p90"]), mode="lines", line=dict(width=0),
                                      showlegend=False, meta={"fullY": data["cola_p90"]}, hoverinfo="skip"), row=r, col=1)
@@ -1346,11 +1564,7 @@ def mostrar(data, capacidad, vista, velocidad, cursor, tema):
                                      name="Esperando cama (mediana)", legend=legend_id, meta={"fullY": data["cola_p50"]},
                                      customdata=customdatas.get("cola_p50"),
                                      hovertemplate=_hover_tpl("esperando cama", gran, "media")), row=r, col=1)
-            if "base_cola_p50" in data:
-                fig.add_trace(go.Scatter(x=fechas_vis, y=recorte(data["base_cola_p50"]), mode="lines",
-                                         line=dict(color=GRIS, width=1.4, dash="dot"), name="Antes de la mejora",
-                                         legend=legend_id, meta={"fullY": data["base_cola_p50"]},
-                                         legendgroup="base", showlegend=True, hoverinfo="skip"), row=r, col=1)
+            trazo_base("cola", r, legend_id)
 
     dark = tg.es_oscuro(tema)
     texto_legenda = tg.OSCURO["texto"] if dark else tg.CLARO["texto"]
@@ -1373,6 +1587,10 @@ def mostrar(data, capacidad, vista, velocidad, cursor, tema):
         ann.x = 0.0
         ann.xanchor = "left"
 
+    for c in data.get("cambios") or []:           # una linea vertical en el dia desde el que rige cada cambio hecho a mitad de la simulacion
+        if int(c["dia"]) <= upto and int(c["dia"]) < len(fechas):
+            fig.add_vline(x=str(fechas[int(c["dia"])].date()), line_width=1.2, line_dash="dashdot", line_color=GRIS, row="all", col="all")
+
     fig.update_xaxes(range=[fechas[0], fechas[-1]], autorange=False, showspikes=True, spikemode="across",
                      spikesnap="cursor", spikethickness=1, spikedash="dot", spikecolor=GRIS)
     tg.aplicar(fig, dark)
@@ -1393,6 +1611,8 @@ def radiografia(hoverData, cursor, data, vista, filtro, velocidad):
         cuerpo = [html.Div(filas_metricas, className="simint-radio__filas")]
         if vista == "camas":
             cuerpo.append(modulo_tablero_camas(0, 0))
+        if vista == "flujo":
+            cuerpo.append(modulo_llegadas_franja(None, 0, 0))
         cuerpo.append(panel_filtros(filtro))
         return "Presiona ▶ Reproducir para simular", cuerpo
     fechas = data["fechas"]
@@ -1451,6 +1671,8 @@ def radiografia(hoverData, cursor, data, vista, filtro, velocidad):
         ad = float(np.mean(data["adultos_p50"][ini:fin])) if ventana_n > 1 else data["adultos_p50"][idx]
         ni = float(np.mean(data["ninos_p50"][ini:fin])) if ventana_n > 1 else data["ninos_p50"][idx]
         cuerpo.append(modulo_tablero_camas(ad, ni))
+    if vista == "flujo":
+        cuerpo.append(modulo_llegadas_franja(data.get("llegadas_franja"), ini, fin))
     cuerpo.append(panel_filtros(filtro))
     return titulo_txt, cuerpo
 
@@ -1463,8 +1685,14 @@ def radiografia(hoverData, cursor, data, vista, filtro, velocidad):
 # ----------------------------------------------------------------------
 clientside_callback(
     """
-    function(n, disabled) {
+    function(n, disabled, datos, cursor, l, e, w, r, a, x, p) {
         var ns = window.dash_clientside;
+        if (disabled && window.simintReanudable && window.simintReanudable(datos, cursor, [l, e, w, r, a, x], p)) {
+            // 19-nov-2026: la simulacion ya estaba en medio de la corrida y nada cambio: sigue desde ese dia, sin volver a simular
+            var hh = window._simintHist || [];
+            if (hh.length) { ns.set_props('simint-alerta-texto', {children: JSON.stringify(Object.assign({}, hh[hh.length - 1], {pos: hh.length + ' de ' + hh.length, ultima: true}))}); }
+            return [false, "\\u23F8 Pausa", ns.no_update, {display: "none"}, {display: "flex", alignItems: "center"}];
+        }
         if (disabled) {
             // estaba en reposo (inicio o terminada): este click dispara TAMBIEN el callback de Python (mismo
             // Input) que (re)simula desde cero; mientras tanto mostramos "Cargando..." y el tick arranca
@@ -1481,12 +1709,24 @@ clientside_callback(
     Output("simint-cursor", "data", allow_duplicate=True),
     Output("simint-play", "style", allow_duplicate=True), Output("simint-play-split", "style", allow_duplicate=True),
     Input("simint-play", "n_clicks"), State("simint-tick", "disabled"),
+    State("simint-datos", "data"), State("simint-cursor", "data"), State("simint-ajuste_llegadas", "value"), State("simint-ajuste_estancia", "value"),
+    State("simint-ajuste_espera", "value"), State("simint-recorte_largas", "value"), State("simint-adelanto_altas", "value"),
+    State("simint-mezcla_estres", "value"), State("simint-plazo", "value"),
     prevent_initial_call=True,
 )
 
 clientside_callback(
     """
-    function(n) {           // mitad "Continuar" del boton partido: reanuda el MISMO cursor, sin recalcular
+    function(n, datos, l, e, w, r, a) {   // mitad "Continuar" del boton partido: reanuda el MISMO cursor, sin recalcular
+        var ns = window.dash_clientside;
+        window._simintEsperandoContinuacion = true;   // lo pidio el usuario (Continuar): la proxima corrida con cursor_inicial es suya
+        var sigQ = window.simintSiguienteAlerta ? window.simintSiguienteAlerta() : null;
+        if (sigQ) { ns.set_props('simint-alerta-texto', {children: sigQ}); return [ns.no_update, ns.no_update, ns.no_update, ns.no_update]; }   // hay alertas encoladas: se muestra la siguiente y sigue en pausa
+        var v = datos && datos.controles, ahora = {llegadas: l, estancia: e, espera: w, recorte: r, adelanto: a};
+        var cambio = !!v && Object.keys(ahora).some(function(k) { return (ahora[k] || 0) !== (v[k] || 0); }) && !datos.es_horario;
+        if (cambio) {    // cambiaste controles con la simulacion en pausa: el servidor la recalcula SOLO de aqui en adelante y la reanuda cuando llegan los datos
+            return [ns.no_update, {display: "flex", alignItems: "center"}, {display: "none"}, "\\u23F3 Aplicando el cambio\u2026"];
+        }
         return [false, {display: "flex", alignItems: "center"}, {display: "none"}, "\\u23F8 Pausa"];
     }
     """,
@@ -1495,6 +1735,8 @@ clientside_callback(
     Output("simint-play-split", "style", allow_duplicate=True),
     Output("simint-play", "children", allow_duplicate=True),
     Input("simint-play-continuar", "n_clicks"),
+    State("simint-datos", "data"), State("simint-ajuste_llegadas", "value"), State("simint-ajuste_estancia", "value"), State("simint-ajuste_espera", "value"),
+    State("simint-recorte_largas", "value"), State("simint-adelanto_altas", "value"),
     prevent_initial_call=True,
 )
 
@@ -1502,7 +1744,7 @@ clientside_callback(
     """
     function(n) {           // mitad "Reiniciar": borra los datos y el progreso y vuelve a mostrar el boton
                              // "Reproducir" solo — NO vuelve a simular hasta que el usuario lo presione.
-        window._simintUltAlerta = null; window._simintUltTipo = {}; window._simintPausados = {}; window._simintHist = []; window._simintVista = -1;
+        window._simintUltAlerta = null; window._simintUltTipo = {}; window._simintPausados = {}; window._simintHist = []; window._simintVista = -1; window._simintActivas = {}; window._simintCola = [];
         window.dash_clientside.set_props('simint-alerta-texto', {children: JSON.stringify({idle: true, n: Date.now()})});
         return [null, null, true, window.dash_clientside.no_update, {display: "flex", alignItems: "center"}, {display: "none"},
                 "▶ Reproducir", {width: "0%"}, "0 %", ""];
@@ -1584,24 +1826,25 @@ clientside_callback(
         }
         var c = nextCursor;
         var al = data.alertas_dia || [];
-        if (al.length > c && al[c]) {
-            var a = al[c], aPrev = (cursorReal < al.length) ? al[cursorReal] : null;
-            var ult = window._simintUltTipo = window._simintUltTipo || {};
-            var pausados = window._simintPausados = window._simintPausados || {};
-            var clave = a.tipo + '|' + a.gravedad;                               // cada alerta (tipo y gravedad) se muestra UNA sola vez por corrida: despues queda como procesada
-            var nueva = ult[clave] === undefined;
-            if (nueva && window._simintUltAlerta !== c) {
-                window._simintUltAlerta = c;
-                ult[clave] = c;
-                var ob = {tipo: a.tipo, gravedad: a.gravedad, titulo: a.titulo, texto: a.texto, fecha: data.fechas[c],
-                          acciones: a.acciones, paso: a.paso, mejora: a.mejora, rec: a.rec, alerta: a.alerta, pausada: false};
-                var hist = window._simintHist = window._simintHist || [];
-                ob.pausada = true;                                                     // toda alerta nueva (aviso o critica) frena la simulacion para poder revisarla y mejorar
-                if (a.gravedad === 'Alta') { pausados[a.tipo] = true; }
-                hist.push(ob); window._simintVista = hist.length - 1;
-                var o1 = Object.assign({}, ob, {pos: hist.length + ' de ' + hist.length, ultima: true});
-                return [c, true, "▶ Reproducir", {display: "flex", alignItems: "center"}, JSON.stringify(o1), fillStyle, pctTxt, fechaOut];
-            }
+        // Una alerta salta cuando APARECE: si ya estaba activa (y no se ha ido), no vuelve a saltar. Las que coinciden en el mismo paso se encolan
+        // y se muestran una despues de otra (al pulsar Continuar o Aplicar mejora en la primera).
+        var activasPrev = window._simintActivas || {};
+        var activasAhora = {};
+        var lista = al[c] || [];
+        lista.forEach(function(x) { activasAhora[x.tipo] = true; });
+        var nuevas = lista.filter(function(x) { return !activasPrev[x.tipo]; });
+        window._simintActivas = activasAhora;
+        if (nuevas.length) {
+            window._simintUltAlerta = c;
+            var pendientes = nuevas.slice(1).map(function(x) { return {a: x, fecha: data.fechas[c]}; });
+            window._simintCola = (window._simintCola || []).concat(pendientes);
+            var a0 = nuevas[0];
+            var ob = {tipo: a0.tipo, gravedad: a0.gravedad, titulo: a0.titulo, texto: a0.texto, fecha: data.fechas[c],
+                      acciones: a0.acciones, palancas: a0.palancas, mejora: a0.mejora, rec: a0.rec, alerta: a0.alerta, pausada: true};
+            var hist = window._simintHist = window._simintHist || [];
+            hist.push(ob); window._simintVista = hist.length - 1;
+            var o1 = Object.assign({}, ob, {pos: hist.length + ' de ' + hist.length, ultima: true});
+            return [c, true, "▶ Reproducir", {display: "flex", alignItems: "center"}, JSON.stringify(o1), fillStyle, pctTxt, fechaOut];
         }
         if (c >= max) { return [c, true, "▶ Reproducir", ns.no_update, ns.no_update, fillStyle, pctTxt, fechaOut]; }
         return [c, ns.no_update, ns.no_update, ns.no_update, ns.no_update, fillStyle, pctTxt, fechaOut];
@@ -1624,27 +1867,28 @@ clientside_callback(
     """
     function(txt) {         // pinta la alerta (JSON): gravedad, titulo, que paso, recomendacion, posicion en el historial y los enlaces
         var ns = window.dash_clientside;
-        var NO = [ns.no_update, ns.no_update, ns.no_update, ns.no_update, ns.no_update, ns.no_update, ns.no_update, ns.no_update, ns.no_update, ns.no_update, ns.no_update];
+        var NO = [ns.no_update, ns.no_update, ns.no_update, ns.no_update, ns.no_update, ns.no_update, ns.no_update, ns.no_update, ns.no_update, ns.no_update, ns.no_update, ns.no_update];
         if (!txt) { return NO; }
         var a = JSON.parse(txt);
         if (a.idle) {          // sin alertas todavia (o corrida nueva): la tarjeta queda a la vista, en espera
             return ["", "Sin alertas por ahora", "Las alertas saltarán aquí mientras corre la simulación, y la tarjeta se queda a la vista.", "", "", "",
-                    "alert-inline simint-alerta simint-alerta--idle", {display: 'none'}, '/alertas', '/recomendaciones', ''];
+                    "alert-inline simint-alerta simint-alerta--idle", {display: 'none'}, '/alertas', '/recomendaciones', '', null, ""];
         }
         var clase = "alert-inline simint-alerta simint-alerta--" + (a.resuelta ? 'resuelta' : (a.gravedad === 'Alta' ? 'alta' : 'media'));
         var boton = {display: (a.mejora && a.ultima && !a.resuelta) ? 'block' : 'none'};
         var queDijo = a.texto + ' (' + a.fecha + ')' + (a.pausada ? ' La simulación se detuvo para que lo revises.' : '');
         return ["Gravedad " + a.gravedad.toLowerCase() + (a.gravedad === 'Alta' ? ' · crítica' : ' · aviso') + (a.resuelta ? ' · resuelta con la mejora' : ''), a.titulo, queDijo,
-                (a.acciones || []).join('  ·  '), a.paso ? ('Primer paso: ' + a.paso) : '', a.pos || '', clase, boton,
+                (a.acciones || []).map(function(x) { return '- ' + x; }).join('\\n'), '', a.pos || '', clase, boton,
                 '/alertas#alerta-' + (a.alerta || 'A2'), '/recomendaciones#rec-R' + (a.rec || 4),
-                (a.gravedad !== 'Alta' && a.mejora && a.ultima && !a.resuelta) ? 'Aún no es crítica: aplica la mejora ahora, antes de que escale.' : ''];
+                '',
+                {palancas: a.palancas || {}, titulo: a.titulo}, a.fecha ? "Día " + a.fecha : ""];
     }
     """,
     Output("simint-alerta-grav", "children"), Output("simint-alerta-titulo", "children"), Output("simint-alerta-detalle", "children"),
     Output("simint-alerta-acciones", "children"), Output("simint-alerta-paso", "children"), Output("simint-alerta-pos", "children"),
     Output("simint-alerta", "className"), Output("simint-aplicar", "style"),
     Output("simint-alerta-link-alerta", "href"), Output("simint-alerta-link-rec", "href"), Output("simint-alerta-nota", "children"),
-    Input("simint-alerta-texto", "children"), prevent_initial_call=True)
+    Output("simint-alerta-palancas", "data"), Output("simint-alerta-fecha", "children"), Input("simint-alerta-texto", "children"), prevent_initial_call=True)
 
 clientside_callback(
     """
@@ -1678,14 +1922,23 @@ clientside_callback(
 
 clientside_callback(
     """
-    function(n) {                                          // boton Continuar del banner: reanuda y lo oculta
-        return [false, "\\u23F8 Pausa", window.dash_clientside.no_update];
+    function(n, datos, l, e, w, r, a) {                    // boton Continuar del banner: reanuda y lo oculta
+        var ns = window.dash_clientside;
+        window._simintEsperandoContinuacion = true;   // lo pidio el usuario (Continuar): la proxima corrida con cursor_inicial es suya
+        var sigQ = window.simintSiguienteAlerta ? window.simintSiguienteAlerta() : null;
+        if (sigQ) { ns.set_props('simint-alerta-texto', {children: sigQ}); return [ns.no_update, ns.no_update, ns.no_update]; }   // hay alertas encoladas: se muestra la siguiente y sigue en pausa
+        var v = datos && datos.controles, ahora = {llegadas: l, estancia: e, espera: w, recorte: r, adelanto: a};
+        var cambio = !!v && Object.keys(ahora).some(function(k) { return (ahora[k] || 0) !== (v[k] || 0); }) && !datos.es_horario;
+        if (cambio) { return [ns.no_update, "\\u23F3 Aplicando el cambio\u2026", ns.no_update]; }   // el servidor recalcula desde aqui y reanuda al terminar
+        return [false, "\\u23F8 Pausa", ns.no_update];
     }
     """,
     Output("simint-tick", "disabled", allow_duplicate=True),
     Output("simint-play", "children", allow_duplicate=True),
     Output("simint-alerta", "style", allow_duplicate=True),
     Input("simint-continuar", "n_clicks"),
+    State("simint-datos", "data"), State("simint-ajuste_llegadas", "value"), State("simint-ajuste_estancia", "value"), State("simint-ajuste_espera", "value"),
+    State("simint-recorte_largas", "value"), State("simint-adelanto_altas", "value"),
     prevent_initial_call=True,
 )
 
@@ -1735,6 +1988,14 @@ clientside_callback(
             return [ns.no_update, ns.no_update, ns.no_update, ns.no_update, ns.no_update, ns.no_update, ns.no_update];
         }
         if (data.cursor_inicial !== undefined && data.cursor_inicial !== null) {       // viene de una alerta: sigue en el mismo dia (y recuerda que alertas ya frenaron)
+            if (!window._simintEsperandoContinuacion) { return [ns.no_update, ns.no_update, ns.no_update, ns.no_update, ns.no_update, ns.no_update, ns.no_update]; }   // al recargar la pagina la corrida guardada no es una continuacion: no reanudar ni mostrar alertas
+            window._simintEsperandoContinuacion = false;
+            var ultC = data.cambios && data.cambios.length ? data.cambios[data.cambios.length - 1] : null;
+            var hh = window._simintHist || [];
+            if (ultC && ultC.origen === 'alerta' && hh.length) { hh[hh.length - 1].resuelta = true; }   // la mejora resuelve la alerta que se veia
+            var sigD = window.simintSiguienteAlerta ? window.simintSiguienteAlerta() : null;
+            if (sigD) { ns.set_props('simint-alerta-texto', {children: sigD}); return [data.cursor_inicial, ns.no_update, true, "\\u25B6 Reproducir", {}, {display: "none"}, {display: "flex", alignItems: "center"}]; }
+            if (ultC && ultC.origen === 'alerta' && hh.length) { ns.set_props('simint-alerta-texto', {children: JSON.stringify(Object.assign({}, hh[hh.length - 1], {pos: hh.length + ' de ' + hh.length, ultima: true}))}); }
             window._simintUltAlerta = data.cursor_inicial;
             if (data.pausado) {                                                         // «Mostrar operación óptima»: queda en pausa para comparar
                 return [data.cursor_inicial, window.dash_clientside.no_update, true, "\\u25B6 Reproducir", {}, {display: "none"}, {display: "flex", alignItems: "center"}];
@@ -1742,6 +2003,7 @@ clientside_callback(
             return [data.cursor_inicial, window.dash_clientside.no_update, false, "\\u23F8 Pausa", {}, {display: "flex", alignItems: "center"}, {display: "none"}];
         }
         var conserva = !!data.conserva_historial;
+        if (!conserva) { window._simintActivas = {}; window._simintCola = []; }
         window._simintUltAlerta = null; window._simintUltTipo = {}; window._simintPausados = {};
         if (conserva) {            // mejora aplicada: las alertas de la corrida anterior siguen consultables con las flechas, marcadas como resueltas
             (window._simintHist || []).forEach(function(h) { h.resuelta = true; });

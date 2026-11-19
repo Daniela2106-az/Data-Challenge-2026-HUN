@@ -22,6 +22,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from componentes import (AZUL, PIZARRA, TENUE, aviso_datos, cifra, coma, estilo, ficha_de, frase, grafico, lamina, laminas_grupo, mensaje,  # noqa: E402
                          metodo, pagina, portada, secciones, tarjetas)
 import catalogo as cat  # noqa: E402
+import umbrales_alertas as um  # noqa: E402
 
 dash.register_page(__name__, path="/alertas", name="Alertas", title="Alertas - HUN", order=33)
 
@@ -82,6 +83,15 @@ def layout(alerta=None, **_):
                    "**En azul, el error del modelo; en gris, el de suponer «lo mismo que ahora».**",
                    grafico("ale-S1", alto=280), dato=("−33 %", "de error a 6 horas frente a «lo mismo que ahora»"), ancla="alerta-S1"),
         ),
+        tarjetas("Las alertas probadas con datos de 2026", "Cuándo salta cada una, qué tan bien acierta y qué recomendación dispara",
+                 ("A1", "Día congestionado", f"A las 12 h, si las llegadas del día pasan el percentil 90 de su día de la semana. Detecta {a1.deteccion_pct:.0f} % y acierta {a1.precision_pct:.0f} %. Dispara las recomendaciones 3 y 4."),
+                 ("A2", "Ocupación alta de mañana", f"Si la ocupación al mediodía está entre el 20 % más alto (107 a 109 camas), suponiendo que mañana será igual que hoy. Detecta {a2.deteccion_pct:.0f} % y acierta {a2.precision_pct:.0f} %. Recomendaciones 3 y 4."),
+                 ("A3", "Paciente con 48 h sin cama", f"Cuando un paciente cumple 48 horas desde su llegada sin cama (unos {a3.alertas_por_dia:.0f} por día). {a3.precision_pct:.0f} % termina esperando más de 72 h; hay {a3.margen_h:.0f} h de margen. Recomendación 5."),
+                 ("A4", "Aviso temprano con el estimador", f"A las 12 h de espera, si la probabilidad de seguir sin cama a las 48 h es de 40 % o más (unos {a4.alertas_por_dia:.0f} por día, {a4.precision_pct:.0f} % acierta, {a4.margen_h:.0f} h de margen). Recomendación 5."),
+                 ("S1", "Cola proyectada", "Una señal para la reunión de camas, no una alerta con umbral: cuántos pacientes esperarán cama en 6, 12 o 24 horas. Recomendación 3.")),
+        tarjetas("Las alertas del simulador integral", "Son las únicas que saltan en el simulador. Hay dos gravedades, aviso (amarillo) y crítico (rojo); las dos frenan la simulación y cada una salta una sola vez por corrida. Los umbrales son criterios del simulador, no resultados validados como los de A1 a A4",
+                 ("Sim 1", "Faltarán camas", f"Se necesitarán más de las 106 camas. Dice cuándo (probabilidad de superarlas a 48 h) y cuántas faltan (camas ocupadas en la mediana de las repeticiones menos 106). Aviso (media) desde {um.UMBRAL_ALERTA_MEDIA} % o desde {um.UMBRAL_FALTAN} cama que falta; crítico (alta) desde {um.UMBRAL_ALERTA} % o desde {um.UMBRAL_FALTAN_CRITICO} camas que faltan. Recomendaciones 3, 4 y 7."),
+                 ("Sim 2", "Cola de espera larga", f"Pacientes esperando cama a la vez. Aviso desde {um.UMBRAL_COLA}; crítico desde {um.UMBRAL_COLA_CRITICA} (el percentil 90 real). Recomendaciones 5 y 6.")),
         tarjetas("Lo esencial de las alertas", "Cuatro cifras de la prueba de enero a abril de 2026",
                  (coma(total, 1), "Alertas por día", "Con el diseño recomendado; casi todas son de pacientes que llevan 48 horas sin cama."),
                  (f"{a1.deteccion_pct:.0f} %", "Días congestionados que detecta", f"A las 12 h, con {a1.precision_pct:.0f} % de acierto. Es la alerta con más señal."),

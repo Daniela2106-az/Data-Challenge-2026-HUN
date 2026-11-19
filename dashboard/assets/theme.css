@@ -839,6 +839,15 @@ button, .btn-primary {
 .lamina__p p { font-size: 15px; line-height: 1.6; color: var(--muted); margin: 0 0 8px; }
 .lamina__p strong { color: var(--ink); }
 .lamina__texto .filtro { margin-top: 14px; }
+.filtros-fila { display: flex; flex-direction: column; gap: 2px; }
+.filtros-fila--h { flex-direction: row; flex-wrap: wrap; gap: 4px 28px; margin-bottom: 6px; }
+.filtros-fila--h .filtro { margin-top: 0; }
+/* en una tarjeta contraida (40 px) los botones se apilarian en una columna altisima y estirarian toda la fila */
+.lamina-acordeon:not(.is-expanded) .filtros-fila { display: none; }
+/* filtros mas chicos dentro de una tarjeta, para que no se vean apiñados */
+.filtros-fila--h .filtro__label { font-size: 10px; margin-bottom: 3px; }
+.filtros-fila--h .pildoras { gap: 4px; }
+.filtros-fila--h .pildoras label.dash-options-list-option { font-size: 11.5px !important; padding: 3px 9px !important; line-height: 1.3; }
 .lamina__dato { display: flex; align-items: baseline; gap: 12px; margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line); }
 .lamina__dato:empty { display: none; }
 .lamina__dato b { font-size: 30px; font-weight: 800; letter-spacing: -.02em; color: var(--brand-strong); white-space: nowrap; }
@@ -2192,3 +2201,44 @@ button, .btn-primary {
 .hero__sub { font-size: 16px; line-height: 1.55; max-width: 720px; opacity: .95; }
 .hero__heart { opacity: .1; width: 260px; height: 260px; }
 .hero__hint { font-size: 12.5px; opacity: .75; margin-top: 10px; }
+
+/* las tarjetas de dato aparecen una vez y se quedan a la vista (el ciclo repetido las hacia desaparecer mientras se leian) */
+.hechos .hecho:nth-child(n) { animation: recAparece .5s ease both; animation-iteration-count: 1; }
+
+/* recomendacion de la alerta en vinetas */
+.simint-alerta__vinetas { margin: 2px 0 0; font-size: 13px; line-height: 1.5; font-weight: 500; }
+.simint-alerta__vinetas p { margin: 0; }
+.simint-alerta__vinetas ul { margin: 4px 0 0; padding-left: 18px; }
+.simint-alerta__vinetas li { margin-bottom: 5px; }
+.simint-alerta__vinetas strong { color: var(--brand-ink); }
+.simint-alerta.alert-inline { min-height: 300px; }
+
+.rec-corta__mas { margin-top: 10px; border-top: 1px solid var(--line); padding-top: 8px; }
+.rec-corta__mas summary { cursor: pointer; font-weight: 700; font-size: 13px; color: var(--accent); }
+
+/* ---- Tarjeta de alerta (19-nov-2026): sin la etiqueta «ALERTA», fecha arriba a la derecha, botones mas arriba y flechas debajo de ellos ---- */
+.simint-alerta__fecha { margin-left: auto; font-size: 12.5px; font-weight: 600; color: var(--muted); white-space: nowrap; }
+.simint-alerta__fecha:empty { display: none; }
+.simint-alerta .simint-alerta__botones { margin-top: -8px; }
+.simint-alerta__navegacion { display: flex; justify-content: flex-end; margin-top: 6px; }
+.simint-alerta__col-rec { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.simint-alerta__col-rec .simint-alerta__navegacion { margin-top: 0; justify-content: center; }
+/* un poco mas de espacio dentro de la tarjeta de alerta (19-nov-2026) */
+.simint-alerta .simint-alerta__bloque { margin-top: 12px; }
+.simint-alerta .simint-alerta__cab { margin-bottom: 4px; }
+.simint-alerta .simint-alerta__botones { margin-top: 4px; }
+.simint-alerta__col-rec { gap: 10px; }
+
+/* ---------- 19-nov-2026: tarjeta de alerta mas ordenada (con 3 recomendaciones ya no se ve llena) ---------- */
+.simint-alerta__cab { padding-bottom: 10px; border-bottom: 1px solid color-mix(in srgb, var(--ink) 14%, transparent); margin-bottom: 0; }
+.simint-alerta .simint-alerta__rotulo { display: block; margin: 0 0 6px; font-size: 11px; letter-spacing: .08em; }
+.simint-alerta__cuerpo > .simint-alerta__bloque:nth-of-type(2) { margin-top: 12px; padding: 10px 12px; border-radius: 10px; background: color-mix(in srgb, var(--surface) 55%, transparent); line-height: 1.5; }
+.simint-alerta__cuerpo > .simint-alerta__bloque:nth-of-type(3) { margin-top: 14px; }
+.simint-alerta__vinetas { margin: 0; }
+.simint-alerta__vinetas ul { list-style: none; counter-reset: rec; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
+.simint-alerta__vinetas li { counter-increment: rec; position: relative; margin: 0; padding: 12px 12px 12px 44px; font-size: 12.8px; line-height: 1.5; font-weight: 500;
+  background: color-mix(in srgb, var(--surface) 70%, transparent); border: 1px solid var(--line); border-radius: 10px; }
+.simint-alerta__vinetas li::before { content: counter(rec); position: absolute; left: 12px; top: 12px; width: 22px; height: 22px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; background: var(--brand-strong); color: #fff; font-size: 11.5px; font-weight: 800; }
+.simint-alerta__vinetas li strong:first-child { display: block; margin-bottom: 4px; font-size: 13px; color: var(--brand-ink); }
+:root[data-theme="dark"] .simint-alerta__vinetas li::before { color: #0f141a; }

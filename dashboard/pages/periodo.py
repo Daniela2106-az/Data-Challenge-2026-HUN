@@ -20,7 +20,7 @@ import plotly.graph_objects as go
 from dash import Input, Output, callback, dcc, html
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from componentes import AZUL, PIZARRA, TENUE, aviso_datos, cifra, coma, estilo, filtro, lamina, leer, mensaje, metodo, pagina, portada, tarjetas  # noqa: E402
+from componentes import AZUL, PIZARRA, TENUE, aviso_datos, cifra, coma, estilo, filtro, lamina, laminas_grupo, leer, mensaje, metodo, pagina, portada, tarjetas  # noqa: E402
 
 dash.register_page(__name__, path="/periodo", name="Diagnóstico por periodo", title="Diagnóstico por periodo - HUN", order=9)
 
@@ -78,7 +78,7 @@ def _cursiva(texto, empieza):
 
 
 def _grafica(fig, alto):
-    return dcc.Graph(figure=fig, config={"displaylogo": False, "displayModeBar": False}, style={"height": f"{alto}px"})
+    return dcc.Graph(figure=fig, config={"displaylogo": False, "displayModeBar": False, "responsive": True}, style={"height": f"{alto}px"})
 
 
 def _pct(v):
@@ -238,7 +238,7 @@ def _cuerpo(r, per, ref, tema):
               f"En {per} hubo en promedio **{coma(media, 0)} camas ocupadas** (máximo {coma(maximo, 0)}) y en el {_pct(sobre)} de las horas se superaron las {CAMAS_HUN} camas "
               f"que dio el HUN. Solo el {_pct(antes)} de las altas ocurre antes del mediodía. {nota}",
               _grafica(_fig_altas(antes, tarde, tema), 280), dato=(_pct(sobre), f"de las horas con más de {CAMAS_HUN} camas ocupadas"))
-    salida = list(laminas)
+    salida = [laminas_grupo(*laminas)] if laminas else []
     if camas and little:
         ing, est, lit = (_num(x) for x in little.groups())
         salida.append(tarjetas("Las camas del periodo", f"Cuatro cifras de la ocupación de {per}",

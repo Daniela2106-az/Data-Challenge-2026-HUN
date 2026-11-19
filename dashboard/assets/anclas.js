@@ -19,6 +19,8 @@
     el._anclaHecha = true;
     el.scrollIntoView({ block: 'start' });
     destacar(el);
+    var detalle = el.querySelector('details');                              // una tarjeta de recomendacion llega con su contexto y evidencia abiertos
+    if (detalle) { detalle.open = true; }
     setTimeout(function () { el.scrollIntoView({ block: 'start' }); }, 1400);   // la pagina aun se acomoda (graficos, tarjetas): se vuelve a centrar
   }
   setInterval(ir, 400);

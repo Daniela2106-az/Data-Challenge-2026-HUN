@@ -69,7 +69,8 @@ def _indicadores():
 
 
 def _ruta_txt(r):
-    return " → ".join({"TU": "atención en urgencias", "ER": "admisión", "HOSP": "hospitalización", "AMB": "consulta"}.get(x.strip(), x.strip()) for x in str(r).split(">")).capitalize()
+    """Ruta con los codigos de la base (TU, ER, HOSP, AMB), sin traducir, para que las etiquetas del eje ocupen poco."""
+    return " → ".join(x.strip() for x in str(r).split(">"))
 
 
 def _laminas_indicadores():
@@ -80,13 +81,15 @@ def _laminas_indicadores():
         salida.append(lamina(3, "Cómo se comporta cada perfil: quién llega, cuántos se hospitalizan, cuánto esperan y quién vuelve",
                              "Cada barra es un grupo de pacientes y la línea fina su intervalo de confianza. **En azul, las diferencias grandes hacia arriba; en naranja, hacia abajo;** "
                              "en gris, las pequeñas o que pueden ser azar. Los reingresos no están validados.",
-                             grafico("perf-ind", alto=520), dato=("Edad, sexo y visita", "se comparan en una sola gráfica"),
-                             controles=filtro("perf-indicador", "Indicador", [(k, v[2]) for k, v in INDICADORES.items()], "espera_mediana_h")))
+                             html.Div(className="filtros-fila filtros-fila--h", children=[
+                                 filtro("perf-vista", "Grupos", [("Edad", "Edad"), ("Sexo", "Sexo"), ("Tipo de visita", "Tipo de visita")], "Edad"),
+                                 filtro("perf-indicador", "Indicador", [(k, v[2]) for k, v in INDICADORES.items()], "espera_mediana_h")]),
+                             grafico("perf-ind", alto=300), dato=("3 vistas", "Edad, sexo y tipo de visita: elige una arriba de la gráfica")))
     if tray is not None and not tray.empty:
         top = tray.sort_values("pct", ascending=False).iloc[0]
         salida.append(lamina(4, f"El {coma(top.pct, 0)} % de las atenciones empieza y termina en urgencias",
                              "Por dónde pasa el paciente dentro de una atención: cada barra es una trayectoria y el porcentaje de episodios que la siguen. "
-                             "**Solo se muestran las seis más frecuentes, en escala logarítmica para que se vean también las poco comunes.**",
+                             "**Solo se muestran las seis más frecuentes, en escala logarítmica.** TU = urgencias, ER = admisión, HOSP = hospitalización, AMB = consulta.",
                              grafico("perf-tray", alto=330), dato=(f"{coma(100 - top.pct, 0)} %", "de las atenciones pasa por otra trayectoria"), invertida=True))
     return salida
 
@@ -102,11 +105,12 @@ def _lamina_dias():
                    grafico("perf-dias", alto=300), dato=(f"{100 * len(DIAS) / 1164:.0f} %", "de los días, más o menos 1 de cada 6"))]
 
 
-@callback(Output("perf-ind", "figure"), Input("perf-indicador", "value"), Input("theme-store", "data"))
-def figura_indicador(ind, tema):
+@callback(Output("perf-ind", "figure"), Input("perf-indicador", "value"), Input("perf-vista", "value"), Input("theme-store", "data"))
+def figura_indicador(ind, vista, tema):
     t, fig = _indicadores(), go.Figure()
     if t is None or ind not in INDICADORES:
         return fig
+    t = t[t.dimension == vista]
     bajo, alto, nombre, unidad, lectura = INDICADORES[ind]
     t = t.iloc[::-1]
     color = [(AZUL if "más alto" in str(l) else NARANJA if "más bajo" in str(l) else TENUE) for l in (t[lectura] if lectura else [""] * len(t))]

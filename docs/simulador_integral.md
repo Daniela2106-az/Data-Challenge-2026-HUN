@@ -284,12 +284,11 @@ La simulación se reproduce siempre como «hoy». Mientras corre, salta una tarj
 
 **Calibración.** En un caso normal de la propia simulación (90 días, sin palancas) la probabilidad de superar las 106 camas tiene mediana 68 % y casi nunca pasa de 84 %; las camas ocupadas, mediana 111 y p90 114,5; la cola, mediana 25 y p99 28. Superar las 106 camas es lo normal en esta simulación: por eso esa condición avisa **una sola vez** y lo que **frena** la simulación es lo crítico, por encima de lo típico. Los primeros 7 días (4 si el plazo es de 2 semanas o menos; 12 horas en la vista horaria), que vienen de la siembra con el censo real, no generan alertas. Si los controles mejoran claramente al hospital (por ejemplo, estancia −10 %), no saltan alertas porque ya no hay riesgo.
 
-**Gravedades y pausa.** Hay dos gravedades: aviso (media) y crítico (alta). **Las dos frenan la simulación**, para poder revisarlas y aplicar la mejora antes de que la condición escale; cada alerta (tipo y gravedad) se muestra una sola vez por corrida, así que en total hay como mucho 6 pausas (3 tipos × 2 gravedades). Cada alerta (tipo y gravedad) se muestra **una sola vez por corrida**: después queda como procesada y no vuelve a saltar; solo escala si pasa de aviso a crítica. Un aviso (gravedad media) también frena la simulación y ofrece «Aplicar mejora y comparar», para corregir antes de que escale.
+**Gravedades y pausa.** Hay dos gravedades: aviso (media) y crítico (alta). **Las dos frenan la simulación**, para poder revisarlas y aplicar la mejora antes de que la condición escale; cada alerta (tipo y gravedad) se muestra una sola vez por corrida, así que en total hay como mucho 4 pausas (2 tipos × 2 gravedades). Cada alerta (tipo y gravedad) se muestra **una sola vez por corrida**: después queda como procesada y no vuelve a saltar; solo escala si pasa de aviso a crítica. Un aviso (gravedad media) también frena la simulación y ofrece «Aplicar mejora y comparar», para corregir antes de que escale.
 
 | Alerta | Aviso (gravedad media) | Crítico (gravedad alta) | Recomendación | Alerta en Resultados |
 |---|---|---|---|---|
-| Riesgo de saturar las camas (probabilidad de superar la capacidad a 48 h) | desde 50 % | desde 84 % | R4 y R7 | A2 |
-| Ocupación alta (camas ocupadas, mediana) | desde 107 (la alerta A2) | desde 118 | R3 y R4 | A2 |
+| Faltarán camas (se necesitarán más de las 106: probabilidad de superar la capacidad a 48 h y camas que faltan, en la mediana) | desde 50 % o 1 cama que falta (107 ocupadas) | desde 84 % o 12 camas que faltan (118 ocupadas) | R3, R4 y R7 | A2 |
 | Cola de espera larga (pacientes a la vez) | desde 28 | desde 33 (el percentil 90 real) | R5 y R6 | S1 |
 
 La tarjeta apila sus botones de arriba abajo: Continuar, Aplicar mejora y comparar, Ver más sobre esta alerta y Ver recomendación. La reproducción nueva arranca cuando la figura nueva ya está dibujada, para que el gráfico no parpadee al reiniciar.
@@ -299,3 +298,13 @@ Los umbrales son criterios de esta página, no resultados validados como los de 
 Al aplicar la mejora, las alertas de la corrida anterior **no desaparecen**: siguen consultables con las flechas, marcadas como «resuelta con la mejora», y las nuevas se suman al historial.
 
 **Una sola acción: «Aplicar mejora y comparar».** Se frena la reproducción, el panel de configuración se abre y los controles se desplazan, uno tras otro, a la operación óptima (R7: 15 % menos en las estancias de más de 14 días; R4: 30 % de las altas de la tarde adelantadas a la mañana). El panel se enfoca en las dos palancas que cambian, se mueven una tras otra y, cuando terminan, **se cierra solo y la vista baja al gráfico**. Entonces la simulación se **repite desde el día 1** con la operación óptima a todo color y cómo iba antes («Antes de la mejora») en gris punteado, durante toda la corrida. La alerta de cola no ofrece la mejora, porque la operación óptima no la mueve directamente. «Reiniciar» devuelve los controles a cero.
+
+## Ingresos por franja horaria (19-nov-2026)
+
+El pronóstico de ingresos a cama ahora se reparte en cuatro franjas del día: **madrugada (0-7 h), mañana (7-14 h), tarde (14-19 h) y noche (19-24 h)**, las mismas de `src/estimador_tiempo_restante.py`.
+
+- **Cómo:** `simular_integral` devuelve `info["ingresos_franja"]` = `{franja: {p10, p50, p90, media}}` por día. Reparte cada ingreso diario simulado con la distribución horaria **real** de asignación de cama (2024-2025), medida por día de la semana (`REPARTO_FRANJA`).
+- **Por qué no sale de los agentes:** el motor diario suaviza la espera con ruido, lo que aplana la hora y daba ~25 % por franja. Lo medido es madrugada ~17 %, mañana ~12 %, tarde ~32 %, noche ~38 %.
+- **Garantías:** no usa números aleatorios nuevos (las series existentes salen idénticas) y las medias de las cuatro franjas suman el total diario. Los percentiles son bandas, no suman exacto.
+- **Vista horaria (72 h):** `ingresos_por_franja_horario(horas_idx, out)` agrupa las horas simuladas en las mismas franjas.
+- **Límite:** el reparto es el promedio histórico; no cambia con la saturación ni con los controles del simulador.

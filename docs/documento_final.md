@@ -574,12 +574,11 @@ estrés, el recorte de las estancias de más de 14 días (recomendación 7), el 
 medido de cada uno: solo las respiratorias mueven la demanda de forma apreciable).
 
 **Alertas, recomendaciones y mejora.** Mientras la simulación corre salta una tarjeta de alerta, siempre visible arriba del gráfico, con qué pasó y la recomendación de la que se deriva (con su primer paso), enlaces a la alerta
-y a la recomendación y flechas para ver las anteriores. Hay tres alertas, cada una con dos gravedades:
+y a la recomendación y flechas para ver las anteriores. Hay dos alertas, cada una con dos gravedades:
 
 | Alerta | Aviso (media) | Crítico (alta) | Recomendaciones |
 |---|---|---|---|
-| Riesgo de saturar las camas (probabilidad de superar la capacidad a 48 h) | desde 50 % | desde 84 % | 4 y 7 |
-| Ocupación alta (camas ocupadas) | desde 107 | desde 118 | 3 y 4 |
+| Faltarán camas (se necesitarán más de las 106: probabilidad de superar la capacidad a 48 h y camas que faltan) | desde 50 % o 1 cama que falta | desde 84 % o 12 camas que faltan (118 ocupadas) | 3, 4 y 7 |
 | Cola de espera larga (pacientes a la vez) | desde 28 | desde 33 | 5 y 6 |
 
 Los umbrales críticos están por encima de lo típico del simulador, porque superar las 106 camas es lo normal en esta simulación (la probabilidad tiene mediana de 68 %). Son criterios de esta herramienta, no resultados validados.
