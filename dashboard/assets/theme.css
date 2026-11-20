@@ -1961,8 +1961,10 @@ button, .btn-primary {
 .simint-player__fecha { font-size: 12px; color: var(--muted); min-width: 84px; font-variant-numeric: tabular-nums; }
 
 /* Tablero de camas del simulador integral (/simulador) */
-.simint-bedgrid { display: flex; flex-wrap: wrap; gap: 3px; padding-top: 4px; }
-.simint-bed { width: 11px; height: 14px; border-radius: 3px 3px 1px 1px; background: var(--brand); }
+/* 22-nov-2026: iconos de cama mas grandes (1 icono = 1 cama, sin cambiar la cuenta) para que la ventana de radiografia
+   de la vista Camas llegue hasta el borde inferior del grafico «Estancias largas en el tiempo». */
+.simint-bedgrid { display: flex; flex-wrap: wrap; gap: 5px; padding-top: 6px; }
+.simint-bed { width: 17px; height: 22px; border-radius: 4px 4px 2px 2px; background: var(--brand); }
 .simint-bed--libre { background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--line); }
 .simint-bed--sobre { background: #c0392b; }
 
@@ -2374,8 +2376,10 @@ button.simint-rev__ver:hover { color: #1b4fb0 !important; background: transparen
 
 /* listas de pacientes: volver y cerrar a la altura del encabezado y la fecha */
 .simint-rev { position: relative; }
-.simint-rev__barra { position: absolute; top: 16px; right: 16px; margin: 0; z-index: 3; justify-content: flex-end; gap: 4px; }
-.simint-rev .simint-conf__cab { padding-right: 80px; }
+/* 20-nov-2026: la flecha de volver va en la esquina superior izquierda y el ✕ de cerrar en la derecha, junto a la fecha */
+.simint-rev__barra { position: absolute; top: 16px; left: 6px; right: 16px; margin: 0; z-index: 3; justify-content: space-between; gap: 4px; pointer-events: none; }
+.simint-rev__barra > button { pointer-events: auto; }
+.simint-rev .simint-conf__cab { padding-left: 52px; padding-right: 80px; }
 button.simint-rev__ver { font-size: 15px; padding: 2px 6px; }
 .simint-rev .simint-rev__cerrar { font-size: 15px; }
 
@@ -2725,3 +2729,50 @@ html.nav-cargando::before { content: ""; position: fixed; top: 0; left: 0; heigh
   .nav__asistente { margin-bottom: 0; }
   .sim-head__t { font-size: 32px; }
 }
+
+/* ---- Icono de carga en las graficas (20-nov-2026): en Render el calculo tarda y una grafica en blanco parece un error ----
+   Se muestra mientras la grafica aun no se dibujo (sin el lienzo de Plotly) y mientras espera el resultado de un calculo (Dash le pone dash-graph--pending).
+   No se muestra en la reproduccion del simulador, que se actualiza todo el tiempo. */
+.dash-graph { position: relative; }
+/* Velo + aro grande + mensaje: se ve claramente que la grafica esta calculando, no que fallo */
+.dash-graph:not(:has(.js-plotly-plot))::before, .dash-graph.dash-graph--pending:not(#simint-grafico)::before {
+  content: "Calculando el gráfico…\A Puede tardar unos segundos"; white-space: pre; text-align: center; position: absolute; inset: 0; z-index: 4; pointer-events: none;
+  display: flex; align-items: center; justify-content: center; padding-top: 92px; box-sizing: border-box; border-radius: var(--r-md);
+  background: color-mix(in srgb, var(--surface) 78%, transparent); backdrop-filter: blur(2px);
+  font-size: 15px; font-weight: 700; line-height: 1.5; color: var(--brand-strong); animation: aviso-pulso 1.4s ease-in-out infinite; }
+.dash-graph:not(:has(.js-plotly-plot))::after, .dash-graph.dash-graph--pending:not(#simint-grafico)::after {
+  content: ""; position: absolute; top: calc(50% - 52px); left: 50%; width: 56px; height: 56px; margin-left: -28px; z-index: 5; pointer-events: none;
+  border-radius: 50%; border: 6px solid var(--surface-2); border-top-color: var(--brand-strong); animation: grafica-gira .8s linear infinite; }
+@keyframes grafica-gira { to { transform: rotate(360deg); } }
+
+/* Icono de carga tambien en los bloques que no son graficas (cifras, reportes, radiografia, notas, titulares): Dash marca con
+   data-dash-is-loading="true" el componente cuyo resultado esta pendiente. Se atenua y, en los bloques grandes, aparece el aro girando. */
+[data-dash-is-loading="true"][id$="-cifras"], [data-dash-is-loading="true"][id$="-reporte"], [data-dash-is-loading="true"][id$="-lead"], [data-dash-is-loading="true"][id$="-rango"],
+[data-dash-is-loading="true"][id$="-dato"], [data-dash-is-loading="true"][id^="alt-dato"], [data-dash-is-loading="true"][id^="dem-dato"],
+[data-dash-is-loading="true"][id^="com-dato"], [data-dash-is-loading="true"][id^="esp-dato"], [data-dash-is-loading="true"][id^="est-dato"],
+[data-dash-is-loading="true"][id$="-titular"], [data-dash-is-loading="true"][id^="com-titular"], [data-dash-is-loading="true"][id$="-nota"]:not([id^="simint-"]) {
+  position: relative; opacity: .45; transition: opacity .2s var(--ease); }
+[data-dash-is-loading="true"][id$="-cifras"], [data-dash-is-loading="true"][id$="-reporte"] { min-height: 90px; }
+[data-dash-is-loading="true"][id$="-cifras"]::after, [data-dash-is-loading="true"][id$="-reporte"]::after {
+  content: ""; position: absolute; top: 24px; left: 50%; width: 30px; height: 30px; margin-left: -15px; z-index: 5; pointer-events: none;
+  border-radius: 50%; border: 3px solid var(--surface-2); border-top-color: var(--brand-strong); animation: grafica-gira .85s linear infinite; }
+
+/* 22-nov-2026: en la vista Camas la columna de la radiografia se estira hasta el borde inferior de la columna del grafico,
+   para que ambas terminen a la misma altura sea cual sea el ancho de la ventana (los iconos de cama llenan el espacio). */
+.simint-layout-dos-col:has(#simint-vista-radio input[value="camas"]:checked) { align-items: stretch; }
+.simint-layout-dos-col:has(#simint-vista-radio input[value="camas"]:checked) .simint-radio-panel { display: flex; flex-direction: column; }
+.simint-layout-dos-col:has(#simint-vista-radio input[value="camas"]:checked) .simint-radio-panel > .simint-radio { flex: 1 1 auto; }
+
+/* Simulador: mientras corre la simulacion (es lo mas lento), la nota de debajo de los controles muestra un aro y el aviso. */
+#simint-nota[data-dash-is-loading="true"]::before {
+  content: "Simulando… en este servicio puede tardar unos segundos"; display: block; padding-left: 28px; font-size: 13px; font-weight: 600; color: var(--brand-strong);
+  background: radial-gradient(circle at 10px 50%, transparent 5px, var(--brand-strong) 5.5px, var(--brand-strong) 8px, transparent 8.5px) no-repeat;
+  min-height: 22px; line-height: 22px; animation: aviso-pulso 1.2s ease-in-out infinite; }
+@keyframes aviso-pulso { 50% { opacity: .45; } }
+
+/* Planeacion de camas: carga explicita sobre metricas + grafico mientras corre la simulacion */
+.camas-carga { position: relative; min-height: 460px; }
+.camas-carga__velo { position: absolute; inset: 0; z-index: 6; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;
+  background: color-mix(in srgb, var(--surface) 80%, transparent); backdrop-filter: blur(2px); border-radius: var(--r-md);
+  font-size: 15px; font-weight: 700; color: var(--brand-strong); text-align: center; }
+.camas-carga__velo::before { content: ""; width: 56px; height: 56px; border-radius: 50%; border: 6px solid var(--surface-2); border-top-color: var(--brand-strong); animation: grafica-gira .8s linear infinite; }

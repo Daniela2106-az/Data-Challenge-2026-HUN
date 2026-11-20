@@ -60,6 +60,32 @@ app = Dash(__name__, use_pages=True, pages_folder="pages", title="Dashboard HUN"
            update_title="Actualizando…")
 server = app.server
 
+# Animacion de entrada (assets/intro.css e intro.js). Va en el HTML base para verse antes de que cargue Dash;
+# solo una vez por sesion del navegador (si ya se vio, el script de la cabecera la oculta al instante).
+def _ico(trazos):
+    return f'<svg viewBox="0 0 24 24" aria-hidden="true">{trazos}</svg>'
+
+_INTRO_ICONOS = [  # (angulo, retraso, azul?, trazos del icono)
+    (-90, ".05s", True,  '<path d="M19 14c1.5-1.5 3-3.2 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.8 0-3 .5-4.5 2-1.5-1.5-2.7-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4 3 5.5l7 7z"/><path d="M3 12h4l2-3 3 6 2-3h2"/>'),
+    (-30, ".18s", False, '<path d="M6 3v6a4 4 0 0 0 8 0V3"/><path d="M10 13v2a5 5 0 0 0 10 0v-1"/><circle cx="20" cy="12" r="2"/>'),
+    (30,  ".31s", True,  '<path d="M3 17h2m10 0H9M1 7h13v10M14 10h4l3 3v4h-2"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/><path d="M7 10h3M8.5 8.5v3"/>'),
+    (90,  ".44s", False, '<path d="M2 18V7M2 14h20v4M22 14v-2a3 3 0 0 0-3-3h-8v5"/><circle cx="6.5" cy="11" r="1.5"/>'),
+    (150, ".57s", True,  '<path d="M10.5 20.5 3.5 13.5a4.9 4.9 0 0 1 7-7l7 7a4.9 4.9 0 0 1-7 7z"/><path d="m8.5 8.5 7 7M10 12l.01 0M12 10l.01 0M14 14l.01 0M12 14l.01 0"/>'),
+    (210, ".70s", False, '<path d="m18 2 4 4M17 7l3-3M19 9 8.7 19.3a2 2 0 0 1-1.4.6H4v-3.3a2 2 0 0 1 .6-1.4L15 5M9 11l4 4M5 19l-3 3M14 4l6 6"/>'),
+]
+_INTRO_HTML = (
+    '<div id="intro-hun" role="presentation" title="Clic para saltar"><div class="intro__escena">'
+    + "".join(f'<div class="intro__ico{" intro__ico--azul" if az else ""}" style="--a:{a}deg;--d:{d}">{_ico(t)}</div>' for a, d, az, t in _INTRO_ICONOS)
+    + '<div class="intro__cruz"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></div>'
+    + '<div class="intro__texto"><b>HOSPITAL</b><span>UNIVERSIDAD DEL NORTE</span></div>'
+    + '</div></div>'
+    + '<script>try{if(sessionStorage.getItem("intro-hun")){document.getElementById("intro-hun").className="intro-listo";}}catch(e){}</script>'
+)
+app.index_string = (
+    '<!DOCTYPE html><html><head>{%metas%}<title>{%title%}</title>{%favicon%}{%css%}</head>'
+    '<body>' + _INTRO_HTML + '{%app_entry%}<footer>{%config%}{%scripts%}{%renderer%}</footer></body></html>'
+)
+
 # Archivos del documento final para la pagina /documentacion: graficos de resultados/graficos/ y el PDF (solo graficos y el documento;
 # nada de datos por paciente).
 from pathlib import Path as _Path  # noqa: E402

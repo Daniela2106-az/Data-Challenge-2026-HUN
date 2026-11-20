@@ -2,7 +2,7 @@
 
 Panel interactivo del Data Challenge HUN 2026 (Hospital Universidad del Norte y Ciencia de Datos, Uninorte). Muestra cómo llegan, esperan y se hospitalizan los pacientes, dónde se pierde el tiempo, qué se espera hacia adelante y qué acciones se recomiendan.
 
-**Versión publicada:** https://data-challenge-hun.onrender.com/ (puede tardar un minuto en abrir si estuvo un rato sin visitas).
+**Versión publicada:** https://data-challenge-hun.onrender.com/ (puede tardar un minuto en abrir si estuvo un rato sin visitas). Mientras una gráfica se calcula, muestra un círculo de carga en vez de quedar en blanco.
 
 Funciona en tu propio computador y se abre en el navegador. No necesita conexión a internet una vez instalado; solo el asistente de preguntas (opcional, ver abajo) la necesita.
 
