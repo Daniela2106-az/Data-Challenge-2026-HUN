@@ -2321,3 +2321,56 @@ button.simint-achip { width: 100%; justify-content: flex-start; }
 #simint-escenario-desc { display: none !important; }
 /* alertas con la mejora aplicada: su propia columna, punto verde */
 .simint-achip--mejora .simint-achip__punto { background: #2e9e5b; }
+
+/* ---------- Configuración en acordeón (19-nov-2026): solo los encabezados; al pasar el mouse se despliega el grupo de ese encabezado ---------- */
+.simint-config-inner, .simint-config-sidebar:hover .simint-config-inner, .simint-config-sidebar:focus-within .simint-config-inner, .simint-config--abierto .simint-config-inner {
+  display: block; width: min(380px, calc(100vw - 340px)); box-sizing: border-box; overflow-x: hidden; }
+.simint-config-sidebar:hover .simint-config-inner, .simint-config-sidebar:focus-within .simint-config-inner, .simint-config--abierto .simint-config-inner { padding: 16px 20px 12px; max-height: 80vh; overflow-y: auto; }
+.simint-config-inner .simint-config-section, .simint-config-inner .simint-config-section:nth-child(n) { padding: 0; border: none; border-bottom: 1px solid var(--line); }
+.simint-config-inner .simint-config-section:last-of-type { border-bottom: none; }
+.simint-config-inner .simint-config-group-header { margin: 0; padding: 11px 4px; font-size: 13px; font-weight: 600; color: var(--brand-ink); cursor: pointer; user-select: none; justify-content: space-between; }
+.simint-config-inner .simint-config-group-header::after { content: ""; width: 8px; height: 8px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(45deg); transition: transform .3s ease; opacity: .6; }
+.simint-config-section.simint-grupo--abierto .simint-config-group-header::after { transform: rotate(-135deg); }
+.simint-config-section.simint-grupo--abierto .simint-config-group-header, .simint-config-inner .simint-config-group-header:hover { color: var(--accent); }
+.simint-config-body { max-height: 0; overflow: hidden; opacity: 0; transition: max-height .4s ease, opacity .3s ease; }
+.simint-config-section.simint-grupo--abierto .simint-config-body { max-height: 900px; opacity: 1; padding-bottom: 12px; }
+/* al aplicar la mejora solo se ve el grupo que se está modificando (aunque el mouse pase por otro) */
+.simint-config--auto .simint-config-section:not(.simint-grupo--abierto) .simint-config-body { max-height: 0; opacity: 0; padding-bottom: 0; }
+.simint-config--auto .simint-config-section:not(.simint-grupo--abierto) .simint-config-group-header { color: var(--brand-ink); }
+
+/* Llegadas por franja del día (vista Flujo): tarjetas con aire y ritmo vertical parejo */
+.simint-radio__modulo-titulo { margin-bottom: 4px; }
+.simint-franjas { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-top: 12px; }
+.simint-franja { min-width: 0; display: flex; flex-direction: column; gap: 6px; padding: 14px 16px; border: 1px solid var(--line); border-radius: var(--r-md); background: var(--surface); }
+.simint-franja .simint-radio__cap { margin: 0; line-height: 1.3; }
+.simint-franja__num { font-size: 26px; line-height: 1.1; margin: 2px 0 4px; }
+.simint-franja__barra { height: 8px; border-radius: 5px; background: var(--line); overflow: hidden; margin: 2px 0 4px; }
+.simint-franja__pie { color: var(--muted); }
+@media (max-width: 700px) { .simint-franjas { grid-template-columns: 1fr; } }
+
+/* boton de cerrar de la tarjeta: solo el icono, sin contorno, gris */
+.simint-alerta__cerrar, .simint-alerta .simint-alerta__cerrar { border: none !important; background: transparent !important; box-shadow: none !important; padding: 2px 6px; font-size: 16px; line-height: 1; color: var(--muted) !important; }
+.simint-alerta__cerrar:hover { color: var(--ink) !important; }
+
+/* fecha pegada al borde derecho del chip */
+.simint-achip__fecha { margin-left: auto !important; padding-left: 14px; }
+/* conmutar entre «qué pasó / recomendación» y las listas de pacientes */
+.simint-alerta__conmutar, .simint-rev__ver { border: 1px solid var(--accent); color: var(--accent); background: transparent; border-radius: var(--r-sm); padding: 7px 12px; font-size: 12.5px; font-weight: 600; cursor: pointer; }
+.simint-alerta__conmutar:hover, .simint-rev__ver:hover { background: var(--accent); color: #fff; }
+.simint-rev__barra { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+
+/* sin flechas para navegar entre tarjetas: se navega con los componentes comprimidos */
+.simint-alerta .simint-alerta__hist { display: none !important; }
+/* «Ver listas de pacientes»: estilo enlace (azul, subrayado, sin contorno) */
+button.simint-alerta__conmutar, .simint-alerta .simint-alerta__conmutar { border: none !important; background: transparent !important; box-shadow: none !important; color: #2b6cdf !important; text-decoration: underline; font-weight: 500; padding: 4px 0; text-align: center; }
+button.simint-alerta__conmutar:hover { color: #1b4fb0 !important; background: transparent !important; }
+/* volver desde las listas: solo un icono azul */
+button.simint-rev__ver { border: none !important; background: transparent !important; box-shadow: none !important; color: #2b6cdf !important; font-size: 22px; line-height: 1; padding: 2px 8px; }
+button.simint-rev__ver:hover { color: #1b4fb0 !important; background: transparent !important; }
+
+/* listas de pacientes: volver y cerrar a la altura del encabezado y la fecha */
+.simint-rev { position: relative; }
+.simint-rev__barra { position: absolute; top: 16px; right: 16px; margin: 0; z-index: 3; justify-content: flex-end; gap: 4px; }
+.simint-rev .simint-conf__cab { padding-right: 80px; }
+button.simint-rev__ver { font-size: 15px; padding: 2px 6px; }
+.simint-rev .simint-rev__cerrar { font-size: 15px; }

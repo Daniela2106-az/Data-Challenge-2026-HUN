@@ -748,17 +748,16 @@ def modulo_llegadas_franja(llegadas_franja, ini, fin):
     for nombre in ("madrugada", "mañana", "tarde", "noche"):
         n = cifras.get(nombre, 0.0)
         pct = 100 * n / total if total > 0 else 0.0
-        tarjetas.append(html.Div(style={"minWidth": 0}, title=f"{nombre.capitalize()} ({FRANJA_HORAS[nombre]}): {pct:.0f} % de las llegadas", children=[
+        tarjetas.append(html.Div(className="simint-franja", title=f"{nombre.capitalize()} ({FRANJA_HORAS[nombre]}): {pct:.0f} % de las llegadas", children=[
             html.Div([icono_franja(nombre), html.B(nombre.capitalize()), html.Span(f"  {FRANJA_HORAS[nombre]}", style={"opacity": .65, "fontSize": "11px"})], className="simint-radio__cap"),
-            html.Div(f"{n:.0f}", className="simint-radio__num"),
-            html.Div(style={"height": "8px", "borderRadius": "4px", "background": "var(--line)", "marginTop": "4px", "overflow": "hidden"},
-                     children=html.Div(style={"width": f"{pct:.0f}%", "height": "100%", "background": FRANJA_COLOR[nombre]})),
-            html.Div(f"{pct:.0f} % de las llegadas", className="simint-radio__cap"),
+            html.Div(f"{n:.0f}", className="simint-radio__num simint-franja__num"),
+            html.Div(className="simint-franja__barra", children=html.Div(style={"width": f"{pct:.0f}%", "height": "100%", "background": FRANJA_COLOR[nombre], "borderRadius": "5px"})),
+            html.Div(f"{pct:.0f} % de las llegadas", className="simint-radio__cap simint-franja__pie"),
         ]))
     return html.Div(className="simint-radio__modulo", children=[
         html.Div("Llegadas por franja del día", className="simint-radio__modulo-titulo"),
-        html.Div(style={"display": "grid", "gridTemplateColumns": "repeat(2, minmax(0, 1fr))", "gap": "16px", "marginTop": "10px"}, children=tarjetas),
-        html.Div("Reparto según la hora real de llegada de 2024–2025 (por día de la semana).", className="simint-radio__cap", style={"marginTop": "8px"}),
+        html.Div(className="simint-franjas", children=tarjetas),
+        html.Div("Reparto según la hora real de llegada de 2024–2025 (por día de la semana).", className="simint-radio__cap", style={"marginTop": "14px"}),
     ])
 
 
@@ -965,13 +964,14 @@ def layout():
                     html.Div(className="simint-alerta__cab", children=[
                         html.Span(id="simint-alerta-grav", className="rec-chip"), html.Span("Sin alertas por ahora", id="simint-alerta-titulo", className="simint-alerta__titulo"),
                         html.Span(id="simint-alerta-fecha", className="simint-alerta__fecha"),
-                        html.Button("Cerrar ✕", id="simint-alerta-cerrar", type="button", className="simint-alerta__cerrar", title="Volver a la versión comprimida")]),
+                        html.Button("✕", id="simint-alerta-cerrar", type="button", className="simint-alerta__cerrar", title="Cerrar: volver a la versión comprimida")]),
                     html.Div(className="simint-alerta__bloque", children=[html.Span("Qué pasó", className="simint-alerta__rotulo"), html.Span("Las alertas saltarán aquí mientras corre la simulación, y la tarjeta se queda a la vista.", id="simint-alerta-detalle")]),
                     html.Div(className="simint-alerta__bloque", children=[html.Span("Recomendación", className="simint-alerta__rotulo"),
                                                                            dcc.Markdown(id="simint-alerta-acciones", className="simint-alerta__vinetas"), html.Span(id="simint-alerta-paso", className="simint-alerta__paso")]),
                     html.Span(id="simint-alerta-texto", style={"display": "none"}),
                 ]),
                 html.Div(className="simint-alerta__botones", children=[
+                    html.Button("Ver listas de pacientes", id="simint-alerta-listas", type="button", className="simint-alerta__btn simint-alerta__conmutar", style={"display": "none"}),
                     html.Button("Continuar", id="simint-continuar", n_clicks=0, className="btn-primary simint-alerta__btn"),
                     html.Button("Aplicar mejora y comparar", id="simint-aplicar", n_clicks=0, className="btn-primary simint-alerta__btn simint-alerta__btn--mejora",
                                 title="Aplica la operación óptima: los controles se mueven y se vuelve a simular desde el día 1, comparando con cómo iba antes"),
@@ -997,6 +997,7 @@ def layout():
                     # Sección 1: Operación
                     html.Div(className="simint-config-section", children=[
                         encabezado_grupo("Operación"),
+                        html.Div(className="simint-config-body", children=[
                         campo_slider("Demanda de llegadas (%)", "llegadas",
                                      dcc.Slider(id="simint-ajuste_llegadas", persistence=True, persistence_type="session", min=-30, max=30, step=5, value=0,
                                                marks={-30: "-30", 0: "0", 30: "30"})),
@@ -1009,36 +1010,43 @@ def layout():
                         campo_slider("Capacidad hipotética (camas)", "capacidad",
                                      dcc.Slider(id="simint-capacidad", persistence=True, persistence_type="session", min=96, max=130, step=2, value=106,
                                                 marks={96: "96", 106: "106", 116: "116", 126: "126"})),
+                        ]),
                     ]),
 
                     # Sección 2: Estrés
                     html.Div(className="simint-config-section", children=[
                         encabezado_grupo("Estrés"),
+                        html.Div(className="simint-config-body", children=[
                         campo_slider("Perfiles de estrés (%)", "mezcla_estres",
                                      dcc.Slider(id="simint-mezcla_estres", persistence=True, persistence_type="session", min=0, max=100, step=10, value=0,
                                                marks={0: "0", 50: "50", 100: "100"})),
+                        ]),
                     ]),
 
                     # Sección 3: Optimización
                     html.Div(className="simint-config-section", children=[
                         encabezado_grupo("Optimización"),
+                        html.Div(className="simint-config-body", children=[
                         campo_slider("Gestión de casos en estancias largas (% menos de duración)", "recorte_largas",
                                      dcc.Slider(id="simint-recorte_largas", persistence=True, persistence_type="session", min=0, max=50, step=5, value=0,
                                                marks={0: "0", 25: "25", 50: "50"})),
                         campo_slider("Adelantar altas a la mañana (%)", "adelanto_altas",
                                      dcc.Slider(id="simint-adelanto_altas", persistence=True, persistence_type="session", min=0, max=100, step=10, value=0,
                                                marks={0: "0", 50: "50", 100: "100"})),
+                        ]),
                     ]),
 
                     # Sección 4: Factores externos
                     html.Div(className="simint-config-section", children=[
                         encabezado_grupo("Factores externos", INFO_FACTORES_EXTERNOS),
+                        html.Div(className="simint-config-body", children=[
                         *([campo_slider_simple(si.CASOS[k], dcc.Slider(
                             id={"type": "simint-caso", "caso": k}, min=min(m), max=max(m), step=1, value=0,
                             marks=_marcas_visibles(m)))
                            for k in MODELOS_FIJOS
                            for m in [{i - [n for n, _ in si.niveles_caso(k)].index("Normal"): n
                                      for i, (n, _) in enumerate(si.niveles_caso(k))}]]),
+                        ]),
                     ]),
 
                     html.Div(id="simint-nota", style={"fontSize": "12px", "marginTop": "10px", "gridColumn": "1 / -1"}),
@@ -1326,22 +1334,29 @@ clientside_callback(
         var ns = window.dash_clientside, set = ns.set_props;
         var el = document.getElementById('simint-config');
         set('simint-tick', {disabled: true});
-        if (el) { el.classList.add('simint-config--abierto'); }
+        if (el) { el.classList.add('simint-config--abierto', 'simint-config--auto'); }
         clearTimeout(window._simintCfgT);
+        var centrar = window.simintCentrar || function() {};
+        var inner = el && el.querySelector('.simint-config-inner');
+        var abrirGrupo = function(sl) {                           // expande solo el grupo del control que se esta moviendo
+            document.querySelectorAll('.simint-config-section.simint-grupo--abierto').forEach(function(g) { g.classList.remove('simint-grupo--abierto'); });
+            var g = sl && sl.closest('.simint-config-section'); if (g) { g.classList.add('simint-grupo--abierto'); }
+            setTimeout(function() { centrar(inner || el); }, 120); setTimeout(function() { centrar(inner || el); }, 500);
+        };
         var ids = {recorte: 'simint-recorte_largas', adelanto: 'simint-adelanto_altas', llegadas: 'simint-ajuste_llegadas', estancia: 'simint-ajuste_estancia',
                    espera: 'simint-ajuste_espera', estres: 'simint-mezcla_estres', capacidad: 'simint-capacidad'};
-        var orden = ['recorte', 'adelanto', 'espera'].filter(function(k) { return p.palancas && p.palancas[k] !== undefined; }), espera = 1000, DESLIZA = 1100;   // se mueven uno por uno; cada uno tarda ~1 s
-        var mover = orden.length ? document.getElementById(ids[orden[0]]) : null;
-        if (mover && mover.scrollIntoView) { setTimeout(function() { mover.scrollIntoView({block: 'center', behavior: 'smooth'}); }, 450); }   // enfoca el primer control que cambia
+        var orden = ['recorte', 'adelanto', 'espera'].filter(function(k) { return p.palancas && p.palancas[k] !== undefined; }), espera = 1800, DESLIZA = 1100;   // se mueven uno por uno; cada uno tarda ~1 s
+        setTimeout(function() { centrar(inner || el); }, 250);      // la ventana de configuracion queda en el centro de la pantalla
         orden.forEach(function(k) {
+            setTimeout(function() { abrirGrupo(document.getElementById(ids[k])); }, espera - 700);     // primero se abre su grupo, luego se mueve el control
             setTimeout(function() { set(ids[k], {value: p.palancas[k]}); }, espera);
             espera += DESLIZA + 300;
         });
         var fin = espera + 300;                                                        // todos ya terminaron de moverse
         setTimeout(function() {                                                        // cierra solo el panel de configuracion; la vista se queda en el panel verde
-            if (el) { el.classList.remove('simint-config--abierto'); if (document.activeElement) { document.activeElement.blur(); } }
-            var c = document.getElementById('simint-confirmacion');
-            if (c && c.scrollIntoView) { c.scrollIntoView({behavior: 'smooth', block: 'start'}); }
+            if (el) { el.classList.remove('simint-config--abierto', 'simint-config--auto'); if (document.activeElement) { document.activeElement.blur(); } }
+            document.querySelectorAll('.simint-config-section.simint-grupo--abierto').forEach(function(g) { g.classList.remove('simint-grupo--abierto'); });
+            setTimeout(function() { centrar(document.getElementById('simint-confirmacion')); }, 150);     // de vuelta a la alerta: queda en el centro de la pantalla
         }, fin);
         window._simintPendienteEscenario = {n: p.n, palancas: p.palancas, previos: p.previos};   // se reanuda cuando el usuario pulsa «Continuar con la mejora» (simint-confirmar)
         return '';
@@ -1357,8 +1372,7 @@ clientside_callback(
         window._simintPendienteEscenario = null;
         ns.set_props('simint-confirmacion', {className: 'simint-confirmacion'});
         ns.set_props('simint-escenario', {data: {n: p.n, palancas: p.palancas, previos: p.previos}});
-        var g = document.getElementById('simint-grafico');
-        if (g && g.scrollIntoView) { g.scrollIntoView({behavior: 'smooth', block: 'start'}); }
+        setTimeout(function() { if (window.simintCentrar) { window.simintCentrar(document.getElementById('simint-grafico'), document.getElementById('simint-play')); } }, 350);   // la simulacion corre con el grafico en el centro de la pantalla
         return '';
     }
     """,
@@ -1888,6 +1902,7 @@ clientside_callback(
                       acciones: a0.acciones, palancas: a0.palancas, mejora: a0.mejora, rec: a0.rec, alerta: a0.alerta, metrica: a0.metrica, pausada: true};
             var hist = window._simintHist = window._simintHist || [];
             hist.push(ob); window._simintVista = hist.length - 1;
+            setTimeout(function() { if (window.simintEncabezadoAlMedio) { window.simintEncabezadoAlMedio(document.getElementById('simint-alerta')); } }, 250);   // la simulacion se pauso por esta alerta: la tarjeta queda en el centro de la pantalla
             var o1 = Object.assign({}, ob, {pos: hist.length + ' de ' + hist.length, ultima: true});
             return [c, true, "▶ Reproducir", {display: "flex", alignItems: "center"}, JSON.stringify(o1), fillStyle, pctTxt, fechaOut];
         }

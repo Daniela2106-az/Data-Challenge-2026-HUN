@@ -9,7 +9,7 @@ window.simintSiguienteAlerta = function () {
   var a = it.a;
   var hist = window._simintHist = window._simintHist || [];
   var ob = {tipo: a.tipo, gravedad: a.gravedad, titulo: a.titulo, texto: a.texto, fecha: it.fecha, acciones: a.acciones,
-            palancas: a.palancas, mejora: a.mejora, rec: a.rec, alerta: a.alerta, pausada: true};
+            palancas: a.palancas, mejora: a.mejora, rec: a.rec, alerta: a.alerta, metrica: a.metrica, pausada: true};
   hist.push(ob);
   window._simintVista = hist.length - 1;
   return JSON.stringify(Object.assign({}, ob, {pos: hist.length + ' de ' + hist.length, ultima: true}));

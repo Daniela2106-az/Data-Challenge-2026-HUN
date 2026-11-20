@@ -143,12 +143,12 @@ def panel_confirmacion(tipo, titulo, fecha, pac, dia, pct_altas=30):
         secciones.append(_seccion(
             f"Estancias de 14 días o más ({len(ya) + len(est)} pacientes)", "Son a quienes se les coordina el plan de salida.",
             _tabla("Ya llevan 14 días o más en cama", ya, "Días en cama (media)", "días"),
-            _tabla("Estimados de 14 días o más", est, "Estancia estimada (media)", "días")))
+            _tabla("Estimador: 14 días o más", est, "Estancia estimada (media)", "días")))
     else:
         for h in (48, 72):
             ya, est = colas(pac, dia, h)
             secciones.append(_seccion(
                 f"Esperas de {h} horas o más ({len(ya) + len(est)} pacientes)", None,
                 _tabla(f"Esperando {h} h o más ahora mismo", ya, "Espera actual (media)", "h"),
-                _tabla(f"Estimados de {h} h o más", est, "Espera estimada (media)", "h")))
-    return [cab, *secciones, html.Div(PIE, className="simint-conf__pie")]
+                _tabla(f"Estimador: {h} h o más", est, "Espera estimada (media)", "h")))
+    return [cab, *secciones]
