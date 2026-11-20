@@ -60,7 +60,7 @@ Formato del `.sql`: cada consulta empieza con una línea `-- nombre: algo` y ter
 - Antes de lanzar, revisa la sintaxis. Para scripts propios con muchas consultas, mira el patrón de `src/auditoria_bd.py --probar-local` (valida el SQL con DuckDB y tablas vacías, sin tocar la base).
 - Una consulta pesada que falla no debe tirar todas: `ejecutar_consultas.py` anota el error y sigue con la siguiente.
 - Los resultados con datos de pacientes (una fila por paciente o por visita) **no se suben a git** (`datos/crudos/` está ignorado). Solo se suben tablas agregadas y documentos.
-- Antes de proponer una consulta nueva, lee `CLAUDE.md` (sección 4 de problemas de calidad y 4.9 de la auditoría): muchas respuestas ya están.
+- Antes de proponer una consulta nueva, lee `docs/CONTEXTO_TECNICO.md` (sección 4 de problemas de calidad y 4.9 de la auditoría): muchas respuestas ya están.
 
 ## 4. Qué hay en la base
 
@@ -79,7 +79,7 @@ PostgreSQL 18, esquema **`uninorte_omop`** (formato OMOP simplificado), solo est
 
 **No hay** servicio, sede, piso ni cama. Las etapas (`visit_detail_concept_id`): **9203** llegada a urgencias (ER), **3045729** atención en urgencias (TU), **9201** hospitalización (HOSP, se registra al asignar la cama), **581479** evento ambulatorio administrativo (AMB, duración 0).
 
-**Trampas que ya conocemos** (detalle en `CLAUDE.md`, secciones 4 y 4.9):
+**Trampas que ya conocemos** (detalle en `docs/CONTEXTO_TECNICO.md`, secciones 4 y 4.9):
 - Cerca del 30 % de las visitas son **copias** (id = original + desfase fijo) y el 53 % de los episodios hospitalizados son la **misma estancia registrada en dos o más personas**: nunca cuentes filas directo, deduplica por intervalo o usa las tablas del pipeline.
 - **El registro de etapas es confiable hasta el 9-abr-2026.** Desde el 10-abr hay visitas de más sin etapas y menos visitas con etapa ER; los diagnósticos con código desaparecen desde el 11-may. No uses esos meses para estimar niveles.
 - La duración de TU solo existe en ~38 % de las etapas (el resto tiene inicio = fin).
@@ -104,7 +104,7 @@ Cada consulta tiene un límite de 15 minutos con `ejecutar_consultas.py`.
 | `src/conexion_bd.py` | Conexión de solo lectura (`consultar(sql)` devuelve un DataFrame). |
 | `src/ejecutar_consultas.py` | Corre un `.sql` en segundo plano, espera la VPN y guarda un CSV por consulta (esta guía). |
 | `src/explorar_bd.py` | Esquema, tamaños, valores de columnas, catálogo `cups` (lotes 1 y 2, ya corridos el 2-nov-2026). |
-| `src/auditoria_bd.py` | 30 consultas que contrastan nuestros hallazgos con la base (lotes 1 a 3, ya corridos; resultados en `CLAUDE.md` 4.8 y 4.9). |
+| `src/auditoria_bd.py` | 30 consultas que contrastan nuestros hallazgos con la base (lotes 1 a 3, ya corridos; resultados en `docs/CONTEXTO_TECNICO.md` 4.8 y 4.9). |
 
 ## 7. Problemas frecuentes
 

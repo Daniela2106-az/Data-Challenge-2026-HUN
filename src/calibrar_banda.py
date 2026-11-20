@@ -20,7 +20,7 @@ RESULTADO (12-nov-2026; distancia media a 80 % en la prueba, promedio de 6 combi
   recalibrado     6,8 puntos / 66,0 %
   - Llegadas con atencion (la serie principal): con A9 la prueba cubre 79-82 % ('reciente') y 78-82 % ('historico'). La validacion decia lo contrario
     (A9 cubria 84-88 % ahi y pedia angostar hasta q = 0,20), y al hacerle caso la prueba cae a 66 %: ene-jun 2025 fue un semestre mas tranquilo que
-    jul-2025 a abr-2026 (las etapas TU ya bajaban desde ene-2026, CLAUDE.md 4.9). Recalibrar sobre ese semestre es sobreajustar.
+    jul-2025 a abr-2026 (las etapas TU ya bajaban desde ene-2026, docs/CONTEXTO_TECNICO.md 4.9). Recalibrar sobre ese semestre es sobreajustar.
   - Ingresos a cama: con A9 la banda cubre 85-93 % en la prueba (sobra ancho). Ninguna regla elegida SOLO con la validacion lo arregla sin
     romper las llegadas con atencion, y elegir una regla por serie mirando la prueba seria hacer trampa. Se acepta: la banda de ingresos es
     conservadora, lo que para planear camas es el error menos grave.

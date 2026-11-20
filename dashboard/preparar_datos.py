@@ -6,7 +6,7 @@ docs/estructura_dashboard.md). Lee los datos procesados de HUN_PROCESADOS (por d
 HUN_PROCESADOS/dashboard/. Esas tablas NO se suben a GitHub: para publicar el dashboard se suben aparte (por ejemplo, como archivos
 secretos del servicio donde se despliegue).
 
-Periodo confiable de las etapas: 1-feb-2023 a 9-abr-2026 (CLAUDE.md 4.9). Espera de cama: estancias unicas (una vez cada una, regla
+Periodo confiable de las etapas: 1-feb-2023 a 9-abr-2026 (docs/CONTEXTO_TECNICO.md 4.9). Espera de cama: estancias unicas (una vez cada una, regla
 v3.8), de la llegada a la asignacion de cama, con la persona real (v4.0).
 
 SALIDAS (HUN_PROCESADOS/dashboard/)

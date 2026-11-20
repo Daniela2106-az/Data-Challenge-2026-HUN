@@ -4,7 +4,7 @@
 Código: `src/perfiles_pacientes.py`. Tablas en `resultados/tablas/perfiles_*.csv`; gráfico `resultados/graficos/perfiles_pacientes.png`.
 
 ## Cómo se midió
-- **Periodo confiable:** llegadas del 1-feb-2023 al 9-abr-2026 (el registro de etapas se degrada desde el 10-abr; `CLAUDE.md` 4.9). 309.378 episodios, 250.910 con atención y 23.245 estancias únicas.
+- **Periodo confiable:** llegadas del 1-feb-2023 al 9-abr-2026 (el registro de etapas se degrada desde el 10-abr; `docs/CONTEXTO_TECNICO.md` 4.9). 309.378 episodios, 250.910 con atención y 23.245 estancias únicas.
 - **«Con atención»:** el episodio no es solo la etapa de admisión (ER). Los porcentajes de hospitalización se calculan sobre los episodios con atención.
 - **Espera y estancia en cama:** una fila por estancia (registro conservado, `estancia_id`). La espera es la de la estancia. Referencia total: se hospitaliza el 9,3 %, espera mediana 18,5 h, estancia mediana 69,5 h, reingreso a 72 h 7,5 %.
 - **Edad y sexo son los de la persona real de la estancia** (ver «Una corrección importante» más abajo).
@@ -45,8 +45,8 @@ Código: `src/perfiles_pacientes.py`. Tablas en `resultados/tablas/perfiles_*.cs
 2. **Los niños esperan mucho menos cama:** 7,8 h de mediana en los de 0 a 4 años y 12,3 h de 5 a 14, contra 24–27 h de los 30 años en adelante. Es la diferencia más clara de espera y se parece a lo esperable: los servicios pediátricos tienen pocas camas, pero también pocos pacientes.
 3. **Las mujeres esperan más cama que los hombres:** mediana de 22,3 h contra 14,3 h, y el hueco aparece en cada grupo de edad desde los 5 años (por ejemplo, 75 años o más: 30,1 h contra 16,0 h). **No es un efecto de mezcla:** con edad, tipo de visita, franja horaria y año en el modelo, las mujeres esperan un 27 % más (IC 23 a 31 %); dentro de cada grupo de diagnóstico, un 36 % más (IC 31 a 41 %). Se mantuvo igual después de corregir la persona de cada estancia, así que no es un error de asignación.
    Es una **asociación sin explicación** en los datos. Una hipótesis (sin comprobar, no hay datos de habitaciones): las camas de hospitalización suelen agruparse por sexo, y la oferta para mujeres sería más ajustada. También puede deberse a otro servicio. Hay que declararlo como hallazgo abierto.
-4. **Se hospitalizan más y se quedan más los de visitas «Treatment urgency»:** el 24,6 % se hospitaliza (contra 8,5 % de urgencias normales) y la estancia mediana es de 112 h (contra 69 h), con una espera más corta (9,8 h). No pasan por la etapa de admisión y su volumen crece (ver `CLAUDE.md` 4.8). Reciben atención el 100 % de los casos.
-5. **Los reingresos a 72 h** van de 2 % en las visitas ambulatorias a 10 % en «Treatment urgency»; por edad, de 6 % (niños y mayores) a 9 % (15 a 29 años). **Sin validar** (`CLAUDE.md` C4): se reportan con esa advertencia.
+4. **Se hospitalizan más y se quedan más los de visitas «Treatment urgency»:** el 24,6 % se hospitaliza (contra 8,5 % de urgencias normales) y la estancia mediana es de 112 h (contra 69 h), con una espera más corta (9,8 h). No pasan por la etapa de admisión y su volumen crece (ver `docs/CONTEXTO_TECNICO.md` 4.8). Reciben atención el 100 % de los casos.
+5. **Los reingresos a 72 h** van de 2 % en las visitas ambulatorias a 10 % en «Treatment urgency»; por edad, de 6 % (niños y mayores) a 9 % (15 a 29 años). **Sin validar** (`docs/CONTEXTO_TECNICO.md` C4): se reportan con esa advertencia.
 6. **Quién llega más:** las mujeres de 15 a 29 años por urgencias (45 por día) y las de 30 a 44 (31 por día) son los perfiles más numerosos. Los de mayor espera son las mujeres de 45 a 59 (32,7 h), de 60 a 74 (30,3 h) y de 75 o más (30,2 h) que llegan por urgencias.
 
 **Trayectorias:** el 84,7 % de los episodios con atención termina en urgencias (`TU`), el 12,1 % pasa a hospitalización (`TU > HOSP`) y el 2,2 % vuelve a admisión y atención (`TU > ER > TU`). Las demás combinaciones suman menos del 1 %.
@@ -74,12 +74,12 @@ Hay diagnósticos con espera larga (musculoesquelético, renal, cáncer, digesti
 ## Una corrección importante: las gemelas son dos personas distintas
 
 Al armar estos perfiles apareció que **los dos registros de una misma estancia gemela son dos personas sin relación**: coinciden en el sexo el 51,7 % de las veces (el azar da 51 %) y en la edad, dentro de 2 años, el 6,3 % (diferencia mediana de 25 años). Una es la real; la otra es un duplicado con los datos de otra persona. La regla anterior (conservar el registro con más información) conservaba la persona real solo en ~81 % de los casos, y la edad y el sexo de esas estancias eran de la persona equivocada.
-Se corrigió con los números de persona de las filas de diagnósticos y laboratorios (en el 93 % de las estancias coinciden; los procedimientos no sirven, el 88 % cuelga del otro registro). Ahora **el registro conservado es el de la persona real en el 99,7 % de las estancias gemelas con persona identificada** (97,6 % de las gemelas). Cambió el modelo de factores (el R² de la espera sube de 14,8 a 15,8 % y «edad y sexo» de 3,7 a 4,1 puntos). Detalle y regla en `CLAUDE.md` sección 4.10.
+Se corrigió con los números de persona de las filas de diagnósticos y laboratorios (en el 93 % de las estancias coinciden; los procedimientos no sirven, el 88 % cuelga del otro registro). Ahora **el registro conservado es el de la persona real en el 99,7 % de las estancias gemelas con persona identificada** (97,6 % de las gemelas). Cambió el modelo de factores (el R² de la espera sube de 14,8 a 15,8 % y «edad y sexo» de 3,7 a 4,1 puntos). Detalle y regla en `docs/CONTEXTO_TECNICO.md` sección 4.10.
 
 ## Límites
 - Asociación, no causa. Sin servicio, sede ni cama no se puede explicar por qué esperan más ciertos perfiles.
 - La duración de urgencias de quienes no se hospitalizan solo existe en ~38 % de los episodios y está sesgada: no se usa para perfiles.
-- El tipo de visita no es confiable para saber por dónde pasó el paciente (`CLAUDE.md` sección 3): se usa solo como etiqueta de origen.
+- El tipo de visita no es confiable para saber por dónde pasó el paciente (`docs/CONTEXTO_TECNICO.md` sección 3): se usa solo como etiqueta de origen.
 - Reingreso: es la columna del pipeline, que cuenta traslapes y registros gemelos; depurado (C4, `docs/c4_reingresos_huecos_llegadas.md`) el reingreso a 72 h baja de ~6,6 % a 5,3 % en el total (~1,3 puntos). Sirve para comparar perfiles entre sí, no como nivel absoluto. Diagnóstico con cobertura parcial y registrado tarde.
 - La edad y el sexo de las estancias no gemelas y de las gemelas sin diagnóstico ni laboratorio no se pudieron verificar (el 99 % de las no gemelas es consistente por construcción).
 

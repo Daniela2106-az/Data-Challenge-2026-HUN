@@ -22,6 +22,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from componentes import (AZUL, PIZARRA, TENUE, aviso_datos, cifra, coma, estilo, ficha_de, frase, grafico, lamina, laminas_grupo, mensaje,  # noqa: E402
                          metodo, pagina, portada, secciones, tarjetas)
 import catalogo as cat  # noqa: E402
+import umbrales_alertas as um  # noqa: E402
 
 dash.register_page(__name__, path="/alertas", name="Alertas", title="Alertas - HUN", order=33)
 
@@ -64,24 +65,36 @@ def layout(alerta=None, **_):
             lamina(1, f"Día congestionado: a las 12 h detecta {a1.deteccion_pct:.0f} % de los casos y acierta {a1.precision_pct:.0f} % de los avisos",
                    "Un día es congestionado cuando llegan más pacientes de lo habitual para ese día de la semana. **La barra azul es los casos que avisa; la gris, los avisos que acertaron.** "
                    "Avisar con más tiempo sube la detección y baja la precisión.",
-                   grafico("ale-A1", alto=300), dato=(coma(a1.auc, 2), "AUC a las 12 h: qué tan bien separa los días congestionados (0,5 es azar)")),
+                   grafico("ale-A1", alto=300), dato=(coma(a1.auc, 2), "AUC a las 12 h: qué tan bien separa los días congestionados (0,5 es azar)"), ancla="alerta-A1"),
             lamina(2, "Ocupación alta de mañana: suponer que será igual que hoy funciona mejor que proyectar altas e ingresos",
                    "Avisa cuando la ocupación de camas al mediodía está entre el 20 % más alto (107 a 109 camas). **La opción recomendada (la más simple) detecta "
                    f"{a2.deteccion_pct:.0f} % y acierta {a2.precision_pct:.0f} %**, con menos avisos por día.",
-                   grafico("ale-A2", alto=280), dato=("3,2 camas", "error de «mañana igual que hoy», frente a 3,7 de proyectar"), invertida=True),
+                   grafico("ale-A2", alto=280), dato=("3,2 camas", "error de «mañana igual que hoy», frente a 3,7 de proyectar"), invertida=True, ancla="alerta-A2"),
             lamina(3, f"Paciente sin cama a las 48 h: {a3.alertas_por_dia:.0f} avisos por día, y {a3.precision_pct:.0f} % termina esperando más de 72 h",
                    "Avisa de un paciente que lleva las horas elegidas desde su llegada sin cama. **Avisar antes da más alertas y menos precisión; avisar después deja menos margen.** "
                    "Cuenta solo a quienes luego se hospitalizan, así que la carga real es mayor.",
-                   grafico("ale-A3", alto=300), dato=(f"{a3.margen_h:.0f} h", "de margen para actuar antes de que cumpla 72 horas")),
+                   grafico("ale-A3", alto=300), dato=(f"{a3.margen_h:.0f} h", "de margen para actuar antes de que cumpla 72 horas"), ancla="alerta-A3"),
             lamina(4, "A las 12 h el estimador avisa quién seguirá sin cama a las 48 h",
                    "Para pacientes con orden de hospitalización: el estimador calcula la probabilidad de seguir sin cama a las 48 h. **Con el corte de 40 % se avisa a unos "
                    f"{coma(a4.alertas_por_dia, 0)} pacientes por día, con 36 horas de margen.** Solo sirve a quienes ya tienen la orden.",
-                   grafico("ale-A4", alto=280), dato=(f"{a4.precision_pct:.0f} %", "de los avisados termina esperando más de 72 h"), invertida=True),
+                   grafico("ale-A4", alto=280), dato=(f"{a4.precision_pct:.0f} %", "de los avisados termina esperando más de 72 h"), invertida=True, ancla="alerta-A4"),
             lamina(5, "La cola de pacientes sin cama se pronostica con un tercio menos de error",
                    "Una señal para la reunión de camas, no una alerta con umbral: cuántos pacientes estarán esperando cama dentro de unas horas. "
                    "**En azul, el error del modelo; en gris, el de suponer «lo mismo que ahora».**",
-                   grafico("ale-S1", alto=280), dato=("−33 %", "de error a 6 horas frente a «lo mismo que ahora»")),
+                   grafico("ale-S1", alto=280), dato=("−33 %", "de error a 6 horas frente a «lo mismo que ahora»"), ancla="alerta-S1"),
         ),
+        tarjetas("Las alertas probadas con datos de 2026", "Cuándo salta cada una, qué tan bien acierta y qué recomendación dispara",
+                 ("A1", "Día congestionado", f"A las 12 h, si las llegadas del día pasan el percentil 90 de su día de la semana. Detecta {a1.deteccion_pct:.0f} % y acierta {a1.precision_pct:.0f} %. Dispara las recomendaciones 3 y 4."),
+                 ("A2", "Ocupación alta de mañana", f"Si la ocupación al mediodía está entre el 20 % más alto (107 a 109 camas), suponiendo que mañana será igual que hoy. Detecta {a2.deteccion_pct:.0f} % y acierta {a2.precision_pct:.0f} %. Recomendaciones 3 y 4."),
+                 ("A3", "Paciente con 48 h sin cama", f"Cuando un paciente cumple 48 horas desde su llegada sin cama (unos {a3.alertas_por_dia:.0f} por día). {a3.precision_pct:.0f} % termina esperando más de 72 h; hay {a3.margen_h:.0f} h de margen. Recomendación 5."),
+                 ("A4", "Aviso temprano con el estimador", f"A las 12 h de espera, si la probabilidad de seguir sin cama a las 48 h es de 40 % o más (unos {a4.alertas_por_dia:.0f} por día, {a4.precision_pct:.0f} % acierta, {a4.margen_h:.0f} h de margen). Recomendación 5."),
+                 ("S1", "Cola proyectada", "Una señal para la reunión de camas, no una alerta con umbral: cuántos pacientes esperarán cama en 6, 12 o 24 horas. Recomendación 3.")),
+        tarjetas("Las alertas del simulador integral", "Son las únicas que saltan en el simulador; las tres últimas miran a los pacientes uno por uno. Hay dos gravedades, aviso (amarillo) y crítico (rojo); las dos frenan la simulación, y una alerta salta cuando aparece; si se dejó sin corregir no vuelve a frenar la simulación, sino que queda marcada como activa en su fila comprimida, y vuelve a saltar si reaparece después de aplicarle la mejora o si se agrava de aviso a crítico. Los umbrales son criterios del simulador, no resultados validados como los de A1 a A4",
+                 ("Sim 1", "Faltarán camas", f"Se necesitarán más de las 106 camas. Dice cuándo (probabilidad de superarlas a 48 h) y cuántas faltan (camas ocupadas en la mediana de las repeticiones menos 106). Aviso (media) desde {um.UMBRAL_ALERTA_MEDIA} % o desde {um.UMBRAL_FALTAN} cama que falta; crítico (alta) desde {um.UMBRAL_ALERTA} % o desde {um.UMBRAL_FALTAN_CRITICO} camas que faltan. Recomendaciones 3, 4 y 7."),
+                 ("Sim 2", "Cola de espera larga", f"Pacientes esperando cama a la vez. Aviso desde {um.UMBRAL_COLA}; crítico desde {um.UMBRAL_COLA_CRITICA} (el percentil 90 real). Recomendaciones 5 y 6."),
+                 ("Sim 3", "Estancias más largas de lo normal", f"Pacientes en cama que ya llevan más días que 9 de cada 10 pacientes de su misma edad y tipo de visita (estancias reales 2023–2026). Ve también a los que aún no cumplen 14 días. Aviso desde {um.UMBRAL_SOBRE_PERFIL} pacientes; crítico desde {um.UMBRAL_SOBRE_PERFIL_CRITICO} (lo habitual son ~{um.NORMAL_SOBRE_PERFIL}). Recomendación 7."),
+                 ("Sim 4", "Esperas de más de 3 días", f"Pacientes que llevan 72 h o más sin cama: los peores casos, que la cola total no muestra. Aviso desde {um.UMBRAL_ESPERA_EXTREMA}; crítico desde {um.UMBRAL_ESPERA_EXTREMA_CRITICO} (lo habitual son ~{um.NORMAL_ESPERA_EXTREMA}). Recomendaciones 5 y 6."),
+                 ("Sim 5", "Ingresos con riesgo de estancia larga", f"Porcentaje de los ingresos de la última semana que son mayores de 60 o «treatment urgency», perfiles con 2 a 3 veces más riesgo de pasar de 14 días: avisa antes de que se llenen las camas. Aviso desde {um.UMBRAL_INGRESOS_RIESGO} %; crítico desde {um.UMBRAL_INGRESOS_RIESGO_CRITICO} % (lo habitual es ~{um.NORMAL_INGRESOS_RIESGO} %). Recomendación 7.")),
         tarjetas("Lo esencial de las alertas", "Cuatro cifras de la prueba de enero a abril de 2026",
                  (coma(total, 1), "Alertas por día", "Con el diseño recomendado; casi todas son de pacientes que llevan 48 horas sin cama."),
                  (f"{a1.deteccion_pct:.0f} %", "Días congestionados que detecta", f"A las 12 h, con {a1.precision_pct:.0f} % de acierto. Es la alerta con más señal."),

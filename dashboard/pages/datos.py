@@ -1,7 +1,7 @@
 """
 dashboard/pages/datos.py  -  pagina «Datos y calidad» (13-nov-2026; pagina 1.3 de docs/estructura_dashboard.md; formato de presentacion)
 De 3,3 millones de etapas a 337 mil episodios: que habia en la base, que se corrigio y por que solo se usa hasta el 9-abr-2026.
-Pagina de contexto: cifras ya documentadas (CLAUDE.md 4.1 a 4.10, docs/documento_final.md seccion 3) y una figura del embudo.
+Pagina de contexto: cifras ya documentadas (docs/CONTEXTO_TECNICO.md 4.1 a 4.10, docs/documento_final.md seccion 3) y una figura del embudo.
 
 DATOS  datos/tablas_dashboard/embudo_datos.csv (tabla escrita a mano, agregada; esta en el repositorio).
 """
@@ -27,7 +27,7 @@ CORREGIDO = [
     ("2 días", "Caída total del registro", "El 28 y el 29 de marzo de 2026 casi no hay registros. Se excluyen, igual que las etapas que "
                                            "seguían abiertas al extraer los datos."),
 ]
-# Que hay en la base y que no (CLAUDE.md secciones 2 y 3): cifras ya publicadas
+# Que hay en la base y que no (docs/CONTEXTO_TECNICO.md secciones 2 y 3): cifras ya publicadas
 BASE = [
     ("1,7 M", "Visitas", "De enero de 2023 a julio de 2026, de unos 304 mil pacientes."),
     ("3,3 M", "Etapas del recorrido", "Llegada, atención en urgencias y hospitalización. De aquí salen todos los tiempos."),
@@ -40,9 +40,9 @@ FALTA = [
     ("Orden de hospitalizar", "No se registra su hora", "Por eso no se separa la atención clínica de la espera pura por una cama."),
     ("Hora de salida", "Falta en 4 de cada 10 etapas de urgencias", "Quien se va de alta desde urgencias casi nunca tiene hora de fin."),
 ]
-# (año, % de las etapas de atencion en urgencias sin hora de salida) - conteo directo en la base (CLAUDE.md 4.3)
+# (año, % de las etapas de atencion en urgencias sin hora de salida) - conteo directo en la base (docs/CONTEXTO_TECNICO.md 4.3)
 SIN_FIN = [("2023", 41.6), ("2024", 38.4), ("2025", 35.8), ("2026", 36.6)]
-# (mes de 2026, % de las visitas de urgencias con su etapa de llegada registrada) - auditoria en la base (CLAUDE.md 4.9, lote 2)
+# (mes de 2026, % de las visitas de urgencias con su etapa de llegada registrada) - auditoria en la base (docs/CONTEXTO_TECNICO.md 4.9, lote 2)
 REGISTRO = [("Enero", 65.7), ("Febrero", 64.7), ("Marzo", 64.6), ("Abril", 54.0), ("Mayo", 28.4), ("Junio", 29.6)]
 HOSPITAL = [
     ("106", "Camas de hospitalización", "88 de adultos y 18 de niños y neonatos."),
@@ -95,7 +95,7 @@ def layout():
             "julio de 2026.",
             "La persona real de las estancias duplicadas se deduce de los datos; el hospital dijo que «lo más probable» es que sean "
             "duplicados, pero no confirmó cuál es. Tampoco explicó por qué cambia el registro desde abril de 2026.",
-            "Fuente: datos/tablas_dashboard/embudo_datos.csv · CLAUDE.md 4.1, 4.3, 4.6, 4.9 y 4.10 · sesión con el HUN del 29-oct-2026.", ruta="/datos"))
+            "Fuente: datos/tablas_dashboard/embudo_datos.csv · docs/CONTEXTO_TECNICO.md 4.1, 4.3, 4.6, 4.9 y 4.10 · sesión con el HUN del 29-oct-2026.", ruta="/datos"))
 
 
 @callback(Output("dat-registro", "figure"), Input("theme-store", "data"))

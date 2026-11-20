@@ -13,7 +13,7 @@ Código: `src/generar_borrador_mapeo_dx.py` (agrupación) y `src/diagnosticos_y_
 - Diagnóstico principal = primer diagnóstico traducido por fecha (no sabemos cuál es el principal real: `condition_type_concept_id` siempre vale 0).
 
 ## 2. Qué estancia en cama se conserva (cambio del 29-oct-2026) y el sesgo del diagnóstico
-La misma estancia en cama aparece en dos registros (estancias gemelas, `CLAUDE.md` 4.6). El HUN confirmó en la sesión del 29-oct que lo más probable es que sean **duplicados** y que hay que quedarse con
+La misma estancia en cama aparece en dos registros (estancias gemelas, `docs/CONTEXTO_TECNICO.md` 4.6). El HUN confirmó en la sesión del 29-oct que lo más probable es que sean **duplicados** y que hay que quedarse con
 el registro que trae la información clínica. Antes se conservaba el de menor `visit_occurrence_id`, que casi nunca era el que tenía diagnóstico (solo 163 de los 6.414 pares en que uno solo lo tenía).
 Ahora `preparar_variables.py` (v2.2, sección 4b) conserva el que tiene **más tipos de información** (diagnóstico, procedimiento, laboratorio), y si le falta algo lo **hereda del gemelo** (los dos se reparten la
 información: uno trae diagnósticos y laboratorios, el otro procedimientos). Edad, sexo y `person_id` son los del registro conservado. `FUSIONAR_INFO=0` desactiva la herencia.

@@ -5,7 +5,7 @@ espera que ocurre cuando si las hay (demora del servicio).
 
 COMO SE SEPARA LA ESPERA
   Para cada hora se cuentan las camas ocupadas por zona (estancias unicas): adultos (15 anos o mas) frente a 88 camas y ninos (menos de 15) frente a 18,
-  las capacidades que dio el HUN el 29-oct (CLAUDE.md 4.7). Una hora esta "sin cama" en una zona si sus camas ocupadas llegan a la capacidad.
+  las capacidades que dio el HUN el 29-oct (docs/CONTEXTO_TECNICO.md 4.7). Una hora esta "sin cama" en una zona si sus camas ocupadas llegan a la capacidad.
   La espera de cada estancia (de la llegada a la asignacion de cama) se reparte hora por hora:
     espera_sin_cama_h  = horas de espera en que la zona del paciente estaba llena
     espera_servicio_h  = horas de espera en que habia camas libres en el conteo (la demora no se explica por falta de camas)
@@ -25,7 +25,7 @@ SALIDAS   en HUN_TABLAS (por defecto resultados/tablas):
 LIMITES (los mas importantes)
   - "Sin cama" significa que el CONTEO de camas estaba lleno, no que el paciente esperara por eso: una cama libre puede no servirle (otro servicio, otro
     sexo, aislamiento) y una zona "llena" puede tener camas de apoyo. No se conoce la fecha de las capacidades del HUN.
-  - La espera empieza en la llegada: incluye la atencion clinica en urgencias, que no se puede separar (CLAUDE.md 4.7).
+  - La espera empieza en la llegada: incluye la atencion clinica en urgencias, que no se puede separar (docs/CONTEXTO_TECNICO.md 4.7).
   - docs/capacidad_efectiva.md mostro que la cola casi no cambia con la ocupacion: si casi todas las horas estan "llenas", casi toda la espera cae en
     "sin cama" por construccion. Por eso se reporta la sensibilidad y se lee la separacion como una descripcion, no como una causa.
 

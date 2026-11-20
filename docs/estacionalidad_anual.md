@@ -201,7 +201,7 @@ Algunos rezagos pasan la regla por 0,01–0,07 puntos (ruido) y **empeoran la pr
   de 2023). Con estos huecos y los paros, el calendario no sirve como variable; además el escolar, que es más regular, ya empeoraba el modelo.
 
 **3. Contexto del sistema de salud (prensa y Supersalud; no entra al modelo, es para el documento).** Ninguno coincide con el 10-abr-2026, y la
-auditoría (CLAUDE.md 4.9) ya mostró que el quiebre está en el registro de etapas, no en la demanda. Lo que pasó alrededor:
+auditoría (docs/CONTEXTO_TECNICO.md 4.9) ya mostró que el quiebre está en el registro de etapas, no en la demanda. Lo que pasó alrededor:
 - **11-oct-2023:** entra en funcionamiento el Hospital Juan Domínguez Romero de Soledad (El Heraldo). El HUN también está en Soledad.
 - **27-ene-2025:** abre el Nuevo Hospital de Barranquilla (122 camas de hospitalización y urgencias, 16 UCI); 2.300 atenciones de urgencias el primer mes (Consultor Salud).
 - **19-ago-2025:** la Supersalud interviene la ESE Universitaria del Atlántico (red pública departamental) por 49 hallazgos críticos, entre
@@ -210,7 +210,7 @@ auditoría (CLAUDE.md 4.9) ya mostró que el quiebre está en el registro de eta
   Norte (Barranquilla) suspende cirugías programadas por cartera de EPS (urgencias siguen); denuncias de que a afiliados de Nueva EPS solo se les
   atiende urgencia vital allí; clínicas con deudas de más de 90 días con sus médicos (El Heraldo, 30-abr-2026).
 - **Lectura:** la crisis financiera de abril de 2026 podría haber llevado pacientes a otros hospitales (las visitas de urgencias del HUN suben ~40 %
-  desde el 10-abr, CLAUDE.md 4.9), pero las fechas no calzan exactamente (10-abr frente a 22-abr) y no hay forma de comprobarlo con los datos.
+  desde el 10-abr, docs/CONTEXTO_TECNICO.md 4.9), pero las fechas no calzan exactamente (10-abr frente a 22-abr) y no hay forma de comprobarlo con los datos.
   Queda como hipótesis, no como causa.
 
 ## Resumen de decisiones por variable

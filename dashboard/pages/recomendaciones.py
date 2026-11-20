@@ -108,7 +108,7 @@ def carta(r):
     """Una recomendacion como tarjeta operativa: que cambiar (tres pasos), la meta con la que se sabe que funciono y por que importa."""
     n = int(r.prioridad)
     pasos = [x for x in str(r.que_cambiar).split("|") if x]
-    return html.Div(className="hecho rec-corta", children=[
+    return html.Div(id=f"rec-R{n}", className="hecho rec-corta", children=[
         html.Div(className="rec-corta__cab", children=[html.Div(f"R{n}", className="hecho__num"),
                                                        html.Div([html.Span(TIPO.get(n, ""), className="rec-chip"), chip(r.firmeza)], className="rec-corta__chips")]),
         html.Div(r.titulo_accion, className="hecho__titulo"),
@@ -116,6 +116,12 @@ def carta(r):
         html.Ol([html.Li(x) for x in pasos], className="rec-corta__pasos"),
         html.Div(className="rec-corta__meta", children=[html.Span("Meta", className="rec-corta__rotulo"), html.Span(r.meta)]),
         html.P(r.por_que, className="hecho__txt"),
+        html.Details(className="rec-corta__mas", children=[
+            html.Summary("Contexto y evidencia"),
+            html.Div("Lo que dicen nuestros datos", className="rec-corta__rotulo"), html.P(r.impacto_estimado, className="hecho__txt"),
+            html.Div("Lo que se encontró en otros hospitales", className="rec-corta__rotulo"), html.P(r.evidencia_externa, className="hecho__txt"),
+            html.Div("Límite", className="rec-corta__rotulo"), html.P(r.limite, className="hecho__txt"),
+            html.Div("Cómo medirla", className="rec-corta__rotulo"), html.P(r.como_medir, className="hecho__txt")]),
         html.Div(className="enlaces", children=[html.Span("Se ve en", className="enlaces__rotulo"), *enlaces_paginas(r.paginas_respaldo), *enlaces_alertas(r.alerta_ids)])
         if (r.paginas_respaldo or r.alerta_ids) else None])
 

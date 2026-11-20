@@ -80,7 +80,7 @@ Implementación: `src/preparar_variables.py` v2.4, sección 4b.
 
 ## Para profundizar
 
-- **Histórico completo:** secciones 4.1–4.13 de `CLAUDE.md` (respaldo: `docs/CLAUDE_respaldo_17nov2026.md`)
+- **Histórico completo:** secciones 4.1–4.13 de `docs/CONTEXTO_TECNICO.md` (respaldo: `docs/CONTEXTO_TECNICO.md`)
 - **Auditoría directa en BD:** `src/auditoria_bd.py` (consultas de solo lectura; resultados en `datos/crudos/auditoria_bd/`)
 - **Exploración de esquema:** `src/explorar_bd.py` (8 tablas, sin índices, sin servicio/piso/cama)
 - **Referencias de scripts:** `src/analisis_etapas.py` (limpieza), `src/preparar_variables.py` (variables), `src/construir_segmentos.py` (cuellos botella)

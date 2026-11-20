@@ -19,3 +19,7 @@ duckdb>=2.0
 sqlalchemy>=2.0
 psycopg[binary]>=3.2
 dash>=4.0              # dashboard/app.py (Dash; los organizadores aceptaron Dash)
+anthropic>=2.11        # dashboard/asistente.py (asistente de preguntas; clave en la variable ANTHROPIC_API_KEY)
+
+# Solo para src/exportar_documento_pdf.py (genera el PDF del documento final; necesita Google Chrome instalado):
+markdown>=3.5

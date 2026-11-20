@@ -3,7 +3,7 @@ dashboard/pages/ocupacion.py  -  pagina «Ocupación de camas» (13-nov-2026; pa
 Camas ocupadas frente a las 106 que informo el hospital, e ingresos a cama por dia. Control: vista (promedio por mes o dia por dia).
 
 DATOS  panel_diario.csv (ya agregado por dia; dashboard/preparar_datos.py). Solo el periodo confiable (1-feb-2023 a 9-abr-2026).
-       La estancia media por año es la cifra documentada en CLAUDE.md 4.8 (el panel diario no la trae).
+       La estancia media por año es la cifra documentada en docs/CONTEXTO_TECNICO.md 4.8 (el panel diario no la trae).
 """
 import sys
 from pathlib import Path
@@ -22,7 +22,7 @@ dash.register_page(__name__, path="/ocupacion", name="Ocupación de camas", titl
 
 TITULO = "La ocupación roza las 106 camas porque los pacientes se quedan más, no porque lleguen más"
 CAMAS = 106
-# Donde esta el exceso (CLAUDE.md 4.11 y la revision final de la ocupacion): cifras ya publicadas
+# Donde esta el exceso (docs/CONTEXTO_TECNICO.md 4.11 y la revision final de la ocupacion): cifras ya publicadas
 EXCESO = [
     ("100 %", "Camas de adultos, en 2025", "88 camas de adultos y 88 ocupadas en promedio: los adultos operan al tope, y más de la mitad "
                                            "de las horas, por encima."),
@@ -101,7 +101,7 @@ def layout():
             "Pasar de 106 no es un error de los datos: puede ser sobreocupación con camas adicionales o una capacidad real mayor, y los "
             "datos no las distinguen. La base no separa piso, UCI ni servicio.",
             "Fuente: panel_diario.csv (src/exportar_para_equipo.py) · capacidad: sesión con el HUN del 29-oct-2026 · "
-            "docs/HALLAZGOS.md 4.6 · CLAUDE.md 4.8.", ruta="/ocupacion"))
+            "docs/HALLAZGOS.md 4.6 · docs/CONTEXTO_TECNICO.md 4.8.", ruta="/ocupacion"))
 
 
 @callback(Output("ocu-camas", "figure"), Output("ocu-flujo", "figure"), Output("ocu-sobre", "figure"), Output("ocu-semana", "figure"),

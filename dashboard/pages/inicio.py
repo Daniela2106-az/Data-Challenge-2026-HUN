@@ -5,7 +5,7 @@ del hospital, un resumen de contexto y un menu de tarjetas para entrar a cada pa
 prediccion y propuestas) con la misma lista de la barra lateral (`dashboard/navegacion.py`).
 
 No carga datos ni se conecta a la base, asi que nunca falla el arranque. Las cifras del resumen son hechos ya
-documentados del proyecto (CLAUDE.md, docs/HALLAZGOS.md), presentados como contexto, no como un calculo en vivo.
+documentados del proyecto (docs/CONTEXTO_TECNICO.md, docs/HALLAZGOS.md), presentados como contexto, no como un calculo en vivo.
 """
 import sys
 from pathlib import Path
@@ -31,7 +31,7 @@ TARJETAS = {
     "/diagnosticos": ("Diagnósticos",
                       "Qué grupos de diagnóstico esperan más cama y cuáles se quedan más tiempo hospitalizados."),
     "/alertas": ("Alertas",
-                 "Tres avisos para actuar a tiempo: día congestionado, paciente sin cama y camas de mañana."),
+                 "Las alertas del proyecto, qué tan bien aciertan y qué recomendación dispara cada una: día congestionado, ocupación alta, paciente sin cama y cola de espera."),
     "/atipicos": ("Días atípicos",
                   "Los días que se salen del patrón y lo que dicen: el problema de la espera es de todos los días."),
     "/datos": ("Datos y calidad",
@@ -45,7 +45,7 @@ TARJETAS = {
     "/altas": ("Llegada y altas",
                "A qué hora salen las altas, a qué hora se asignan las camas y cuánto espera quien llega a cada hora."),
     "/perfiles": ("Perfiles y picos",
-                  "¿Qué perfiles de paciente esperan o se quedan distinto cuando el hospital está más cargado? Tabla histórica."),
+                  "¿Qué perfiles de paciente esperan o se quedan distinto cuando el hospital está más cargado? Perfiles, trayectorias y días de alta demanda."),
     "/pronostico": ("Pronóstico de demanda",
                     "¿Cuántos pacientes ingresarán al hospital y a cama en los próximos días? Proyección diaria con su rango probable."),
     "/estacionalidad": ("Forma del año",
@@ -55,9 +55,11 @@ TARJETAS = {
     "/camas": ("Planeación de camas",
                "Simula «¿qué pasaría si…?»: más ingresos, menos estancia u otra mezcla de perfiles, y mira la ocupación proyectada."),
     "/simulador": ("Simulador integral",
-                   "Un solo motor de agentes sigue a cada paciente simulado: demanda, cola de espera y ocupación, todo a la vez."),
+                   "Un solo motor sigue a cada paciente simulado: demanda, cola de espera y ocupación a la vez. Saltan alertas con su recomendación y puedes aplicar la mejora y compararla."),
     "/recomendaciones": ("Recomendaciones",
                          "Siete acciones para el hospital, cada una con lo que dicen nuestros datos y lo que se encontró en otros hospitales."),
+    "/preguntas": ("Asistente de flujo HUN",
+                    "Pregunta en tus palabras sobre la espera, la ocupación, las alertas o las recomendaciones: responde solo con lo que dice el proyecto y cita la fuente."),
     "/documentacion": ("Documentación",
                        "El documento completo del proyecto: datos, hallazgos, modelos, recomendaciones y referencias, con descarga en PDF."),
 }
@@ -110,13 +112,13 @@ def layout():
                    "los pacientes, dónde se pierde el tiempo, qué se espera para los próximos meses y qué proponemos. "
                    "Elige una página o recórrelo en orden, como una presentación.", className="hero__sub"),
             dcc.Link("Empezar el recorrido", href="/resumen", className="hero__cta"),
-            html.Div("Avanza con las flechas ← → del teclado. El botón de la esquina superior derecha oculta el menú para exponer.",
+            html.Div("Avanza con las flechas ← → del teclado. El botón de la esquina superior derecha oculta el menú para presentar.",
                      className="hero__hint"),
         ]),
 
         html.Div("El hospital en una mirada", className="section-title", style={"marginTop": "28px"}),
         html.Div(className="stat-row", style={"marginTop": "0"}, children=[tarjeta_resumen(n, e) for n, e in RESUMEN]),
-        html.P("Cifras de contexto ya documentadas (regla de estancia única v3.8, CLAUDE.md / docs/HALLAZGOS.md). "
+        html.P("Cifras de contexto ya documentadas en la página de Documentación (regla de estancia única). "
                "Casi todo son asociaciones y escenarios, no causas; periodo confiable: feb-2023 a 9-abr-2026.",
                style={"fontSize": "12px", "color": "var(--muted)", "marginTop": "10px"}),
 

@@ -14,7 +14,7 @@ QUE ES Y QUE NO ES (decidido en la conversacion de diseno del 14-nov; ver docs/s
   - Los ingresos a cama diarios EMERGEN de los agentes (llegadas x P(cama|perfil) x espera sorteada) y se
     CALIBRAN (factor kappa) para que su nivel esperado coincida con el pronostico validado de ingresos a cama.
     No se fuerza una cuota diaria con un ranking: el orden de llegada casi no predice el orden de cama
-    (53 % de pares en orden, azar 50 % - CLAUDE.md 6b), asi que una fila de prioridad seria inventada.
+    (53 % de pares en orden, azar 50 % - docs/CONTEXTO_TECNICO.md 6b), asi que una fila de prioridad seria inventada.
   - La cola simulada es COTA INFERIOR de la presion real: solo contiene agentes que terminaran en cama (los
     que se van de alta desde urgencias no esperan cama y el 36-42 % de sus etapas no tiene hora de fin).
 
@@ -85,6 +85,42 @@ SEMILLA = scm.SEMILLA
 BACKTEST_CORTE = scm.BACKTEST_CORTE
 HORIZONTE_PROYECCION = scm.HORIZONTE_PROYECCION
 SERIES_SALIDA = ("llegadas", "ingresos_cama", "altas", "cola", "total", "ninos", "adultos")
+# Franjas horarias del dia (19-nov-2026): las mismas de src/estimador_tiempo_restante.py. (hora_ini, hora_fin, nombre)
+FRANJAS = ((0, 7, "madrugada"), (7, 14, "mañana"), (14, 19, "tarde"), (19, 24, "noche"))
+NOMBRES_FRANJA = tuple(f[2] for f in FRANJAS)
+_BORDES_FRANJA = np.array([f[0] for f in FRANJAS[1:]], dtype=float)      # 7, 14, 19
+
+
+def _cargar_reparto_franja(columna="ingreso_cama"):
+    """Proporcion por (dia de la semana, franja) con la hora REAL de `columna` ("ingreso_cama": asignacion de cama; "llegada": llegada al hospital), ventana del bootstrap.
+    El motor diario suaviza la espera con ruido (Silverman) y eso aplana la hora, asi que el reparto por franja se hace con lo medido."""
+    e = scm.est[scm.est[columna].notna() & scm.est.ingreso_cama.notna()]
+    e = e[(e.ingreso_cama >= scm.VENTANA_BOOTSTRAP[0]) & (e.ingreso_cama < scm.VENTANA_BOOTSTRAP[1])]
+    t = pd.to_datetime(e[columna])
+    cuenta = pd.crosstab(t.dt.dayofweek, franja_de_hora(t.dt.hour + t.dt.minute / 60.0)).reindex(index=range(7), columns=range(len(FRANJAS)), fill_value=0)
+    return (cuenta.div(cuenta.sum(axis=1), axis=0)).to_numpy(), cuenta.to_numpy().sum(axis=1)
+
+
+def repartir_por_franja(fechas, ingresos_rep, reparto=None):
+    """Reparte los ingresos a cama diarios simulados (n_rep, dias) entre madrugada/mañana/tarde/noche con el reparto real del dia de la
+    semana. Devuelve {franja: {p10, p50, p90, media}} (listas por dia). Determinista: no consume numeros aleatorios. Las medias de las
+    cuatro franjas suman el total diario; los percentiles se escalan con la misma proporcion (no suman exacto: son bandas, no conteos)."""
+    pesos = (REPARTO_FRANJA if reparto is None else reparto)[pd.DatetimeIndex(fechas).dayofweek.to_numpy()]            # (dias, 4)
+    res = {}
+    for i, nombre in enumerate(NOMBRES_FRANJA):
+        m = ingresos_rep * pesos[:, i]
+        res[nombre] = {q: np.percentile(m, v, axis=0).round(2).tolist() for q, v in (("p10", 10), ("p50", 50), ("p90", 90))}
+        res[nombre]["media"] = m.mean(axis=0).round(2).tolist()
+    return res
+
+
+def franja_de_hora(hora_del_dia):
+    """Indice de franja (0 madrugada, 1 manana, 2 tarde, 3 noche) para horas del dia 0-24 (arreglo o escalar)."""
+    return np.searchsorted(_BORDES_FRANJA, np.asarray(hora_del_dia, dtype=float), side="right")
+
+
+REPARTO_FRANJA, _N_REAL_FRANJA = _cargar_reparto_franja()
+REPARTO_LLEGADA, _N_REAL_LLEGADA = _cargar_reparto_franja("llegada")   # hora real de LLEGADA al hospital (de los pacientes que luego tuvieron cama)        # (7 dias x 4 franjas); n de ingresos reales por dia de la semana
 
 
 def titulo(t):
@@ -95,10 +131,10 @@ def titulo(t):
 # 1) Serie de llegadas (panel) y P(cama | perfil) + mezcla de llegadas (tabla_episodios)
 # ----------------------------------------------------------------------
 titulo("1. LLEGADAS: serie diaria, mezcla de perfiles y P(cama | perfil)")
-_panel = mp.cargar_panel()                                 # ya blanqueado desde el 10-abr-2026 (CLAUDE.md 4.9)
+_panel = mp.cargar_panel()                                 # ya blanqueado desde el 10-abr-2026 (docs/CONTEXTO_TECNICO.md 4.9)
 serie_llegadas = _panel["llegadas"].rename("llegadas")
 print(f"serie_llegadas: {serie_llegadas.dropna().index.min().date()} a {serie_llegadas.dropna().index.max().date()} "
-      f"(media 2025: {serie_llegadas['2025'].mean():.0f}/dia; incluye ~4 % de replicas, cota conocida - CLAUDE.md 4.13)")
+      f"(media 2025: {serie_llegadas['2025'].mean():.0f}/dia; incluye ~4 % de replicas, cota conocida - docs/CONTEXTO_TECNICO.md 4.13)")
 
 _ep = pd.read_parquet(PROC / "tabla_episodios.parquet",
                       columns=["fecha", "grupo_edad", "tipo_visita", "hospitalizado", "estancia_unica", "sexo"])
@@ -106,7 +142,7 @@ _ep = _ep[_ep.grupo_edad.notna() & _ep.tipo_visita.notna()].copy()
 _ep["ruta"] = _ep.tipo_visita.where(_ep.tipo_visita.isin(scm.TIPOS_VALIDOS), "Urgencias")  # mismo plegado que A5
 _ep["fecha"] = pd.to_datetime(_ep.fecha)
 _ep25 = _ep[(_ep.fecha >= VENTANA_MEZCLA_LLEGADAS[0]) & (_ep.fecha < VENTANA_MEZCLA_LLEGADAS[1])]
-# el numerador usa estancia_unica para no contar dos veces las estancias gemelas (CLAUDE.md 4.6/4.8); el
+# el numerador usa estancia_unica para no contar dos veces las estancias gemelas (docs/CONTEXTO_TECNICO.md 4.6/4.8); el
 # denominador (todas las llegadas) incluye las replicas igual que la serie del panel, asi ambos lados cuadran.
 _grupos = _ep25.groupby(["grupo_edad", "ruta"], observed=True)
 _tam = _grupos.size()
@@ -121,7 +157,7 @@ P_CAMA_VEC = np.array([P_CAMA[per] for per in PERFILES_LLEG])
 P_MEDIA = float((PROB_LLEG * P_CAMA_VEC).sum())
 
 # Sexo por perfil (16-nov-2026, para la vista de perfiles del dashboard): P(mujer | grupo_edad, ruta) entre
-# las llegadas de 2025 (sexo de la persona real tras la regla v4.0, CLAUDE.md 4.10). La mezcla NO es 50/50 ni
+# las llegadas de 2025 (sexo de la persona real tras la regla v4.0, docs/CONTEXTO_TECNICO.md 4.10). La mezcla NO es 50/50 ni
 # constante: va de 41 % (5-14, ambulatorio) a ~60 % (15-29 por urgencias, edad fertil); global 56 %. El sexo
 # NO entra en ninguna probabilidad del motor (P(cama), espera y estancia ya lo promedian dentro de cada
 # perfil): es una etiqueta para mostrar el perfil completo. Para agentes HOSPITALIZADOS usar el sexo que
@@ -129,7 +165,7 @@ P_MEDIA = float((PROB_LLEG * P_CAMA_VEC).sum())
 # mediana 21,8 h contra 14,3 h en el pool, y un sorteo independiente rompia esa coherencia). Para llegadas
 # sin cama (solo conteos) sortear con SEXO_LLEG. Raza y etnia NO se asignan: en la base la raza esta 95 %
 # sin dato y la etnia es casi constante ("Hispanic or Latino"), asi que no hay distribucion real que imitar
-# (CLAUDE.md seccion 3, person); si la vista las muestra, que diga "Sin dato en la base".
+# (docs/CONTEXTO_TECNICO.md seccion 3, person); si la vista las muestra, que diga "Sin dato en la base".
 _sx = _ep25[_ep25.sexo.isin(["Mujer", "Hombre"])]
 _p_mujer_celda = _sx.groupby(["grupo_edad", "ruta"], observed=True).sexo.apply(lambda s: float((s == "Mujer").mean()))
 P_MUJER_GLOBAL = float((_sx.sexo == "Mujer").mean())
@@ -155,7 +191,7 @@ print(pd.Series(P_CAMA).mul(100).round(1).unstack().to_string())
 # ----------------------------------------------------------------------
 # En los dias con mas llegadas la espera TIPICA de cama es mas larga: coeficiente de log(espera+1) sobre las
 # llegadas estandarizadas del dia de llegada = +4,7 % por desviacion (~37 llegadas), t ~ 4,5, estancias de
-# 2024-2025 (coherente con la Fase 4 de cuellos de botella: la carga mueve la espera, CLAUDE.md 6b). Cada dia
+# 2024-2025 (coherente con la Fase 4 de cuellos de botella: la carga mueve la espera, docs/CONTEXTO_TECNICO.md 6b). Cada dia
 # simulado multiplica las esperas sorteadas de sus llegadas por exp(beta x z) / C, con z acotado a +-3 (soporte
 # historico) y C el promedio historico del factor entre hospitalizados: el multiplicador queda CENTRADO y la
 # espera media poblacional no cambia (verificado: el backtest no se mueve y la media de 5b queda igual).
@@ -215,7 +251,7 @@ def trayectoria_para(grupo, ruta, rng, n, suavizar_espera=True):
     discreta 0-23). Conserva la correlacion espera-estancia del paciente real (los que esperan mas tienden a
     quedarse mas, docs/factores_estancia.md: +9 % por desviacion de espera). El sexo es el del MISMO paciente
     historico (16-nov-2026): asi la etiqueta que muestre el dashboard es coherente con la espera sorteada
-    (las mujeres esperan mas, CLAUDE.md 4.10-4.11); no entra en ningun calculo del motor.
+    (las mujeres esperan mas, docs/CONTEXTO_TECNICO.md 4.10-4.11); no entra en ningun calculo del motor.
 
     `suavizar_espera=False` (Etapa 6, vista horaria): SIN el ruido de Silverman sobre la espera, hora_llegada +
     espera reproduce EXACTO la hora del dia en que ese paciente real recibio la cama (las dos olas de
@@ -259,21 +295,35 @@ SEXO_IDX = {"Mujer": 0, "Hombre": 1}                        # indice de la 3a di
 
 
 def _una_repeticion(lam_lleg, p_eff, rng, ajuste_estancia, ajuste_espera, n0_camas, q0_cola, comp=None,
-                    prob_lleg=None, recorte_largas=0.0):
+                    prob_lleg=None, recorte_largas=0.0, factor_lleg=None, rng_extra=None, acoplar_estancia=False, registro=None):
     """Una repeticion sobre len(lam_lleg) dias. Devuelve dict de arrays diarios (ver SERIES_SALIDA).
     `comp` (opcional, Etapa 1 del plan del 16-nov): dict {etapa: array (n_dias, n_perfiles)} donde se ACUMULA
     la composicion por dia x perfil de 5 etapas (llegadas, ingresos_cama, altas, en_cama, esperando). Solo
     cuenta sorteos ya hechos — no consume numeros aleatorios, asi que la regresion de semilla se mantiene.
     `prob_lleg` (Etapa 5): mezcla de perfiles de las llegadas (por defecto la real de 2025, PROB_LLEG).
     `recorte_largas` (Etapa 5, palanca R7): fraccion 0-1 que reduce SOLO las estancias (ya ajustadas) que
-    superan UMBRAL_LARGA_H — gestion de casos sobre los largos, no un recorte uniforme. 0 = sin efecto."""
+    superan UMBRAL_LARGA_H — gestion de casos sobre los largos, no un recorte uniforme. 0 = sin efecto.
+    `ajuste_estancia`, `ajuste_espera` y `recorte_largas` pueden ser un escalar (igual todos los dias, como siempre) o un
+    vector por dia (cambios a mitad de la simulacion, ver `cambios` en simular_integral): cada paciente usa el valor del
+    dia en que llega. Con escalares el resultado es identico al de antes.
+    `factor_lleg` (vector por dia, o None): cuanto cambia la demanda ese dia respecto a la corrida sin cambios. Para que los dias
+    anteriores al cambio salgan IDENTICOS, la corrida base no se toca: los pacientes de mas se sortean aparte con `rng_extra` y
+    los de menos se quitan al azar con ese mismo generador."""
     if prob_lleg is None:
         prob_lleg = PROB_LLEG
     n_dias = len(lam_lleg)
+    aj_est = np.broadcast_to(np.asarray(ajuste_estancia, dtype=float), (n_dias,))
+    aj_esp = np.broadcast_to(np.asarray(ajuste_espera, dtype=float), (n_dias,))
+    rec_d = np.broadcast_to(np.asarray(recorte_largas, dtype=float), (n_dias,))
     n_horas = n_dias * 24
     n_lleg = rng.poisson(np.clip(lam_lleg, 0, None))                       # llegadas por dia
     por_perfil = rng.multinomial(n_lleg, prob_lleg)                        # (dias, perfiles)
     n_hosp = rng.binomial(por_perfil, p_eff)                               # cuantos de cada celda iran a cama
+    cambia_lleg = factor_lleg is not None and rng_extra is not None and bool(np.any(np.asarray(factor_lleg) != 1.0))
+    if cambia_lleg:
+        f_ll = np.asarray(factor_lleg, dtype=float)
+        n_lleg = np.round(n_lleg * f_ll)                                   # las llegadas que se ven y la carga del dia
+        por_perfil = por_perfil * f_ll[:, np.newaxis]                      # solo se usa para la composicion
     # multiplicador de espera por carga del dia (seccion 1b): centrado, z acotado al soporte historico
     if AJUSTE_CARGA:
         mult_carga = np.exp(BETA_CARGA * np.clip((n_lleg - MU_CARGA) / SD_CARGA, -3.0, 3.0)) / CENTRO_CARGA
@@ -306,11 +356,31 @@ def _una_repeticion(lam_lleg, p_eff, rng, ajuste_estancia, ajuste_espera, n0_cam
         m = perf == p
         g, r = PERFILES_LLEG[p]
         hora[m], espera[m], estancia[m], sexo_ag[m] = trayectoria_para(g, r, rng, int(m.sum()))
-    espera = espera * mult_carga[dia_lleg] * ajuste_espera
-    estancia = estancia * ajuste_estancia
-    if recorte_largas:
+    if cambia_lleg:
+        nuevos = np.arange(total) >= q0_cola                               # la cola sembrada nunca se quita
+        ff = f_ll[dia_lleg]
+        cae = nuevos & (ff < 1.0) & (rng_extra.random(total) > ff)         # menos demanda: se quitan al azar
+        mas = rng_extra.poisson(n_hosp[d_idx, p_idx] * np.clip(f_ll[d_idx] - 1.0, 0.0, None))
+        dia_e, perf_e = np.repeat(d_idx, mas), np.repeat(p_idx, mas)       # mas demanda: pacientes nuevos, sorteados aparte
+        hora_e, espera_e = np.empty(len(dia_e)), np.empty(len(dia_e))
+        estancia_e, sexo_e = np.empty(len(dia_e)), np.empty(len(dia_e), dtype=object)
+        for p in np.unique(perf_e):
+            m = perf_e == p
+            g, r = PERFILES_LLEG[p]
+            hora_e[m], espera_e[m], estancia_e[m], sexo_e[m] = trayectoria_para(g, r, rng_extra, int(m.sum()))
+        k = ~cae
+        dia_lleg = np.concatenate([dia_lleg[k], dia_e]); perf = np.concatenate([perf[k], perf_e])
+        hora = np.concatenate([hora[k], hora_e]); espera = np.concatenate([espera[k], espera_e])
+        estancia = np.concatenate([estancia[k], estancia_e]); sexo_ag = np.concatenate([sexo_ag[k], sexo_e])
+        total = len(dia_lleg)
+    espera = espera * mult_carga[dia_lleg] * aj_esp[dia_lleg]
+    if acoplar_estancia:
+        # 19-nov-2026 (supuesto del dashboard, no calibrado): si las camas se quedan ocupadas mas tiempo, la espera sube en la misma proporcion
+        espera = espera * aj_est[dia_lleg]
+    estancia = estancia * aj_est[dia_lleg]
+    if rec_d.any():
         m_larga = estancia > UMBRAL_LARGA_H
-        estancia[m_larga] *= 1.0 - recorte_largas
+        estancia[m_larga] *= 1.0 - rec_d[dia_lleg][m_larga]
     # la cola sembrada ya esta esperando en el instante 0: su "llegada" es la hora 0 del dia 0
     hora[:q0_cola] = 0.0
 
@@ -330,10 +400,10 @@ def _una_repeticion(lam_lleg, p_eff, rng, ajuste_estancia, ajuste_espera, n0_cam
         m = idx0 == i
         g, r = scm.PERFILES_HIST[i]
         est0[m] = scm.horas_para(g, r, rng, int(m.sum()))
-    est0 = est0 * ajuste_estancia
-    if recorte_largas:
+    est0 = est0 * aj_est[0]
+    if rec_d[0]:
         m0_larga = est0 > UMBRAL_LARGA_H
-        est0[m0_larga] *= 1.0 - recorte_largas
+        est0[m0_larga] *= 1.0 - rec_d[0]
     dur0 = np.clip(np.ceil(est0 / 24.0).astype(int), 1, None)
     nino0 = np.isin(g0, scm.GRUPOS_NINOS)
 
@@ -410,6 +480,17 @@ def _una_repeticion(lam_lleg, p_eff, rng, ajuste_estancia, ajuste_espera, n0_cam
         np.add.at(dq2, (q_out[con_espera], perf[con_espera], sx_idx[con_espera]), -1.0)
         comp["esperando"] += np.cumsum(dq2, axis=0)[:n_horas].reshape(n_dias, 24, n_perf, 2).mean(axis=1)
 
+    if registro is not None:
+        # 19-nov-2026: los pacientes de ESTA repeticion (para mostrar ejemplos en el dashboard). Solo copia lo ya sorteado: no consume numeros aleatorios
+        # del motor (el sexo de los sembrados en cama, que no tienen trayectoria propia, sale de un generador aparte).
+        perf0_r = np.array([_map.get(scm.PERFILES_HIST[i], 0) for i in idx0], dtype=int)
+        sexo0 = (np.random.default_rng(20261119).random(n0_camas) >= SEXO_LLEG_VEC[perf0_r]).astype(int)      # 0 = mujer, 1 = hombre (misma convencion que SEXO_IDX)
+        registro.update({
+            "perfiles": [[g, r] for g, r in PERFILES_LLEG],
+            "nuevos": {"perf": perf.tolist(), "sexo": (sexo_ag != "Mujer").astype(int).tolist(), "t_lleg_h": np.round(t_lleg_h, 1).tolist(),
+                       "espera_h": np.round(espera, 1).tolist(), "estancia_h": np.round(estancia, 1).tolist(), "dia_cama": dia_cama.tolist(),
+                       "dia_alta": dia_alta.tolist(), "cola_sembrada": (np.arange(total) < q0_cola).astype(int).tolist()},
+            "sembrados": {"perf": perf0_r.tolist(), "sexo": sexo0.tolist(), "dur_dias": dur0.tolist()}})
     return {"llegadas": n_lleg.astype(float), "ingresos_cama": ingresos, "altas": altas, "cola": cola,
             "total": censo_total, "ninos": censo_ninos, "adultos": censo_adultos}
 
@@ -578,7 +659,7 @@ def _prob_lleg_ajustada(mezcla_edad=None, mezcla_ruta=None):
 
 
 # Adelantar altas a la manana (Etapa 5): efecto del escenario A YA MEDIDO (src/simulacion_altas.py,
-# CLAUDE.md 6b): adelantar el 30 % de las altas de la tarde evita ~3 % del exceso de espera (estimacion
+# docs/CONTEXTO_TECNICO.md 6b): adelantar el 30 % de las altas de la tarde evita ~3 % del exceso de espera (estimacion
 # central; cota maxima 8 %; con el 100 %, cota 27 %). Se aplica como reduccion proporcional de la espera
 # sorteada: 0,1 % de espera menos por cada punto de adelanto (30 % -> -3 %, 100 % -> -10 %, dentro de las
 # cotas). Es la ESTIMACION del escenario A inyectada al motor, no mecanica interna (las esperas del motor
@@ -589,7 +670,7 @@ EFECTO_ADELANTO_POR_PUNTO = 0.001
 def simular_integral(corte, dias, escenario="historico", ajuste_llegadas=1.0, ajuste_estancia=1.0,
                      ajuste_espera=1.0, n_rep=N_REP, semilla=SEMILLA, modelos=None, casos=None,
                      con_composicion=False, recorte_largas_pct=0.0, adelanto_altas_pct=0.0,
-                     mezcla_edad=None, mezcla_ruta=None):
+                     mezcla_edad=None, mezcla_ruta=None, cambios=None, acoplar_estancia=False, registrar_rep=None):
     """Simula `dias` dias despues de `corte`. Devuelve (fechas, salidas, info) donde salidas es un dict
     {serie: array (n_rep, dias)} con las 7 series de SERIES_SALIDA e info trae kappa y las siembras.
 
@@ -614,7 +695,13 @@ def simular_integral(corte, dias, escenario="historico", ajuste_llegadas=1.0, aj
     Palancas de hallazgos (Etapa 5, todas neutras por defecto — con 0/None el motor es identico):
     recorte_largas_pct (0-50): R7 — reduce ese % SOLO a las estancias de mas de 14 dias (gestion de casos).
     adelanto_altas_pct (0-100): escenario A — reduce la espera 0,1 % por punto (estimacion medida, ver arriba).
-    mezcla_edad / mezcla_ruta: {categoria: proporcion} sustituyen los marginales de la mezcla de LLEGADAS."""
+    mezcla_edad / mezcla_ruta: {categoria: proporcion} sustituyen los marginales de la mezcla de LLEGADAS.
+
+    cambios (19-nov-2026, cambios a mitad de la simulacion): lista de {"dia": k, "valores": {...}} donde `valores` puede traer
+    ajuste_llegadas, ajuste_estancia, ajuste_espera, recorte_largas_pct y adelanto_altas_pct. Desde el dia k (indice, 0 = primer dia
+    simulado) esos valores sustituyen a los de los argumentos; se aplican segun el dia de llegada del paciente, asi lo que ya paso
+    no cambia y los numeros aleatorios son los mismos que sin los cambios (la diferencia entre las dos corridas es solo el cambio).
+    No cubre la mezcla de estres ni los casos externos, que valen para todo el periodo. Sin `cambios`, el motor es identico."""
     rng = np.random.default_rng(semilla)
     corte = pd.Timestamp(corte)
     modelos = [m for m in (modelos or ()) if m in MODELOS_DISPONIBLES]
@@ -628,6 +715,20 @@ def simular_integral(corte, dias, escenario="historico", ajuste_llegadas=1.0, aj
     fechas = pron_lleg.index
     lam_lleg = pron_lleg.values
     kappa = float(pron_ing.values.sum() / max(lam_lleg.sum() * P_MEDIA, 1e-9))
+    factor_lleg, rng_extra = None, np.random.default_rng(semilla + 91)
+    if cambios:      # los valores que cambian a mitad de la simulacion: un vector por dia (kappa se queda con el de la corrida sin cambios)
+        def _vec(clave, base):
+            v = np.full(dias, float(base))
+            for c in sorted(cambios, key=lambda c: c["dia"]):
+                if clave in c["valores"]:
+                    v[int(np.clip(c["dia"], 0, dias)):] = c["valores"][clave]
+            return v
+        v_lleg = _vec("ajuste_llegadas", ajuste_llegadas)
+        factor_lleg = v_lleg / max(ajuste_llegadas, 1e-9)
+        ajuste_estancia = _vec("ajuste_estancia", ajuste_estancia)
+        ajuste_espera = _vec("ajuste_espera", ajuste_espera)
+        recorte_largas_pct = _vec("recorte_largas_pct", recorte_largas_pct)
+        adelanto_altas_pct = _vec("adelanto_altas_pct", adelanto_altas_pct)
     p_eff = np.clip(kappa * P_CAMA_VEC, 0.0, 1.0)
 
     censo_real = scm.ocup_d["mean"].reindex([corte]).iloc[0]
@@ -647,18 +748,37 @@ def simular_integral(corte, dias, escenario="historico", ajuste_llegadas=1.0, aj
     ajuste_espera_total = ajuste_espera * (1.0 - EFECTO_ADELANTO_POR_PUNTO * adelanto_altas_pct)
     recorte = np.clip(recorte_largas_pct / 100.0, 0.0, 0.9)
     out = {s: np.zeros((n_rep, dias)) for s in SERIES_SALIDA}
+    registro_cap = None
     for r in range(n_rep):
+        reg = {} if (registrar_rep is not None and r == registrar_rep) else None
         rep = _una_repeticion(lam_lleg, p_eff, rng, ajuste_estancia, ajuste_espera_total, n0, q0, comp=comp,
-                              prob_lleg=prob_lleg, recorte_largas=recorte)
+                              prob_lleg=prob_lleg, recorte_largas=recorte, factor_lleg=factor_lleg, rng_extra=rng_extra, acoplar_estancia=acoplar_estancia, registro=reg)
+        if reg is not None:
+            registro_cap = reg
         for s in SERIES_SALIDA:
             out[s][r] = rep[s]
     info = {"kappa": kappa, "n0_camas": n0, "q0_cola": q0,
+            # ingresos a cama por franja horaria (reparto con la distribucion horaria REAL, por dia de la semana)
+            "ingresos_franja": repartir_por_franja(fechas, out["ingresos_cama"]),
+            # llegadas al hospital por franja (hora real de llegada, por dia de la semana)
+            "llegadas_franja": repartir_por_franja(fechas, out["llegadas"], REPARTO_LLEGADA),
             "ingresos_esperados_dia": float(pron_ing.values.mean()), "llegadas_esperadas_dia": float(lam_lleg.mean()),
             "modelos": modelos, "casos": casos, "factor_llegadas": f_lleg, "factor_ingresos": f_ing}
     if comp is not None:
         info["perfiles"] = [[g, r] for g, r in PERFILES_LLEG]
         info["composicion"] = {e: np.round(v / n_rep, 2).tolist() for e, v in comp.items()}
+    if registro_cap is not None:
+        info["pacientes"] = registro_cap          # una repeticion con sus pacientes (ejemplo para el dashboard)
     return fechas, out, info
+
+
+def ingresos_por_franja_horario(horas_idx, out):
+    """Vista horaria: ingresos a cama medios por franja (suma de las horas de cada franja, promedio de repeticiones).
+    Devuelve {franja: array por dia calendario}; mismo desglose que info["ingresos_franja"] del motor diario."""
+    ing = out["ingresos_cama"].mean(axis=0)
+    fr = franja_de_hora(horas_idx.hour.to_numpy())
+    dia = horas_idx.normalize()
+    return {n: pd.Series(ing * (fr == i), index=horas_idx).groupby(dia).sum() for i, n in enumerate(NOMBRES_FRANJA)}
 
 
 def percentiles(salidas, pcts=(10, 50, 90)):

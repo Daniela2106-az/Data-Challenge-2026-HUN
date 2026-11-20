@@ -22,7 +22,7 @@ dash.register_page(__name__, path="/altas", name="Llegada y altas", title="Hora 
 
 TITULO = "Las altas salen por la tarde, y quien llega en la mañana espera hasta entonces"
 OLAS = set(range(15, 18)) | set(range(20, 24))            # 15-17 h y 20-23 h
-# Que pasaria si se adelantan las altas (CLAUDE.md 6b, simulacion de altas): cifras ya publicadas
+# Que pasaria si se adelantan las altas (docs/CONTEXTO_TECNICO.md 6b, simulacion de altas): cifras ya publicadas
 ESCENARIO = [
     ("5 camas", "Libres al mediodía", "Si el 30 % de las altas de la tarde saliera entre las 9 y las 12 h."),
     ("3 a 8 %", "Menos exceso de espera", "Estimación y tope máximo. Ayuda, pero no resuelve las esperas de varios días."),
@@ -59,26 +59,26 @@ def _asignacion():
 
 
 def _laminas_extra():
-    out, t, h, a = [], _tipos(), _horas(), _asignacion()
+    out, t, h, a = {}, _tipos(), _horas(), _asignacion()
     if t is not None and {"dia habil", "festivo entre semana"} <= set(t.index):
         hab, fes, fin = t.altas_por_100_camas["dia habil"], t.altas_por_100_camas["festivo entre semana"], t.altas_por_100_camas["fin de semana"]
-        out.append(lamina(4, f"En los festivos se dan {coma(100 * (1 - fes / hab), 0)} % menos altas que en un día hábil",
+        out[4] = (lamina(4, f"En los festivos se dan {coma(100 * (1 - fes / hab), 0)} % menos altas que en un día hábil",
                           f"Altas por cada 100 camas: **{coma(hab, 0)}** en un día hábil, **{coma(fin, 0)}** en fin de semana y **{coma(fes, 0)}** en un festivo entre semana. "
                           "Es probable que las camas que no se liberan esos días lleguen ocupadas al lunes. El efecto estimado en camas es pequeño (1 a 2 camas equivalentes), pero es de bajo costo.",
                           grafico("alt-tipodia", alto=300), dato=(f"−{coma(100 * (1 - fes / hab), 0)} %", "de altas en festivos frente a un día hábil"), invertida=True))
     if a is not None and {8, 16} <= set(a.hora_llegada):
         p8, p16 = a.set_index("hora_llegada").pct_cama_dia_siguiente_o_mas[8], a.set_index("hora_llegada").pct_cama_dia_siguiente_o_mas[16]
-        out.append(lamina(6, f"De quienes llegan a las 16 h, {coma(p16, 0)} % recibe la cama al día siguiente; a las 8 h, {coma(p8, 0)} %",
+        out[6] = (lamina(6, f"De quienes llegan a las 16 h, {coma(p16, 0)} % recibe la cama al día siguiente; a las 8 h, {coma(p8, 0)} %",
                           "Porcentaje de pacientes hospitalizados que recibe la cama un día después de llegar o más tarde, según la hora de llegada. "
                           "Solo cuenta a quienes esperaron cama. Es una asociación: a esa hora también cambian el tipo de paciente y la carga.",
                           grafico("alt-diasig", alto=300), dato=(f"+{coma(p16 - p8, 0)} puntos", "entre llegar a las 16 h y a las 8 h")))
     if h is not None:
         mx, mn = h.loc[h.ocupacion_base.idxmax()], h.loc[h.ocupacion_base.idxmin()]
-        out.append(lamina(5, f"La ocupación baja de {coma(mx.ocupacion_base, 0)} a {coma(mn.ocupacion_base, 0)} camas después de las altas de la tarde",
+        out[5] = (lamina(5, f"La ocupación baja de {coma(mx.ocupacion_base, 0)} a {coma(mn.ocupacion_base, 0)} camas después de las altas de la tarde",
                           f"Camas ocupadas en promedio según la hora del día. Llega a su punto más alto a las **{int(mx.hora)} h** y al más bajo a las **{int(mn.hora)} h**. "
                           "Aun en el momento más vacío quedan unas 95 camas ocupadas, de las 106 que informó el hospital.",
                           grafico("alt-ocuphora", alto=300), dato=(f"{coma(mx.ocupacion_base - mn.ocupacion_base, 0)} camas", "de diferencia entre la hora más llena y la más vacía")))
-    return out
+    return [out[k] for k in sorted(out)]   # siempre en orden: 04, 05, 06
 
 
 def layout():

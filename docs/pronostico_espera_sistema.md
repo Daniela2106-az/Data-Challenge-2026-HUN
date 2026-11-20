@@ -28,7 +28,7 @@ Mejora frente a dar el mismo rango a todos (IC 95 % por semanas):
 | 12 h | 5,47 | 5,22 | **3,48 (−36 %)** | 3,60 |
 | 24 h | 4,53 | 5,22 | **4,11 (−9 %)** | 4,05 |
 
-El modelo de flujo es: cola de ahora + llegadas esperadas − camas asignadas esperadas, por hora de la semana. **Aquí sí le gana a la persistencia**, a diferencia de la proyección de camas a 24 h (`CLAUDE.md` 6b).
+El modelo de flujo es: cola de ahora + llegadas esperadas − camas asignadas esperadas, por hora de la semana. **Aquí sí le gana a la persistencia**, a diferencia de la proyección de camas a 24 h (`docs/CONTEXTO_TECNICO.md` 6b).
 
 **1b. Ley de Little:** se hospitalizan 0,85 llegadas por hora y la cola media es 25,8, así que la **espera media esperada es 30,4 h**, frente a 30,5 h reales. La relación se cumple casi exacta. Un error de 3 pacientes en la cola equivale a unas 3,5 h de espera media (3 ÷ 0,85), sobre una media de 30 h.
 

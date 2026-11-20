@@ -2,7 +2,7 @@
 dashboard/pages/factores.py  -  pagina «Qué influye en la espera» (13-nov-2026; pagina 2.5 de docs/estructura_dashboard.md; formato de presentacion)
 Cuanto de la espera de cama se explica con lo que se sabe del paciente (poco) y que factores pesan.
 
-DATOS  Peso de cada factor y demas cifras: ya publicadas (CLAUDE.md 6b y 4.10, docs/HALLAZGOS.md 4.5, docs/modelo_espera.md), escritas aqui
+DATOS  Peso de cada factor y demas cifras: ya publicadas (docs/CONTEXTO_TECNICO.md 6b y 4.10, docs/HALLAZGOS.md 4.5, docs/modelo_espera.md), escritas aqui
        como constantes. La grafica por tipo de visita y edad lee espera_cubo.csv (dashboard/preparar_datos.py).
 """
 import sys
@@ -13,7 +13,7 @@ import plotly.graph_objects as go
 from dash import Input, Output, callback, html
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from componentes import (AZUL, PIZARRA, TENUE, aviso_datos, bloque, cifra, coma, dato, estilo, grafico, hecho, lamina, laminas_grupo, leer,  # noqa: E402
+from componentes import (AZUL, PIZARRA, TENUE, aviso_datos, bloque, cifra, coma, dato, estilo, filtro, grafico, hecho, lamina, laminas_grupo, leer,  # noqa: E402
                          mensaje, metodo, pagina, portada)
 
 from componentes import frase, tarjetas, tarjeta_grafica  # noqa: E402,F401
@@ -33,7 +33,7 @@ OTROS = [
     ("4 de cada 10", "Falsas alarmas al predecir por paciente", "Un modelo que avise al llegar quién esperará más de un día marcaría al "
                                                                "44 % de los pacientes."),
 ]
-# (comparacion, cambio en la espera con todo lo demas igual, en %) - efectos del modelo (CLAUDE.md 6b y 4.10)
+# (comparacion, cambio en la espera con todo lo demas igual, en %) - efectos del modelo (docs/CONTEXTO_TECNICO.md 6b y 4.10)
 EFECTOS = [("Mujer, frente a hombre", 27), ("Cada escalón más de carga al llegar", 2.5), ("Visita ambulatoria, frente a urgencias", -31),
            ("«Treatment urgency», frente a urgencias", -39)]
 TIPOS = ["Urgencias", "Ambulatorio", "Treatment urgency"]
@@ -59,6 +59,13 @@ def _lamina_carga():
                    invertida=True)]
 
 
+# vistas del grafico de efectos: (texto del boton, prefijos de las filas que muestra)
+VISTAS_OR = {"edad": ("Grupos de edad", ("Grupo de edad",)),
+             "horario": ("Horarios", ("Mañana", "Tarde", "Noche", "Llegadas 6 h")),
+             "ruta": ("Rutas de entrada", ("Treatment", "Ambulatorio")),
+             "sexo": ("Sexo", ("Mujer",))}
+
+
 def _or():
     """Efectos del modelo explicativo con su intervalo de confianza del 95 % (datos/tablas_dashboard/efectos_espera_or.csv, de docs/modelo_espera.md), o None."""
     t = leer("efectos_espera_or.csv")
@@ -74,7 +81,8 @@ def _lamina_or():
     return [lamina(5, "Con lo demás igual, esperar más de un día es más probable por la mañana, entre los mayores y entre las mujeres",
                    "Cada punto dice cuántas veces más (o menos) probable es esperar más de un día frente al grupo de referencia, con lo demás igual. La línea fina es el intervalo de "
                    "confianza del 95 %. **A la derecha del 1, más espera; a la izquierda, menos.** Los niños y las visitas ambulatorias esperan mucho menos.",
-                   grafico("fac-or", alto=420), dato=dato_)]
+                   grafico("fac-or", alto=300), dato=dato_,
+                   controles=filtro("fac-or-vista", "Comparación", [(k, v[0]) for k, v in VISTAS_OR.items()], "edad"))]
 
 
 def layout():
@@ -115,11 +123,11 @@ def layout():
             "de `espera_cubo.csv`.",
             "Que un factor pese no significa que cause la espera. El **diagnóstico es un dato administrativo**, se registra tarde y puede "
             "venir del registro duplicado. El grupo «treatment urgency» es una etiqueta de la base, no un servicio confirmado por el hospital.",
-            "Fuente: CLAUDE.md 6b y 4.10 · docs/HALLAZGOS.md 4.5 · docs/modelo_espera.md · espera_cubo.csv (dashboard/preparar_datos.py).", ruta="/factores"))
+            "Fuente: docs/CONTEXTO_TECNICO.md 6b y 4.10 · docs/HALLAZGOS.md 4.5 · docs/modelo_espera.md · espera_cubo.csv (dashboard/preparar_datos.py).", ruta="/factores"))
 
 
 @callback(Output("fac-peso", "figure"), Output("fac-grupos", "figure"), Output("fac-dato", "children"), Output("fac-efectos", "figure"),
-          Output("fac-carga", "figure"), Output("fac-or", "figure"), Input("theme-store", "data"))
+          Output("fac-carga", "figure"), Input("theme-store", "data"))
 def figuras(tema):
     nombres, puntos = [f for f, _ in FACTORES], [p for _, p in FACTORES]
     peso = go.Figure(go.Bar(y=nombres, x=puntos, orientation="h", marker_color=[AZUL] * 3 + [TENUE] * 5,
@@ -163,15 +171,21 @@ def figuras(tema):
         estilo(carga, tema, leyenda=True).update_yaxes(ticksuffix=" h", range=[0, t.p90.max() * 1.2])
         carga.update_layout(barmode="group", bargap=0.3, bargroupgap=0.06)
         carga.update_xaxes(title_text="Pacientes que llegaron en las 6 horas previas (de menos a más)")
+    return peso, grupos, dato(f"{coma(tipo['Urgencias'], 0)} h", "de espera mediana al entrar por urgencias"), efectos, carga
+
+
+@callback(Output("fac-or", "figure"), Input("fac-or-vista", "value"), Input("theme-store", "data"))
+def figura_or(vista, tema):
     orf, o = go.Figure(), _or()
-    if o is not None:
-        o = o.sort_values("razon")
+    if o is not None and vista in VISTAS_OR:
+        o = o[o.variable.str.startswith(VISTAS_OR[vista][1])].sort_values("razon")
         orf.add_trace(go.Scatter(x=o.razon, y=o.variable, mode="markers", marker=dict(size=9, color=[AZUL if v > 1 else TENUE for v in o.razon]),
                                  error_x=dict(type="data", symmetric=False, array=o.ic_alto - o.razon, arrayminus=o.razon - o.ic_bajo, thickness=1.5, width=4, color="#8a97a6"),
                                  customdata=list(zip(o.ic_bajo, o.ic_alto)),
                                  hovertemplate="<b>%{y}</b><br>%{x:.2f} veces (intervalo %{customdata[0]:.2f} a %{customdata[1]:.2f})<extra></extra>"))
         orf.add_vline(x=1, line_dash="dash", line_color=TENUE)
-        estilo(orf, tema).update_xaxes(type="log", tickvals=[0.15, 0.25, 0.5, 1, 1.5, 2], ticktext=["0,15", "0,25", "0,5", "1", "1,5", "2"], title_text="Veces más (o menos) probable esperar más de un día")
+        estilo(orf, tema).update_xaxes(type="log", range=[-0.9, 0.45], tickvals=[0.15, 0.25, 0.5, 1, 1.5, 2, 2.5], ticktext=["0,15", "0,25", "0,5", "1", "1,5", "2", "2,5"],
+                                       title_text="Veces más (o menos) probable esperar más de un día")
         orf.update_yaxes(automargin=True)
         orf.update_layout(margin=dict(l=10, r=20, t=10, b=44))
-    return peso, grupos, dato(f"{coma(tipo['Urgencias'], 0)} h", "de espera mediana al entrar por urgencias"), efectos, carga, orf
+    return orf

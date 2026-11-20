@@ -216,7 +216,7 @@ def evaluar_alerta(paq, d, te):
         a = p >= corte
         filas.append({"corte": f"probabilidad >= {corte:.0%}", "alertas_por_dia": round(a.sum() / dias, 2),
                       "precision_pct": round(100 * y[a].mean(), 1) if a.any() else np.nan, "deteccion_pct": round(100 * a[y].mean(), 1), "auc": round(auc(y, p), 3)})
-    # el mismo volumen de alertas que la regla de alertar a todos los que llevan 24 h (CLAUDE.md 6b, alerta C)
+    # el mismo volumen de alertas que la regla de alertar a todos los que llevan 24 h (docs/CONTEXTO_TECNICO.md 6b, alerta C)
     n24 = int((sub.espera_cama_h > 24).sum())
     top = np.argsort(-p)[:n24]
     a = np.zeros(len(p), bool)

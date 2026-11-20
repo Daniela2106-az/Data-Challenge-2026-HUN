@@ -57,7 +57,7 @@ for _d in (PROC, TABLAS, GRAFICOS, EXCEL):
 # y al final (las etapas abiertas a la fecha de extraccion se quitaron). Fuera de este
 # rango la ocupacion se marca como poco confiable.
 OCUP_DESDE = "2023-02-01"
-OCUP_HASTA = "2026-04-10"     # periodo confiable hasta el 9-abr-2026 (CLAUDE.md 4.9)
+OCUP_HASTA = "2026-04-10"     # periodo confiable hasta el 9-abr-2026 (docs/CONTEXTO_TECNICO.md 4.9)
 UMBRAL_ESPERA_H = 24
 DIAS = ["lunes", "martes", "miercoles", "jueves", "viernes", "sabado", "domingo"]
 
@@ -562,7 +562,7 @@ DICC = {
     "ini_hosp / fin_hosp": "inicio de la primera HOSP y fin de la ultima HOSP del episodio (solo hospitalizados)",
     "estancia_gemela / estancia_unica": "gemela = otro episodio tiene el mismo inicio y fin de cama (replica entre dos personas); "
                                         "unica = se queda el de menor visit_occurrence_id y los no hospitalizados. "
-                                        "Espera de cama, ocupacion e ingresos cuentan solo estancias unicas (CLAUDE.md 4.6)",
+                                        "Espera de cama, ocupacion e ingresos cuentan solo estancias unicas (docs/CONTEXTO_TECNICO.md 4.6)",
     "ocup_hosp": "pacientes en cama en el momento de la llegada (cada estancia cuenta una vez)",
     "ocup_tu": "pacientes en urgencias con TU medida en el momento de la llegada (se queda corta)",
     "llegadas_6h_previas / 24h": "llegadas en las 6 / 24 horas anteriores",

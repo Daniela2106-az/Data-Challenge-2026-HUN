@@ -5,9 +5,9 @@
 Código: `src/modelo_espera_explicativo.py` (una regresión logística ajustada a mano con Newton-Raphson/IRLS, sin `scikit-learn` ni `statsmodels` — mismo estilo que `ols()` en `src/dependencia_carga.py` y `src/altas_y_factores.py`). Tablas en `resultados/tablas/modelo_espera_*.csv`.
 
 ## Cómo se midió
-- **Datos:** `tabla_episodios.parquet`, filtrado a `estancia_unica & hospitalizado & espera_cama_h` medida → **24.990 episodios**. Cifras de control: mediana 18,8 h, p90 73,3 h, 43,9 % > 24 h — coinciden con `CLAUDE.md` (18,6 / 73,9 / 43,7 %).
+- **Datos:** `tabla_episodios.parquet`, filtrado a `estancia_unica & hospitalizado & espera_cama_h` medida → **24.990 episodios**. Cifras de control: mediana 18,8 h, p90 73,3 h, 43,9 % > 24 h — coinciden con `docs/CONTEXTO_TECNICO.md` (18,6 / 73,9 / 43,7 %).
 - **Objetivo:** `espera_mas_24h` (¿la espera de cama superó las 24 h?).
-- **Tres tramos temporales** (nunca al azar): entrenamiento 2023-02-01 a 2025-06-30 (17.389 episodios), validación 2025-07-01 a 2025-12-31 (3.603), **prueba** 2026-01-01 a **2026-04-09** (1.827). La ficha original pedía prueba hasta 2026-05-31; se corta en el 9-abr-2026 porque el registro de etapas se degrada desde esa fecha (`CLAUDE.md` 4.9) — usar datos posteriores habría contaminado la evaluación.
+- **Tres tramos temporales** (nunca al azar): entrenamiento 2023-02-01 a 2025-06-30 (17.389 episodios), validación 2025-07-01 a 2025-12-31 (3.603), **prueba** 2026-01-01 a **2026-04-09** (1.827). La ficha original pedía prueba hasta 2026-05-31; se corta en el 9-abr-2026 porque el registro de etapas se degrada desde esa fecha (`docs/CONTEXTO_TECNICO.md` 4.9) — usar datos posteriores habría contaminado la evaluación.
 - **Variables permitidas** (se conocen al llegar; nunca `categoria_dx`, `dx_*`, `n_lab*`, `horas_*`, `ruta*` — se registran después y filtran la respuesta): `franja`, `dia_semana_num`, `mes`, `festivo`, `grupo_edad`, `sexo`, `tipo_visita`, `ocup_hosp`, `ocup_tu`, `llegadas_6h_previas`, `llegadas_24h_previas`, `n_episodios_previos`, `reingreso_72h`, `reingreso_30d`. Categóricas como variables dummy (categoría de referencia fijada con el tramo de entrenamiento); numéricas estandarizadas con media/desvío de entrenamiento (nunca con información de validación o prueba). Dos variables de la lista de la ficha se dejaron fuera por ser redundantes con otras ya incluidas: `edad` continua (ya está `grupo_edad`) y `dia_no_habil` (ya es `fin_de_semana OR festivo`, y `festivo` + los indicadores de día de la semana cubren lo mismo).
 
 ## 1. Modelo base — qué factores pesan (38 parámetros, razones de probabilidades)
@@ -20,7 +20,7 @@ Código: `src/modelo_espera_explicativo.py` (una regresión logística ajustada 
 | Grupo de edad 30-44 vs. 15-29 | 1,60 | 1,45–1,77 | |
 | Grupo de edad 60-74 vs. 15-29 | 1,53 | 1,38–1,70 | |
 | Grupo de edad 75+ vs. 15-29 | 1,52 | 1,36–1,70 | |
-| **Mujer vs. hombre** | **1,37** | 1,28–1,46 | coherente con `CLAUDE.md` 4.10 (+27 % en el modelo lineal) |
+| **Mujer vs. hombre** | **1,37** | 1,28–1,46 | coherente con `docs/CONTEXTO_TECNICO.md` 4.10 (+27 % en el modelo lineal) |
 | Llegadas 6 h previas (por 1 desvío) | 1,25 | 1,18–1,32 | congestión reciente sí pesa |
 | Noche (18-23h) vs. madrugada | 1,20 | 1,04–1,39 | |
 | Ocupación en TU al llegar | 1,08 | 1,03–1,13 | |
@@ -28,11 +28,11 @@ Código: `src/modelo_espera_explicativo.py` (una regresión logística ajustada 
 | Ocupación en cama al llegar | 1,06 | 1,02–1,10 | |
 | Llegadas 24 h previas | 0,97 | 0,92–1,02 | **no significativo** (p=0,22) |
 | reingreso_72h | 0,85 | 0,73–1,00 | p=0,045, dirección inesperada (ver límites) |
-| Treatment urgency vs. urgencias | 0,65 | 0,57–0,73 | coherente con `CLAUDE.md` 6b (−39 %) |
+| Treatment urgency vs. urgencias | 0,65 | 0,57–0,73 | coherente con `docs/CONTEXTO_TECNICO.md` 6b (−39 %) |
 | Grupo de edad 5-14 vs. 15-29 | 0,64 | 0,56–0,72 | |
 | **Grupo de edad 0-4 vs. 15-29** | **0,40** | 0,35–0,46 | coherente con `docs/perfiles_pacientes.md` ("los niños esperan mucho menos") |
-| Ambulatorio vs. urgencias | 0,16 | 0,13–0,19 | coherente con `CLAUDE.md` 6b (−31 %) |
-| `mes_*`, `dia_semana_num_*` | — | — | casi ninguno significativo — coherente con "calendario ~0" (`CLAUDE.md` 6b) |
+| Ambulatorio vs. urgencias | 0,16 | 0,13–0,19 | coherente con `docs/CONTEXTO_TECNICO.md` 6b (−31 %) |
+| `mes_*`, `dia_semana_num_*` | — | — | casi ninguno significativo — coherente con "calendario ~0" (`docs/CONTEXTO_TECNICO.md` 6b) |
 
 Tabla completa (38 variables): `resultados/tablas/modelo_espera_coeficientes_base.csv`. Cada coeficiente es **validación cruzada con hallazgos ya documentados por otros caminos** (factores de la espera de `altas_y_factores.py`, perfiles de A1): da confianza de que el modelo no está inventando nada, solo cuantificando con más precisión patrones ya conocidos.
 
@@ -67,7 +67,7 @@ Tabla completa: `resultados/tablas/modelo_espera_mejoras.csv`.
 
 ## 4. Techo real con "trampa" (extensión exploratoria, nunca usada en el modelo final)
 
-`categoria_dx` (A3, 19 grupos) se registra **después** de la llegada (88 % tras las primeras 2 h, `CLAUDE.md`) y en parte depende de cuánto duró la espera (causalidad inversa parcial) — por eso nunca entra al modelo "al llegar". Se probó aparte, solo para medir el techo máximo si se permitiera usarla:
+`categoria_dx` (A3, 19 grupos) se registra **después** de la llegada (88 % tras las primeras 2 h, `docs/CONTEXTO_TECNICO.md`) y en parte depende de cuánto duró la espera (causalidad inversa parcial) — por eso nunca entra al modelo "al llegar". Se probó aparte, solo para medir el techo máximo si se permitiera usarla:
 
 | Modelo | AUC val | Brier val |
 |---|---|---|

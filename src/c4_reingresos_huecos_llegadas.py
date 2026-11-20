@@ -10,7 +10,7 @@ PREGUNTAS
      y cuanto cambian los niveles diarios si se quitan?
 
 LIMITES
-  - Replica de llegada = cota inferior: solo pares que empiezan en el MISMO segundo (v. CLAUDE.md 4.6).
+  - Replica de llegada = cota inferior: solo pares que empiezan en el MISMO segundo (v. docs/CONTEXTO_TECNICO.md 4.6).
   - Periodo confiable: 1-feb-2023 a 9-abr-2026, sin el 28 y 29 de marzo de 2026.
   - El reingreso se mide con el fin registrado del episodio anterior; si ese fin es un minimo (estado no medida), el
     intervalo real hasta la nueva llegada es menor o igual al calculado.

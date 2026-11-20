@@ -4,7 +4,7 @@ estimador_tiempo_restante.py  -  version 7 (14-nov-2026)
  (conversacion sobre el salto de incoherencia entre landmarks) que entrenar con enero-abril de 2026 produce saltos grandes e incoherentes entre
  landmarks vecinos (ej. landmark 5h y 6h, con el mismo paciente, llegaban a una espera total implicita distinta por ~14h) -- NO por los laboratorios
  (se descarto moviendo HORAS_LAB, el salto seguia igual), sino porque el peso a lo reciente (VIDA_MEDIA_DIAS) concentra el entrenamiento en los
- ultimos meses, y ya desde enero de 2026 el registro de las etapas TU viene cayendo (-13% a -17% frente al año anterior, CLAUDE.md 4.9), antes del
+ ultimos meses, y ya desde enero de 2026 el registro de las etapas TU viene cayendo (-13% a -17% frente al año anterior, docs/CONTEXTO_TECNICO.md 4.9), antes del
  quiebre fuerte de abril. Prueba de precision (Brier score, holdout oct-dic 2025 que ninguna variante entreno): excluir enero-abril de 2026 no
  empeora la precision -- en landmarks 5 y 6 la mejora levemente (-0.2%), en el modelo de 12h+ es practicamente igual (+0.1%, dentro del ruido). El
  paquete pasa a la version 10 y el .joblib anterior se vuelve a entrenar solo.)
@@ -31,7 +31,7 @@ QUE USA (todo se conoce en el momento de la consulta)
   modelo con solo el historial (el recorrido ya no suma). Validado con jul-2025 a 9-abr-2026 (docs/estimador_tiempos.md); el modelo que se consulta se entrena
   con el periodo confiable HASTA LIMITE_ENTRENAMIENTO (feb-2023 a 2025-12-31, no hasta 9-abr-2026), con MAS PESO A LO RECIENTE (un dato de hace 6 meses
   pesa la mitad): el hospital cambio y asi estima mejor los meses nuevos (src/ventana_entrenamiento.py). Se recorta antes de abril de 2026 porque ya
-  desde enero de 2026 el registro de las etapas TU cae -13% a -17% frente al año anterior (CLAUDE.md 4.9): con ese peso reciente, entrenar incluyendo
+  desde enero de 2026 el registro de las etapas TU cae -13% a -17% frente al año anterior (docs/CONTEXTO_TECNICO.md 4.9): con ese peso reciente, entrenar incluyendo
   esos meses producia saltos grandes e incoherentes entre landmarks vecinos, SIN mejorar (de hecho empeorando levemente) la precision medida en un
   holdout limpio -- ver v7 arriba. Lo ideal es volver a entrenarlo cada mes con los datos nuevos, siempre que no se acerquen al tramo degradado
   (borrar el .joblib).
@@ -52,7 +52,7 @@ LIMITES
   la base no registra (triage, servicio, tipo de cama). La "espera de cama" termina en la asignacion administrativa, que puede ser una silla o camilla.
   A QUIEN APLICA: solo a pacientes que se van a hospitalizar (orden de hospitalizacion ya dada). Se entreno solo con quienes recibieron cama; para un
   paciente cualquiera que llega a urgencias no sirve (solo ~9 % se hospitaliza y eso no se sabe al llegar).
-  DESACTUALIZACION: los datos confiables en general terminan el 9-abr-2026 (CLAUDE.md 4.9), pero ESTE modelo entrena solo hasta LIMITE_ENTRENAMIENTO
+  DESACTUALIZACION: los datos confiables en general terminan el 9-abr-2026 (docs/CONTEXTO_TECNICO.md 4.9), pero ESTE modelo entrena solo hasta LIMITE_ENTRENAMIENTO
   (2025-12-31): enero-marzo de 2026, aunque "confiables" para el resto del proyecto, ya muestran una caida de registro en las etapas TU que
   desestabiliza este modelo en particular (ver v7 arriba). No se puede reentrenar con meses mas nuevos mientras el registro siga degradado. Si la
   fecha consultada esta a mas de DIAS_AVISO dias del fin del entrenamiento, el resultado trae un aviso (con el corte mas temprano, el aviso aparece
@@ -74,7 +74,7 @@ import estimador_tiempos as et  # noqa: E402
 LANDMARKS = list(range(ce.HORAS_RECORRIDO))    # 0 a 11 h, uno por hora; con 12 h o mas se usa el modelo con solo el historial
 VIDA_MEDIA_DIAS = 182                          # peso a lo reciente: la mitad cada 6 meses hacia atras
 LIMITE_ENTRENAMIENTO = "2025-12-31"            # NO "2026-04-09" (el fin del periodo confiable general): desde enero-2026 el registro de TU ya cae
-                                                # -13% a -17% frente al año anterior (CLAUDE.md 4.9), y con VIDA_MEDIA_DIAS=182 ese tramo reciente
+                                                # -13% a -17% frente al año anterior (docs/CONTEXTO_TECNICO.md 4.9), y con VIDA_MEDIA_DIAS=182 ese tramo reciente
                                                 # pesa mucho -- produce saltos incoherentes entre landmarks vecinos sin mejorar la precision (14-nov)
 DIAS_AVISO = 60                                # mas de 60 dias entre el fin del entrenamiento y la fecha consultada: el modelo puede estar viejo
 NIVEL_P90 = 0.93                               # nivel calibrado en la validacion ene-jun 2025 (src/calibracion_y_corte.py): con 0,90 el p90 cubria 87-88 %; con 0,93, ~91 %

@@ -15,7 +15,7 @@ QUE COMPRUEBA (cada bloque responde una duda concreta)
        - horas redondas en inicio y fin (marcas administrativas en vez de horas reales);
        - hora del dia de ingresos y altas por estancia distinta (valida el 62 % de altas de 14 a 19 h sin pasar por nuestro pipeline).
   D. Cifras clave recalculadas directo de la base: espera de cama (mediana, p75, p90) y estancias distintas por mes (ingresos por dia).
-  E. Llegadas: visitas contra personas distintas por dia (cuantas replicas hay), copias por desfase de id (validacion de CLAUDE.md 4.1), llegadas por hora.
+  E. Llegadas: visitas contra personas distintas por dia (cuantas replicas hay), copias por desfase de id (validacion de docs/CONTEXTO_TECNICO.md 4.1), llegadas por hora.
   F. Diagnosticos: filas con y sin codigo por mes (2023 a 2026), fechas futuras y hora del diagnostico frente a la visita (muestra).
   G. Personas: anios de nacimiento imposibles y sexo.
 
@@ -281,7 +281,7 @@ CONSULTAS_4 = [
 # ---------------------------------------------------------------------------------------------------------------------------------------------
 # LOTE 5 (3-nov-2026), tarea A2b: ¿que procedimientos y laboratorios tienen las estancias largas (mas de 14 dias) frente a las demas? Por visita con hospitalizacion,
 # los conceptos de procedimientos (sin fecha: "durante la estancia") y de laboratorios de las PRIMERAS 48 HORAS de la estancia (con fecha), con el person_id de cada fila
-# para quedarse con las filas de la persona real (CLAUDE.md 4.10). Mas los nombres de esos conceptos.
+# para quedarse con las filas de la persona real (docs/CONTEXTO_TECNICO.md 4.10). Mas los nombres de esos conceptos.
 # ---------------------------------------------------------------------------------------------------------------------------------------------
 CONSULTAS_5 = [
     ("Q01_procedimientos_por_estancia", f"""

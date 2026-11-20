@@ -108,7 +108,7 @@ def mezcla_escenario_d(intensidad):
 ETAPAS_PIPELINE_CAMAS = [
     ("1. Series base", "Ingresos a cama y ocupación real se reconstruyen directo de "
      "estancias_hospitalizacion.csv (25.777 estancias únicas), con la misma fórmula que ya usa "
-     "exportar_para_equipo.py — se reprodujo y coincide con CLAUDE.md 4.8."),
+     "exportar_para_equipo.py — se reprodujo y coincide con docs/CONTEXTO_TECNICO.md 4.8."),
     ("2. Bootstrap por perfil", "La duración de cada estancia simulada se saca al azar de pacientes reales "
      "con la misma edad Y la misma ruta de llegada (Urgencias/Treatment urgency/Ambulatorio) — separar por "
      "ruta importa porque Treatment urgency se queda 63 % más tiempo que Urgencias a la misma edad."),
@@ -469,7 +469,7 @@ def mostrar(data, grupo, tema):
             x_sobre.append(x_cruce); y_sobre.append(cap_hun)
 
     # El tramo rojo NO son "pacientes sin cama": superar las 106 camas reportadas es sobreocupacion o una
-    # capacidad real mayor (CLAUDE.md 4.8), asi que el hover muestra la ocupacion total, igual que el azul.
+    # capacidad real mayor (docs/CONTEXTO_TECNICO.md 4.8), asi que el hover muestra la ocupacion total, igual que el azul.
     fig = go.Figure([
         go.Scatter(x=fechas, y=p90, mode="lines", line=dict(width=0), showlegend=False, hoverinfo="skip"),
         go.Scatter(x=fechas, y=p10, mode="lines", line=dict(width=0), fill="tonexty", fillcolor="rgba(42,111,176,0.15)",

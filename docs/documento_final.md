@@ -1,9 +1,9 @@
 # ¿Por qué se espera tanto por una cama?
 ## Flujo de pacientes, cuellos de botella y anticipación en el Hospital Universidad del Norte
 
-**Data Challenge HUN 2026** · Hospital Universidad del Norte (HUN) y pregrado de Ciencia de Datos, Universidad del Norte
-**Equipo:** Daniela (coordinación, datos y análisis), Samuel (estimador de tiempos, recomendaciones y dashboard), Anthony (modelo explicativo y simulación de camas)
-**Versión:** borrador del 14-nov-2026 (estacionalidad anual completa, ficha A9: dengue, IRA y EDA del SIVIGILA; recomendaciones con 38 fuentes verificadas; capítulo 3 reorganizado: tablas y columnas de la base, exploración y limpieza paso a paso, variables y herramientas) · **Entregables:** este documento, el repositorio en GitHub y el dashboard interactivo
+**Data Challenge HUN 2026** · Hospital Universidad del Norte (HUN) y pregrado de Ciencia de Datos, Universidad del Norte  
+**Equipo:** Daniela Amaya (coordinación, datos y análisis), Samuel Amador (estimador de tiempos, recomendaciones y dashboard), Anthony Amaya (modelo explicativo y simulación de camas)  
+**Versión:** versión del 17-nov-2026 (estacionalidad anual completa, ficha A9: dengue, IRA y EDA del SIVIGILA; recomendaciones con 38 fuentes verificadas; capítulo 3 reorganizado: tablas y columnas de la base, exploración y limpieza paso a paso, variables y herramientas) · **Entregables:** este documento, el repositorio en GitHub y el dashboard interactivo  
 
 > **Cómo leer este documento.** Cada cifra lleva al lado el documento del repositorio donde se calcula y el script que la produce. Casi todo
 > son **asociaciones y escenarios**, no causas probadas, y cada hallazgo lleva su limitación junto a él. Los datos clínicos no están en el
@@ -72,17 +72,33 @@ documentación, el repositorio en GitHub y el enlace a un dashboard interactivo 
 |---|---|---|
 | 1. Caracterizar el flujo reconstruyendo las etapas | Limpieza de la base, episodios, rutas, tiempos por etapa | Sección 4; `docs/HALLAZGOS.md` 2–3 |
 | 2. Factores de los tiempos y la estancia; cuellos de botella | Definición formal de cuello de botella, ranking, carga, altas tardías, perfiles, diagnósticos, estancias largas, etapas de urgencias | Sección 5 |
-| 3. Modelos para estimar tiempos, saturación y patrones atípicos | Pronóstico de demanda, alertas, días atípicos, estimador de espera por paciente, simulación Monte Carlo de camas, pronóstico de la cola | Sección 6 |
+| 3. Modelos para estimar tiempos, saturación y patrones atípicos | Pronóstico de demanda, alertas, días atípicos, estimador de espera por paciente, simulación Monte Carlo de camas, pronóstico de la cola, simulador integral | Sección 6 |
 | 4. Propuestas accionables | Siete recomendaciones con su cifra, su evidencia externa verificada y su límite | Sección 7 |
 
 **Decisión de enfoque:** la profundidad va en la espera de cama (componente 2) y en los modelos (componente 3); el componente 1 da el contexto y
+
+**La ruta del proyecto, de punta a punta.** Este documento sigue el orden en que se trabajó:
+
+| Etapa | Qué se hizo | Dónde está |
+|---|---|---|
+| Contexto | El reto, lo que pide el instructivo y las decisiones de enfoque | Sección 2 |
+| Extracción | Cómo se obtuvieron los datos de la base del hospital | 3.2 |
+| Exploración | Qué hay en la base, tabla por tabla, y qué no trae | 3.1 y 3.3 |
+| Limpieza | Visitas copia, estancias duplicadas, etapas abiertas, episodios y la persona real | 3.4 |
+| Calidad y validación | El quiebre de abril de 2026 y lo que respondió el hospital | 3.5 y 3.6 |
+| Construcción de variables | Calendario, carga, ocupación, diagnóstico y laboratorios | 3.7 |
+| Flujo y cuello de botella | Cómo fluye el paciente, dónde se pierde el tiempo y qué factores se asocian | Secciones 4 y 5 |
+| Modelos y simulación | Pronóstico, alertas, días atípicos, estimador, simulación de camas y simulador integral | Sección 6 |
+| Recomendaciones | Siete acciones con su evidencia y su meta | Sección 7 |
+| Dashboard | Cómo se presenta todo al hospital | Sección 8 |
+| Límites y futuro | Lo que no sabemos y lo que sigue | Secciones 9 y 10 |
 el 4 sale de los dos anteriores.
 
 ---
 
 ## 3. Los datos y su calidad
 
-Este capítulo describe la base tal como es, qué columnas usamos y qué representa cada una, cómo se exploró y se limpió paso a paso, qué variables se construyeron y con qué herramientas. Es la parte **previa a cualquier resultado**: sin ella, las cifras del hospital salían infladas cerca de 40 %.
+Este capítulo sigue el orden en que se trabajó: qué es la base (3.1), cómo se extrajeron los datos (3.2), qué tablas y columnas se usaron (3.3), cómo se exploró y se limpió paso a paso (3.4), qué pasó con el registro en abril de 2026 (3.5), lo que dijo el hospital (3.6), qué variables se construyeron (3.7) y con qué herramientas (3.8). Es la parte **previa a cualquier resultado**: sin ella, las cifras del hospital salían infladas cerca de 40 %.
 
 ### 3.1 La base
 Base PostgreSQL en el esquema estándar **OMOP** (`uninorte_omop`), de solo lectura y detrás de VPN. Tablas: `visit_occurrence` (1,7 millones de
@@ -100,11 +116,23 @@ procedimientos (la columna está vacía en toda la tabla); diagnóstico principa
 | 9201 | Cama (HOSP) | Hospitalización; según el HUN, se registra **al asignar la cama** |
 | 581479 | Ambulatorio (AMB) | Evento administrativo de duración cero; se descarta |
 
-El detalle de cada tabla y de sus columnas está en 3.2; cómo se limpió, en 3.3.
+Cómo se obtuvieron los datos está en 3.2; el detalle de cada tabla y de sus columnas, en 3.3; cómo se exploró y se limpió, en 3.4.
 
-### 3.2 Las tablas y las columnas que usamos
+### 3.2 Cómo se extrajeron los datos
+**Acceso.** La base es de **solo lectura** y está detrás de una VPN del hospital; las credenciales viven fuera del proyecto y nunca se guardan en el repositorio. Solo existen índices de llave primaria, así que las consultas pesadas
+tardan entre 10 y 30 minutos, y como la VPN corta el internet del computador, las consultas largas se corren en segundo plano. La conexión no permite crear tablas temporales: las consultas se escriben con expresiones `WITH`.
+
+**Dos vías de extracción.**
+1. **Exportaciones en CSV** con consultas de la carpeta `sql/` (por ejemplo `sql/exportaciones_base.sql` y `sql/consultas_semana1.sql`): las etapas de visita (`visit_detail`), las visitas, las personas, los diagnósticos, procedimientos y laboratorios resumidos **por visita**
+   (en SQL, en lugar de exportar las tablas enteras, que pesan decenas de gigabytes) y las consultas de personas y diagnósticos de apoyo.
+2. **Revisiones directas de solo lectura** con `src/explorar_bd.py` y `src/auditoria_bd.py` (sobre `src/conexion_bd.py`): sirvieron para comprobar en la base, y no solo en los CSV, hallazgos como el quiebre de abril de 2026 (3.5) o los duplicados.
+
+**Comprobación.** Las exportaciones se verificaron contra la base: las filas y las sumas de los CSV coinciden con las de la base (por ejemplo, 566.004 visitas con diagnósticos y 662.783 con procedimientos, con 38.636.063 y 47.042.032 registros).
+**Qué no se publica:** los datos son clínicos, por eso en el repositorio solo hay código, consultas, documentos, gráficos y tablas agregadas.
+
+### 3.3 Las tablas y las columnas que usamos
 El esquema real tiene 8 tablas (no las 20 del instructivo). Esta es la lectura de cada una después de explorarla: qué es, qué columnas usamos y qué representan,
-y lo que hay que saber antes de confiar en ella. Detalle completo en `CLAUDE.md` 3 y 4.
+y lo que hay que saber antes de confiar en ella. Detalle completo en `docs/CONTEXTO_TECNICO.md` 3 y 4.
 
 | Tabla (filas) | Qué es | Columnas que usamos y qué representan | Lo que hay que saber |
 |---|---|---|---|
@@ -117,7 +145,7 @@ y lo que hay que saber antes de confiar en ella. Detalle completo en `CLAUDE.md`
 | `concept` (10 M) | Diccionario de códigos | `concept_id`, `concept_name`, `domain_id`, `vocabulary_id` | Sin índices y sin `concept_code`; no hay `concept_ancestor`, así que los diagnósticos se agruparon a mano en 19 grupos (`datos/referencia/mapeo_dx.csv`). |
 | `cups` (94 mil) | Catálogo nacional de procedimientos | — | No enlaza con `procedure_occurrence` (sus códigos son SNOMED, LOINC o ICD9Proc). |
 
-### 3.3 Cómo exploramos y limpiamos la base, paso a paso
+### 3.4 Cómo exploramos y limpiamos la base, paso a paso
 1. **Exploración por agregados.** La base es lenta (consultas de 10 a 30 minutos, solo índices de llave primaria), así que nunca se bajaron tablas enteras: cada
    pregunta se resolvió con una consulta agregada por visita en SQL (`sql/`), exportada a CSV y analizada en Python. Antes de usar cada tabla se contaron sus filas,
    sus conceptos, sus fechas nulas y sus rangos; así aparecieron, por ejemplo, el 100 % de procedimientos sin fecha y los 80 diagnósticos con fecha futura. Desde
@@ -150,13 +178,13 @@ y lo que hay que saber antes de confiar en ella. Detalle completo en `CLAUDE.md`
 
 **Por qué importa:** sin esta limpieza el hospital parecía tener ~146 camas ocupadas y 27,7 ingresos por día; los valores reales son ~100 camas y
 ~20 ingresos. La auditoría directa en la base (2-nov) y la reproducción del pipeline en un clon limpio confirmaron las cifras.
-Detalle: `CLAUDE.md` 4.1–4.13; `docs/HALLAZGOS.md` 2; `src/analisis_etapas.py`, `src/preparar_variables.py`, `src/auditoria_bd.py`.
+Detalle: `docs/CONTEXTO_TECNICO.md` 4.1–4.13; `docs/HALLAZGOS.md` 2; `src/analisis_etapas.py`, `src/preparar_variables.py`, `src/auditoria_bd.py`.
 
 **Resultado:** 337.194 episodios (atención continua de un paciente; se corta tras 168 h sin etapas). En el periodo confiable, 22.819 estancias
 únicas con espera de cama medida.
 
-### 3.4 El quiebre de abril de 2026 y lo que pasaba en el sistema de salud
-La auditoría en la base (`CLAUDE.md` 4.9) muestra que desde el 10-abr-2026 las visitas de urgencias **suben ~40 %** mientras el registro de etapas se
+### 3.5 El quiebre de abril de 2026 y lo que pasaba en el sistema de salud
+La auditoría en la base (`docs/CONTEXTO_TECNICO.md` 4.9) muestra que desde el 10-abr-2026 las visitas de urgencias **suben ~40 %** mientras el registro de etapas se
 degrada: no es menos demanda. El hospital no explicó la causa. Para el contexto se revisaron prensa y actos de la Superintendencia de Salud
 (`docs/estacionalidad_anual.md`, cuarta ronda):
 - **Oct-2023:** abre el Hospital Juan Domínguez Romero en Soledad, el mismo municipio del HUN. **Ene-2025:** abre el Nuevo Hospital de Barranquilla
@@ -170,12 +198,12 @@ degrada: no es menos demanda. El hospital no explicó la causa. Para el contexto
 fechas no coinciden exactamente (10-abr frente a 22-abr) y no se puede comprobar con los datos. Queda como hipótesis, no como causa; la decisión de
 usar solo el periodo confiable no cambia.
 
-### 3.5 Lo que dijo el hospital (sesión del 29-oct-2026)
+### 3.6 Lo que dijo el hospital (sesión del 29-oct-2026)
 106 camas de hospitalización (88 de adultos y 18 de niños) y 58 camillas de urgencias; la hospitalización se registra al asignar la cama; las
 estancias en dos personas «probablemente son duplicados»; hay horarios y costumbres de alta. No dieron la meta de tiempos ni la causa del cambio
 de registro de abril de 2026. No hubo más sesiones.
 
-### 3.6 Las variables que construimos y qué representa cada una
+### 3.7 Las variables que construimos y qué representa cada una
 Todo sale de `src/analisis_etapas.py` y `src/preparar_variables.py` en una tabla con una fila por episodio (`tabla_episodios`). Las columnas que más se usan:
 
 | Variable (columna) | Cómo se calcula | Qué representa | Qué peso tiene en los resultados |
@@ -199,7 +227,7 @@ Además de la tabla hay variables que se calculan **en el momento**, para los mo
 laboratorio** de las primeras 6 h (11 valores con punto de corte clínico) y, para el pronóstico, las series diarias de llegadas, llegadas con atención e ingresos a
 cama con su calendario y su forma del año. El diccionario de las tablas pequeñas que alimentan el dashboard está en `datos/tablas_dashboard/diccionario_tablas.md`.
 
-### 3.7 Herramientas y por qué estas
+### 3.8 Herramientas y por qué estas
 | Herramienta | Para qué | Por qué esta |
 |---|---|---|
 | PostgreSQL con SQL (CTE), DBeaver al inicio y después SQLAlchemy + psycopg desde Python | Consultas agregadas de solo lectura, en segundo plano por la VPN | La base no permite tablas temporales y es lenta: agregar en SQL y exportar lo mínimo evita bajar tablas de 15 GB |
@@ -223,7 +251,7 @@ cama con su calendario y su forma del año. El diccionario de las tablas pequeñ
   que tienen hora de salida la subestima (`docs/supervivencia_urgencias.md`).
 - **Estancia en cama:** mediana de 71 h, percentil 90 de 280 h, media de 5,2 días.
 - **Entre etapas casi no hay tiempo muerto:** el «hueco sin registro» antes de la cama que se creía del 21 % resultó un artefacto de las estancias
-  duplicadas; en el registro de la persona real es ~1 % de las horas (`CLAUDE.md` 4.12).
+  duplicadas; en el registro de la persona real es ~1 % de las horas (`docs/CONTEXTO_TECNICO.md` 4.12).
 - **Reingresos depurados:** 5,3 % en 72 h y 14,1 % en 30 días (`docs/c4_reingresos_huecos_llegadas.md`).
 
 ![Mapa de calor de llegadas por día y hora](../resultados/graficos/mapa_calor_llegadas.png)
@@ -333,7 +361,7 @@ puntuales; `docs/dias_atipicos.md`); las camas de baja actividad clínica son ~6
 ## 6. Modelos, predicción y simulación (componente 3)
 
 Construimos un conjunto de herramientas que permiten **anticipar** lo que va a pasar en el hospital: cuántos pacientes llegarán, qué días se
-congestionará urgencias, cuándo recibirá cama cada paciente y qué pasaría con las camas en distintos escenarios. Todas se validaron con el método más
+congestionará urgencias, cuándo recibirá cama cada paciente, qué pasaría con las camas en distintos escenarios y, con el simulador integral (6.9), cómo se mueven a la vez la demanda, la cola y la ocupación cuando se cambia una decisión. Todas se validaron con el método más
 exigente: entrenar con el pasado y probar con meses que el modelo nunca vio, y siempre frente a una referencia simple para demostrar que aportan.
 
 **Por qué estos modelos y no otros.** Para cada pregunta se eligió el método más simple que diera el mejor resultado en datos que no había visto, y que un
@@ -347,6 +375,7 @@ hospital pudiera leer:
 | ¿Qué perfiles esperan más y por qué? | Regresión logística y regresión sobre el logaritmo de la espera | Coeficientes interpretables con intervalos; explica, no reemplaza al estimador | Alertar por riesgo al llegar (marcaría al 44 % con 4 de cada 10 falsas alarmas) |
 | ¿Se van a saturar las camas? | Simulación Monte Carlo con estancias reales por perfil (edad y ruta) sobre los ingresos pronosticados | Respeta la cola larga de las estancias y da probabilidades de superar las 106 camas; cobertura 86 % en el backtest | Predecir la estancia de cada paciente (R² ≈ 0), proyección con altas esperadas (peor que «lo mismo que ahora») |
 | ¿Cuántos esperarán cama en 6–12 h? | Modelo de flujo (entradas y salidas de la cola) | Un tercio menos de error que suponer que todo sigue igual | Persistencia y tasa típica |
+| ¿Cómo se mueven a la vez la demanda, la cola y las camas? | Un solo motor de agentes (simulador integral) que sigue a cada paciente simulado | Las tres vistas salen del mismo paciente y se validaron contra la cola y la ocupación reales | Encadenar pronóstico, estimador y Monte Carlo en serie (6.9) |
 
 ### 6.1 Pronóstico de demanda (`src/modelo_pronostico.py`; página de pronóstico del dashboard)
 Un modelo de Poisson que combina el calendario (día de la semana, festivos, semana santa, fin de año y el **Carnaval de Barranquilla**, que reduce las
@@ -389,6 +418,8 @@ más pacientes, así que la tomamos de **datos públicos de muchos años** y la 
 | C. Paciente sin cama a las 48 h | ~4 alertas por día; la mitad de esos pacientes terminaría esperando más de 72 h, así que avisa con 24 h de margen |
 
 En conjunto son unas 4–5 alertas al día: una carga manejable para una reunión diaria de camas.
+
+En el dashboard, la página **Alertas** (sección Resultados) muestra la prueba de cada alerta, y el **simulador integral** (6.9) las dispara mientras corre, con la recomendación de la que se derivan. Cada alerta apunta a una o más de las siete recomendaciones (sección 7): día congestionado y ocupación alta, a la reunión diaria de camas y a adelantar las altas; paciente sin cama, a la alerta con responsable.
 
 ### 6.3 Días atípicos (`src/dias_atipicos.py`)
 El modelo identifica automáticamente los días que se salen de lo esperado (14 de llegadas, 9 de ingresos y 7 de espera). Los más extremos coinciden con
@@ -502,6 +533,8 @@ procesadas) y sin datos de pacientes en la salida.
 
 Es la base para el seguimiento mensual de la recomendación 2: el hospital puede correrlo cada mes y ver de inmediato si las acciones están funcionando.
 
+**En el dashboard** (página «Diagnóstico por periodo», sección Resultados) se eligen un periodo (todo el periodo, cada año o cada semestre) y otro con el que compararlo; la página muestra el cuello de botella, cuánto cambió frente a la referencia, qué se dispara, qué estancias esperan muchísimo, qué tienen en común y las camas del periodo, cada resultado con su gráfica. Los reportes se calculan de antemano para cada combinación (`src/exportar_reportes_periodo.py`). El paso 5 («qué hacer») ya no se muestra ahí: las acciones se leen en la página de Recomendaciones.
+
 ### 6.8 Alternativas evaluadas
 Parte de la solidez de los modelos está en lo que se comparó para elegirlos. Cada alternativa se probó con el mismo método (datos que el modelo no
 vio) y quedó documentada en el repositorio:
@@ -515,9 +548,52 @@ vio) y quedó documentada en el repositorio:
 | SARIMAX y otros modelos de series de tiempo | Mejor en validación, pero peor a 1–7 días y en 2026 | Poisson con la forma del año, más preciso e interpretable (6.1) |
 | Quincenas, puentes y deduplicar las llegadas | Cambios de ±0,15 puntos de error; las réplicas son una proporción estable | Mantener el modelo más simple (6.1) |
 | LightGBM, XGBoost y otros 13 enfoques para el estimador | Todos llegan al mismo nivel | El modelo de supervivencia, que además da probabilidades calibradas (6.4) |
+| Encadenar pronóstico, estimador de espera y Monte Carlo en serie | Cada módulo se hizo para otra población y encadenarlos rompe sus supuestos | Un motor único de agentes con trayectorias reales sorteadas (6.9) |
 
 Que alternativas muy distintas lleguen al mismo resultado confirma que los modelos elegidos aprovechan lo que permiten los datos, y señala con
 precisión qué dato nuevo (gravedad, servicio y hora de la orden de hospitalización) haría el siguiente salto.
+
+
+### 6.9 Simulador integral (`src/simulador_integral.py`; `docs/simulador_integral.md`; página «Simulador integral»)
+**Qué es:** un solo motor de agentes que sigue a cada paciente simulado por todo su recorrido (llega, espera cama, la ocupa y sale de alta) y emite **tres vistas del mismo
+paciente**: la demanda (llegadas por día), la cola de espera de cama y la ocupación de camas con sus altas. Antes esas vistas vivían en herramientas separadas (pronóstico,
+estimador y planeación de camas); el simulador las une **sobre un motor único**, sin encadenar los tres modelos en serie.
+
+**Cómo funciona (una repetición):**
+1. Las llegadas diarias salen del pronóstico de demanda (Poisson alrededor del pronóstico validado).
+2. Cada llegada recibe un perfil real (grupo de edad × ruta de llegada) y se hospitaliza con la probabilidad histórica de su perfil, calibrada con el pronóstico de ingresos a cama.
+3. A cada futuro hospitalizado se le sortea la trayectoria completa de un paciente real de su perfil (hora de llegada, espera y estancia del **mismo** paciente, 2024–2025).
+4. cama = llegada + espera; alta = cama + estancia. La ocupación se acumula por día y la cola por hora, y se siembra con el censo y la cola reales del último día confiable.
+
+**Validación (enero a 9-abr-2026, entrenado hasta diciembre de 2025):** cumple la puerta de validación. Ocupación: error medio de 9,3 camas y cobertura de 74,7 % (el motor de camas daba 8,6 y 78,8 %);
+cola de espera: error de 4,3 pacientes, y reproduce la cola real (~26); ingresos a cama emergentes: error de 4,0 por día, con sesgo de +0,7. Los percentiles de espera y de estancia simulados casi
+calcan los reales (espera mediana 18,9 h frente a 17,0 h reales). En la proyección a 180 días: 112 camas ocupadas y 69 % de los días sobre las 106, coherente con la simulación de camas (6.5).
+
+**Qué se puede cambiar (palancas):** la demanda de llegadas (−30 a +30 %), la estancia (−20 a +20 %), la espera de cama (solo mueve la cola, no libera camas), la capacidad hipotética (96 a 130 camas), los perfiles de
+estrés, el recorte de las estancias de más de 14 días (recomendación 7), el adelanto de altas a la mañana (recomendación 4) y cuatro factores externos (dengue, lluvias, infecciones respiratorias y diarreas, con el efecto
+medido de cada uno: solo las respiratorias mueven la demanda de forma apreciable).
+
+**Alertas, recomendaciones y mejora.** Mientras la simulación corre salta una tarjeta de alerta, siempre visible arriba del gráfico, con qué pasó y la recomendación de la que se deriva (con su primer paso), enlaces a la alerta
+y a la recomendación. Al continuar, la tarjeta se comprime en una fila (punto de color, título y fecha) que se acumula en columnas por gravedad, con una columna aparte para las alertas a las que se les aplicó la mejora; un clic la vuelve a abrir. Hay cinco alertas, cada una con dos gravedades:
+
+| Alerta | Aviso (media) | Crítico (alta) | Recomendaciones |
+|---|---|---|---|
+| Faltarán camas (se necesitarán más de las 106: probabilidad de superar la capacidad a 48 h y camas que faltan) | desde 50 % o 1 cama que falta | desde 84 % o 12 camas que faltan (118 ocupadas) | 3, 4 y 7 |
+| Cola de espera larga (pacientes a la vez) | desde 28 | desde 33 | 5 y 6 |
+| Estancias más largas de lo normal (pacientes en cama que ya llevan más días que 9 de cada 10 de su perfil) | desde 23 | desde 28 | 7 |
+| Esperas de más de 3 días (pacientes con 72 h o más sin cama) | desde 10 | desde 13 | 5 y 6 |
+| Ingresos con riesgo de estancia larga (% de los ingresos de la semana mayores de 60 o «treatment urgency») | desde 47 % | desde 55 % | 7 |
+
+Los umbrales críticos están por encima de lo típico del simulador, porque superar las 106 camas es lo normal en esta simulación (la probabilidad tiene mediana de 68 %). Son criterios de esta herramienta, no resultados validados.
+Las tres últimas cuentan a los pacientes uno por uno en una repetición de la simulación. Sus umbrales se calibraron con corridas de 90 días en operación normal; la justificación de cada una, y de las ideas que se descartaron, está en `docs/alertas_por_paciente.md`.
+Las dos gravedades frenan la simulación. Una alerta salta cuando aparece. Si se dejó sin corregir (Continuar), al volver no frena otra vez: su fila comprimida queda marcada como **activa** (el punto late) mientras la condición siga. Vuelve a saltar si reaparece después de aplicarle la mejora (la mejora no alcanzó) o si se agrava de aviso a crítico. Desde la alerta, **«Aplicar mejora y comparar»** abre el panel, desplaza los controles a la **operación óptima** (15 % menos en las estancias largas y 30 % de las altas
+de la tarde adelantadas) y repite la simulación desde el día 1, con la mejora en color y cómo iba antes en gris punteado.
+
+**Por qué no se encadenó con los otros modelos.** Cada módulo se construyó para una población distinta: el estimador de espera solo vio pacientes que recibieron cama, y el ~87 % de las llegadas atendidas se va de alta desde urgencias.
+La espera se **sortea** de trayectorias reales en vez de usar la predicción puntual, que comprimiría la varianza y daría bandas falsamente angostas.
+
+**Límites:** la cola es una cota inferior (solo cuenta a quienes terminan hospitalizados); reproduce patrones, no días ni pacientes concretos; la retroalimentación ocupación → espera no se modela porque no se puede estimar del histórico;
+las llegadas incluyen ~4 % de réplicas; los efectos de los factores externos son asociaciones con pocas semanas altas; y el periodo confiable termina el 9-abr-2026.
 
 ---
 
@@ -584,6 +660,18 @@ días, con foco en los de más de 14. Bajar la estancia apenas 5 % liberaría un
 48 %. En otros hospitales, un equipo que se reúne cada semana bajó la estancia de los pacientes con alta demorada de 15,5 a 9 días (Ibrahim 2022), y
 una herramienta de seguimiento diario la redujo de 19 a 14 días en un hospital universitario de Brasil (Paiva 2024).
 
+**Qué cambiar, en concreto.** Cada recomendación se traduce en pasos y en una meta con la que se sabe si funcionó (la página de Recomendaciones del dashboard las muestra ordenadas por firmeza):
+
+| # | Qué cambiar | Meta |
+|---|---|---|
+| 1 | Hacer obligatoria la hora de salida de urgencias, registrar la hora de asignación de cama y la de la orden de hospitalización, y revisar cada mes que un ingreso no quede en dos pacientes | 100 % de las atenciones con hora de salida y ningún ingreso duplicado |
+| 2 | Definir una meta propia de espera de cama (la guía internacional usa 4 horas) y revisar cada mes seis cifras con la dirección de urgencias y de hospitalización | Una meta escrita y las seis cifras en la reunión mensual |
+| 3 | Reunir 10 a 15 minutos antes del mediodía a quien administra las camas, urgencias y los pisos, con el censo, las altas y los ingresos previstos y las alertas | La reunión se hace todos los días y se anotan las alertas atendidas |
+| 4 | Pasar la ronda médica a primera hora, dejar preparada el día anterior el alta de la tarde y asignar la cama liberada apenas queda libre | De 14 % a 25–30 % de altas antes de las 12 h; asignar la cama en menos de 1,8 h |
+| 5 | Dar a una persona por turno la lista diaria de pacientes con 48 h sin cama (unos 4 por día), revisarlos uno por uno y anotar qué se hizo | Ningún paciente con 48 h sin cama queda sin responsable |
+| 6 | Para quien llega entre las 13 y las 18 h, pedir la cama en cuanto se decide hospitalizarlo, sin esperar el ciclo de altas del día siguiente | Que espere como quien llega por la mañana (hoy, 24 h frente a 16 h) |
+| 7 | Reunir cada semana a quien coordina las altas con los médicos tratantes y revisar a quienes llevan más de 7 días, empezando por los de más de 14 | Bajar la estancia 5 % (unas 5 camas) |
+
 **Qué no recomendamos.** Los datos no respaldan reforzar el personal según el día de la semana (casi no cambia la espera), ni ordenar la fila según
 el riesgo de cada paciente al llegar (el mejor modelo marcaría al 44 % de los pacientes, con 4 de cada 10 falsas alarmas), ni un centro de comando
 como solución por sí mismo (el estudio mejor diseñado no encontró efecto). Tampoco permiten calcular cuántas camas más harían falta: antes de
@@ -603,31 +691,38 @@ externos son de antes y después, sin grupo de comparación.
 **Herramienta:** Dash (Python y Plotly), aceptado por los organizadores. Un solo programa (`dashboard/main.py`, puerto 8050) con una página por tema en
 `dashboard/pages/`, organizadas en cuatro secciones que siguen el orden del reto: contexto, resultados, predicción y propuestas. **No se conecta a la base:** solo lee tablas agregadas, ninguna con una fila por paciente.
 
-| Página | Qué responde |
-|---|---|
-| Inicio (`/`) | Portada con las cifras clave del hospital y el menú por secciones |
-| Resumen (`/resumen`) | El proyecto en una pantalla: los ocho hallazgos, cada uno con su página, y lo que se propone |
-| Datos y calidad (`/datos`) | Qué había en la base, qué se corrigió y hasta qué fecha son confiables los datos |
-| Demanda (`/demanda`) | A qué hora y qué día llegan los pacientes, y si la demanda crece entre años |
-| Ocupación de camas (`/ocupacion`) | Camas ocupadas frente a las 106 del hospital, y por qué sube la ocupación |
-| Espera de cama (`/espera`) | Cuánto se espera por una cama, quién espera más y si los peores casos empeoran |
-| Comparar años (`/comparar`) | Qué cambió en la espera entre dos años: en qué tramos, en qué grupos de pacientes y por dónde entran |
-| Llegada y altas (`/altas`) | A qué hora salen las altas, a qué hora se asignan las camas y cuánto espera quien llega a cada hora |
-| Qué influye en la espera (`/factores`) | Cuánto de la espera se explica con lo que se sabe del paciente y qué factores pesan |
-| Estancias largas (`/estancia`) | Por qué subió la estancia media y qué comparten las estancias de semanas |
-| Diagnósticos (`/diagnosticos`) | Qué grupos de diagnóstico esperan más cama y cuáles se quedan más |
-| Perfiles y picos (`/perfiles`) | Cómo cambian la espera y la estancia según el perfil del paciente y la carga del momento |
-| Pronóstico de demanda (`/pronostico`) | Cuántos pacientes llegarán y cuántos irán a cama, desde hoy hasta un año, con su banda del 80 % y la forma del año |
-| Forma del año (`/estacionalidad`) | Qué épocas del año traen más pacientes y cuánto mejora el pronóstico al saberlo |
-| Alertas (`/alertas`) | Las tres alertas (día congestionado, paciente sin cama y camas de mañana): cuándo avisar y qué tanto aciertan |
-| Días atípicos (`/atipicos`) | Los días que se salen del patrón y qué dicen del problema de la espera |
-| Paciente en espera (`/paciente`) | Cuándo es más probable que un paciente que ya espera reciba cama (estimador A6), con sus avisos |
-| Planeación de camas (`/camas`) | Riesgo de saturar las camas y escenarios de ingresos y estancia (simulación Monte Carlo, A5) |
-| Cómo se eligieron los modelos (`/modelos`) | Para cada pregunta: el modelo elegido, por qué y qué se descartó |
-| Recomendaciones (`/recomendaciones`) | Las siete recomendaciones, cada una con la evidencia propia, la evidencia de otros hospitales y su firmeza |
-| Documentación (`/documentacion`) | Este documento completo, con sus tablas y figuras, y la descarga en PDF |
+**Estructura de cada página de Resultados:** un encabezado con cifras clave, una frase que resume la conclusión, las gráficas numeradas (cada una con su titular, una explicación y un dato), una sección de cuatro tarjetas,
+«Qué significa para el hospital» y un único panel plegable de **Documentación de esta sección**, con cómo se calculó, qué no dice y a qué otra página se conecta. Las páginas de Predicción siguen el mismo orden: la elección del modelo
+va como una tarjeta antes de «Qué significa» y la documentación reúne lo que se probó y se descartó.
 
-- **Cómo correrlo:** `python3 dashboard/main.py` y abrir http://127.0.0.1:8050 (las tablas agregadas deben estar disponibles; ver `README.md`).
+| Página | Sección | Qué responde |
+|---|---|---|
+| Inicio (`/`) | Inicio | Portada con las cifras clave del hospital y el menú por secciones |
+| Resumen (`/resumen`) | Contexto | El proyecto en una pantalla: los ocho hallazgos en tarjetas deslizables y las siete acciones que se proponen (leídas de la tabla de recomendaciones) |
+| Datos y calidad (`/datos`) | Contexto | Qué había en la base, qué se corrigió y hasta qué fecha son confiables los datos |
+| Demanda (`/demanda`) | Resultados | A qué hora y qué día llegan los pacientes, y si la demanda crece entre años |
+| Forma del año (`/estacionalidad`) | Resultados | Qué épocas del año traen más pacientes y cuánto mejora el pronóstico al saberlo |
+| Ocupación de camas (`/ocupacion`) | Resultados | Camas ocupadas frente a las 106 del hospital, y por qué sube la ocupación |
+| Espera de cama (`/espera`) | Resultados | Cuánto se espera por una cama, quién espera más y si los peores casos empeoran |
+| Comparar años (`/comparar`) | Resultados | Qué cambió en la espera entre dos años: en qué tramos, en qué grupos de pacientes y por dónde entran |
+| Diagnóstico por periodo (`/periodo`) | Resultados | El cuello de botella de cualquier periodo comparado con una referencia, cada resultado con su gráfica |
+| Llegada y altas (`/altas`) | Resultados | A qué hora salen las altas, a qué hora se asignan las camas y cuánto espera quien llega a cada hora |
+| Qué influye en la espera (`/factores`) | Resultados | Cuánto de la espera se explica con lo que se sabe del paciente y qué factores pesan |
+| Estancias largas (`/estancia`) | Resultados | Por qué subió la estancia media y qué comparten las estancias de semanas |
+| Diagnósticos (`/diagnosticos`) | Resultados | Qué grupos de diagnóstico esperan más cama y cuáles se quedan más |
+| Perfiles y picos (`/perfiles`) | Resultados | Cómo cambian la espera y la estancia según el perfil del paciente y la carga del momento |
+| Días atípicos (`/atipicos`) | Resultados | Los días que se salen del patrón y qué dicen del problema de la espera |
+| Alertas (`/alertas`) | Resultados | Las alertas (día congestionado, ocupación alta, paciente sin cama y cola de espera): cuándo avisar, qué tanto aciertan y qué recomendación dispara cada una; y las cinco que saltan en el simulador integral, con sus umbrales |
+| Pronóstico de demanda (`/pronostico`) | Predicción | Cuántos pacientes llegarán y cuántos irán a cama, desde hoy hasta un año, con su banda del 80 % |
+| Paciente en espera (`/paciente`) | Predicción | Cuándo es más probable que un paciente que ya espera reciba cama (estimador A6), con sus avisos |
+| Planeación de camas (`/camas`) | Predicción | Riesgo de saturar las camas y escenarios de ingresos y estancia (simulación Monte Carlo, A5) |
+| Simulador integral (`/simulador`) | Predicción | Demanda, cola y ocupación a la vez, con cinco alertas (dos de totales y tres por paciente), su recomendación y la operación óptima comparada con cómo iba antes (6.9) |
+| Recomendaciones (`/recomendaciones`) | Propuestas | Las siete recomendaciones ordenadas por firmeza, con qué cambiar y la meta de cada una, y qué reglas del diagnóstico se activan cada año |
+| Asistente de flujo HUN (`/preguntas`) | Propuestas | Preguntas en lenguaje natural sobre el análisis: responde solo con la documentación del proyecto, con tarjetas de cifras y su fuente |
+| Documentación (`/documentacion`) | Propuestas | Este documento completo, con sus tablas y figuras, y la descarga en PDF |
+
+- **Asistente de preguntas (20-nov-2026):** una página y un botón en la esquina de todas las páginas, desde donde se puede preguntar en lenguaje natural o seleccionar un texto de la pantalla y pulsar «Preguntar sobre esto». Usa la API de Anthropic (Claude Sonnet 5.5) y **solo recibe `docs/asistente/conocimiento.md`**, un documento armado con `src/armar_conocimiento.py` a partir de esta documentación (unos 43.000 tokens, sin datos de pacientes); si la respuesta no está ahí, lo dice. Tiene un límite de 10 preguntas por persona y 60 por día para todo el sitio, y se apaga solo desde el 1-dic-2026. Configuración, costo y apagado: `docs/asistente.md`. Es opcional: sin la clave el dashboard funciona igual y la página avisa que el asistente no está configurado.
+- **Cómo correrlo:** `python3 dashboard/main.py` y abrir http://127.0.0.1:8050; el `README.md` explica la descarga y la instalación paso a paso. Las tablas agregadas y la carpeta `datos/procesados` deben estar disponibles.
 - **Cómo recorrerlo:** el menú agrupa las páginas por sección y el inicio tiene el botón «Empezar el recorrido». Cada página lleva al
   pie los botones de anterior y siguiente, que también responden a las flechas del teclado; el botón de modo presentación de la barra
   superior oculta el menú y agranda la página para exponer.
@@ -673,6 +768,8 @@ externos son de antes y después, sin grupo de comparación.
 - **Conectar la simulación con el pronóstico estacional:** hoy usa el calendario sin la forma del año, así que sus escenarios todavía no reflejan
   que los ingresos suben a mitad de año.
 
+- **Simulador integral:** hoy las alertas y la operación óptima se calculan sobre el motor de agentes; falta validar sus umbrales con el hospital y sumar más palancas ligadas a las recomendaciones (por ejemplo, pedir antes la cama de quien llega por la tarde, recomendación 6, que hoy no tiene palanca propia).
+
 ### 10.4 Perfiles, diagnósticos y laboratorios
 - **Validación clínica** del agrupamiento de diagnósticos (`mapeo_dx.csv`, hoy un borrador) y de los cortes de las banderas de laboratorio.
 - **Brecha de espera entre mujeres y hombres** (+27 % con todo controlado): investigarla con el dato de servicio o de tipo de cama, que hoy la base
@@ -709,18 +806,18 @@ externos son de antes y después, sin grupo de comparación.
    los de persona real (P02 y P03). Ver `docs/conexion_bd.md` y `README.md`.
 2. `python3 src/analisis_etapas.py` y `python3 src/preparar_variables.py` (tabla de episodios; se regenera idéntica en menos de un minuto).
 3. Cada análisis tiene su script en `src/` y su documento en `docs/` (mapa en `docs/HALLAZGOS.md` 9).
-4. Dashboard: `python3 dashboard/preparar_datos.py` (tablas agregadas) y luego la app de Dash.
+4. Dashboard: `python3 dashboard/preparar_datos.py` (tablas agregadas) y luego `python3 dashboard/main.py` (puerto 8050); el `README.md` explica la instalación.
 Los datos y las tablas de resultados **no** están en el repositorio porque son clínicos; los gráficos sí.
 
 ### 11.3 Mapa de documentos
 | Tema | Documento |
 |---|---|
 | Todos los hallazgos con cifras | `docs/HALLAZGOS.md` |
-| Contexto técnico completo y decisiones | `CLAUDE.md` |
+| Contexto técnico completo y decisiones | `docs/CONTEXTO_TECNICO.md` |
 | Definición de cuello de botella y fases | `docs/plan_de_accion.md` |
 | Perfiles, estancia, estancias largas, diagnósticos | `docs/perfiles_pacientes.md`, `docs/factores_estancia.md`, `docs/estancias_disparadas.md`, `docs/diagnosticos_todos.md` |
 | Saturación, etapas de urgencias, laboratorios | `docs/saturacion_y_espera.md`, `docs/caracterizacion_etapas_tu.md`, `docs/espera_con_labs_y_severidad.md` |
-| Modelo explicativo, estimador, simulación | `docs/modelo_espera.md`, `docs/estimador_tiempos.md`, `docs/modelo_camas.md`, `docs/simulacion.md` |
+| Modelo explicativo, estimador, simulación | `docs/modelo_espera.md`, `docs/estimador_tiempos.md`, `docs/modelo_camas.md`, `docs/simulacion.md`, `docs/simulador_integral.md` |
 | Pronóstico de la cola, días atípicos, A7 | `docs/pronostico_espera_sistema.md`, `docs/dias_atipicos.md`, `docs/diagnostico_cuello_botella.md` |
 | Recomendaciones y fuentes | `docs/recomendaciones.md` |
 | Dashboard | `docs/estructura_dashboard.md` |

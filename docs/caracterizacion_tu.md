@@ -85,5 +85,5 @@ Entre las estancias que siguen esperando a las 6 h (n = 17.358), espera **restan
 ## Limitaciones
 - Cobertura de laboratorio ~70 % de las estancias; el 58 % de las filas de laboratorio dentro de la espera viene sin traducir (concepto 0), así que no siempre se sabe qué examen fue.
 - El diagnóstico se registra al llegar y justo antes de la cama; no dice cuándo se supo.
-- Las estancias gemelas se resolvieron con la persona real (`persona_real`; si no se pudo identificar, el registro conservado), con la advertencia de CLAUDE.md 4.10.
+- Las estancias gemelas se resolvieron con la persona real (`persona_real`; si no se pudo identificar, el registro conservado), con la advertencia de docs/CONTEXTO_TECNICO.md 4.10.
 - Son asociaciones, no causas.

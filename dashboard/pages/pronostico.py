@@ -47,7 +47,7 @@ dash.register_page(__name__, path="/pronostico", name="Pronóstico", title="Pron
 SUPUESTO = "historico"                                      # nivel de los 12 meses del periodo confiable
 
 # Carga perezosa y defensiva: con `use_pages=True` TODAS las paginas se importan al arrancar `main.py`, asi que
-# si panel_diario.csv no esta disponible en este equipo (vive fuera del repo, CLAUDE.md), no debe tumbar el
+# si panel_diario.csv no esta disponible en este equipo (vive fuera del repo, docs/CONTEXTO_TECNICO.md), no debe tumbar el
 # arranque de las otras 3 paginas -- se muestra un aviso en vez de la pagina (igual patron que perfiles.py).
 try:
     LIMPIO = mp.cargar_panel()                                  # el modelo se entrena sin los dias atipicos ni los posteriores al 9-abr-2026

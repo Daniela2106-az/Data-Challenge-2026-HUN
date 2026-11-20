@@ -29,7 +29,6 @@ PAGINAS (ver docstring de cada una en dashboard/pages/):
   /diagnosticos    diagnosticos.py     Espera y estancia por grupo de diagnostico (A3, Samuel)
   /alertas         alertas.py          Las tres alertas y cuando avisar (Samuel)
   /atipicos        atipicos.py         Dias atipicos frente al pronostico (Samuel)
-  /modelos         modelos.py          Como se eligieron los modelos (Samuel)
   /recomendaciones recomendaciones.py  Las 7 recomendaciones con su evidencia (Samuel)
   /documentacion   documentacion.py    El documento final completo con descarga en PDF (Samuel)
 
@@ -50,6 +49,7 @@ import dash
 from dash import Dash, Input, Output, State, callback, dcc, html
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import asistente_ui  # noqa: E402  (chat del asistente de preguntas en todas las paginas)
 from navegacion import CAPITULOS, DENTRO_DE_DOCUMENTACION, ICONOS, SECCIONES, agrupar, capitulos_documento, documentacion_de, recorrido  # noqa: E402
 
 app = Dash(__name__, use_pages=True, pages_folder="pages", title="Dashboard HUN",
@@ -185,6 +185,7 @@ def servir_layout():
             barra_superior(),
             html.Main(className="content", children=[dash.page_container, html.Div(id="doc-rel", className="doc-pie"), html.Nav(id="paso-nav", className="paso")]),
         ]),
+        asistente_ui.chat_flotante(),
     ])
 
 
@@ -200,7 +201,7 @@ def sincronizar_navegacion(ruta):
     actual = next((p["name"] for p in dash.page_registry.values() if p["path"] == ruta), "Documentación" if ruta.startswith("/documentacion") else "Inicio")
     seccion = next((t for t, _d, grupo in agrupar(_paginas_ordenadas()) if any(p["path"] == ruta for p in grupo)), "Propuestas" if ruta.startswith("/documentacion") or ruta in DENTRO_DE_DOCUMENTACION else "")
     titulo = [html.Span(seccion + " · ", className="topbar__seccion"), actual] if seccion else actual
-    return enlaces, titulo, pasos(ruta), enlace_documentacion(ruta)
+    return enlaces, titulo, pasos(ruta), []        # la documentacion y el enlace al capitulo van dentro de «Documentación de esta sección» de cada pagina
 
 
 # Modo claro/oscuro: todo del lado del cliente para que sea instantaneo y no necesite al servidor.
@@ -319,7 +320,13 @@ app.clientside_callback(
             if (parar || Date.now() - t0 > 20000) { clearInterval(timer); return; }
             if (el) {
                 if (Math.abs(el.getBoundingClientRect().top - 80) > 24) { el.scrollIntoView({block: 'start'}); }
-                else if (Date.now() - t0 > 2500) { clearInterval(timer); }
+                else if (Date.now() - t0 > 2500) {
+                    clearInterval(timer);
+                    if (/^(rec-R|alerta-)/.test(id)) {       // tarjeta de una recomendacion o alerta: se resalta un momento para ubicarla
+                        el.classList.add('ancla-destacada');
+                        setTimeout(function() { el.classList.remove('ancla-destacada'); }, 3500);
+                    }
+                }
             }
         }, 300);
         return '';

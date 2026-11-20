@@ -11,12 +11,12 @@ Código: `src/simulacion_camas_montecarlo.py`. Tablas: `resultados/tablas/simcam
 
 - **Datos:** `estancias_hospitalizacion.csv` (25.777 estancias únicas). No hizo falta `panel_diario.csv`: sus
   columnas `ingresos_a_cama` y `ocup_hosp_media/max` se calculan, en `src/exportar_para_equipo.py`, directamente
-  desde `estancias_hospitalizacion.csv` — se reprodujo la misma fórmula aquí y coincide con `CLAUDE.md` 4.8
+  desde `estancias_hospitalizacion.csv` — se reprodujo la misma fórmula aquí y coincide con `docs/CONTEXTO_TECNICO.md` 4.8
   (ingresos 20,5/20,8/19,8 por día y ocupación 93,9/101,1/105,0 para 2023/2024/2025, contra 20,6/20,8/19,8 y
   94/101/105 documentados).
 - **Motor de Monte Carlo** (1.000 repeticiones): cada día futuro, los ingresos a cama salen de una distribución
   de Poisson alrededor del pronóstico puntual de `src/modelo_pronostico.py` (el modelo vigente del proyecto,
-  entrenado solo hasta el 9-abr-2026 por el registro degradado, `CLAUDE.md` 4.9). A cada ingreso simulado se le
+  entrenado solo hasta el 9-abr-2026 por el registro degradado, `docs/CONTEXTO_TECNICO.md` 4.9). A cada ingreso simulado se le
   asigna un **perfil conjunto** (grupo de edad × ruta de llegada — Urgencias/Treatment urgency/Ambulatorio,
   mezcla real de 2025, conserva la correlación real entre edad y ruta) y una estancia por **bootstrap empírico**
   de ese mismo perfil (se saca al azar una `horas_hosp` real de un paciente con esa edad y esa ruta). El censo
@@ -51,8 +51,8 @@ Código: `src/simulacion_camas_montecarlo.py`. Tablas: `resultados/tablas/simcam
      vacío): sin esto, la ocupación simulada tardaba ~3-4 semanas en "llenarse", un arranque que no existe en
      la realidad (el hospital ya tiene pacientes en cama el día 1 de cualquier simulación).
 - **Capacidad del HUN** (tabla compartida el 8-nov-2026, consistente con los 106/58 ya documentados el
-  29-oct en `CLAUDE.md` 4.7): 106 camas en total. Como la base no tiene campo de servicio/piso/cama
-  (`CLAUDE.md` 4.8), se reusa el proxy de edad que el equipo ya validó una vez a mano: **niños** (`grupo_edad`
+  29-oct en `docs/CONTEXTO_TECNICO.md` 4.7): 106 camas en total. Como la base no tiene campo de servicio/piso/cama
+  (`docs/CONTEXTO_TECNICO.md` 4.8), se reusa el proxy de edad que el equipo ya validó una vez a mano: **niños** (`grupo_edad`
   0-4 y 5-14) frente a pediátrica + neonatal agrupadas (8+6+3+1 = **18 camas**); **adultos** (15-29 en adelante)
   frente a las camas de adultos agrupadas (64+6+14+4 = **88 camas**). Es una aproximación más gruesa que el
   corte "menor de 1 año" que usó esa revisión puntual de la base — se declara como límite.
@@ -117,7 +117,7 @@ consideraría un día lleno, sin mirar la cifra del HUN"). Ambos dan una probabi
 que le da robustez al hallazgo: no depende de confiar en un solo número.
 
 **El riesgo no está repartido parejo:** 70,6 % de probabilidad de saturar las 88 camas de adultos, contra 34,5 %
-en las 18 de niños y neonatal — coherente con `CLAUDE.md` 4.8 ("los adultos operan, en promedio, al 100 % de su
+en las 18 de niños y neonatal — coherente con `docs/CONTEXTO_TECNICO.md` 4.8 ("los adultos operan, en promedio, al 100 % de su
 capacidad"), ahora expresado como riesgo proyectado hacia adelante, no solo como hecho ya ocurrido.
 
 Gráfico (`resultados/graficos/simcamas_resultados.png`, 5 paneles): backtest, zoom de corto plazo (30-60 días,
@@ -158,7 +158,7 @@ menos riesgo, sin saltos) en los tres grupos — es la prueba de que el cálculo
 
 ## Límites
 - El proxy niños/adultos usa los bins de `grupo_edad` disponibles (0-4/5-14 vs. 15-29+), más grueso que el
-  corte "menor de 1 año" que el equipo usó una vez directamente sobre la base (`CLAUDE.md` 4.8).
+  corte "menor de 1 año" que el equipo usó una vez directamente sobre la base (`docs/CONTEXTO_TECNICO.md` 4.8).
 - El backtest formal es solo del censo **total**; los censos de niños/adultos no tienen una serie real separada
   contra la cual compararse (la base no distingue servicio/piso/cama).
 - Los ingresos se simulan con una sola fuente de aleatoriedad por día (Poisson alrededor del pronóstico puntual);

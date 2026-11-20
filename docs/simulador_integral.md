@@ -65,7 +65,7 @@ hallazgos ni A9/casos) pensado para la experiencia en vivo de corto plazo, no pa
 | Qué se consideró | Resultado | Por qué |
 |---|---|---|
 | Encadenar pronóstico → estimador de espera → Monte Carlo en serie | **No entra** | Cada módulo se construyó para una población distinta: el estimador A6 solo vio pacientes que recibieron cama (no sabe decir "este no necesita cama") y el ~87 % de las llegadas atendidas se va de alta desde urgencias. Encadenarlos rompía los supuestos de cada uno. |
-| Llenar una cuota diaria de camas con un ranking de probabilidad | **No entra** | Reinventa una fila de prioridad que los datos rechazan: el orden de llegada casi no predice el orden de cama (53 % de pares consecutivos en orden, azar 50 %, `CLAUDE.md` 6b) y la espera es individual, no del momento (el día de llegada explica el 0,1 % de la espera, `docs/estimador_tiempos.md` 1.1). |
+| Llenar una cuota diaria de camas con un ranking de probabilidad | **No entra** | Reinventa una fila de prioridad que los datos rechazan: el orden de llegada casi no predice el orden de cama (53 % de pares consecutivos en orden, azar 50 %, `docs/CONTEXTO_TECNICO.md` 6b) y la espera es individual, no del momento (el día de llegada explica el 0,1 % de la espera, `docs/estimador_tiempos.md` 1.1). |
 | "Pacientes sin cama" = llegadas − ingresos a cama | **No entra** | Esa resta no es la cola: es sobre todo gente que nunca iba a necesitar cama. La cola se construye agente por agente (de su llegada a su cama) y se valida contra la cola real. |
 | Usar el estimador A6 como predictor dentro del motor | **No entra** | Asignar a cada agente la predicción puntual comprime la varianza y daña las bandas. La espera se **sortea** de trayectorias reales; A6 sigue siendo la consulta para pacientes reales. |
 | Ingresos a cama **emergentes** de los agentes, calibrados (κ) | **Entra** | Opción B de la conversación: los conteos emergen de llegadas × P(cama\|perfil) × espera sorteada; un factor global κ los calibra contra el pronóstico validado de ingresos. κ salió ≈ 1,00 (1,002 en el backtest, 0,994 en la proyección): la P(cama\|perfil) de `tabla_episodios` ya era consistente con el pronóstico — señal de coherencia interna, no un parche. |
@@ -82,7 +82,7 @@ hallazgos ni A9/casos) pensado para la experiencia en vivo de corto plazo, no pa
    mediana 21,8 h contra 14,3 h en el pool 2024-2025, hallazgo abierto de A1). El sexo **no entra en ningún
    cálculo del motor** (P(cama), espera y estancia ya lo promedian dentro de cada perfil): los resultados son
    bit-idénticos con o sin él. **Raza y etnia no se asignan**: en la base la raza está 95 % sin dato y la
-   etnia es casi constante ("Hispanic or Latino", `CLAUDE.md` sección 3); si la vista las muestra, que diga
+   etnia es casi constante ("Hispanic or Latino", `docs/CONTEXTO_TECNICO.md` sección 3); si la vista las muestra, que diga
    "Sin dato en la base".
 3. Cada llegada **se hospitaliza** con probabilidad κ × P(cama|perfil), donde P viene de `tabla_episodios`
    (hospitalizado y `estancia_unica` entre TODOS los episodios de 2025: global 7,6 %; va de 5,1 % en adultos
@@ -126,7 +126,7 @@ los reales del periodo de backtest (`resultados/tablas/simint_distribuciones.csv
 | Estancia (h) | 1.756 | 75,2 / 69,6 | 149,1 / 141,6 | 283,8 / 260,6 | 125,9 / 116,9 |
 
 Los percentiles casi se calcan. Dos sesgos chicos y explicables: la cola alta de la **espera** real de 2026 es
-algo peor que el pool 2024-2025 (coherente con que los peores casos empeoran año a año, `CLAUDE.md` 6b), y la
+algo peor que el pool 2024-2025 (coherente con que los peores casos empeoran año a año, `docs/CONTEXTO_TECNICO.md` 6b), y la
 cola alta de la **estancia** real está algo recortada porque las estancias largas que entraron en el backtest y
 aún no tenían alta registrada quedan fuera del lado real (censura, no error del simulador).
 
@@ -185,14 +185,14 @@ después; la nota de la página lo advierte para que nadie lea "menos espera = c
 ## Límites (declarados también en la página)
 
 - **La cola es cota inferior:** solo contiene futuros hospitalizados. La congestión completa de urgencias no
-  se puede simular (36-42 % de las etapas TU sin hora de fin, `CLAUDE.md` 4.3).
+  se puede simular (36-42 % de las etapas TU sin hora de fin, `docs/CONTEXTO_TECNICO.md` 4.3).
 - **Fidelidad estadística, no bola de cristal:** reproduce patrones (cuántos, qué perfiles, qué tan lleno),
   no días concretos ni pacientes concretos.
 - P(cama|perfil) constante por día; κ global por corrida (no por día de semana). El patrón semanal de los
   ingresos emergentes hereda el de las llegadas suavizado por la espera (el backtest muestra que alcanza).
 - Los sembrados reciben tiempos completos del bootstrap (sin corregir el sesgo de selección); solo afecta los
   primeros días.
-- Las llegadas incluyen ~4 % de réplicas (cota conocida, `CLAUDE.md` 4.13).
+- Las llegadas incluyen ~4 % de réplicas (cota conocida, `docs/CONTEXTO_TECNICO.md` 4.13).
 - El ajuste por carga del día (16-nov) mueve la espera típica, no la media por día (que es plana en los datos);
   la retroalimentación ocupación → espera no se modela porque no es estimable del histórico (ver la subsección
   del backtest). Si la simulación sale muy lejos del régimen histórico de ocupación, las esperas no se alargan
@@ -277,3 +277,69 @@ de abril de 2026; el efecto se aplica parejo durante todo el horizonte.
 Código: `src/simulador_integral.py` (sección «Modelos de la ficha A9 y casos»: `MODELOS_A9`, `CASOS`, `EFECTO_CASOS`, `ERROR_MODELOS`,
 `pronostico_entrenado`, `efecto_aplicado`, `factor_casos`; `simular_integral(..., modelos=, casos=)`), `src/medir_casos.py` y
 `dashboard/pages/simulador.py`. Si `casos_efecto.csv` y `modelos_error.csv` no están, el motor usa los valores de la última corrida.
+
+## Alertas y operación óptima durante la simulación (18-nov-2026)
+
+La simulación se reproduce siempre como «hoy». Mientras corre, salta una tarjeta arriba del gráfico (dentro del flujo de la página, sin tapar nada) con la etiqueta **Alerta**, su gravedad, **qué pasó** y la **recomendación** (con su primer paso). Tiene flechas ◀ ▶ para recorrer las alertas anteriores sin interrumpir la reproducción, y enlaces a **la alerta** (`/alertas#alerta-A2`) y a **la recomendación** (`/recomendaciones#rec-R4`) que abren la página y llevan a esa tarjeta, resaltada un momento.
+
+**Calibración.** En un caso normal de la propia simulación (90 días, sin palancas) la probabilidad de superar las 106 camas tiene mediana 68 % y casi nunca pasa de 84 %; las camas ocupadas, mediana 111 y p90 114,5; la cola, mediana 25 y p99 28. Superar las 106 camas es lo normal en esta simulación: por eso esa condición avisa **una sola vez** y lo que **frena** la simulación es lo crítico, por encima de lo típico. Los primeros 7 días (4 si el plazo es de 2 semanas o menos; 12 horas en la vista horaria), que vienen de la siembra con el censo real, no generan alertas. Si los controles mejoran claramente al hospital (por ejemplo, estancia −10 %), no saltan alertas porque ya no hay riesgo.
+
+**Gravedades y pausa.** Hay dos gravedades: aviso (media) y crítico (alta). **Las dos frenan la simulación**, para poder revisarlas y aplicar la mejora antes de que la condición escale. Una alerta salta cuando **aparece** (20-nov-2026). Si se dejó **sin corregir** (Continuar), al volver no frena otra vez: su fila comprimida queda marcada como activa (el punto late) mientras la condición se cumpla. **Vuelve a saltar** si reaparece después de aplicarle la mejora (la mejora no alcanzó) o si se agrava de aviso a crítico, aunque siga activa. Reiniciar o una corrida nueva borran esa memoria; aplicar una mejora no. Todas las alertas tienen **histéresis**: se encienden en el umbral de aviso y, ya encendidas, solo se apagan al volver claramente a lo normal (cola por debajo de 26; faltarán camas con probabilidad por debajo de 40 % y sin camas faltantes; las por paciente, en su nivel de suelta). Así un vaivén de uno o dos pacientes no cuenta como alerta nueva.
+
+| Alerta | Aviso (gravedad media) | Crítico (gravedad alta) | Recomendación | Alerta en Resultados |
+|---|---|---|---|---|
+| Faltarán camas (se necesitarán más de las 106: probabilidad de superar la capacidad a 48 h y camas que faltan, en la mediana) | desde 50 % o 1 cama que falta (107 ocupadas) | desde 84 % o 12 camas que faltan (118 ocupadas) | R3, R4 y R7 | A2 |
+| Cola de espera larga (pacientes a la vez) | desde 28 | desde 33 (el percentil 90 real) | R5 y R6 | S1 |
+| Estancias más largas de lo normal (en cama con más días que el p90 de su perfil) | desde 23 | desde 28 | R7 | A2 |
+| Esperas de más de 3 días (72 h o más sin cama) | desde 10 | desde 13 | R5 y R6 | A3 |
+| Ingresos con riesgo de estancia larga (% de ingresos de 7 días de 60+ o treatment urgency) | desde 47 % | desde 55 % | R7 | A2 |
+
+La tarjeta apila sus botones de arriba abajo: Continuar, Aplicar mejora y comparar, Ver más sobre esta alerta y Ver recomendación. La reproducción nueva arranca cuando la figura nueva ya está dibujada, para que el gráfico no parpadee al reiniciar.
+
+Los umbrales son criterios de esta página, no resultados validados como los de `docs/recomendaciones.md`. Si coinciden varias, gana la más grave.
+
+Al aplicar la mejora, las alertas de la corrida anterior **no desaparecen**: siguen consultables, y las nuevas se suman al historial.
+
+**Una sola acción: «Aplicar mejora y comparar».** Se frena la reproducción, el panel de configuración se abre y los controles se desplazan, uno tras otro, a la operación óptima (R7: 15 % menos en las estancias de más de 14 días; R4: 30 % de las altas de la tarde adelantadas a la mañana). El panel se enfoca en las dos palancas que cambian, se mueven una tras otra y, cuando terminan, **se cierra solo y la vista baja al gráfico**. Entonces la simulación se **repite desde el día 1** con la operación óptima a todo color y cómo iba antes («Antes de la mejora») en gris punteado, durante toda la corrida. La alerta de cola no ofrece la mejora, porque la operación óptima no la mueve directamente. «Reiniciar» devuelve los controles a cero.
+
+## Ingresos por franja horaria (19-nov-2026)
+
+El pronóstico de ingresos a cama ahora se reparte en cuatro franjas del día: **madrugada (0-7 h), mañana (7-14 h), tarde (14-19 h) y noche (19-24 h)**, las mismas de `src/estimador_tiempo_restante.py`.
+
+- **Cómo:** `simular_integral` devuelve `info["ingresos_franja"]` = `{franja: {p10, p50, p90, media}}` por día. Reparte cada ingreso diario simulado con la distribución horaria **real** de asignación de cama (2024-2025), medida por día de la semana (`REPARTO_FRANJA`).
+- **Por qué no sale de los agentes:** el motor diario suaviza la espera con ruido, lo que aplana la hora y daba ~25 % por franja. Lo medido es madrugada ~17 %, mañana ~12 %, tarde ~32 %, noche ~38 %.
+- **Garantías:** no usa números aleatorios nuevos (las series existentes salen idénticas) y las medias de las cuatro franjas suman el total diario. Los percentiles son bandas, no suman exacto.
+- **Vista horaria (72 h):** `ingresos_por_franja_horario(horas_idx, out)` agrupa las horas simuladas en las mismas franjas.
+- **Límite:** el reparto es el promedio histórico; no cambia con la saturación ni con los controles del simulador.
+
+## Confirmación verde al aplicar una mejora y pico de llegadas de la tarde (19-nov-2026)
+
+- **Pacientes de ejemplo:** `simular_integral(..., registrar_rep=0)` devuelve `info["pacientes"]` con los pacientes de **una** repetición (perfil, sexo, llegada, espera, estancia, día de cama y de alta; los que ya estaban en cama el día 0 aparte). No usa números aleatorios del motor: las series salen idénticas con o sin el registro. El sexo de los sembrados en cama sale de un generador aparte.
+- **Panel verde (`dashboard/pacientes_alerta.py`):** al pulsar «Aplicar mejora y comparar», los controles se mueven y la simulación **queda en pausa** con un panel verde hasta pulsar «Continuar con la mejora».
+  - *Faltarán camas:* las altas del día (llegada + espera + estancia) y el 30 % de ellas que pasaría a la mañana (se sortea con semilla fija, así que el mismo día da el mismo resultado); y los pacientes de 14 días o más, separados en «ya llevan 14 días o más en cama» y «estimados de 14 días o más».
+  - *Cola de espera:* para 48 h y para 72 h, «esperando ese tiempo o más ahora mismo» (al cierre del día) y «estimados» (llevan menos, pero su espera asignada es de ese tiempo o más).
+- **Límites:** las tablas son una corrida, no el promedio; la cifra del texto de la recomendación (~34) sale de promedios y puede diferir. Los pacientes que ya estaban en cama el día 0 no tienen fecha de ingreso, así que solo entran en «estimados». Las estancias y esperas «estimadas» son las del simulador según el perfil, no las del modelo de «Paciente en espera». La vista horaria no tiene estas tablas.
+- **R3 («Reunión de camas»):** ya no repite las camas esperadas, que están en «Qué pasó».
+- **Estancia y espera acopladas (supuesto):** con `acoplar_estancia=True` (lo usa el dashboard) la espera de cada paciente sube en la misma proporción que la estancia. No está calibrado con datos.
+- **Pico de llegadas de la tarde:** la alerta de cola también salta si las llegadas de 14 a 19 h llegan a 81 o más ese día (percentil 90 de los datos reales; promedio 65) y la cola ya es de al menos el 80 % del umbral (22 de 28). Con la operación normal del simulador nunca se supera (máximo 76,7 en 90 días); con 15 % más de llegadas se supera 19 de 90 días. Es un indicador del volumen del día, no una medida independiente, porque el reparto por franja es fijo por día de la semana.
+- **Alertas:** una alerta salta cuando **aparece**; si ya estaba activa no vuelve a saltar, y si se va y reaparece salta de nuevo. Las que coinciden el mismo día se encolan y se muestran una tras otra.
+
+## Alertas comprimidas y alertas por paciente (19 y 20-nov-2026)
+
+- **Alertas comprimidas (`dashboard/assets/simint_compacto.js`):**
+  - Al pulsar Continuar o Aplicar mejora, la tarjeta se comprime en una fila con punto de color, título y fecha.
+  - Las filas se acumulan en el lugar de la tarjeta, en columnas: Críticas, Avisos y Con mejora.
+  - Un clic en una fila abre la tarjeta completa, y la ✕ la vuelve a comprimir.
+  - En las alertas con mejora, «Ver listas de pacientes» cambia la tarjeta por las tablas, y la flecha vuelve a la tarjeta. Los cambios de tamaño tienen una transición de altura.
+  - Las flechas para recorrer el historial se quitaron.
+- **Desplazamientos (`dashboard/assets/simint_scroll.js`):**
+  - Al saltar una alerta, su encabezado queda en el primer cuarto de la pantalla.
+  - Al aplicar la mejora, la ventana de configuración queda centrada y se abre solo el grupo del control que se mueve.
+  - Al continuar, el gráfico queda centrado sin cortar el botón de reproducir.
+- **Configuración en acordeón:** solo se ven los encabezados de los grupos, y cada grupo se abre con un clic.
+- **Tres alertas por paciente:**
+  - Son estancias más largas de lo normal, esperas de más de 3 días e ingresos con riesgo de estancia larga.
+  - Se cuentan día a día sobre los pacientes de la repetición registrada (`pacientes_alerta.series_alertas`).
+  - Tienen histéresis: una vez activas, siguen activas hasta bajar de un nivel de suelta.
+  - Calibración, justificación e ideas descartadas: `docs/alertas_por_paciente.md`.
+  - No existen en la vista horaria, que no registra pacientes.

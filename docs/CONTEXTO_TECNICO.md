@@ -1,52 +1,28 @@
-# CLAUDE.md — Data Challenge HUN 2026 (contexto completo del proyecto)
+# Contexto técnico — Data Challenge HUN 2026
 
-Este archivo resume TODO lo que ya se averiguó de la base de datos en semanas de consultas.
-**Léelo completo antes de proponer consultas nuevas.** La base es lenta (consultas pesadas de 10–30 min
-que traban el computador), así que antes de pedir una consulta comprueba aquí si la respuesta ya existe.
-Última actualización: 1-nov-2026 (sección 4.7: respuestas del HUN; sección 4.8: la ocupación no cuadraba con las 106 camas porque faltaban duplicados por detectar; regla de estancia única v3.8 y todas las cifras recalculadas). (Cambio del 22-oct: las estancias en cama replicadas entre dos personas se cuentan
-una sola vez; ver sección 4.6. Las cifras de espera de cama, ingresos y ocupación anteriores a esa fecha están infladas.)
+Este documento reúne lo que se averiguó de la base de datos del hospital en semanas de consultas: cómo está construida, qué problemas de calidad tiene, qué decisiones de método se tomaron y
+qué resultados salieron. Los demás documentos del repositorio citan sus secciones (por ejemplo «sección 4.8» o «6b») como origen de las cifras. La base es lenta (consultas pesadas de 10–30 min),
+así que antes de pedir una consulta nueva conviene comprobar aquí si la respuesta ya existe.
+Última actualización: 1-nov-2026 (sección 4.7: respuestas del HUN; sección 4.8: la ocupación no cuadraba con las 106 camas porque faltaban duplicados por detectar; regla de estancia única v3.8 y todas las cifras recalculadas).
 
-## Lee esto primero (si eres un Claude que abre este repositorio por primera vez)
+## Cómo leerlo
 
-**Qué es:** proyecto del Data Challenge HUN 2026 (Hospital Universidad del Norte + Ciencia de Datos, Uninorte): entender y optimizar el
-flujo de pacientes, hallar cuellos de botella, modelar demanda y proponer acciones. Casi todo el trabajo ya está hecho; este archivo y
-`docs/HALLAZGOS.md` dicen **qué se encontró** con cifras y fuentes.
+**Qué es:** proyecto del Data Challenge HUN 2026 (Hospital Universidad del Norte + Ciencia de Datos, Uninorte): entender y optimizar el flujo de pacientes, hallar cuellos de botella, modelar demanda y proponer acciones.
 
-**Orden de lectura:** (1) `README.md`, (2) **`docs/HALLAZGOS.md`** (hallazgos, glosario, preguntas frecuentes, mapa de archivos),
-(3) este archivo: sección 4.6 (estancias gemelas), 6b (resultados de cuellos de botella), 8 (preguntas al HUN), (4) `docs/plan_de_accion.md`
-(definición de cuello de botella y fases), (5) `docs/recomendaciones.md` y `docs/dias_atipicos.md`, (6) `docs/fichas_de_tareas.md` (reparto del equipo).
+**Orden de lectura sugerido:** (1) `README.md`, (2) `docs/HALLAZGOS.md` (hallazgos, glosario, preguntas frecuentes, mapa de archivos), (3) este documento: sección 4.6 (estancias gemelas), 6b (resultados de cuellos de botella) y 8 (preguntas al HUN),
+(4) `docs/plan_de_accion.md` (definición de cuello de botella y fases), (5) `docs/recomendaciones.md` y `docs/dias_atipicos.md`.
 
-**Lo que NO hay en el repositorio:** los datos (`datos/`) ni las tablas de resultados (`resultados/tablas/`, `resultados/excel/`) están fuera de git
-porque son datos clínicos. Solo hay código, consultas SQL, documentos y los gráficos de `resultados/graficos/`. Por eso contesta **desde los
-documentos**; si te piden una cifra que no está escrita, di que no está registrada, señala el script que la produce y que hace falta
-tener los datos (ver `README.md`, "Cómo reproducirlo"). Nunca pidas ni escribas la contraseña de la base.
+**Lo que no hay en el repositorio:** los datos (`datos/`) ni las tablas de resultados (`resultados/tablas/`, `resultados/excel/`) están fuera de git porque son datos clínicos. Solo hay código, consultas SQL, documentos y los gráficos de `resultados/graficos/`.
+Si hace falta una cifra que no está escrita, el script que la produce está señalado y hace falta tener los datos (ver `README.md`). Las credenciales de la base no se guardan en el proyecto.
 
-**Reglas al contestar:**
-- Cita el archivo o la sección de donde sale cada cifra. No inventes números ni causas.
-- Distingue **asociación** de **causa** y di siempre la limitación al lado del hallazgo (casi todo son asociaciones y escenarios).
-- **Cifras obsoletas:** las de espera de cama mediana 22,4 h, 27,7 ingresos por día y ~145 camas (secciones 5 y 6 y algunos textos viejos) estaban
-  infladas por estancias duplicadas. **Vigentes (1-nov, regla v3.8, sección 4.8): espera mediana 18,6 h, ~20 ingresos por día, ~100 camas ocupadas en promedio (94 en 2023 a 105 en 2025).** Las cifras de 22-oct (18 h, ~22 ingresos, ~113 camas) también quedaron infladas por duplicados que faltaban.
-- La meta de tiempos y la causa del cambio de registro desde el 10 de abril de 2026 **no se conocen** (la auditoría de 4.9 descarta que sea menos demanda). El HUN respondió en la sesión del 29-oct: **106 camas, 58 camillas**, la hospitalización se registra al asignar cama, las gemelas son duplicados y hay horarios de alta (sección 4.7). No habrá más sesiones.
+**Cómo citar:** cada cifra sale de un archivo o sección; casi todo son **asociaciones y escenarios**, no causas, y cada hallazgo lleva su limitación al lado.
 
-**Dónde está cada respuesta:** espera de cama y cuello de botella → `HALLAZGOS.md` 4; altas tardías y factores → 6b; pronóstico y alertas → 6b;
-calidad de datos y duplicados → 4.1 y 4.6; recomendaciones → `docs/recomendaciones.md`; qué falta → sección 9.
+**Cifras obsoletas y vigentes:** las de espera de cama mediana 22,4 h, 27,7 ingresos por día y ~145 camas (secciones 5 y 6 y algunos textos viejos) estaban infladas por estancias duplicadas.
+**Vigentes (1-nov, regla v3.8, sección 4.8): espera mediana 18,6 h, ~20 ingresos por día, ~100 camas ocupadas en promedio (94 en 2023 a 105 en 2025).** Las cifras de 22-oct (18 h, ~22 ingresos, ~113 camas) también quedaron infladas por duplicados que faltaban.
 
----
+**Lo que no se conoce:** la meta de tiempos del hospital y la causa del cambio de registro desde el 10 de abril de 2026 (la auditoría de 4.9 descarta que sea menos demanda). El HUN respondió en la sesión del 29-oct: **106 camas, 58 camillas**, la hospitalización se registra al asignar cama, las gemelas son duplicados y hay horarios de alta (sección 4.7).
 
-## 0. Cómo trabajar conmigo (preferencias del equipo)
-
-*(Son las preferencias de la persona que lleva el proyecto, que habla en primera persona. Si eres otra persona del equipo, sigue
-las mismas salvo que te digan otra cosa.)*
-
-- Habla en español, claro y explícito, para que no haga falta preguntar dos veces.
-- Cuando cambies código, entrega SIEMPRE el archivo completo, nunca "cambia esta partecita".
-- No me des la razón por complacerme: si una idea mía es mala o hay un camino mejor, dilo y explica por qué.
-- No tengo formación médica: explica los términos clínicos en palabras simples.
-- **Nunca** pidas ni escribas la contraseña de la base en el chat ni en un archivo del proyecto.
-- Las consultas a la base las corro yo en DBeaver y exporto CSV; tú trabajas sobre los CSV en Python.
-  Si necesitas un dato nuevo de la base, dame UNA consulta lista para copiar, explica cuánto puede tardar
-  y con qué nombre guardar el CSV. Prefiere agregar por visita en SQL antes que exportar tablas enteras.
-- Verifica tus cambios corriéndolos antes de decir que funcionan.
+**Dónde está cada respuesta:** espera de cama y cuello de botella → `HALLAZGOS.md` 4; altas tardías y factores → 6b; pronóstico y alertas → 6b; calidad de datos y duplicados → 4.1 y 4.6; recomendaciones → `docs/recomendaciones.md`; qué falta → sección 9.
 
 ---
 
@@ -75,7 +51,7 @@ el 1 da contexto y el 4 sale de los dos anteriores.
 
 ## 2. Acceso a la base
 
-> **Cómo consultar la base desde Claude Code (conexión de solo lectura con SQLAlchemy, la VPN que apaga el internet y el flujo para correr consultas en segundo plano): ver `docs/conexion_bd.md`.** Las credenciales viven fuera del proyecto (`~/.pgpass` y `~/.hun_db.json`); nunca las pidas ni las escribas.
+> **Cómo consultar la base (conexión de solo lectura con SQLAlchemy, la VPN que apaga el internet y el flujo para correr consultas en segundo plano): ver `docs/conexion_bd.md`.** Las credenciales viven fuera del proyecto (`~/.pgpass` y `~/.hun_db.json`); nunca las pidas ni las escribas.
 
 - PostgreSQL detrás de VPN, esquema **`uninorte_omop`** (el esquema `public` está vacío).
 - Conexión **de solo lectura**: `CREATE TEMP TABLE` falla ("read-only transaction"). Usar `WITH` (CTE).
@@ -688,7 +664,7 @@ escenarios y supuestos escritos y se declara como limitación en el documento fi
 | Simulación Monte Carlo de camas | **Hecho el 9-nov-2026, bootstrap suavizado el 10-nov** (backtest con 78,8 % de cobertura; probabilidad de saturar 106 camas 65,4 % en el horizonte de 180 días, concentrada en adultos: 70,6 % contra 34,5 % en niños; escenario de −5 % estancia casi iguala al de +10 % ingresos en efecto sobre la ocupación) | A5, `docs/modelo_camas.md`, `docs/simulacion.md` |
 | Qué comparten las estancias que se disparan (idea de Anthony) | **Hecha** (`docs/estancias_disparadas.md`) | A2b |
 | Sistema repetible de diagnóstico de cuellos de botella | **Hecho** (`src/diagnostico_cuello_botella.py`, `docs/diagnostico_cuello_botella.md`); falta sumarle Monte Carlo (A5) | A7 |
-| Dashboard de Power BI (**va de último**, datos parciales; guía para su Claude en `powerbi/CLAUDE.md`) y verificar fuentes de las recomendaciones | B2 (verificar fuentes de las recomendaciones) **hecha** (PR #1 de Samuel, mergeado el 8-nov-2026; falta recalcular las ~11 horas-paciente de R6 y la alerta de ocupación de R3). B1 (dashboard) pendiente — **adelanto del 10-nov (Anthony):** las 4 páginas que ya existían (pronóstico, A6, A5, perfiles y picos) se unieron en un solo proceso Dash (`dashboard/main.py`, puerto 8050, patrón multipágina `use_pages=True`, cada página en `dashboard/pages/`); las 5 apps sueltas anteriores se retiraron. Es la base técnica para que Samuel construya encima la estructura completa de `docs/estructura_dashboard.md` (0 a 5, con subpáginas), que sigue siendo B1. **Adelanto del 14-nov (Samuel): simulador integral** (`src/simulador_integral.py` + página `/simulador`): motor de agentes sobre el Monte Carlo A5 que une demanda, cola de espera y ocupación (llegada → espera → cama → alta por paciente sintético); re-pasó el backtest de ocupación (MAE 9,3 camas, cobertura 74,7 %) y reproduce la cola real (~26); ver `docs/simulador_integral.md` | B1 y B2 |
+| Dashboard de Power BI (**va de último**, datos parciales) y verificar fuentes de las recomendaciones | B2 (verificar fuentes de las recomendaciones) **hecha** (PR #1 de Samuel, mergeado el 8-nov-2026; falta recalcular las ~11 horas-paciente de R6 y la alerta de ocupación de R3). B1 (dashboard) pendiente — **adelanto del 10-nov (Anthony):** las 4 páginas que ya existían (pronóstico, A6, A5, perfiles y picos) se unieron en un solo proceso Dash (`dashboard/main.py`, puerto 8050, patrón multipágina `use_pages=True`, cada página en `dashboard/pages/`); las 5 apps sueltas anteriores se retiraron. Es la base técnica para que Samuel construya encima la estructura completa de `docs/estructura_dashboard.md` (0 a 5, con subpáginas), que sigue siendo B1. **Adelanto del 14-nov (Samuel): simulador integral** (`src/simulador_integral.py` + página `/simulador`): motor de agentes sobre el Monte Carlo A5 que une demanda, cola de espera y ocupación (llegada → espera → cama → alta por paciente sintético); re-pasó el backtest de ocupación (MAE 9,3 camas, cobertura 74,7 %) y reproduce la cola real (~26); ver `docs/simulador_integral.md` | B1 y B2 |
 | `mapeo_dx.csv` (grupos de diagnóstico) y tiempos por diagnóstico | **Hecho como borrador** (falta validación clínica); `docs/diagnosticos_y_tiempos.md` | A3 |
 | Estimar tiempos de atención (componente 3) | **Hecho el 7-nov** (`docs/estimador_tiempos.md`): la espera es individual; modelo de tiempo restante con historial y recorrido en urgencias, reentrenado cada mes con más peso en lo reciente (8,9 % de mejora al llegar, 11,3 % a las 3 h y 11,7 % a las 6 h, con la persona real de P02 y P03 y, desde las 6 h, las banderas de laboratorio de Daniela; el modelo de consulta se entrena con todos los datos hasta el 9-abr-2026); salidas de uso diario (ventanas del día, censo para la reunión de camas, alerta a las 12 h) en `src/utilidad_estimador.py` y página `dashboard/estimador.py`; función de consulta `src/estimador_tiempo_restante.py` | A6 |
 | README y reproducibilidad desde cero | README y `requirements.txt` hechos; falta probar desde cero con alguien que no tiene los datos | `README.md` |
@@ -706,7 +682,7 @@ Limitaciones a declarar en el documento: copias (30 %) y estancias gemelas (41 %
 (36–42 %), diagnósticos tardíos y sin jerarquía, número de camas desconocido, procedimientos sin fecha, sin signos vitales, registro de etapas degradado
 desde el 10 de abril de 2026 (causa sin explicar), y que casi todo son asociaciones.
 
-Documento del equipo (Claude Docs): "Exploración BD — Data Challenge HUN 2026".**Revisión final de la ocupación (2-nov-2026, tarde):**
+Documento del equipo: "Exploración BD — Data Challenge HUN 2026".**Revisión final de la ocupación (2-nov-2026, tarde):**
 - **El doble conteo de una misma persona es 0,2 camas, no 2,2** (corrijo lo dicho antes: las 19.375 horas del lote 1 de la auditoría incluían intervalos solapados *dentro* de una misma estancia). Entre las 25.777 estancias únicas solo 96 se solapan con otra de la misma persona (4.556 horas en total); fusionarlas baja la ocupación de 2025 de 105,0 a 104,8. No se corrigió en el pipeline por ser despreciable.
 - **Ocupación por tipo de paciente, 2025 (media / p95 / máximo):** adultos de 15 años o más 88,3 / 97 / 106 frente a 88 camas de adultos que dio el HUN (64 de piso, 6 intermedio, 14 UCI, 4 TPR); niños de 1 a 14 años 14,5 / 22 / 27 y menores de 1 año 2,2 / 6 / 8, que juntos (16,7) frente a las 18 camas pediátricas y neonatales (8 + 10).
   Los adultos operan, en promedio, al 100 % de su capacidad, y el máximo llega a 106 (+18 sobre las 88). Es coherente con un hospital que hace esperar una mediana de 18,6 h por una cama.

@@ -8,7 +8,7 @@ Código: `src/ocupacion_por_zona.py`. Tablas (fuera de git): `resultados/tablas/
 
 ## Resultados
 
-**1. El exceso sobre las camas está en los adultos.** Camas de adultos ocupadas frente a las 88: 88 % de la capacidad en 2023, 98 % en 2024 y **101 % en 2025**, con el 57,5 % de las horas de 2025 por encima de 88 (en 2023, 0,8 %). Los niños (menores de 15, frente a 18 camas) se mantienen entre el 83 % y el 99 %. El aumento de ocupación de 2023 a 2025 viene de los adultos (77 → 89 camas) y no de los niños (17 → 16). Es coherente con la causa ya documentada: las estancias largas de adultos (`CLAUDE.md` 4.8).
+**1. El exceso sobre las camas está en los adultos.** Camas de adultos ocupadas frente a las 88: 88 % de la capacidad en 2023, 98 % en 2024 y **101 % en 2025**, con el 57,5 % de las horas de 2025 por encima de 88 (en 2023, 0,8 %). Los niños (menores de 15, frente a 18 camas) se mantienen entre el 83 % y el 99 %. El aumento de ocupación de 2023 a 2025 viene de los adultos (77 → 89 camas) y no de los niños (17 → 16). Es coherente con la causa ya documentada: las estancias largas de adultos (`docs/CONTEXTO_TECNICO.md` 4.8).
 
 **2. El desglose pediátrico/neonatal del HUN no se puede comprobar con edad.** Los de 1 a 14 años ocupan 12–14 camas de media frente a 8 de pediátrica (más del 150 %), y los menores de 1 año solo 2–5 frente a 10 de neonatal. O los niños ocupan camas de otras zonas, o la clasificación por edad no calza con las unidades. Solo tiene sentido comparar a los niños **juntos** frente a las 18 camas.
 

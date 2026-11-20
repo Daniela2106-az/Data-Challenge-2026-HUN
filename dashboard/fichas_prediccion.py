@@ -1,8 +1,7 @@
 """
 dashboard/fichas_prediccion.py  -  «¿Cómo se interpreta?» y «Ficha técnica» de las paginas de Prediccion que no las tenian (14-nov-2026)
-Pronostico, Paciente en espera y Planeacion de camas traen las suyas propias (con graficos); aqui estan las de Alertas, Dias atipicos y
-Elección de modelos, con la misma forma, para que todas las paginas de Prediccion tengan interpretacion, documentacion y ficha tecnica.
-Cifras: docs/documento_final.md (6.2, 6.3, 6.8), CLAUDE.md 6b y docs/dias_atipicos.md.
+Pronostico, Paciente en espera y Planeacion de camas traen las suyas propias (con graficos); aqui estan las de Alertas y Dias atipicos, con la misma forma, para que todas las paginas de Prediccion tengan interpretacion, documentacion y ficha tecnica.
+Cifras: docs/documento_final.md (6.2, 6.3, 6.8), docs/CONTEXTO_TECNICO.md 6b y docs/dias_atipicos.md.
 """
 FICHAS = {
     "/alertas": {
@@ -47,27 +46,5 @@ FICHAS = {
                       ("Revisar los días raros para mejorar el pronóstico", "Entra", "Descubrió el efecto del Carnaval y del fin de año"),
                       ("Detectar días con espera más alta de lo esperado", "Sin casos", "Ningún día lo fue")],
             "nota": "Detalle: documentación, sección 6.3, `src/dias_atipicos.py` y `docs/dias_atipicos.md`."},
-    },
-    "/modelos": {
-        "interpretacion": [
-            ("Qué estás viendo", "Para cada pregunta que el hospital quería responder, el modelo que se eligió, por qué y qué alternativas se descartaron."),
-            ("Cómo se calculó", "Cada alternativa se probó con el mismo método: entrenar con el pasado y medir en meses que el modelo no había visto, siempre frente a una referencia simple. Se eligió el más simple que diera el mejor resultado y que el hospital pudiera leer."),
-            ("Cómo leerlo", "Que alternativas muy distintas lleguen al mismo resultado confirma que el modelo elegido aprovecha lo que permiten los datos. Lo que falta para dar el siguiente salto es un dato nuevo: gravedad, servicio y la hora de la orden de hospitalización."),
-            ("Qué NO dice", "No dice que sean los mejores modelos posibles, sino los mejores con los datos que hay. No incluye lo que no se pudo probar por falta de datos."),
-        ],
-        "ficha": {
-            "sub": "cómo se eligió cada modelo",
-            "etapas": [("1. Pregunta", "Se define la pregunta que el hospital quiere responder."),
-                       ("2. Referencia", "Se fija una referencia simple (por ejemplo, «lo mismo que ahora»)."),
-                       ("3. Candidatos", "Se prueban varios modelos, de los simples a los complejos."),
-                       ("4. Prueba temporal", "Se entrena con el pasado y se mide en meses posteriores, nunca con partición al azar."),
-                       ("5. Elección", "Gana el más simple que mejora la referencia y es interpretable.")],
-            "tabla": [("Alternativa evaluada", "Resultado", "Qué se eligió"),
-                      ("SARIMAX y otros modelos de series de tiempo", "No entra", "Poisson con la forma del año (más preciso a 1–7 días)"),
-                      ("LightGBM, XGBoost y otros 13 enfoques para el estimador", "No entra", "Supervivencia hora a hora (mismo nivel y probabilidades calibradas)"),
-                      ("Fila «primero en llegar, primero en cama»", "No entra", "Simulación con estancias reales por perfil"),
-                      ("Predecir la estancia de cada paciente", "No entra", "Estancia en conjunto: simulación y ley de Little"),
-                      ("Proyectar camas a 24 h con altas esperadas", "No entra", "Persistencia y modelo de flujo para la cola")],
-            "nota": "Detalle: documentación, sección 6.8 y el cuadro «Por qué estos modelos y no otros» al inicio del capítulo 6."},
     },
 }

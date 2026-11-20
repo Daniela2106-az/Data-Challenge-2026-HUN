@@ -149,7 +149,7 @@ print(f"estancias gemelas: {int(ep.estancia_gemela.sum())} episodios hospitaliza
       f"comparten inicio y fin de cama con otro | estancias unicas: {int((_hh & ep.estancia_unica).sum())} de {int(_hh.sum())}")
 print(f"DEDUP_ESTANCIAS = {DEDUP_ESTANCIAS}: " + ("los segmentos de hospitalizacion cuentan cada estancia una vez"
                                                   if DEDUP_ESTANCIAS else "NO se deduplica (solo para comparar)"))
-# v1.2 (1-nov-2026): la estancia unica y las gemelas salen del pipeline (analisis_etapas.py v3.8, CLAUDE.md 4.8) cuando esta episodios.csv: ademas de
+# v1.2 (1-nov-2026): la estancia unica y las gemelas salen del pipeline (analisis_etapas.py v3.8, docs/CONTEXTO_TECNICO.md 4.8) cuando esta episodios.csv: ademas de
 # "mismo inicio y fin de cama" detecta las gemelas que comparten algun intervalo HOSP identico. Los episodios que no estan en el pipeline conservan la regla propia.
 if "_u" in ep.columns:
     _n_cambia = int((ep._u.notna() & (ep._u != ep.estancia_unica)).sum())

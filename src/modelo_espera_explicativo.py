@@ -11,7 +11,7 @@ QUE HACE (este archivo: solo el PASO 2 del plan, el modelo base "al llegar")
   1. Carga tabla_episodios.parquet, filtra a estancia_unica & hospitalizado & espera_cama_h medida.
   2. Separa en 3 tramos TEMPORALES: entrenamiento (2023-02 a 2025-06), validacion (2025-07 a 2025-12) y
      prueba (2026-01 a 2026-04-09, NO 2026-05-31 como decia la ficha original: el registro se degrada desde
-     el 10-abr-2026, CLAUDE.md 4.9 - no se toca la prueba todavia, solo se separa).
+     el 10-abr-2026, docs/CONTEXTO_TECNICO.md 4.9 - no se toca la prueba todavia, solo se separa).
   3. Construye el diseno de variables (dummies con categoria de referencia fija en el tramo de entrenamiento;
      numericas estandarizadas con media/desvio del tramo de entrenamiento).
   4. Ajusta una regresion logistica A MANO (Newton-Raphson/IRLS, sin scikit-learn ni statsmodels, mismo estilo
@@ -58,7 +58,7 @@ TABLAS.mkdir(parents=True, exist_ok=True)
 # ----------------------------------------------------------------------
 TRAIN = ("2023-02-01", "2025-07-01")   # [ini, fin)
 VAL = ("2025-07-01", "2026-01-01")
-TEST = ("2026-01-01", "2026-04-10")    # corte v3.9 (CLAUDE.md 4.9): no usar mas alla del 9-abr-2026
+TEST = ("2026-01-01", "2026-04-10")    # corte v3.9 (docs/CONTEXTO_TECNICO.md 4.9): no usar mas alla del 9-abr-2026
 
 CATEGORICAS = ["franja", "dia_semana_num", "mes", "grupo_edad", "sexo", "tipo_visita"]
 REF_FIJA = {"franja": "madrugada 0-5", "dia_semana_num": "0", "sexo": "Hombre"}   # el resto: la mas frecuente en entrenamiento
@@ -83,7 +83,7 @@ ep = pd.read_parquet(PROC / "tabla_episodios.parquet")
 m = ep[ep.estancia_unica & ep.hospitalizado & ep.espera_cama_h.notna()].copy()
 print(f"episodios totales: {len(ep)} | con estancia_unica & hospitalizado & espera medida: {len(m)}")
 print(f"espera_cama_h: mediana {m.espera_cama_h.median():.1f} h | p90 {m.espera_cama_h.quantile(.9):.1f} h | "
-      f"% > 24h {100 * m[OBJETIVO].mean():.1f} %  (referencia CLAUDE.md: 18,6 / 73,9 / 43,7)")
+      f"% > 24h {100 * m[OBJETIVO].mean():.1f} %  (referencia docs/CONTEXTO_TECNICO.md: 18,6 / 73,9 / 43,7)")
 for c in CATEGORICAS + BOOLEANAS + NUMERICAS:
     assert m[c].notna().all(), f"hay nulos en {c}, revisar"
 print("sin nulos en las variables del modelo: OK")
@@ -355,7 +355,7 @@ print("\nguardado: resultados/tablas/modelo_espera_mejoras.csv")
 # 12) PASO 4 DEL PLAN: extension EXPLORATORIA con diagnostico (A3) - FUERA de lo permitido, modelo APARTE
 # ----------------------------------------------------------------------
 titulo("12. EXTENSION EXPLORATORIA: + categoria_dx (A3) - NO es un modelo 'al llegar', es un chequeo de techo")
-print("AVISO DE FUGA: categoria_dx se registra DESPUES de la llegada (88% tras las primeras 2h, CLAUDE.md) y")
+print("AVISO DE FUGA: categoria_dx se registra DESPUES de la llegada (88% tras las primeras 2h, docs/CONTEXTO_TECNICO.md) y")
 print("depende en parte de cuanto duro la espera (quien espera mas tiene mas tiempo para que se le registre un")
 print("diagnostico). Este modelo NUNCA se usa para alertar ni se mezcla con los de los pasos 2-3. Solo responde:")
 print("¿cuanto sube el techo si se permite 'trampa', igual que la prueba del 21-oct (AUC 0,60 -> 0,64)?\n")

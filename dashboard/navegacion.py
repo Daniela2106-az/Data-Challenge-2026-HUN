@@ -11,7 +11,7 @@ import re
 ICONOS = {"/": "ico-home", "/pronostico": "ico-forecast", "/paciente": "ico-patient", "/camas": "ico-bed", "/simulador": "ico-models",
           "/perfiles": "ico-profiles", "/recomendaciones": "ico-recs", "/documentacion": "ico-docs", "/datos": "ico-data",
           "/demanda": "ico-demand", "/ocupacion": "ico-occup", "/espera": "ico-wait", "/altas": "ico-clock",
-          "/estacionalidad": "ico-season", "/alertas": "ico-alert", "/factores": "ico-factors", "/estancia": "ico-stay",
+          "/estacionalidad": "ico-season", "/alertas": "ico-alert", "/preguntas": "ico-chat", "/factores": "ico-factors", "/estancia": "ico-stay",
           "/diagnosticos": "ico-dx", "/atipicos": "ico-outlier", "/resumen": "ico-summary", "/comparar": "ico-compare", "/periodo": "ico-period"}
 
 # (titulo de la seccion, que responde, rutas en orden)
@@ -21,7 +21,7 @@ SECCIONES = [
      ["/demanda", "/estacionalidad", "/ocupacion", "/espera", "/comparar", "/periodo", "/altas", "/factores", "/estancia", "/diagnosticos", "/perfiles", "/atipicos", "/alertas"]),
     ("Predicción", "Qué se espera y qué pasaría si algo cambia",
      ["/pronostico", "/paciente", "/camas", "/simulador"]),
-    ("Propuestas", "Qué hacer con lo que se encontró", ["/recomendaciones", "/documentacion"]),
+    ("Propuestas", "Qué hacer con lo que se encontró", ["/recomendaciones", "/preguntas", "/documentacion"]),
 ]
 
 
@@ -62,7 +62,7 @@ CAPITULOS = {1: "Resumen ejecutivo", 2: "El reto y qué abordamos", 3: "Los dato
 # ruta -> (capitulo, subseccion o tema, que se encuentra alli)
 DOCUMENTACION = {
     "/resumen": (1, "Resumen ejecutivo", "los ocho hallazgos y lo que se propone, con sus cifras"),
-    "/datos": (3, "3.1 a 3.7", "la base tabla por tabla, la exploración y la limpieza paso a paso, las variables construidas y las herramientas"),
+    "/datos": (3, "3.1 a 3.8", "la base, cómo se extrajeron los datos, tabla por tabla, la exploración y la limpieza paso a paso, las variables construidas y las herramientas"),
     "/demanda": (4, "Cómo fluye el paciente", "llegadas por hora y por día, el recorrido, la estancia y los reingresos"),
     "/ocupacion": (5, "5.5 La saturación y la ocupación", "por qué sube la ocupación, la ley de Little y el exceso sobre las 106 camas"),
     "/espera": (5, "5.1 a 5.3 La espera de cama", "la definición de cuello de botella, el exceso y por qué empeoran los peores casos"),
@@ -74,13 +74,14 @@ DOCUMENTACION = {
     "/perfiles": (5, "5.7 Quién es el paciente", "los perfiles, la brecha por sexo y la carga del momento"),
     "/pronostico": (6, "6.1 Pronóstico de demanda", "el modelo, su error por horizonte y la forma del año"),
     "/estacionalidad": (6, "6.1 La forma del año", "de dónde salen las curvas del año y cuánto mejoran el pronóstico"),
-    "/alertas": (6, "6.2 Alertas", "las tres alertas, cómo se probaron y qué tanto aciertan"),
+    "/alertas": (6, "6.2 Alertas", "las alertas, cómo se probaron, qué tanto aciertan y qué recomendación dispara cada una"),
     "/atipicos": (6, "6.3 Días atípicos", "cómo se detectan y qué dicen del problema de la espera"),
     "/paciente": (6, "6.4 Estimador de la espera de cada paciente", "qué usa, cómo se validó y sus límites"),
     "/camas": (6, "6.5 Simulación Monte Carlo de camas", "cómo funciona, su validación, los escenarios y la curva de capacidad"),
-    "/periodo": (6, "6.7 Diagnóstico repetible del cuello de botella", "el reporte de cinco pasos de cualquier periodo, comparado con una referencia"),
-    "/simulador": (6, "6.5 Simulación (motor integral)", "el motor de agentes que une demanda, cola de espera y ocupación sobre el Monte Carlo"),
+    "/periodo": (6, "6.7 Diagnóstico repetible del cuello de botella", "el diagnóstico de cualquier periodo comparado con una referencia: dónde está el cuello, qué se dispara y qué comparten las esperas largas"),
+    "/simulador": (6, "6.9 Simulador integral", "el motor de agentes, su validación, las palancas, las alertas con su recomendación y la operación óptima"),
     "/recomendaciones": (7, "Recomendaciones", "las siete acciones con su evidencia, su firmeza y lo que no recomendamos"),
+    "/preguntas": (8, "El dashboard", "cómo funciona el asistente de preguntas, qué lee, sus límites y cuándo se apaga"),
 }
 
 
