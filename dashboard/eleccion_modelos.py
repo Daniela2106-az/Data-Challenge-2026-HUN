@@ -33,6 +33,12 @@ RESUMEN = {
         "No se predice la estancia de cada paciente ni se supone una fila por orden de llegada.",
         [("Fila «primero en llegar, primero en cama»", "El orden de llegada casi no predice el orden de asignación (53 % de pares en orden, frente a 50 % por azar)", "Simular la ocupación con estancias reales por perfil"),
          ("Predecir la estancia de cada paciente al ingresar", "Ni con diagnóstico ni con laboratorios se explica la estancia individual (R² de 0 a 0,02)", "Trabajar la estancia en conjunto: simulación y ley de Little")]),
+    "/paciente-cama": (
+        "Un modelo de supervivencia por hora ya pasada en cama (igual idea que el de la espera), medido contra el rango por "
+        "perfil que ya usa el dashboard: la mejora es real pero modesta, y se publica con ese límite explícito.",
+        [("Regresión de la estancia total al ingresar (prueba del 21-oct)", "R² ≈ 0,00-0,02, igual que adivinar la mediana", "Un modelo por hora ya pasada en cama, no uno solo al ingresar"),
+         ("Modelo explicativo con diagnóstico (factores_estancia.py)", "R² = 7,9-10,8 %, declarado como «explica, no predice»", "Medir con pérdida de cuantiles contra el rango por perfil, no con R²"),
+         ("Landmark propio a las 72/120/168 h", "Mide peor que el modelo agrupado en los tres puntos (muestra ya chica)", "Modelo agrupado dinámico desde las 72 h")]),
 }
 
 

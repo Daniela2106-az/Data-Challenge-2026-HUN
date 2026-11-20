@@ -8,7 +8,7 @@ Una pagina nueva que no este en SECCIONES aparece sola al final, bajo "Más": pa
 import re
 
 # Icono (clase CSS de theme.css) de cada ruta. Una ruta sin entrada usa el icono generico de perfiles.
-ICONOS = {"/": "ico-home", "/pronostico": "ico-forecast", "/paciente": "ico-patient", "/camas": "ico-bed", "/simulador": "ico-models",
+ICONOS = {"/": "ico-home", "/pronostico": "ico-forecast", "/paciente": "ico-patient", "/paciente-cama": "ico-stay", "/camas": "ico-bed", "/simulador": "ico-models",
           "/perfiles": "ico-profiles", "/recomendaciones": "ico-recs", "/documentacion": "ico-docs", "/datos": "ico-data",
           "/demanda": "ico-demand", "/ocupacion": "ico-occup", "/espera": "ico-wait", "/altas": "ico-clock",
           "/estacionalidad": "ico-season", "/alertas": "ico-alert", "/preguntas": "ico-chat", "/factores": "ico-factors", "/estancia": "ico-stay",
@@ -20,7 +20,7 @@ SECCIONES = [
     ("Resultados", "Qué pasa hoy en el hospital y dónde se pierde el tiempo",
      ["/demanda", "/estacionalidad", "/ocupacion", "/espera", "/comparar", "/periodo", "/altas", "/factores", "/estancia", "/diagnosticos", "/perfiles", "/atipicos", "/alertas"]),
     ("Predicción", "Qué se espera y qué pasaría si algo cambia",
-     ["/pronostico", "/paciente", "/camas", "/simulador"]),
+     ["/pronostico", "/paciente", "/paciente-cama", "/camas", "/simulador"]),
     ("Propuestas", "Qué hacer con lo que se encontró", ["/recomendaciones", "/preguntas", "/documentacion"]),
 ]
 
@@ -77,6 +77,7 @@ DOCUMENTACION = {
     "/alertas": (6, "6.2 Alertas", "las alertas, cómo se probaron, qué tanto aciertan y qué recomendación dispara cada una"),
     "/atipicos": (6, "6.3 Días atípicos", "cómo se detectan y qué dicen del problema de la espera"),
     "/paciente": (6, "6.4 Estimador de la espera de cada paciente", "qué usa, cómo se validó y sus límites"),
+    "/paciente-cama": (6, "6.10 Estimador de la estancia restante de cada paciente", "qué usa, cómo se validó y sus límites"),
     "/camas": (6, "6.5 Simulación Monte Carlo de camas", "cómo funciona, su validación, los escenarios y la curva de capacidad"),
     "/periodo": (6, "6.7 Diagnóstico repetible del cuello de botella", "el diagnóstico de cualquier periodo comparado con una referencia: dónde está el cuello, qué se dispara y qué comparten las esperas largas"),
     "/simulador": (6, "6.9 Simulador integral", "el motor de agentes, su validación, las palancas, las alertas con su recomendación y la operación óptima"),

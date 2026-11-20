@@ -595,6 +595,24 @@ La espera se **sortea** de trayectorias reales en vez de usar la predicción pun
 **Límites:** la cola es una cota inferior (solo cuenta a quienes terminan hospitalizados); reproduce patrones, no días ni pacientes concretos; la retroalimentación ocupación → espera no se modela porque no se puede estimar del histórico;
 las llegadas incluyen ~4 % de réplicas; los efectos de los factores externos son asociaciones con pocas semanas altas; y el periodo confiable termina el 9-abr-2026.
 
+### 6.10 Estimador de la estancia restante de cada paciente (A6b; `docs/estimador_estancia.md`; página «Paciente en cama»)
+- **Qué hace:** para un paciente que YA tiene cama asignada, estima cuánto le falta para el alta (con su rango) y la probabilidad de recibir el alta en 1,
+  3 y 7 días, y se actualiza con las horas que lleva en cama. Usa el mismo tipo de modelo de supervivencia en tiempo discreto del estimador de espera
+  (6.4), aplicado por primera vez a la estancia: un modelo por cada hora **ya transcurrida en cama**, no uno solo al momento del ingreso.
+- **Por qué se vuelve a intentar:** ya se había descartado un estimador de estancia por mala precisión — una prueba rápida (21-oct) con regresión al
+  ingreso dio R² ≈ 0,00-0,02 (igual que adivinar la mediana), y un modelo explicativo con más variables (`factores_estancia.py`, 3-nov) solo llegó a
+  R² = 7,9-10,8 %, declarado como «explica, no predice». Ambos intentaban resolver, de una sola vez al ingresar, la estancia TOTAL; nunca se había
+  probado la arquitectura que sí funciona para la espera (un modelo por hora ya transcurrida).
+- **Qué usa:** edad, sexo, tipo de visita, horas ya en cama, la hora, la ocupación del hospital, el historial de hospitalizaciones anteriores (incluido
+  el diagnóstico de esa visita anterior) y sus laboratorios del ingreso. NO usa el diagnóstico de esta estancia (se registra tarde: fuga) ni el
+  recorrido en urgencias (pertenece al tramo antes de la cama).
+- **Resultado** (probado con 3.900 estancias de jul-2025 a 9-ene-2026 que el modelo no vio, contra el rango por perfil que ya usa el dashboard): mejora
+  **1,6 % al asignarse la cama (IC 95 % 0,9 a 2,4 %)**, bajando con las horas y modestamente negativa desde las 120 h (muestra de prueba ya chica). Es
+  real pero mucho menor que el ~9-11 % del estimador de espera: lo que no se registra (servicio, tipo de cama, gravedad clínica) sigue explicando la
+  mayor parte de cuánto dura una estancia. Se publica igual, con este límite explícito.
+- **Mejora metodológica:** a diferencia de `que_esperar.py` y `factores_estancia.py`, las estancias sin alta resuelta no se descartan — aportan al
+  entrenamiento como censuradas, sin sesgar contra las estancias largas.
+
 ---
 
 ## 7. Recomendaciones (componente 4)

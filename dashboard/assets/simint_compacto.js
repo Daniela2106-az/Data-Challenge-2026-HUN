@@ -106,6 +106,14 @@
     }
     cols.innerHTML = lista.length ? col('Críticas', 'alta', 'Alta') + col('Avisos', 'media', 'Media') + col('Con mejora', 'mejora', null) : '';
     cols.style.display = lista.length ? 'flex' : 'none';
+    cols.querySelectorAll('.simint-cols__col').forEach(function (c) {
+      function estado() {
+        c.classList.toggle('simint-cols__col--desborda', c.scrollHeight > c.clientHeight + 1);
+        c.classList.toggle('simint-cols__col--fin', c.scrollTop + c.clientHeight >= c.scrollHeight - 2);
+      }
+      estado();
+      c.addEventListener('scroll', estado);
+    });
   }
 
   document.addEventListener('click', function (e) {
