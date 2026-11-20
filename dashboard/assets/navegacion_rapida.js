@@ -10,8 +10,8 @@
     var a = e.target.closest && e.target.closest('a[href^="/"]');
     if (!a || a.target === '_blank' || e.metaKey || e.ctrlKey || e.shiftKey || a.getAttribute('href') === location.pathname) { return; }
     var barra = document.querySelector('.sidebar');
-    if (a.classList.contains('nav__item') && barra) {
-      barra.querySelectorAll('.nav__item.is-active').forEach(function (x) { x.classList.remove('is-active'); });
+    if ((a.classList.contains('nav__item') || a.classList.contains('nav__simular')) && barra) {      // «Simular» tambien se marca al instante
+      barra.querySelectorAll('.nav__item.is-active, .nav__simular.is-active').forEach(function (x) { x.classList.remove('is-active'); });
       a.classList.add('is-active');
     }
     destino = a.getAttribute('href').split('#')[0].split('?')[0];

@@ -16,7 +16,7 @@ import markdown
 RAIZ = Path(__file__).resolve().parent.parent
 CHROME = {"darwin": "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome", "linux": "google-chrome", "win32": r"C:\Program Files\Google\Chrome\Application\chrome.exe"}
 LOGO = RAIZ / "dashboard" / "assets" / "logo_hun.png"
-FECHA = "17 de noviembre de 2026"
+FECHA = "20 de noviembre de 2026"
 EQUIPO = [("Daniela Amaya", "Coordinación, datos y análisis"), ("Samuel Amador", "Estimador de tiempos, recomendaciones y dashboard"), ("Anthony Amaya", "Modelo explicativo y simulación de camas")]
 CSS = ("@page{size:A4;margin:18mm 16mm 20mm 16mm;@bottom-right{content:'Página ' counter(page) ' de ' counter(pages);font:8.5pt Helvetica,Arial,sans-serif;color:#6b7785}"
        "@bottom-left{content:'Data Challenge HUN 2026 · Documentación del proyecto';font:8.5pt Helvetica,Arial,sans-serif;color:#6b7785}}"

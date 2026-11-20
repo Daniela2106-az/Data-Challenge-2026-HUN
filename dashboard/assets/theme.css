@@ -2717,3 +2717,11 @@ html.nav-cargando::before { content: ""; position: fixed; top: 0; left: 0; heigh
 .rec-corta__graf { margin: 4px 0 6px; padding: 10px 12px 8px; border-radius: var(--r-md); background: var(--surface-2); }
 .rec-corta__graf .dash-graph { background: transparent; }
 .rec-corta__pie { margin: 6px 2px 0; font-size: 12.5px; line-height: 1.45; color: var(--muted); }
+
+/* Movil: el menu pasa a una fila horizontal; «Simular» queda al inicio y el menu se desliza de lado */
+@media (max-width: 880px) {
+  .sidebar > .nav__simular { margin: 0 4px 0 0; padding: 9px 16px; flex: 0 0 auto; }
+  .sidebar > .nav { overflow-x: auto; overflow-y: hidden; flex: 1 1 auto; }
+  .nav__asistente { margin-bottom: 0; }
+  .sim-head__t { font-size: 32px; }
+}
