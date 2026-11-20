@@ -2725,3 +2725,16 @@ html.nav-cargando::before { content: ""; position: fixed; top: 0; left: 0; heigh
   .nav__asistente { margin-bottom: 0; }
   .sim-head__t { font-size: 32px; }
 }
+
+/* ---- Icono de carga en las graficas (20-nov-2026): en Render el calculo tarda y una grafica en blanco parece un error ----
+   Se muestra mientras la grafica aun no se dibujo (sin el lienzo de Plotly) y mientras espera el resultado de un calculo (Dash le pone dash-graph--pending).
+   No se muestra en la reproduccion del simulador, que se actualiza todo el tiempo. */
+.dash-graph { position: relative; }
+.dash-graph:not(:has(.js-plotly-plot))::after, .dash-graph.dash-graph--pending:not(#simint-grafico)::after {
+  content: ""; position: absolute; top: 50%; left: 50%; width: 38px; height: 38px; margin: -19px 0 0 -19px; z-index: 5; pointer-events: none;
+  border-radius: 50%; border: 4px solid var(--surface-2); border-top-color: var(--brand-strong); animation: grafica-gira .85s linear infinite; }
+.dash-graph:not(:has(.js-plotly-plot))::before, .dash-graph.dash-graph--pending:not(#simint-grafico)::before {
+  content: "Cargando…"; position: absolute; top: 50%; left: 50%; margin: 28px 0 0; transform: translateX(-50%); z-index: 5; pointer-events: none;
+  font-size: 12.5px; font-weight: 600; color: var(--muted); letter-spacing: .02em; }
+.dash-graph.dash-graph--pending:not(#simint-grafico) .js-plotly-plot { opacity: .45; transition: opacity .2s var(--ease); }
+@keyframes grafica-gira { to { transform: rotate(360deg); } }
