@@ -284,18 +284,21 @@ La simulación se reproduce siempre como «hoy». Mientras corre, salta una tarj
 
 **Calibración.** En un caso normal de la propia simulación (90 días, sin palancas) la probabilidad de superar las 106 camas tiene mediana 68 % y casi nunca pasa de 84 %; las camas ocupadas, mediana 111 y p90 114,5; la cola, mediana 25 y p99 28. Superar las 106 camas es lo normal en esta simulación: por eso esa condición avisa **una sola vez** y lo que **frena** la simulación es lo crítico, por encima de lo típico. Los primeros 7 días (4 si el plazo es de 2 semanas o menos; 12 horas en la vista horaria), que vienen de la siembra con el censo real, no generan alertas. Si los controles mejoran claramente al hospital (por ejemplo, estancia −10 %), no saltan alertas porque ya no hay riesgo.
 
-**Gravedades y pausa.** Hay dos gravedades: aviso (media) y crítico (alta). **Las dos frenan la simulación**, para poder revisarlas y aplicar la mejora antes de que la condición escale; cada alerta (tipo y gravedad) se muestra una sola vez por corrida, así que en total hay como mucho 4 pausas (2 tipos × 2 gravedades). Cada alerta (tipo y gravedad) se muestra **una sola vez por corrida**: después queda como procesada y no vuelve a saltar; solo escala si pasa de aviso a crítica. Un aviso (gravedad media) también frena la simulación y ofrece «Aplicar mejora y comparar», para corregir antes de que escale.
+**Gravedades y pausa.** Hay dos gravedades: aviso (media) y crítico (alta). **Las dos frenan la simulación**, para poder revisarlas y aplicar la mejora antes de que la condición escale. Una alerta salta cuando **aparece**: mientras siga activa no vuelve a saltar, y si se va, solo vuelve a saltar después de **14 días apagada** (14 × 24 pasos en la vista horaria), o antes si se agrava de aviso a crítico (20-nov-2026; antes volvía a saltar cada vez que cruzaba el umbral, hasta 4 o 5 veces por corrida).
 
 | Alerta | Aviso (gravedad media) | Crítico (gravedad alta) | Recomendación | Alerta en Resultados |
 |---|---|---|---|---|
 | Faltarán camas (se necesitarán más de las 106: probabilidad de superar la capacidad a 48 h y camas que faltan, en la mediana) | desde 50 % o 1 cama que falta (107 ocupadas) | desde 84 % o 12 camas que faltan (118 ocupadas) | R3, R4 y R7 | A2 |
 | Cola de espera larga (pacientes a la vez) | desde 28 | desde 33 (el percentil 90 real) | R5 y R6 | S1 |
+| Estancias más largas de lo normal (en cama con más días que el p90 de su perfil) | desde 23 | desde 28 | R7 | A2 |
+| Esperas de más de 3 días (72 h o más sin cama) | desde 10 | desde 13 | R5 y R6 | A3 |
+| Ingresos con riesgo de estancia larga (% de ingresos de 7 días de 60+ o treatment urgency) | desde 47 % | desde 55 % | R7 | A2 |
 
 La tarjeta apila sus botones de arriba abajo: Continuar, Aplicar mejora y comparar, Ver más sobre esta alerta y Ver recomendación. La reproducción nueva arranca cuando la figura nueva ya está dibujada, para que el gráfico no parpadee al reiniciar.
 
 Los umbrales son criterios de esta página, no resultados validados como los de `docs/recomendaciones.md`. Si coinciden varias, gana la más grave.
 
-Al aplicar la mejora, las alertas de la corrida anterior **no desaparecen**: siguen consultables con las flechas, marcadas como «resuelta con la mejora», y las nuevas se suman al historial.
+Al aplicar la mejora, las alertas de la corrida anterior **no desaparecen**: siguen consultables, y las nuevas se suman al historial.
 
 **Una sola acción: «Aplicar mejora y comparar».** Se frena la reproducción, el panel de configuración se abre y los controles se desplazan, uno tras otro, a la operación óptima (R7: 15 % menos en las estancias de más de 14 días; R4: 30 % de las altas de la tarde adelantadas a la mañana). El panel se enfoca en las dos palancas que cambian, se mueven una tras otra y, cuando terminan, **se cierra solo y la vista baja al gráfico**. Entonces la simulación se **repite desde el día 1** con la operación óptima a todo color y cómo iba antes («Antes de la mejora») en gris punteado, durante toda la corrida. La alerta de cola no ofrece la mejora, porque la operación óptima no la mueve directamente. «Reiniciar» devuelve los controles a cero.
 
@@ -320,3 +323,23 @@ El pronóstico de ingresos a cama ahora se reparte en cuatro franjas del día: *
 - **Estancia y espera acopladas (supuesto):** con `acoplar_estancia=True` (lo usa el dashboard) la espera de cada paciente sube en la misma proporción que la estancia. No está calibrado con datos.
 - **Pico de llegadas de la tarde:** la alerta de cola también salta si las llegadas de 14 a 19 h llegan a 81 o más ese día (percentil 90 de los datos reales; promedio 65) y la cola ya es de al menos el 80 % del umbral (22 de 28). Con la operación normal del simulador nunca se supera (máximo 76,7 en 90 días); con 15 % más de llegadas se supera 19 de 90 días. Es un indicador del volumen del día, no una medida independiente, porque el reparto por franja es fijo por día de la semana.
 - **Alertas:** una alerta salta cuando **aparece**; si ya estaba activa no vuelve a saltar, y si se va y reaparece salta de nuevo. Las que coinciden el mismo día se encolan y se muestran una tras otra.
+
+## Alertas comprimidas y alertas por paciente (19 y 20-nov-2026)
+
+- **Alertas comprimidas (`dashboard/assets/simint_compacto.js`):**
+  - Al pulsar Continuar o Aplicar mejora, la tarjeta se comprime en una fila con punto de color, título y fecha.
+  - Las filas se acumulan en el lugar de la tarjeta, en columnas: Críticas, Avisos y Con mejora.
+  - Un clic en una fila abre la tarjeta completa, y la ✕ la vuelve a comprimir.
+  - En las alertas con mejora, «Ver listas de pacientes» cambia la tarjeta por las tablas, y la flecha vuelve a la tarjeta. Los cambios de tamaño tienen una transición de altura.
+  - Las flechas para recorrer el historial se quitaron.
+- **Desplazamientos (`dashboard/assets/simint_scroll.js`):**
+  - Al saltar una alerta, su encabezado queda en el primer cuarto de la pantalla.
+  - Al aplicar la mejora, la ventana de configuración queda centrada y se abre solo el grupo del control que se mueve.
+  - Al continuar, el gráfico queda centrado sin cortar el botón de reproducir.
+- **Configuración en acordeón:** solo se ven los encabezados de los grupos, y cada grupo se abre con un clic.
+- **Tres alertas por paciente:**
+  - Son estancias más largas de lo normal, esperas de más de 3 días e ingresos con riesgo de estancia larga.
+  - Se cuentan día a día sobre los pacientes de la repetición registrada (`pacientes_alerta.series_alertas`).
+  - Tienen histéresis: una vez activas, siguen activas hasta bajar de un nivel de suelta.
+  - Calibración, justificación e ideas descartadas: `docs/alertas_por_paciente.md`.
+  - No existen en la vista horaria, que no registra pacientes.

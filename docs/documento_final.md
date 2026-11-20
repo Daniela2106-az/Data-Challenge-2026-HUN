@@ -574,15 +574,19 @@ estrés, el recorte de las estancias de más de 14 días (recomendación 7), el 
 medido de cada uno: solo las respiratorias mueven la demanda de forma apreciable).
 
 **Alertas, recomendaciones y mejora.** Mientras la simulación corre salta una tarjeta de alerta, siempre visible arriba del gráfico, con qué pasó y la recomendación de la que se deriva (con su primer paso), enlaces a la alerta
-y a la recomendación y flechas para ver las anteriores. Hay dos alertas, cada una con dos gravedades:
+y a la recomendación. Al continuar, la tarjeta se comprime en una fila (punto de color, título y fecha) que se acumula en columnas por gravedad, con una columna aparte para las alertas a las que se les aplicó la mejora; un clic la vuelve a abrir. Hay cinco alertas, cada una con dos gravedades:
 
 | Alerta | Aviso (media) | Crítico (alta) | Recomendaciones |
 |---|---|---|---|
 | Faltarán camas (se necesitarán más de las 106: probabilidad de superar la capacidad a 48 h y camas que faltan) | desde 50 % o 1 cama que falta | desde 84 % o 12 camas que faltan (118 ocupadas) | 3, 4 y 7 |
 | Cola de espera larga (pacientes a la vez) | desde 28 | desde 33 | 5 y 6 |
+| Estancias más largas de lo normal (pacientes en cama que ya llevan más días que 9 de cada 10 de su perfil) | desde 23 | desde 28 | 7 |
+| Esperas de más de 3 días (pacientes con 72 h o más sin cama) | desde 10 | desde 13 | 5 y 6 |
+| Ingresos con riesgo de estancia larga (% de los ingresos de la semana mayores de 60 o «treatment urgency») | desde 47 % | desde 55 % | 7 |
 
 Los umbrales críticos están por encima de lo típico del simulador, porque superar las 106 camas es lo normal en esta simulación (la probabilidad tiene mediana de 68 %). Son criterios de esta herramienta, no resultados validados.
-Las dos gravedades frenan la simulación, y cada alerta salta una sola vez por corrida. Desde la alerta, **«Aplicar mejora y comparar»** abre el panel, desplaza los controles a la **operación óptima** (15 % menos en las estancias largas y 30 % de las altas
+Las tres últimas cuentan a los pacientes uno por uno en una repetición de la simulación. Sus umbrales se calibraron con corridas de 90 días en operación normal; la justificación de cada una, y de las ideas que se descartaron, está en `docs/alertas_por_paciente.md`.
+Las dos gravedades frenan la simulación. Una alerta salta cuando aparece; si se va, solo vuelve a saltar tras 14 días apagada, o antes si se agrava de aviso a crítico. Desde la alerta, **«Aplicar mejora y comparar»** abre el panel, desplaza los controles a la **operación óptima** (15 % menos en las estancias largas y 30 % de las altas
 de la tarde adelantadas) y repite la simulación desde el día 1, con la mejora en color y cómo iba antes en gris punteado.
 
 **Por qué no se encadenó con los otros modelos.** Cada módulo se construyó para una población distinta: el estimador de espera solo vio pacientes que recibieron cama, y el ~87 % de las llegadas atendidas se va de alta desde urgencias.

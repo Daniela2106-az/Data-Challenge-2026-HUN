@@ -53,7 +53,10 @@ N_REP_INTERACTIVO = 200
 N_REP_HORARIO = 300
 import pacientes_alerta as pac_alerta  # noqa: E402  (tablas de pacientes de la confirmacion verde)
 from umbrales_alertas import (ARRANQUE_SIN_ALERTAS, UMBRAL_ALERTA, UMBRAL_ALERTA_MEDIA, UMBRAL_COLA, UMBRAL_COLA_CRITICA, UMBRAL_FALTAN,  # noqa: E402,F401
-                              UMBRAL_FALTAN_CRITICO, UMBRAL_LLEGADAS_TARDE, FRACCION_COLA_PICO)
+                              UMBRAL_FALTAN_CRITICO, UMBRAL_LLEGADAS_TARDE, FRACCION_COLA_PICO,
+                              NORMAL_SOBRE_PERFIL, UMBRAL_SOBRE_PERFIL, UMBRAL_SOBRE_PERFIL_CRITICO, NORMAL_ESPERA_EXTREMA, UMBRAL_ESPERA_EXTREMA,
+                              UMBRAL_ESPERA_EXTREMA_CRITICO, NORMAL_INGRESOS_RIESGO, UMBRAL_INGRESOS_RIESGO, UMBRAL_INGRESOS_RIESGO_CRITICO,
+                              SUELTA_SOBRE_PERFIL, SUELTA_ESPERA_EXTREMA, SUELTA_INGRESOS_RIESGO)
 
 # Escenarios con nombre: cada uno fija las palancas (el simulador mueve los controles y despues recalcula). Los factores externos no cambian.
 PALANCAS_CERO = {"llegadas": 0, "estancia": 0, "espera": 0, "capacidad": 106, "estres": 0, "recorte": 0, "adelanto": 0}
@@ -133,12 +136,12 @@ def _plan_de_mejora(tipo, o, cap, c, altas_dia, perfiles_top):
     return [r5, r6], {"espera": ESPERA_PEDIR_ANTES}
 
 
-def _alertas_dia(fechas, total_p50, cola_p50, probs48, capacidad, horas=False, altas_dia=19.6, comp=None, perfiles=None, llegadas_tarde=None):
+def _alertas_dia(fechas, total_p50, cola_p50, probs48, capacidad, horas=False, altas_dia=19.6, comp=None, perfiles=None, llegadas_tarde=None, ser=None):
     """Reglas de negocio sobre las series simuladas: la alerta de cada dia (o de cada hora), o None. Cada una dice su tipo, su gravedad (media: aviso; alta: critica),
     por que salto, la recomendacion especifica con cifras de la simulacion y las palancas que la aplican (`_plan_de_mejora`).
     Faltaran camas (se necesitaran mas de las 106; fusiona las antiguas saturacion y ocupacion alta, que decian lo mismo): aviso desde 50 % de probabilidad de superar la capacidad a 48 h
     o desde 1 cama que falta; critica desde 84 % o desde 12 camas que faltan (118 ocupadas). Cola de espera: aviso desde 28 pacientes y critica desde 33. Si varias coinciden, se encolan (la mas grave primero)."""
-    salida = []
+    salida, estado = [], {}
     for i, f in enumerate(fechas):
         p, o, c = float(probs48[i]), float(total_p50[i]), float(cola_p50[i])
         cand = []
@@ -166,12 +169,78 @@ def _alertas_dia(fechas, total_p50, cola_p50, probs48, capacidad, horas=False, a
                 "tipo": "cola", "titulo": "Cola de espera larga", "metrica": f"{c:.0f} pacientes esperando",
                 "texto": texto_cola,
                 "acciones": ac, "palancas": pal, "mejora": True, "rec": 5, "alerta": "S1"}))
+        if ser is not None and not horas:
+            cand.extend(_alertas_paciente(ser, i, c, estado))
         if not cand:
             salida.append([])
             continue
         # 19-nov-2026: todas las alertas del dia (no solo la mas grave), para encolarlas: se muestran una despues de otra
         salida.append([{**a, "gravedad": g} for g, _, a in sorted(cand, key=lambda x: (x[0] != "Alta", x[1]))])
     return salida
+
+
+def _coma(x, d=0):
+    return f"{x:.{d}f}".replace(".", ",")
+
+
+def _ref_p90_estancia(perfiles):
+    """Estancia (dias) que solo supera 1 de cada 10 pacientes de cada perfil (edad x tipo de visita), en las trayectorias reales que usa el simulador."""
+    return [round(float(np.percentile((si.TRAY_PERFIL.get((g, r)) or si.TRAY_EDAD.get(g) or si.TRAY_GLOBAL)[2], 90)) / 24, 1) for g, r in perfiles]
+
+
+def _alertas_paciente(ser, i, cola, estado=None):
+    """Alertas que miran a los pacientes uno por uno (20-nov-2026): estancias mas largas de lo normal para su perfil, esperas de mas de 3 dias e ingresos
+    con riesgo de estancia larga. `ser` = conteos diarios de pacientes_alerta.series_alertas. Devuelve [(gravedad, orden, alerta)]."""
+    cand = []
+    estado = {} if estado is None else estado
+
+    def activa(tipo, valor, umbral, suelta):            # histeresis: salta en `umbral` y, ya activa, sigue hasta bajar de `suelta`
+        estado[tipo] = valor >= umbral or (estado.get(tipo, False) and valor >= suelta)
+        return estado[tipo]
+    sp, corto, m30 = ser["sobre_perfil"][i], ser["sobre_corto"][i], ser["mas30"][i]
+    if activa("estancia_perfil", sp, UMBRAL_SOBRE_PERFIL, SUELTA_SOBRE_PERFIL):
+        largos = sp - corto
+        dosis = min(30, max(10, _a5(100 * max(sp - NORMAL_SOBRE_PERFIL, 1) / max(largos, 1))))
+        texto = (f"{sp} pacientes en cama ya llevan más días que 9 de cada 10 pacientes de su misma edad y tipo de visita (lo habitual en la simulación son unos {NORMAL_SOBRE_PERFIL}). "
+                 f"{corto} de ellos aún no cumplen 14 días, así que la revisión de estancias largas, que empieza a los 14 días, todavía no los ve"
+                 + (f"; {m30} ya pasan de 30 días." if m30 else ".")
+                 + " La ocupación sube porque los pacientes se quedan más, no porque lleguen más (Ocupación de camas, resultados 1 y 2): esta alerta lo ve antes de que falten camas.")
+        ac = [f"**Revisar por perfil, no solo a los 14 días.** Llevar a la reunión de camas la lista de los {sp} pacientes, empezando por los {corto} que aún no cumplen 14 días: "
+              "para cada uno, qué falta para el alta (un examen, una interconsulta, un trámite o un traslado) y quién lo resuelve hoy.",
+              f"**R7 · Gestión de casos en los {largos} que pasan de 14 días.** Coordinar su plan de salida para que su estancia dure {dosis} % menos: a la larga libera unas {_coma(dosis / 100 * largos)} camas.",
+              "**Cómo se mide «lo normal».** Con la estancia real de cada perfil en 2023–2026. La alerta mira cuánto lleva cada paciente y no intenta adivinar cuánto le falta: "
+              "la estancia exacta de un paciente no se puede predecir al ingresar con los datos que registra el hospital."]
+        cand.append(("Alta" if sp >= UMBRAL_SOBRE_PERFIL_CRITICO else "Media", 2, {
+            "tipo": "estancia_perfil", "titulo": "Estancias más largas de lo normal", "metrica": f"{sp} pacientes",
+            "texto": texto, "acciones": ac, "palancas": {"recorte": dosis}, "mejora": True, "rec": 7, "alerta": "A2"}))
+    ext, prox, may, man = ser["espera_ext"][i], ser["espera_prox"][i], ser["may_urg"][i], ser["manana"][i]
+    if activa("espera_extrema", ext, UMBRAL_ESPERA_EXTREMA, SUELTA_ESPERA_EXTREMA):
+        texto = (f"{ext} pacientes llevan 72 horas o más esperando cama (lo habitual en la simulación son unos {NORMAL_ESPERA_EXTREMA}), con una cola total de {cola:.0f}. "
+                 "Son los peores casos, los que más empeoran año tras año (Espera de cama, resultado 2): la cola total puede verse normal mientras ellos se acumulan. "
+                 + (f"Otros {prox} llegarán a 72 horas si nada cambia." if prox else ""))
+        ac = [f"**R5 · Un responsable para estos {ext} pacientes, hoy.** Revisar cada caso: si la orden de hospitalización está completa, qué tipo de cama necesita y qué bloquea "
+              "la asignación (cama de un servicio específico, aislamiento o un trámite).",
+              f"**Quiénes son.** {may} de los {ext} son mayores de 60 que entraron por urgencias y {man} llegaron en la mañana (6 a 12 h), el patrón de Espera de cama (resultado 3) "
+              "y de Qué influye en la espera (resultado 5). Quien llega en la mañana depende de la asignación de camas de las 15 a 17 h: si su solicitud no está lista antes, pasa a la de las 20 a 23 h o al día siguiente.",
+              f"**R6 · Pedir la cama antes de esa hora.** Dejar lista la solicitud de cama antes de las 15 h; en la simulación equivale a bajar la espera {abs(ESPERA_PEDIR_ANTES)} %."
+              + (f" Para los {prox} que van en camino, usar el estimador de «Paciente en espera» a las 12 h: avisa quién seguirá sin cama a las 48 h y acierta 1 de cada 2." if prox else ""),
+              "**No adelantarlos en la fila por su edad o sexo.** Lo que se sabe del paciente explica solo el 16 % de su espera: la prioridad la da la revisión del caso."]
+        cand.append(("Alta" if ext >= UMBRAL_ESPERA_EXTREMA_CRITICO else "Media", 3, {
+            "tipo": "espera_extrema", "titulo": "Esperas de más de 3 días", "metrica": f"{ext} pacientes",
+            "texto": texto, "acciones": ac, "palancas": {"espera": ESPERA_PEDIR_ANTES}, "mejora": True, "rec": 5, "alerta": "A3"}))
+    pct, nr, r14 = ser["pct_riesgo"][i], ser["n_riesgo"][i], ser["riesgo_14"][i]
+    if activa("ingresos_riesgo", pct, UMBRAL_INGRESOS_RIESGO, SUELTA_INGRESOS_RIESGO):
+        texto = (f"En los últimos 7 días, el {_coma(pct)} % de quienes recibieron cama ({nr} pacientes) son mayores de 60 o entraron como «treatment urgency» (lo habitual es ~{NORMAL_INGRESOS_RIESGO} %). "
+                 "Esos pacientes tienen 2 a 3 veces más riesgo de quedarse más de 14 días (Estancias largas, resultados 3 y 4). Las camas todavía no lo reflejan: "
+                 "se llenan en las próximas una a dos semanas, cuando esas estancias se alarguen.")
+        ac = [f"**Plan de alta desde el ingreso.** Para los {nr} pacientes de esos perfiles, fijar en las primeras 48 horas la fecha probable de alta y lo que se necesita para cumplirla "
+              "(trabajo social, cuidados en casa, traslado o un cupo en otra institución).",
+              f"**Avisar a la reunión de camas.** Unos {r14} de ellos pasarían de 14 días: son camas que no se liberarán en semanas y hay que contar con ellas al planear los próximos ingresos.",
+              "**R7 · Gestión de casos temprana.** Empezar la coordinación del alta desde ya y no a los 14 días; en la simulación equivale a recortar 15 % las estancias de más de 14 días."]
+        cand.append(("Alta" if pct >= UMBRAL_INGRESOS_RIESGO_CRITICO else "Media", 4, {
+            "tipo": "ingresos_riesgo", "titulo": "Ingresos con riesgo de estancia larga", "metrica": f"{_coma(pct)} % de los ingresos",
+            "texto": texto, "acciones": ac, "palancas": {"recorte": 15}, "mejora": True, "rec": 7, "alerta": "A2"}))
+    return cand
 
 
 MODELOS_FIJOS = [k for k in ("dengue", "lluvia", "ira", "eda") if k in si.MODELOS_DISPONIBLES]
@@ -409,13 +478,15 @@ def _seccion_alertas():
     """Como funcionan las alertas, la pausa y la operacion optima (se muestra dentro de la documentacion de la pagina)."""
     return html.Div([
         _titulo_interp("Alertas y operación óptima"),
-        html.Div(f"Mientras corre la simulación salta una tarjeta de alerta arriba del gráfico, siempre visible. Hay dos alertas: faltarán camas (se necesitarán más de las 106; aviso desde {UMBRAL_ALERTA_MEDIA} % de "
+        html.Div(f"Mientras corre la simulación salta una tarjeta de alerta arriba del gráfico, siempre visible. Hay cinco alertas: faltarán camas (se necesitarán más de las 106; aviso desde {UMBRAL_ALERTA_MEDIA} % de "
                  f"probabilidad de superar la capacidad a 48 h o desde {UMBRAL_FALTAN} cama que falta, crítico desde {UMBRAL_ALERTA} % o desde {UMBRAL_FALTAN_CRITICO} camas que faltan) y cola de espera larga "
-                 f"(aviso desde {UMBRAL_COLA} pacientes, crítico desde {UMBRAL_COLA_CRITICA}). Hay dos gravedades, aviso (amarillo) y crítico (rojo); las dos frenan la simulación, y cada alerta salta una sola vez por corrida. "
-                 "La tarjeta dice qué pasó y la recomendación de la que se deriva (con su primer paso), tiene flechas para ver las alertas anteriores y botones para ir a la alerta y a la recomendación."),
+                 f"(aviso desde {UMBRAL_COLA} pacientes, crítico desde {UMBRAL_COLA_CRITICA}); y tres que miran a los pacientes uno por uno: estancias más largas de lo normal para su perfil "
+                 f"(aviso desde {UMBRAL_SOBRE_PERFIL} pacientes), esperas de más de 3 días (aviso desde {UMBRAL_ESPERA_EXTREMA} pacientes) e ingresos con riesgo de estancia larga (aviso desde {UMBRAL_INGRESOS_RIESGO} % de los ingresos de la semana). "
+                 f"Hay dos gravedades, aviso (amarillo) y crítico (rojo); las dos frenan la simulación, y una alerta salta cuando aparece; si se va, solo vuelve a saltar tras 14 días apagada, o antes si se agrava de aviso a crítico. "
+                 "La tarjeta dice qué pasó y la recomendación de la que se deriva. Al continuar se comprime en una fila (punto de color, título y fecha), agrupada en columnas por gravedad y una columna aparte para las que tuvieron mejora; un clic la vuelve a abrir."),
         html.Div([html.B("Recomendación específica y mejora: "), "cada alerta calcula su recomendación con las cifras de la propia simulación (cuántas camas faltan, cuántos pacientes llevan más de 14 días, cuántas altas "
                   "de la tarde hay, qué grupos ocupan más camas). «Aplicar mejora y comparar» abre el panel y mueve, uno tras otro, SOLO los controles de esa recomendación: en faltarán camas, adelantar el 30 % de las altas de la tarde (R4) y la "
-                  "gestión de casos en las estancias largas (R7), además de la reunión de camas (R3); en cola larga, pedir antes la cama (R6, espera −5 %). La dosis de la gestión de casos sale de cuántas camas faltan (de 10 a 30 % menos de duración). "
+                  "gestión de casos en las estancias largas (R7), además de la reunión de camas (R3); en cola larga y en esperas de más de 3 días, pedir antes la cama (R6, espera −5 %); en estancias más largas de lo normal e ingresos con riesgo de estancia larga, la gestión de casos (R7). La dosis de la gestión de casos sale de cuántas camas faltan (de 10 a 30 % menos de duración). "
                   "Los demás controles quedan como estaban. Luego la simulación se repite desde el día 1 con la mejora en color y cómo iba antes («Antes de la mejora») en gris punteado. "
                   "Las alertas anteriores siguen disponibles, marcadas como resueltas con la mejora. «Reiniciar» devuelve los controles a cero."], style={"marginTop": "8px"}),
     ])
@@ -959,7 +1030,10 @@ def layout():
                                "la tarjeta se queda a la vista todo el tiempo.", className="simint-alerta__espera-p"),
                         html.Div(className="simint-alerta__vigila", children=[
                             html.Span([html.I(), f"Faltarán camas · aviso desde {UMBRAL_ALERTA_MEDIA} % o {UMBRAL_FALTAN} cama que falta, crítico desde {UMBRAL_ALERTA} % o {UMBRAL_FALTAN_CRITICO} camas"], className="simint-alerta__vigila-item"),
-                            html.Span([html.I(), f"Cola de espera larga · aviso desde {UMBRAL_COLA} pacientes, crítico desde {UMBRAL_COLA_CRITICA}"], className="simint-alerta__vigila-item")])])]),
+                            html.Span([html.I(), f"Cola de espera larga · aviso desde {UMBRAL_COLA} pacientes, crítico desde {UMBRAL_COLA_CRITICA}"], className="simint-alerta__vigila-item"),
+                            html.Span([html.I(), f"Estancias más largas de lo normal · aviso desde {UMBRAL_SOBRE_PERFIL} pacientes, crítico desde {UMBRAL_SOBRE_PERFIL_CRITICO}"], className="simint-alerta__vigila-item"),
+                            html.Span([html.I(), f"Esperas de más de 3 días · aviso desde {UMBRAL_ESPERA_EXTREMA} pacientes, crítico desde {UMBRAL_ESPERA_EXTREMA_CRITICO}"], className="simint-alerta__vigila-item"),
+                            html.Span([html.I(), f"Ingresos con riesgo de estancia larga · aviso desde {UMBRAL_INGRESOS_RIESGO} %, crítico desde {UMBRAL_INGRESOS_RIESGO_CRITICO} %"], className="simint-alerta__vigila-item")])])]),
                 html.Div(className="simint-alerta__cuerpo", children=[
                     html.Div(className="simint-alerta__cab", children=[
                         html.Span(id="simint-alerta-grav", className="rec-chip"), html.Span("Sin alertas por ahora", id="simint-alerta-titulo", className="simint-alerta__titulo"),
@@ -1174,6 +1248,8 @@ def _ejecutar(dias, pct_lleg, pct_est, pct_esp, recorte, adelanto, estres, compa
                                             recorte_largas_pct=recorte or 0, adelanto_altas_pct=adelanto or 0,
                                             mezcla_edad=me, mezcla_ruta=mr, acoplar_estancia=True, registrar_rep=0, cambios=[{"dia": c["dia"], "valores": c["valores"]} for c in cambios] if cambios else None)
     data = {"fechas": [str(f.date()) for f in fechas], "es_horario": False}
+    if info.get("pacientes"):
+        info["pacientes"]["ref_p90"] = _ref_p90_estancia(info["pacientes"]["perfiles"])      # 20-nov: estancia de referencia por perfil (alertas por paciente)
     data["pacientes"] = info.get("pacientes")        # ejemplo de una repeticion: va a su propio Store (_sacar_pacientes), no en simint-datos
     # Los controles con los que arranco esta corrida y los que valen ahora (si hubo cambios a mitad de camino): sirven para saber, al continuar, si el usuario cambio algo.
     data["controles_ini"] = {"llegadas": pct_lleg or 0, "estancia": pct_est or 0, "espera": pct_esp or 0, "recorte": recorte or 0, "adelanto": adelanto or 0, "estres": estres or 0}
@@ -1193,7 +1269,8 @@ def _ejecutar(dias, pct_lleg, pct_est, pct_esp, recorte, adelanto, estres, compa
     data["umbral_alerta"] = UMBRAL_ALERTA
     data["alertas_dia"] = _alertas_dia(data["fechas"], data["total_p50"], data["cola_p50"], data["prob_sat_48h"], scm.CAPACIDAD["total"],
                                        altas_dia=data["medias"]["altas"], comp=data["composicion"]["en_cama"], perfiles=data["perfiles"],
-                                       llegadas_tarde=data["llegadas_franja"].get("tarde"))
+                                       llegadas_tarde=data["llegadas_franja"].get("tarde"),
+                                       ser=pac_alerta.series_alertas(data["pacientes"], len(fechas)) if data.get("pacientes") else None)
     data["sat_por_capacidad"] = {str(c): round(100 * float((out["total"] > c).mean()), 1) for c in range(96, 131, 2)}
     hay_palancas = any([pct_lleg, pct_est, pct_esp, recorte, adelanto, estres, casos])
     cambios_l = list(cambios or [])
@@ -1891,7 +1968,16 @@ clientside_callback(
         var activasAhora = {};
         var lista = al[c] || [];
         lista.forEach(function(x) { activasAhora[x.tipo] = true; });
-        var nuevas = lista.filter(function(x) { return !activasPrev[x.tipo]; });
+        // 20-nov-2026: la MISMA alerta no vuelve a saltar si ya salto y no lleva al menos 14 dias apagada (14*24 pasos en la vista horaria); solo salta antes si se agrava (aviso -> critico).
+        var ult = window._simintUltTipo = window._simintUltTipo || {}, REPOSO = data.es_horario ? 14 * 24 : 14;
+        var nuevas = lista.filter(function(x) {
+            if (activasPrev[x.tipo]) { return false; }
+            var u = ult[x.tipo];
+            if (!u) { return true; }
+            return (c - u.activo >= REPOSO) || (x.gravedad === 'Alta' && u.g !== 'Alta');
+        });
+        nuevas.forEach(function(x) { ult[x.tipo] = {g: x.gravedad, activo: c}; });
+        lista.forEach(function(x) { if (ult[x.tipo]) { ult[x.tipo].activo = c; if (x.gravedad === 'Alta') { ult[x.tipo].g = 'Alta'; } } });
         window._simintActivas = activasAhora;
         if (nuevas.length) {
             window._simintUltAlerta = c;
@@ -1936,7 +2022,7 @@ clientside_callback(
         }
         var clase = "alert-inline simint-alerta simint-alerta--" + (a.resuelta ? 'resuelta' : (a.gravedad === 'Alta' ? 'alta' : 'media'));
         var boton = {display: (a.mejora && a.ultima && !a.resuelta) ? 'block' : 'none'};
-        var queDijo = a.texto + ' (' + a.fecha + ')' + (a.pausada ? ' La simulación se detuvo para que lo revises.' : '');
+        var queDijo = a.texto + (a.pausada ? ' La simulación se detuvo para que lo revises.' : '');
         return ["Gravedad " + a.gravedad.toLowerCase() + (a.gravedad === 'Alta' ? ' · crítica' : ' · aviso') + (a.resuelta ? ' · resuelta con la mejora' : ''), a.titulo, queDijo,
                 (a.acciones || []).map(function(x) { return '- ' + x; }).join('\\n'), '', a.pos || '', clase, boton,
                 '/alertas#alerta-' + (a.alerta || 'A2'), '/recomendaciones#rec-R' + (a.rec || 4),

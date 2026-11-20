@@ -20,7 +20,8 @@
     if (!r) {
       var cols = $('simint-alerta-cols'); if (!cols || !cols.parentNode) { return null; }
       r = document.createElement('div'); r.id = 'simint-alerta-rev'; r.className = 'simint-rev'; r.style.display = 'none';
-      cols.parentNode.insertBefore(r, cols);
+      var card = $('simint-alerta');
+      cols.parentNode.insertBefore(r, card || cols.nextSibling);      // debajo de los componentes comprimidos, en el mismo lugar que la tarjeta
     }
     return r;
   }

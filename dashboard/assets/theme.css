@@ -2374,3 +2374,9 @@ button.simint-rev__ver:hover { color: #1b4fb0 !important; background: transparen
 .simint-rev .simint-conf__cab { padding-right: 80px; }
 button.simint-rev__ver { font-size: 15px; padding: 2px 6px; }
 .simint-rev .simint-rev__cerrar { font-size: 15px; }
+
+/* fecha de la tarjeta en la esquina superior, junto al icono de cerrar */
+.simint-alerta:not(.simint-alerta--idle) .simint-alerta__fecha { margin-left: auto; }
+.simint-alerta:not(.simint-alerta--idle) .simint-alerta__cerrar { margin-left: 2px; }
+.simint-rev .simint-conf__cab .simint-alerta__fecha { margin-left: auto; }
+.simint-rev .simint-conf__cab { padding-right: 64px; }

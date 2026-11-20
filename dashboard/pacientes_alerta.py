@@ -89,6 +89,77 @@ def colas(pac, dia, umbral_h):
     return ya, est
 
 
+RIESGO_LARGA = lambda g, r: g in ("60-74", "75+") or r == "Treatment urgency"      # 2 a 3 veces mas riesgo de pasar de 14 dias (pagina Estancias largas)
+
+
+def _ref(pac):
+    return np.asarray(pac.get("ref_p90") or [14.0] * len(pac["perfiles"]), dtype=float)
+
+
+def series_alertas(pac, n_dias, umbral_espera_h=72):
+    """Conteos diarios de las alertas por paciente (20-nov-2026), sobre los pacientes de la repeticion registrada:
+    sobre_perfil (en cama con mas dias que el p90 de su perfil), sobre_corto (de ellos, con menos de 14 dias), mas30 (en cama con 30 dias o mas),
+    espera_ext (esperando `umbral_espera_h` o mas ahora), espera_prox (esperando desde hace 12 h o mas que llegaran a ese umbral), may_urg y manana
+    (de los de espera extrema: mayores de 60 por urgencias / llegados entre las 6 y las 12 h), pct_riesgo y n_riesgo (ingresos de los ultimos 7 dias de perfil de riesgo)
+    y riesgo_14 (de ellos, con estancia estimada de 14 dias o mas)."""
+    n = _a(pac, "nuevos")
+    ref = _ref(pac)
+    perf = n["perf"].astype(int)
+    p90 = ref[perf]
+    riesgo = np.array([RIESGO_LARGA(g, r) for g, r in pac["perfiles"]])[perf]
+    may_urg = np.array([g in ("60-74", "75+") and r == "Urgencias" for g, r in pac["perfiles"]])[perf]
+    manana = (np.mod(n["t_lleg_h"], 24) >= 6) & (np.mod(n["t_lleg_h"], 24) < 12)
+    t_cama = n["t_lleg_h"] + n["espera_h"]
+    out = {k: [] for k in ("sobre_perfil", "sobre_corto", "mas30", "espera_ext", "espera_prox", "may_urg", "manana", "pct_riesgo", "n_riesgo", "riesgo_14")}
+    for d in range(n_dias):
+        en = (n["dia_cama"] <= d) & (n["dia_alta"] > d)
+        llev = d - n["dia_cama"]
+        sob = en & (llev > p90)
+        out["sobre_perfil"].append(int(sob.sum()))
+        out["sobre_corto"].append(int((sob & (llev < 14)).sum()))
+        out["mas30"].append(int((en & (llev >= 30)).sum()))
+        ahora = (d + 1) * 24.0
+        esp = (n["t_lleg_h"] <= ahora) & (t_cama > ahora)
+        tr = ahora - n["t_lleg_h"]
+        ext = esp & (tr >= umbral_espera_h)
+        out["espera_ext"].append(int(ext.sum()))
+        out["espera_prox"].append(int((esp & (tr >= 12) & (tr < umbral_espera_h) & (n["espera_h"] >= umbral_espera_h)).sum()))
+        out["may_urg"].append(int((ext & may_urg).sum()))
+        out["manana"].append(int((ext & manana).sum()))
+        ing = (n["dia_cama"] > d - 7) & (n["dia_cama"] <= d)
+        k = int(ing.sum())
+        out["n_riesgo"].append(int((ing & riesgo).sum()))
+        out["pct_riesgo"].append(round(100.0 * (ing & riesgo).sum() / k, 1) if k else 0.0)
+        out["riesgo_14"].append(int((ing & riesgo & (n["estancia_h"] >= 14 * 24)).sum()))
+    return out
+
+
+def estancias_sobre_perfil(pac, dia):
+    """(14 dias o mas, menos de 14 dias): pacientes en cama que ya superan el p90 de estancia de su perfil. Valor = dias que llevan en cama."""
+    n = _a(pac, "nuevos")
+    ref = _ref(pac)
+    largos, cortos = [], []
+    en = (n["dia_cama"] <= dia) & (n["dia_alta"] > dia)
+    for i in np.nonzero(en)[0]:
+        llevan = dia - n["dia_cama"][i]
+        if llevan > ref[int(n["perf"][i])]:
+            (largos if llevan >= 14 else cortos).append(_fila(pac, n["perf"][i], n["sexo"][i], llevan))
+    return largos, cortos
+
+
+def ingresos_riesgo(pac, dia):
+    """(ingresos de los ultimos 7 dias de perfil de riesgo, de ellos con estancia estimada de 14 dias o mas). Valor = dias en cama / estancia estimada."""
+    n = _a(pac, "nuevos")
+    todos, largos = [], []
+    for i in np.nonzero((n["dia_cama"] > dia - 7) & (n["dia_cama"] <= dia))[0]:
+        g, r = pac["perfiles"][int(n["perf"][i])]
+        if RIESGO_LARGA(g, r):
+            todos.append(_fila(pac, n["perf"][i], n["sexo"][i], dia - n["dia_cama"][i]))
+            if n["estancia_h"][i] >= 14 * 24:
+                largos.append(_fila(pac, n["perf"][i], n["sexo"][i], n["estancia_h"][i] / 24.0))
+    return todos, largos
+
+
 def agrupar(filas):
     """Perfiles distintos con su cantidad y el valor medio, del mas frecuente al menos."""
     g = {}
@@ -144,6 +215,26 @@ def panel_confirmacion(tipo, titulo, fecha, pac, dia, pct_altas=30):
             f"Estancias de 14 días o más ({len(ya) + len(est)} pacientes)", "Son a quienes se les coordina el plan de salida.",
             _tabla("Ya llevan 14 días o más en cama", ya, "Días en cama (media)", "días"),
             _tabla("Estimador: 14 días o más", est, "Estancia estimada (media)", "días")))
+    elif tipo == "estancia_perfil":
+        largos, cortos = estancias_sobre_perfil(pac, dia)
+        secciones.append(_seccion(
+            f"Estancias más largas de lo normal para su perfil ({len(largos) + len(cortos)} pacientes)",
+            "Ya llevan más días en cama que 9 de cada 10 pacientes de su misma edad y tipo de visita.",
+            _tabla("Aún no cumplen 14 días (la revisión de estancias largas no los ve)", cortos, "Días en cama (media)", "días"),
+            _tabla("Con 14 días o más", largos, "Días en cama (media)", "días")))
+    elif tipo == "ingresos_riesgo":
+        todos, largos = ingresos_riesgo(pac, dia)
+        secciones.append(_seccion(
+            f"Ingresos de la última semana con riesgo de estancia larga ({len(todos)} pacientes)",
+            "Mayores de 60 o visitas «treatment urgency»: a quienes conviene fijarles el plan de alta desde el ingreso.",
+            _tabla("Ingresaron en los últimos 7 días", todos, "Días en cama (media)", "días"),
+            _tabla("Estimador: 14 días o más", largos, "Estancia estimada (media)", "días")))
+    elif tipo == "espera_extrema":
+        ya, est = colas(pac, dia, 72)
+        secciones.append(_seccion(
+            f"Esperas de 72 horas o más ({len(ya) + len(est)} pacientes)", "Los peores casos de espera: revisar uno por uno qué bloquea la cama.",
+            _tabla("Esperando 72 h o más ahora mismo", ya, "Espera actual (media)", "h"),
+            _tabla("Estimador: 72 h o más", est, "Espera estimada (media)", "h")))
     else:
         for h in (48, 72):
             ya, est = colas(pac, dia, h)

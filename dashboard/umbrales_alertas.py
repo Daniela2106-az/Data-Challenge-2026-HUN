@@ -21,3 +21,28 @@ UMBRAL_LLEGADAS_TARDE = 81               # cola (pico de la tarde): aviso si las
 FRACCION_COLA_PICO = 0.8                 # ...y la cola ya es de al menos el 80 % del umbral de cola (22 de 28 pacientes)
 ARRANQUE_SIN_ALERTAS = 7                 # los primeros dias vienen de la siembra con el censo real y no generan alertas: 7 (4 si el plazo es de 2 semanas o menos, porque la siembra deja las camas por encima de 118 los primeros 3 dias; 12 h en la vista horaria)
 
+
+# ---------- Alertas por paciente (20-nov-2026) ----------
+# Se cuentan sobre los pacientes de UNA repeticion de la simulacion (los mismos de las tablas), dia a dia. Umbrales calibrados con corridas de 90 dias
+# en operacion normal (sin palancas): mediana, percentil 90 y maximo de cada conteo; con estancia +15 % y con perfiles de estres para ver cuanto sube.
+# 1) Estancias mas largas de lo normal: pacientes en cama que ya llevan mas dias que el 90 % de los pacientes de su perfil (edad x tipo de visita) en los datos
+#    reales 2023-2026. Normal: mediana 15, p90 21, maximo 23; con estancia +15 %: mediana 20, p90 28.
+NORMAL_SOBRE_PERFIL = 15
+UMBRAL_SOBRE_PERFIL = 23                 # aviso
+UMBRAL_SOBRE_PERFIL_CRITICO = 28         # critico
+# 2) Esperas de mas de 3 dias: pacientes que llevan 72 h o mas sin cama (el percentil 90 real de la espera es 73,9 h). Normal: mediana 5, p90 8, maximo 12.
+#    Se mueve aparte de la cola total (correlacion 0,35): la cola puede verse normal mientras se acumulan los peores casos.
+NORMAL_ESPERA_EXTREMA = 5
+UMBRAL_ESPERA_EXTREMA = 10               # aviso
+UMBRAL_ESPERA_EXTREMA_CRITICO = 13       # critico
+ESPERA_EXTREMA_H = 72
+# 3) Ingresos con riesgo de estancia larga: % de quienes recibieron cama en los ultimos 7 dias que son mayores de 60 o entraron como treatment urgency
+#    (2 a 3 veces mas riesgo de pasar de 14 dias, pagina Estancias largas). Normal: mediana 37 %, maximo 46 %; con 20 % de perfiles de estres: mediana 56 %.
+NORMAL_INGRESOS_RIESGO = 37
+UMBRAL_INGRESOS_RIESGO = 47              # aviso
+UMBRAL_INGRESOS_RIESGO_CRITICO = 55      # critico
+# Histeresis (20-nov-2026): una alerta por paciente que ya salto sigue activa (no vuelve a saltar) hasta que el conteo baja de este nivel. Sin esto el conteo, que sube y baja
+# de un dia a otro, cruzaba el umbral una y otra vez (hasta 10 avisos por corrida con estancia +15 %).
+SUELTA_SOBRE_PERFIL = 19
+SUELTA_ESPERA_EXTREMA = 7
+SUELTA_INGRESOS_RIESGO = 42
