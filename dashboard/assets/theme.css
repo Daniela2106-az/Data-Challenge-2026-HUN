@@ -2380,3 +2380,12 @@ button.simint-rev__ver { font-size: 15px; padding: 2px 6px; }
 .simint-alerta:not(.simint-alerta--idle) .simint-alerta__cerrar { margin-left: 2px; }
 .simint-rev .simint-conf__cab .simint-alerta__fecha { margin-left: auto; }
 .simint-rev .simint-conf__cab { padding-right: 64px; }
+
+/* alerta que sigue activa sin corregir: el punto late */
+@keyframes simint-late { 0% { box-shadow: 0 0 0 0 currentColor; } 70% { box-shadow: 0 0 0 6px transparent; } 100% { box-shadow: 0 0 0 0 transparent; } }
+.simint-achip--viva .simint-achip__punto { animation: simint-late 1.4s ease-out infinite; }
+.simint-achip--alta.simint-achip--viva .simint-achip__punto { color: #c0392b; }
+.simint-achip--media.simint-achip--viva .simint-achip__punto { color: #e0a030; }
+.simint-achip--viva { border-color: currentColor; }
+.simint-achip--alta.simint-achip--viva { border-color: #c0392b !important; }
+.simint-achip--media.simint-achip--viva { border-color: #e0a030 !important; }

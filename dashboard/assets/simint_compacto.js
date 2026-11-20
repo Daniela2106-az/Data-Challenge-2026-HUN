@@ -86,7 +86,12 @@
     }
 
     var lista = h.filter(function (o) { return comp.has(o); });
-    var f = lista.map(function (o) { return h.indexOf(o); }).join(',') + '|' + (abierta ? h.indexOf(abierta) : '-');
+    // «sigue activa»: la ultima alerta de cada tipo que se dejo sin corregir y cuya condicion se cumple ahora
+    var act = window._simintActivas || {}, vivas = new Set();
+    Object.keys(act).forEach(function (tp) {
+      for (var k = h.length - 1; k >= 0; k--) { if (h[k].tipo === tp) { if (!h[k].aplicada) { vivas.add(h[k]); } break; } }
+    });
+    var f = lista.map(function (o) { return h.indexOf(o) + (vivas.has(o) ? '*' : ''); }).join(',') + '|' + (abierta ? h.indexOf(abierta) : '-');
     if (f === firma) { return; }
     firma = f;
     function col(nombre, clase, grav) {
@@ -94,7 +99,7 @@
       if (!its.length) { return ''; }
       return '<div class="simint-cols__col"><div class="simint-cols__cab">' + nombre + ' · ' + its.length + '</div>' +
         its.map(function (o) {
-          return '<button type="button" class="simint-achip simint-achip--' + (o.aplicada ? 'mejora' : clase) + (o === abierta ? ' simint-achip--abierta' : '') + '" data-i="' + h.indexOf(o) + '" title="Ver la alerta completa">' +
+          return '<button type="button" class="simint-achip simint-achip--' + (o.aplicada ? 'mejora' : clase) + (o === abierta ? ' simint-achip--abierta' : '') + (vivas.has(o) ? ' simint-achip--viva' : '') + '" data-i="' + h.indexOf(o) + '" title="' + (vivas.has(o) ? 'Sigue activa: no se ha corregido. ' : '') + 'Ver la alerta completa">' +
             '<i class="simint-achip__punto"></i><span class="simint-achip__titulo">' + esc(o.titulo) + '</span>' +
             '<span class="simint-achip__fecha">' + esc(o.fecha) + '</span></button>';
         }).join('') + '</div>';
@@ -125,7 +130,7 @@
       cerrar();
     } else if (cur) {                                   // Continuar / Aplicar mejora
       comp.add(cur); abierta = null;
-      if (t.id === 'simint-aplicar') { captura = cur; cur.aplicada = true; }
+      if (t.id === 'simint-aplicar') { captura = cur; cur.aplicada = true; var u = (window._simintUltTipo || {})[cur.tipo]; if (u) { u.mejorada = true; } }
       firma = ''; render();
     }
   }, true);

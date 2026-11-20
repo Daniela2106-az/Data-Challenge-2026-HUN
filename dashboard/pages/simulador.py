@@ -482,7 +482,7 @@ def _seccion_alertas():
                  f"probabilidad de superar la capacidad a 48 h o desde {UMBRAL_FALTAN} cama que falta, crítico desde {UMBRAL_ALERTA} % o desde {UMBRAL_FALTAN_CRITICO} camas que faltan) y cola de espera larga "
                  f"(aviso desde {UMBRAL_COLA} pacientes, crítico desde {UMBRAL_COLA_CRITICA}); y tres que miran a los pacientes uno por uno: estancias más largas de lo normal para su perfil "
                  f"(aviso desde {UMBRAL_SOBRE_PERFIL} pacientes), esperas de más de 3 días (aviso desde {UMBRAL_ESPERA_EXTREMA} pacientes) e ingresos con riesgo de estancia larga (aviso desde {UMBRAL_INGRESOS_RIESGO} % de los ingresos de la semana). "
-                 f"Hay dos gravedades, aviso (amarillo) y crítico (rojo); las dos frenan la simulación, y una alerta salta cuando aparece; si se va, solo vuelve a saltar tras 14 días apagada, o antes si se agrava de aviso a crítico. "
+                 f"Hay dos gravedades, aviso (amarillo) y crítico (rojo); las dos frenan la simulación, y una alerta salta cuando aparece; si se dejó sin corregir no vuelve a frenar la simulación, sino que queda marcada como activa en su fila comprimida, y vuelve a saltar si reaparece después de aplicarle la mejora o si se agrava de aviso a crítico. "
                  "La tarjeta dice qué pasó y la recomendación de la que se deriva. Al continuar se comprime en una fila (punto de color, título y fecha), agrupada en columnas por gravedad y una columna aparte para las que tuvieron mejora; un clic la vuelve a abrir."),
         html.Div([html.B("Recomendación específica y mejora: "), "cada alerta calcula su recomendación con las cifras de la propia simulación (cuántas camas faltan, cuántos pacientes llevan más de 14 días, cuántas altas "
                   "de la tarde hay, qué grupos ocupan más camas). «Aplicar mejora y comparar» abre el panel y mueve, uno tras otro, SOLO los controles de esa recomendación: en faltarán camas, adelantar el 30 % de las altas de la tarde (R4) y la "
@@ -1968,16 +1968,17 @@ clientside_callback(
         var activasAhora = {};
         var lista = al[c] || [];
         lista.forEach(function(x) { activasAhora[x.tipo] = true; });
-        // 20-nov-2026: la MISMA alerta no vuelve a saltar si ya salto y no lleva al menos 14 dias apagada (14*24 pasos en la vista horaria); solo salta antes si se agrava (aviso -> critico).
-        var ult = window._simintUltTipo = window._simintUltTipo || {}, REPOSO = data.es_horario ? 14 * 24 : 14;
+        // 20-nov-2026: si una alerta ya salto y se dejo SIN corregir (Continuar), al volver no frena otra vez: queda como «sigue activa» en su componente comprimido.
+        // Vuelve a saltar (y frena) si se le aplico la mejora y aun asi reaparece (la mejora no alcanzo), o si se agrava de aviso a critico (aunque siga activa).
+        var ult = window._simintUltTipo = window._simintUltTipo || {};
         var nuevas = lista.filter(function(x) {
-            if (activasPrev[x.tipo]) { return false; }
             var u = ult[x.tipo];
-            if (!u) { return true; }
-            return (c - u.activo >= REPOSO) || (x.gravedad === 'Alta' && u.g !== 'Alta');
+            if (!u) { return !activasPrev[x.tipo]; }
+            if (x.gravedad === 'Alta' && u.g !== 'Alta') { return true; }             // se agravo: siempre salta
+            if (activasPrev[x.tipo]) { return false; }
+            return !!u.mejorada;                                                      // reaparece: solo salta si ya se habia corregido con la mejora
         });
-        nuevas.forEach(function(x) { ult[x.tipo] = {g: x.gravedad, activo: c}; });
-        lista.forEach(function(x) { if (ult[x.tipo]) { ult[x.tipo].activo = c; if (x.gravedad === 'Alta') { ult[x.tipo].g = 'Alta'; } } });
+        nuevas.forEach(function(x) { ult[x.tipo] = {g: x.gravedad, mejorada: false}; });
         window._simintActivas = activasAhora;
         if (nuevas.length) {
             window._simintUltAlerta = c;
@@ -2150,7 +2151,8 @@ clientside_callback(
         }
         var conserva = !!data.conserva_historial;
         if (!conserva) { window._simintActivas = {}; window._simintCola = []; }
-        window._simintUltAlerta = null; window._simintUltTipo = {}; window._simintPausados = {};
+        window._simintUltAlerta = null; window._simintPausados = {};
+        if (!conserva) { window._simintUltTipo = {}; }      // con la mejora aplicada se recuerda que alertas ya salieron y cuales se corrigieron
         if (conserva) {            // mejora aplicada: las alertas de la corrida anterior siguen consultables con las flechas, marcadas como resueltas
             (window._simintHist || []).forEach(function(h) { h.resuelta = true; });
         } else { window._simintHist = []; window._simintVista = -1; }
