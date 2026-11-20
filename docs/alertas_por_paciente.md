@@ -53,5 +53,7 @@ Correlaciones en operación normal: «esperando 72 h o más» con la cola total,
 | Desbalance de ingresos y altas en varios días | El balance diario es casi todo azar, y la proyección de camas a 24 h no le gana a «mañana igual que hoy» (`src/alertas.py`). |
 | Días-cama de baja actividad | Son unos 6 y no crecen (`docs/dias_cama_baja_actividad.md`). |
 
-## Pendiente que se notó al calibrar
-La alerta que ya existía de «Cola de espera larga» salta 12 o 13 veces en 90 días cuando se sube la espera o la estancia. Se le puede aplicar la misma histéresis.
+## Histéresis también en las alertas de totales (20-nov-2026)
+«Cola de espera larga» volvía a encenderse 12 o 13 veces en 90 días cuando se subía la espera o la estancia, porque la cola oscila alrededor de 28. Ahora tiene histéresis: una vez encendida, sigue así hasta bajar de 26 pacientes. «Faltarán camas» sigue encendida hasta que la probabilidad de superar la capacidad a 48 h baja de 40 % y ya no falta ninguna cama (`SUELTA_COLA`, `SUELTA_PROB` y `SUELTA_FALTAN` en `dashboard/umbrales_alertas.py`).
+Con espera +20 %, la cola pasó de 12 a 3 encendidas por corrida; con estancia +15 %, de 13 a 8. En operación normal, «Faltarán camas» pasó de 5 a 1.
+Además, una alerta que se dejó sin corregir no vuelve a frenar la simulación al reaparecer: solo marca como activa su fila comprimida.

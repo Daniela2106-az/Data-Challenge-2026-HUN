@@ -46,3 +46,7 @@ UMBRAL_INGRESOS_RIESGO_CRITICO = 55      # critico
 SUELTA_SOBRE_PERFIL = 19
 SUELTA_ESPERA_EXTREMA = 7
 SUELTA_INGRESOS_RIESGO = 42
+# Histeresis de las dos alertas de totales (20-nov-2026): ya activas, siguen activas hasta volver claramente a lo normal.
+SUELTA_PROB = 40                         # faltaran camas: se apaga cuando la probabilidad a 48 h baja de 40 %...
+SUELTA_FALTAN = 0                        # ...y ya no falta ninguna cama (camas ocupadas por debajo de la capacidad)
+SUELTA_COLA = 26                         # cola: se apaga cuando baja de 26 pacientes (lo habitual son ~25)

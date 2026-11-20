@@ -56,7 +56,7 @@ from umbrales_alertas import (ARRANQUE_SIN_ALERTAS, UMBRAL_ALERTA, UMBRAL_ALERTA
                               UMBRAL_FALTAN_CRITICO, UMBRAL_LLEGADAS_TARDE, FRACCION_COLA_PICO,
                               NORMAL_SOBRE_PERFIL, UMBRAL_SOBRE_PERFIL, UMBRAL_SOBRE_PERFIL_CRITICO, NORMAL_ESPERA_EXTREMA, UMBRAL_ESPERA_EXTREMA,
                               UMBRAL_ESPERA_EXTREMA_CRITICO, NORMAL_INGRESOS_RIESGO, UMBRAL_INGRESOS_RIESGO, UMBRAL_INGRESOS_RIESGO_CRITICO,
-                              SUELTA_SOBRE_PERFIL, SUELTA_ESPERA_EXTREMA, SUELTA_INGRESOS_RIESGO)
+                              SUELTA_SOBRE_PERFIL, SUELTA_ESPERA_EXTREMA, SUELTA_INGRESOS_RIESGO, SUELTA_PROB, SUELTA_FALTAN, SUELTA_COLA)
 
 # Escenarios con nombre: cada uno fija las palancas (el simulador mueve los controles y despues recalcula). Los factores externos no cambian.
 PALANCAS_CERO = {"llegadas": 0, "estancia": 0, "espera": 0, "capacidad": 106, "estres": 0, "recorte": 0, "adelanto": 0}
@@ -150,7 +150,9 @@ def _alertas_dia(fechas, total_p50, cola_p50, probs48, capacidad, horas=False, a
             continue
         top = _perfiles_con_mas_camas(comp, perfiles, i) if (comp is not None and perfiles) else []
         falta = o - capacidad
-        if p >= UMBRAL_ALERTA_MEDIA or falta >= UMBRAL_FALTAN:
+        # histeresis (20-nov-2026): se enciende en el umbral de aviso y, ya encendida, sigue hasta que la probabilidad baja de SUELTA_PROB y no falta ninguna cama
+        estado["saturacion"] = (p >= UMBRAL_ALERTA_MEDIA or falta >= UMBRAL_FALTAN) or (estado.get("saturacion", False) and (p >= SUELTA_PROB or falta > SUELTA_FALTAN))
+        if estado["saturacion"]:
             ac, pal = _plan_de_mejora("saturacion", o, capacidad, c, altas_dia, top)
             cuando = f"{p:.0f} % de probabilidad de superar las {capacidad} camas dentro de 48 {'horas' if horas else 'horas (pasado mañana)'}"
             cuanto = (f"faltarían unas {falta:.0f} camas (se esperan ~{o:.0f} ocupadas)" if round(falta) != 1 else f"faltaría 1 cama (se esperan ~{o:.0f} ocupadas)") if falta >= UMBRAL_FALTAN else f"se esperan ~{o:.0f} camas ocupadas, al límite de la capacidad"
@@ -160,9 +162,10 @@ def _alertas_dia(fechas, total_p50, cola_p50, probs48, capacidad, horas=False, a
                 "acciones": ac, "palancas": pal, "mejora": True, "rec": 3, "alerta": "A2"}))
         lt = float(llegadas_tarde[i]) if llegadas_tarde is not None and i < len(llegadas_tarde) else 0.0
         pico_tarde = lt >= UMBRAL_LLEGADAS_TARDE and c >= FRACCION_COLA_PICO * UMBRAL_COLA          # 19-nov: pico de llegadas de la tarde con la cola ya alta
-        if c >= UMBRAL_COLA or pico_tarde:
+        estado["cola"] = (c >= UMBRAL_COLA or pico_tarde) or (estado.get("cola", False) and c >= SUELTA_COLA)     # histeresis: se apaga al bajar de SUELTA_COLA
+        if estado["cola"]:
             ac, pal = _plan_de_mejora("cola", o, capacidad, c, altas_dia, top)
-            texto_cola = (f"Unos {c:.0f} pacientes esperando cama a la vez, más de lo habitual (cerca de 26)." if c >= UMBRAL_COLA else
+            texto_cola = (f"Unos {c:.0f} pacientes esperando cama a la vez, más de lo habitual (cerca de 26)." if (c >= UMBRAL_COLA or not pico_tarde) else
                           f"Llegan unos {lt:.0f} pacientes entre las 14 y las 19 h (lo habitual son ~65 y solo 1 de cada 10 días pasa de {UMBRAL_LLEGADAS_TARDE}) y la cola ya es de ~{c:.0f}: "
                           "la ola de la tarde la va a alargar.")
             cand.append(("Alta" if c >= UMBRAL_COLA_CRITICA else "Media", 1, {
