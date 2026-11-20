@@ -58,6 +58,8 @@ TARJETAS = {
                    "Un solo motor sigue a cada paciente simulado: demanda, cola de espera y ocupación a la vez. Saltan alertas con su recomendación y puedes aplicar la mejora y compararla."),
     "/recomendaciones": ("Recomendaciones",
                          "Siete acciones para el hospital, cada una con lo que dicen nuestros datos y lo que se encontró en otros hospitales."),
+    "/preguntas": ("Asistente de flujo HUN",
+                    "Pregunta en tus palabras sobre la espera, la ocupación, las alertas o las recomendaciones: responde solo con lo que dice el proyecto y cita la fuente."),
     "/documentacion": ("Documentación",
                        "El documento completo del proyecto: datos, hallazgos, modelos, recomendaciones y referencias, con descarga en PDF."),
 }

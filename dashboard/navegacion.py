@@ -81,6 +81,7 @@ DOCUMENTACION = {
     "/periodo": (6, "6.7 Diagnóstico repetible del cuello de botella", "el diagnóstico de cualquier periodo comparado con una referencia: dónde está el cuello, qué se dispara y qué comparten las esperas largas"),
     "/simulador": (6, "6.9 Simulador integral", "el motor de agentes, su validación, las palancas, las alertas con su recomendación y la operación óptima"),
     "/recomendaciones": (7, "Recomendaciones", "las siete acciones con su evidencia, su firmeza y lo que no recomendamos"),
+    "/preguntas": (8, "El dashboard", "cómo funciona el asistente de preguntas, qué lee, sus límites y cuándo se apaga"),
 }
 
 

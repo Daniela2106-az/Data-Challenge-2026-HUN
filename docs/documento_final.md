@@ -712,14 +712,16 @@ va como una tarjeta antes de «Qué significa» y la documentación reúne lo qu
 | Diagnósticos (`/diagnosticos`) | Resultados | Qué grupos de diagnóstico esperan más cama y cuáles se quedan más |
 | Perfiles y picos (`/perfiles`) | Resultados | Cómo cambian la espera y la estancia según el perfil del paciente y la carga del momento |
 | Días atípicos (`/atipicos`) | Resultados | Los días que se salen del patrón y qué dicen del problema de la espera |
-| Alertas (`/alertas`) | Resultados | Las alertas (día congestionado, ocupación alta, paciente sin cama y cola de espera): cuándo avisar, qué tanto aciertan y qué recomendación dispara cada una |
+| Alertas (`/alertas`) | Resultados | Las alertas (día congestionado, ocupación alta, paciente sin cama y cola de espera): cuándo avisar, qué tanto aciertan y qué recomendación dispara cada una; y las cinco que saltan en el simulador integral, con sus umbrales |
 | Pronóstico de demanda (`/pronostico`) | Predicción | Cuántos pacientes llegarán y cuántos irán a cama, desde hoy hasta un año, con su banda del 80 % |
 | Paciente en espera (`/paciente`) | Predicción | Cuándo es más probable que un paciente que ya espera reciba cama (estimador A6), con sus avisos |
 | Planeación de camas (`/camas`) | Predicción | Riesgo de saturar las camas y escenarios de ingresos y estancia (simulación Monte Carlo, A5) |
-| Simulador integral (`/simulador`) | Predicción | Demanda, cola y ocupación a la vez, con alertas, su recomendación y la operación óptima comparada con cómo iba antes (6.9) |
+| Simulador integral (`/simulador`) | Predicción | Demanda, cola y ocupación a la vez, con cinco alertas (dos de totales y tres por paciente), su recomendación y la operación óptima comparada con cómo iba antes (6.9) |
 | Recomendaciones (`/recomendaciones`) | Propuestas | Las siete recomendaciones ordenadas por firmeza, con qué cambiar y la meta de cada una, y qué reglas del diagnóstico se activan cada año |
+| Asistente de flujo HUN (`/preguntas`) | Propuestas | Preguntas en lenguaje natural sobre el análisis: responde solo con la documentación del proyecto, con tarjetas de cifras y su fuente |
 | Documentación (`/documentacion`) | Propuestas | Este documento completo, con sus tablas y figuras, y la descarga en PDF |
 
+- **Asistente de preguntas (20-nov-2026):** una página y un botón en la esquina de todas las páginas, desde donde se puede preguntar en lenguaje natural o seleccionar un texto de la pantalla y pulsar «Preguntar sobre esto». Usa la API de Anthropic (Claude Sonnet 5.5) y **solo recibe `docs/asistente/conocimiento.md`**, un documento armado con `src/armar_conocimiento.py` a partir de esta documentación (unos 43.000 tokens, sin datos de pacientes); si la respuesta no está ahí, lo dice. Tiene un límite de 10 preguntas por persona y 60 por día para todo el sitio, y se apaga solo desde el 1-dic-2026. Configuración, costo y apagado: `docs/asistente.md`. Es opcional: sin la clave el dashboard funciona igual y la página avisa que el asistente no está configurado.
 - **Cómo correrlo:** `python3 dashboard/main.py` y abrir http://127.0.0.1:8050; el `README.md` explica la descarga y la instalación paso a paso. Las tablas agregadas y la carpeta `datos/procesados` deben estar disponibles.
 - **Cómo recorrerlo:** el menú agrupa las páginas por sección y el inicio tiene el botón «Empezar el recorrido». Cada página lleva al
   pie los botones de anterior y siguiente, que también responden a las flechas del teclado; el botón de modo presentación de la barra

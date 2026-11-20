@@ -2,7 +2,7 @@
 
 Panel interactivo del Data Challenge HUN 2026 (Hospital Universidad del Norte y Ciencia de Datos, Uninorte). Muestra cómo llegan, esperan y se hospitalizan los pacientes, dónde se pierde el tiempo, qué se espera hacia adelante y qué acciones se recomiendan.
 
-Funciona en tu propio computador y se abre en el navegador. No necesita conexión a internet una vez instalado.
+Funciona en tu propio computador y se abre en el navegador. No necesita conexión a internet una vez instalado; solo el asistente de preguntas (opcional, ver abajo) la necesita.
 
 ## Qué necesitas
 
@@ -62,6 +62,16 @@ Todos los comandos se escriben dentro de la carpeta del proyecto.
 El dashboard usa el **puerto 8050**. Si otro programa ya lo está usando, ciérralo antes de iniciar.
 
 Para detenerlo, vuelve a la terminal y presiona `Ctrl + C`. La próxima vez solo repite los pasos 2.2 (activar el entorno) y 3.
+
+## El asistente de preguntas (opcional)
+
+El dashboard trae un asistente donde se pregunta en lenguaje natural sobre el análisis (página «Asistente HUN», o el botón de la esquina de cada página). Para activarlo hace falta una clave de la API de Anthropic:
+
+1. Crea un archivo llamado `.env` en la carpeta del proyecto, con una sola línea: `ANTHROPIC_API_KEY=tu-clave`. Ese archivo no se sube a GitHub. Si publicas el dashboard en un servicio como Render, pon la clave en sus variables de entorno, nunca en el repositorio.
+2. Opcional: `ASISTENTE_HASTA=2026-12-01` es el día desde el que el asistente deja de responder (ese es el valor por defecto).
+3. Inicia el dashboard como siempre. Sin la clave, todo lo demás funciona y la página del asistente avisa que no está configurado.
+
+El asistente solo lee `docs/asistente/conocimiento.md` (documentación, sin datos de pacientes). Si cambias la documentación, vuelve a armarlo con `python3 src/armar_conocimiento.py`. Más detalle, costos y límites: `docs/asistente.md`.
 
 ## Si algo no funciona
 
