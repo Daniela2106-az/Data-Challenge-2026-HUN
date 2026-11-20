@@ -1,28 +1,33 @@
 """
 dashboard/navegacion.py  -  secciones del menu del dashboard (13-nov-2026)
 Una sola lista para la barra lateral (main.py) y para las tarjetas del inicio (pages/inicio.py), en el orden de
-docs/estructura_dashboard.md: contexto, resultados, prediccion y propuestas.
+docs/estructura_dashboard.md: contexto, flujo, capacidad, clinico, riesgo, modulos y conclusiones.
 
 Una pagina nueva que no este en SECCIONES aparece sola al final, bajo "Más": para agregarla basta con crear su archivo en pages/.
 """
 import re
 
 # Icono (clase CSS de theme.css) de cada ruta. Una ruta sin entrada usa el icono generico de perfiles.
-ICONOS = {"/": "ico-home", "/pronostico": "ico-forecast", "/paciente": "ico-patient", "/camas": "ico-bed", "/simulador": "ico-models",
+ICONOS = {"/": "ico-home", "/pronostico": "ico-forecast", "/paciente": "ico-patient", "/paciente-cama": "ico-stay", "/camas": "ico-bed", "/simulador": "ico-models",
           "/perfiles": "ico-profiles", "/recomendaciones": "ico-recs", "/documentacion": "ico-docs", "/datos": "ico-data",
           "/demanda": "ico-demand", "/ocupacion": "ico-occup", "/espera": "ico-wait", "/altas": "ico-clock",
           "/estacionalidad": "ico-season", "/alertas": "ico-alert", "/preguntas": "ico-chat", "/factores": "ico-factors", "/estancia": "ico-stay",
           "/diagnosticos": "ico-dx", "/atipicos": "ico-outlier", "/resumen": "ico-summary", "/comparar": "ico-compare", "/periodo": "ico-period"}
 
-# (titulo de la seccion, que responde, rutas en orden)
+# (titulo de la seccion, que responde, rutas en orden). Un titulo vacio es un grupo suelto sin encabezado en el menu (el asistente, justo debajo de Inicio):
+# sirve para dudas de cualquier tema, por eso no vive dentro de una categoria, y queda fuera del recorrido «anterior / siguiente».
+# 20-nov-2026: «Resultados» (13 paginas) se reparte en cuatro categorias de una palabra; «Prediccion» pasa a «Módulos» y «Propuestas» a «Conclusiones».
 SECCIONES = [
+    ("", "Pregunta lo que quieras: cómo usar el dashboard, qué mirar primero o cualquier duda del análisis", ["/preguntas"]),
     ("Contexto", "El proyecto en una pantalla, y qué datos hay detrás", ["/resumen", "/datos"]),
-    ("Resultados", "Qué pasa hoy en el hospital y dónde se pierde el tiempo",
-     ["/demanda", "/estacionalidad", "/ocupacion", "/espera", "/comparar", "/periodo", "/altas", "/factores", "/estancia", "/diagnosticos", "/perfiles", "/atipicos", "/alertas"]),
-    ("Predicción", "Qué se espera y qué pasaría si algo cambia",
-     ["/pronostico", "/paciente", "/camas", "/simulador"]),
-    ("Propuestas", "Qué hacer con lo que se encontró", ["/recomendaciones", "/preguntas", "/documentacion"]),
+    ("Flujo", "Cuántos pacientes llegan, a qué hora y cómo cambia con los años", ["/demanda", "/altas", "/estacionalidad", "/comparar"]),
+    ("Capacidad", "Cuánto se llena el hospital y por qué se espera por una cama", ["/ocupacion", "/espera", "/factores", "/estancia"]),
+    ("Clínico", "Qué diagnósticos esperan más y dónde se acumula el tiempo", ["/diagnosticos", "/periodo"]),
+    ("Riesgo", "Quiénes y cuándo se complica el flujo, y cómo avisar a tiempo", ["/perfiles", "/atipicos", "/alertas"]),
+    ("Módulos", "Qué se espera y qué pasaría si algo cambia", ["/pronostico", "/paciente", "/paciente-cama", "/camas", "/simulador"]),
+    ("Conclusiones", "Qué hacer con lo que se encontró", ["/recomendaciones", "/documentacion"]),
 ]
+CATEGORIAS_RESULTADOS = ("Flujo", "Capacidad", "Clínico", "Riesgo")       # lo que antes era la seccion «Resultados»
 
 
 # Paginas que no van en el menu principal porque viven dentro de la Documentacion (se abren desde su submenu y desde cada componente)
@@ -50,7 +55,7 @@ def agrupar(paginas):
 def recorrido(paginas):
     """Las paginas en el orden en que se recorre el dashboard, como una presentacion: el inicio y luego cada seccion."""
     inicio = [p for p in paginas if p["path"] == "/"]
-    return inicio + [p for _titulo, _descripcion, grupo in agrupar(paginas) for p in grupo]
+    return inicio + [p for titulo, _descripcion, grupo in agrupar(paginas) if titulo for p in grupo]      # el asistente (sin titulo) no va en el recorrido
 
 
 # ---------------------------------------------------------------- documentacion que respalda cada pagina (14-nov-2026)
@@ -77,6 +82,7 @@ DOCUMENTACION = {
     "/alertas": (6, "6.2 Alertas", "las alertas, cómo se probaron, qué tanto aciertan y qué recomendación dispara cada una"),
     "/atipicos": (6, "6.3 Días atípicos", "cómo se detectan y qué dicen del problema de la espera"),
     "/paciente": (6, "6.4 Estimador de la espera de cada paciente", "qué usa, cómo se validó y sus límites"),
+    "/paciente-cama": (6, "6.10 Estimador de la estancia restante de cada paciente", "qué usa, cómo se validó y sus límites"),
     "/camas": (6, "6.5 Simulación Monte Carlo de camas", "cómo funciona, su validación, los escenarios y la curva de capacidad"),
     "/periodo": (6, "6.7 Diagnóstico repetible del cuello de botella", "el diagnóstico de cualquier periodo comparado con una referencia: dónde está el cuello, qué se dispara y qué comparten las esperas largas"),
     "/simulador": (6, "6.9 Simulador integral", "el motor de agentes, su validación, las palancas, las alertas con su recomendación y la operación óptima"),

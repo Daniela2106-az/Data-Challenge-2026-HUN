@@ -19,6 +19,7 @@ Este documento se arma solo con `src/armar_conocimiento.py` a partir de la docum
 - **Inicio**: `/`
 - **Ocupación de camas**: `/ocupacion`
 - **Paciente en espera**: `/paciente`
+- **Paciente en cama**: `/paciente-cama`
 - **Perfiles y picos**: `/perfiles`
 - **Diagnóstico por periodo**: `/periodo`
 - **Asistente HUN**: `/preguntas`
@@ -369,7 +370,7 @@ más pacientes, así que la tomamos de **datos públicos de muchos años** y la 
 
 En conjunto son unas 4–5 alertas al día: una carga manejable para una reunión diaria de camas.
 
-En el dashboard, la página **Alertas** (sección Resultados) muestra la prueba de cada alerta, y el **simulador integral** (6.9) las dispara mientras corre, con la recomendación de la que se derivan. Cada alerta apunta a una o más de las siete recomendaciones (sección 7): día congestionado y ocupación alta, a la reunión diaria de camas y a adelantar las altas; paciente sin cama, a la alerta con responsable.
+En el dashboard, la página **Alertas** (categoría Riesgo) muestra la prueba de cada alerta, y el **simulador integral** (6.9) las dispara mientras corre, con la recomendación de la que se derivan. Cada alerta apunta a una o más de las siete recomendaciones (sección 7): día congestionado y ocupación alta, a la reunión diaria de camas y a adelantar las altas; paciente sin cama, a la alerta con responsable.
 
 #### 6.3 Días atípicos (`src/dias_atipicos.py`)
 El modelo identifica automáticamente los días que se salen de lo esperado (14 de llegadas, 9 de ingresos y 7 de espera). Los más extremos coinciden con
@@ -483,7 +484,7 @@ procesadas) y sin datos de pacientes en la salida.
 
 Es la base para el seguimiento mensual de la recomendación 2: el hospital puede correrlo cada mes y ver de inmediato si las acciones están funcionando.
 
-**En el dashboard** (página «Diagnóstico por periodo», sección Resultados) se eligen un periodo (todo el periodo, cada año o cada semestre) y otro con el que compararlo; la página muestra el cuello de botella, cuánto cambió frente a la referencia, qué se dispara, qué estancias esperan muchísimo, qué tienen en común y las camas del periodo, cada resultado con su gráfica. Los reportes se calculan de antemano para cada combinación (`src/exportar_reportes_periodo.py`). El paso 5 («qué hacer») ya no se muestra ahí: las acciones se leen en la página de Recomendaciones.
+**En el dashboard** (página «Diagnóstico por periodo», categoría Clínico) se eligen un periodo (todo el periodo, cada año o cada semestre) y otro con el que compararlo; la página muestra el cuello de botella, cuánto cambió frente a la referencia, qué se dispara, qué estancias esperan muchísimo, qué tienen en común y las camas del periodo, cada resultado con su gráfica. Los reportes se calculan de antemano para cada combinación (`src/exportar_reportes_periodo.py`). El paso 5 («qué hacer») ya no se muestra ahí: las acciones se leen en la página de Recomendaciones.
 
 #### 6.8 Alternativas evaluadas
 Parte de la solidez de los modelos está en lo que se comparó para elegirlos. Cada alternativa se probó con el mismo método (datos que el modelo no
@@ -503,6 +504,26 @@ vio) y quedó documentada en el repositorio:
 Que alternativas muy distintas lleguen al mismo resultado confirma que los modelos elegidos aprovechan lo que permiten los datos, y señala con
 precisión qué dato nuevo (gravedad, servicio y hora de la orden de hospitalización) haría el siguiente salto.
 
+
+#### 6.10 Estimador de la estancia restante de cada paciente (A6b; `docs/estimador_estancia.md`; página «Paciente en cama»)
+- **Qué hace:** para un paciente que YA tiene cama asignada, estima cuánto le falta para el alta (con su rango) y la probabilidad de recibir el alta en 1,
+  3 y 7 días, y se actualiza con las horas que lleva en cama. Usa el mismo tipo de modelo de supervivencia en tiempo discreto del estimador de espera
+  (6.4), aplicado por primera vez a la estancia: un modelo por cada hora **ya transcurrida en cama**, no uno solo al momento del ingreso.
+- **Por qué se vuelve a intentar:** ya se había descartado un estimador de estancia por mala precisión — una prueba rápida (21-oct) con regresión al
+  ingreso dio R² ≈ 0,00-0,02 (igual que adivinar la mediana), y un modelo explicativo con más variables (`factores_estancia.py`, 3-nov) solo llegó a
+  R² = 7,9-10,8 %, declarado como «explica, no predice». Ambos intentaban resolver, de una sola vez al ingresar, la estancia TOTAL; nunca se había
+  probado la arquitectura que sí funciona para la espera (un modelo por hora ya transcurrida).
+- **Qué usa:** edad, sexo, tipo de visita, horas ya en cama, la hora, la ocupación del hospital, el historial de hospitalizaciones anteriores (incluido
+  el diagnóstico de esa visita anterior) y sus laboratorios del ingreso. NO usa el diagnóstico de esta estancia (se registra tarde: fuga) ni el
+  recorrido en urgencias (pertenece al tramo antes de la cama).
+- **Resultado** (probado con 3.900 estancias de jul-2025 a 9-ene-2026 que el modelo no vio, contra el rango por perfil que ya usa el dashboard): mejora
+  **1,6 % al asignarse la cama (IC 95 % 0,9 a 2,4 %)**, bajando con las horas y modestamente negativa desde las 120 h (muestra de prueba ya chica). Es
+  real pero mucho menor que el ~9-11 % del estimador de espera: lo que no se registra (servicio, tipo de cama, gravedad clínica) sigue explicando la
+  mayor parte de cuánto dura una estancia. Se publica igual, con este límite explícito.
+- **Mejora metodológica:** a diferencia de `que_esperar.py` y `factores_estancia.py`, las estancias sin alta resuelta no se descartan — aportan al
+  entrenamiento como censuradas, sin sesgar contra las estancias largas.
+
+---
 
 ### 7. Recomendaciones (componente 4)
 
@@ -929,7 +950,7 @@ La simulación se reproduce siempre como «hoy». Mientras corre, salta una tarj
 
 **Gravedades y pausa.** Hay dos gravedades: aviso (media) y crítico (alta). **Las dos frenan la simulación**, para poder revisarlas y aplicar la mejora antes de que la condición escale. Una alerta salta cuando **aparece** (20-nov-2026). Si se dejó **sin corregir** (Continuar), al volver no frena otra vez: su fila comprimida queda marcada como activa (el punto late) mientras la condición se cumpla. **Vuelve a saltar** si reaparece después de aplicarle la mejora (la mejora no alcanzó) o si se agrava de aviso a crítico, aunque siga activa. Reiniciar o una corrida nueva borran esa memoria; aplicar una mejora no. Todas las alertas tienen **histéresis**: se encienden en el umbral de aviso y, ya encendidas, solo se apagan al volver claramente a lo normal (cola por debajo de 26; faltarán camas con probabilidad por debajo de 40 % y sin camas faltantes; las por paciente, en su nivel de suelta). Así un vaivén de uno o dos pacientes no cuenta como alerta nueva.
 
-| Alerta | Aviso (gravedad media) | Crítico (gravedad alta) | Recomendación | Alerta en Resultados |
+| Alerta | Aviso (gravedad media) | Crítico (gravedad alta) | Recomendación | Alerta (página Alertas, categoría Riesgo) |
 |---|---|---|---|---|
 | Faltarán camas (se necesitarán más de las 106: probabilidad de superar la capacidad a 48 h y camas que faltan, en la mediana) | desde 50 % o 1 cama que falta (107 ocupadas) | desde 84 % o 12 camas que faltan (118 ocupadas) | R3, R4 y R7 | A2 |
 | Cola de espera larga (pacientes a la vez) | desde 28 | desde 33 (el percentil 90 real) | R5 y R6 | S1 |

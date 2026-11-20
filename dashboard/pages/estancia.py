@@ -68,7 +68,7 @@ def _lamina_laboratorios():
 
 def layout():
     return pagina(
-        portada("Resultados · Estancias largas", "Unas pocas estancias muy largas explican casi todo el aumento de la ocupación",
+        portada("Capacidad · Estancias largas", "Unas pocas estancias muy largas explican casi todo el aumento de la ocupación",
                 "La estancia media subió 16 % en dos años. No es que cada paciente se quede un poco más: creció la cola de pacientes que "
                 "se quedan semanas.",
                 [cifra("7 %", "de las estancias dura más de 14 días"), cifra("1 de cada 3", "camas la ocupa una de esas estancias largas"),

@@ -64,7 +64,9 @@ dash.register_page(__name__, path="/camas", name="Planeación de camas", title="
 GRIS, AZUL, NARANJA, VERDE, ROJO = "#6b6b6b", "#2a6fb0", "#eb6834", "#2e8b57", "#c0392b"
 RAIZ = Path(__file__).resolve().parent.parent.parent
 TABLAS = Path(os.environ.get("HUN_TABLAS", RAIZ / "resultados" / "tablas"))
-N_REP_INTERACTIVO = 300
+from modo import repeticiones  # noqa: E402  (modo ligero en servidores pequenos como Render)
+N_REP_INTERACTIVO = repeticiones(300)
+_CACHE = {}      # resultados ya calculados por (cambios, plazo, dia): repetir una simulacion es instantaneo
 CAMAS_HUN_TOTAL = 106            # camas de hospitalizacion que informo el HUN
 _BASE = {}      # caso base (mediana por grupo) por (plazo, dia de arranque): se calcula una vez y se reutiliza
 GRUPOS = ["total", "ninos", "adultos"]
@@ -381,8 +383,9 @@ def layout():
                 ]),
             ]),
             html.Div(style={"flex": "1 1 600px"}, children=[
-                html.Div(id="camas-metricas"),
-                dcc.Graph(id="camas-grafico_proyeccion", config={"displaylogo": False}),
+                dcc.Loading(type="dot", color="#0071bc", children=[
+                    html.Div(id="camas-metricas"),
+                    dcc.Graph(id="camas-grafico_proyeccion", config={"displaylogo": False})]),
             ]),
         ]),
 
@@ -409,6 +412,9 @@ def layout():
           State("camas-ajuste_ingresos", "value"), State("camas-ajuste_estancia", "value"),
           State("camas-intensidad_d", "value"), State("camas-plazo", "value"))
 def correr_simulacion(_, pct_ingresos, pct_estancia, intensidad_d, dias):
+    llave = (pct_ingresos, pct_estancia, intensidad_d, int(dias), str(pd.Timestamp.today().date()))
+    if llave in _CACHE:
+        return _CACHE[llave]
     me, mr = (mezcla_escenario_d(intensidad_d / 100) if intensidad_d else (None, None))
     # El motor arranca del ultimo censo confiable (9-abr-2026) y se simulan tambien los dias hasta hoy; se muestra solo lo que viene,
     # desde mañana, igual que el pronostico de demanda. Asi "7 dias" son los proximos 7 dias y no el 10 al 16 de abril.
@@ -433,7 +439,11 @@ def correr_simulacion(_, pct_ingresos, pct_estancia, intensidad_d, dias):
         fb, cb = scm.simular(scm.serie_ingresos, scm.ULTIMO_CONFIABLE, previos + dias, n_rep=N_REP_INTERACTIVO)
         db = np.where(np.asarray(fb) >= np.datetime64(manana))[0][:dias]
         _BASE[clave] = {g: np.percentile(cb[g][:, db], 50, axis=0).tolist() for g in GRUPOS}
-    data = {"fechas": [str(f.date()) for f in fechas], "base": _BASE[clave], "cambio": cambio, **{g: censos[g].tolist() for g in GRUPOS}}
+    # Al navegador solo va lo que se dibuja (percentiles por dia y la fraccion sobre la capacidad), no las 300 repeticiones: antes eran ~3 MB por corrida.
+    resumen = {g: {"p10": np.percentile(censos[g], 10, axis=0).round(1).tolist(), "p50": np.percentile(censos[g], 50, axis=0).round(1).tolist(),
+                   "p90": np.percentile(censos[g], 90, axis=0).round(1).tolist(), "pct_sat": round(100 * float((censos[g] > scm.CAPACIDAD[g]).mean()), 1)} for g in GRUPOS}
+    data = {"fechas": [str(f.date()) for f in fechas], "base": _BASE[clave], "cambio": cambio, "resumen": resumen}
+    _CACHE[llave] = (data, nota)
     return data, nota
 
 
@@ -444,9 +454,8 @@ def mostrar(data, grupo, tema):
     if not data:
         return go.Figure(), []
     fechas = pd.to_datetime(data["fechas"])
-    censos = {g: np.array(data[g]) for g in GRUPOS}
-    c = censos[grupo]
-    p10, p50, p90 = np.percentile(c, 10, axis=0), np.percentile(c, 50, axis=0), np.percentile(c, 90, axis=0)
+    r = data["resumen"][grupo]
+    p10, p50, p90 = np.array(r["p10"]), np.array(r["p50"]), np.array(r["p90"])
     cap_hun = scm.CAPACIDAD[grupo]
 
     sobre = p50 > cap_hun                                    # dias (de la mediana simulada) sin camas suficientes
@@ -489,7 +498,7 @@ def mostrar(data, grupo, tema):
     fig.update_layout(title=f"Ocupación proyectada — {NOMBRES_GRUPO[grupo]}", yaxis_title="Pacientes en cama",
                       template="simple_white", legend=dict(orientation="h", y=-0.2), margin=dict(l=40, r=20, t=50, b=40))
 
-    pct_sat = round(100 * float((c > cap_hun).mean()), 1)
+    pct_sat = r["pct_sat"]
     dias_sin_cama = int((p50 > cap_hun).sum())
     medias = {"mejor": float(p10.mean()), "base": float(p50.mean()), "peor": float(p90.mean())}
     metricas = panel_metricas_animado(medias, cap_hun, pct_sat, dias_sin_cama, len(fechas))

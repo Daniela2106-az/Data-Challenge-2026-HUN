@@ -146,7 +146,7 @@ def layout():
     n_alta = int((RECS.firmeza == "Alta").sum())
     return html.Div(className="page-container", children=[
         portada(
-            "Propuestas · Recomendaciones", "Más que faltar camas, falta liberarlas, asignarlas y desocuparlas a tiempo",
+            "Conclusiones · Recomendaciones", "Más que faltar camas, falta liberarlas, asignarlas y desocuparlas a tiempo",
             "Siete acciones para el hospital, de la más básica a la más específica, cada una respaldada por los datos del HUN y por "
             "lo que se ha encontrado en otros hospitales.",
             [cifra(str(len(RECS)), f"recomendaciones: {n_alta} con firmeza alta y {len(RECS) - n_alta} con firmeza media"),

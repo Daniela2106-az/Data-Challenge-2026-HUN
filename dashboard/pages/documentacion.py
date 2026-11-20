@@ -28,7 +28,7 @@ def layout():
             html.Div(f"{n:02d}", className="doc-card__num"), html.Div(c["titulo"], className="doc-card__titulo"),
             subs, html.Div("Abrir capítulo →", className="doc-card__ir")]))
     return html.Div(className="page-container", children=[
-        portada("Propuestas · Documentación", "¿Por qué se espera tanto por una cama?",
+        portada("Conclusiones · Documentación", "¿Por qué se espera tanto por una cama?",
                 "El documento completo del proyecto, por capítulos: los datos y su calidad, cómo fluye el paciente, el cuello de botella, los modelos "
                 "de predicción y simulación, las recomendaciones, las limitaciones y las referencias. Los capítulos también están en el menú de la izquierda.",
                 [cifra(str(len(caps)), "capítulos, del reto a los anexos"), cifra("7", "recomendaciones para el hospital"),

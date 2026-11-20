@@ -44,13 +44,17 @@ import simulador_integral as si  # noqa: E402  (import liviano: no corre backtes
 import simulacion_camas_montecarlo as scm  # noqa: E402
 import tema_graficos as tg  # noqa: E402
 import catalogo as _catalogo  # noqa: E402
-from componentes import mensaje, metodo, secciones  # noqa: E402
+from componentes import mensaje, metodo, secciones, leer  # noqa: E402
 
 dash.register_page(__name__, path="/simulador", name="Simulador integral", title="Simulador integral - HUN", order=7)
 
 GRIS, AZUL, NARANJA, VERDE, ROJO, ROSA = "#6b6b6b", "#2a6fb0", "#eb6834", "#2e8b57", "#c0392b", "#c2185b"
-N_REP_INTERACTIVO = 200
-N_REP_HORARIO = 300
+# Mismo azul de marca que var(--brand-strong) en theme.css (21-nov), para que el titulo de los 3 graficos
+# principales (flujo/camas/espera) combine exactamente con el de los modulos nuevos (.simint-radio__modulo-titulo).
+BRAND_STRONG_CLARO, BRAND_STRONG_OSCURO = "#0071bc", "#6fcbef"
+from modo import repeticiones  # noqa: E402  (modo ligero en servidores pequenos como Render)
+N_REP_INTERACTIVO = repeticiones(200)
+N_REP_HORARIO = repeticiones(300)
 import pacientes_alerta as pac_alerta  # noqa: E402  (tablas de pacientes de la confirmacion verde)
 from umbrales_alertas import (ARRANQUE_SIN_ALERTAS, UMBRAL_ALERTA, UMBRAL_ALERTA_MEDIA, UMBRAL_COLA, UMBRAL_COLA_CRITICA, UMBRAL_FALTAN,  # noqa: E402,F401
                               UMBRAL_FALTAN_CRITICO, UMBRAL_LLEGADAS_TARDE, FRACCION_COLA_PICO,
@@ -95,6 +99,42 @@ PARTE_CAMAS_LARGAS, DIAS_MEDIA_LARGA, PCT_ESTANCIAS_LARGAS = _estancias_largas()
 PARTE_ALTAS_TARDE = 0.627                    # 62,7 % de las altas ocurre entre las 14:00 y las 18:59 (docs/HALLAZGOS.md 4.4)
 ADELANTO_ALTAS = 30                          # % de las altas de la tarde que pasan a la manana (R4: meta de 25-30 % de altas antes de las 12 h)
 ESPERA_PEDIR_ANTES = -5                      # % de espera que se ahorra al pedir antes la cama de quien llega por la tarde (R6: 2 a 11 % del exceso)
+
+ANIOS_HIST = ["2023", "2024", "2025", "2026"]
+ETIQUETA_ANIO = {"2023": "2023", "2024": "2024", "2025": "2025", "2026": "2026 (ene–abr)"}
+
+
+def _historico_ocupacion():
+    """% de dias por año con ocup_hosp_media > capacidad (20-nov, para el modulo "% de dias sobre capacidad"
+    de la vista Camas) — MISMO calculo que dashboard/pages/ocupacion.py (lamina "ocu-sobre"), leido aqui
+    directo de panel_diario.csv en vez de duplicar una tabla pre-agregada aparte. {} si el CSV no esta."""
+    try:
+        p = leer("panel_diario.csv", parse_dates=["fecha"])
+        p = p[(p.fecha >= "2023-02-01") & (p.fecha < "2026-04-10") & p.ocup_hosp_media.notna()]
+        pct = 100 * (p.ocup_hosp_media > scm.CAPACIDAD["total"]).groupby(p.fecha.dt.year).mean()
+        return {str(a): float(v) for a, v in pct.items()}
+    except Exception:
+        return {}
+
+
+def _historico_espera_estancia():
+    """Espera tipica (mediana/p90) y mezcla de rutas de ingreso por año (20-nov, para los modulos
+    comparativos de las vistas Flujo y Espera) — de espera_cubo.csv, MISMA tabla que dashboard/pages/
+    comparar.py. Devuelve (por_anio: {anio: (mediana_h, p90_h)}, ruta_por_anio: {anio: {ruta: pct}})."""
+    try:
+        c = leer("espera_cubo.csv", dtype={"anio": str})
+        total = c[(c.tipo_visita == "Todos") & (c.grupo_edad == "Todos")].set_index("anio")
+        por_anio = {a: (float(total.loc[a, "mediana"]), float(total.loc[a, "p90"])) for a in ANIOS_HIST if a in total.index}
+        m = c[(c.tipo_visita != "Todos") & (c.grupo_edad == "Todos")].pivot_table(index="anio", columns="tipo_visita", values="n")
+        m = (100 * m.div(m.sum(axis=1), axis=0))
+        ruta_por_anio = {a: m.loc[a].to_dict() for a in ANIOS_HIST if a in m.index}
+        return por_anio, ruta_por_anio
+    except Exception:
+        return {}, {}
+
+
+HIST_OCUPACION = _historico_ocupacion()
+HIST_ESPERA, HIST_RUTA = _historico_espera_estancia()
 
 
 def _a5(x):
@@ -791,6 +831,204 @@ def modulo_tablero_camas(ocup_adultos, ocup_ninos):
     ])
 
 
+def _figura_barras_comparativas(categorias, valores, colores, tema, sufijo=" %", alto=190):
+    """Barras chicas para los modulos comparativos (simulacion vs anios anteriores, o por perfil) de las
+    vistas Flujo/Camas/Espera — mismo estilo de los graficos reales del dashboard (estilo() de
+    componentes.py), reescrito aqui liviano porque estos modulos no pasan por dcc.Graph con id propio."""
+    fig = go.Figure(go.Bar(x=categorias, y=valores, marker_color=colores,
+                           text=[f"{v:.1f}{sufijo}" for v in valores], textposition="outside", cliponaxis=False,
+                           hovertemplate="%{x}: %{y:.1f}" + sufijo + "<extra></extra>"))
+    # margen superior generoso (21-nov): con t=6 las etiquetas "outside" de las barras mas altas se veian
+    # cortadas contra el borde del grafico (reportado como "entrecortado"); 28px les deja aire de sobra.
+    fig.update_layout(template="simple_white", margin=dict(l=36, r=10, t=28, b=28), height=alto, showlegend=False, bargap=0.4)
+    fig.update_xaxes(showgrid=False, ticks="")
+    fig.update_yaxes(showgrid=True, gridwidth=1, ticks="", showline=False, zeroline=False, ticksuffix=sufijo, rangemode="tozero")
+    return tg.aplicar(fig, tg.es_oscuro(tema))
+
+
+def _modulo_grafico(titulo, fig, alto=190):
+    return html.Div(className="simint-radio__modulo", children=[
+        html.Div(titulo, className="simint-radio__modulo-titulo"),
+        dcc.Graph(figure=fig, config={"displayModeBar": False, "responsive": True}, style={"height": f"{alto}px"}),
+    ])
+
+
+def _carrusel(id_, titulo, paneles_dom, extra_header=None, sin_botones=False, botones_abajo=False, **root_attrs):
+    """Carrusel generico (21-nov): varios paneles (etiqueta_boton, contenido) en una pista que rota sola cada
+    pocos segundos o al hacer clic en un boton — puro cliente (dashboard/assets/carrusel.js), sin Store ni
+    callback. Mismo contenedor que un modulo normal (simint-radio__modulo): funciona igual dentro de la
+    radiografia o afuera, en el panel del grafico (ver .simint-extra__fila de theme.css).
+    `sin_botones=True` (21-nov): no dibuja su propia fila de botones — lo usan los carruseles controlados por
+    una fila de botones EXTERNA compartida con otro carrusel (mismo `data-grupo`, ver fila_vista_switch()).
+    `botones_abajo=True` (22-nov): sus PROPIOS botones van DEBAJO de la grafica (mismo diseño sutil y
+    centrado que fila_vista_switch) en vez de junto al titulo — para un carrusel SOLO a ancho completo
+    (p.ej. "Espera de cama (media aprox.)"). El click sigue funcionando igual (carrusel.js delega el click en
+    todo el carrusel, no solo en el header)."""
+    panels = [html.Div(cont, className="simint-carrusel__panel") for _, cont in paneles_dom]
+    hijos_header = [html.Div(titulo, className="simint-radio__modulo-titulo")]
+    botones_dom = None
+    if not sin_botones:
+        botones = [html.Button(etq, type="button", className="simint-carrusel__boton" + (" is-active" if i == 0 else ""))
+                   for i, (etq, _) in enumerate(paneles_dom)]
+        botones_dom = html.Div(botones, className="simint-vista-switch" if botones_abajo else "simint-carrusel__botones")
+        if not botones_abajo:
+            hijos_header.append(botones_dom)
+    if extra_header is not None:
+        hijos_header.append(extra_header)
+    hijos_raiz = [html.Div(hijos_header, className="simint-carrusel__header"),
+                  html.Div(html.Div(panels, className="simint-carrusel__track"), className="simint-carrusel__viewport")]
+    if botones_abajo and botones_dom is not None:
+        hijos_raiz.append(botones_dom)
+    return html.Div(className="simint-radio__modulo simint-carrusel", id=id_, children=hijos_raiz, **root_attrs)
+
+
+def fila_vista_switch(grupo, etiquetas=("Edad", "Sexo", "Ruta")):
+    """Fila de botones EXTERNA (21-nov) que controla DOS carruseles a la vez (mismo `data-grupo` en ambos
+    carruseles y en esta fila, ver dashboard/assets/carrusel.js): un solo clic cambia la vista de las dos
+    graficas juntas. Va centrada debajo de las dos graficas a las que acompaña (ver .simint-extra__bloque)."""
+    botones = [html.Button(etq, type="button", className="simint-carrusel__boton" + (" is-active" if i == 0 else ""))
+               for i, etq in enumerate(etiquetas)]
+    return html.Div(botones, className="simint-vista-switch", **{"data-grupo": grupo})
+
+
+def _carrusel_indicador(id_, titulo, edades_m, rutas_m, sexos_m, sufijo, tema, alto=220, grupo=None, botones_abajo=False):
+    """Carrusel de 1 grafico con 3 vistas (edad/sexo/ruta) a partir de diccionarios {categoria: valor} ya
+    promediados — reemplaza (21-nov) los 3 paneles chicos lado a lado por un solo grafico de tamaño completo
+    que se rota entre las 3 dimensiones (usado por los indicadores de llegadas, hospitalizacion, espera y
+    estancia; todos comparten sexo en su fuente, ver _medias_por_dimension). `grupo` (21-nov): si se da, este
+    carrusel NO dibuja sus propios botones — los controla la fila externa fila_vista_switch() del mismo grupo
+    (Flujo: "Llegan por día" + "Se hospitalizan"; Camas: "Estancia en cama" + "Estancias largas")."""
+    edad_cats = [g for g in EDAD_ORDEN if g in edades_m]
+    ruta_cats = [r for r in RUTA_ORDEN if r in rutas_m]
+    specs = [
+        ("Edad", edad_cats, [edades_m[g] for g in edad_cats], [EDAD_COLORES.get(g, GRIS) for g in edad_cats]),
+        ("Sexo", ["Mujer", "Hombre"], [sexos_m.get("Mujer", 0.0), sexos_m.get("Hombre", 0.0)], [ROSA, AZUL]),
+        ("Ruta", ruta_cats, [rutas_m[r] for r in ruta_cats], [AZUL, NARANJA, GRIS][:len(ruta_cats)]),
+    ]
+    paneles_dom = []
+    for etq, cats, vals, cols in specs:
+        if not cats:
+            continue
+        fig = _figura_barras_comparativas(cats, vals, cols, tema, sufijo=sufijo, alto=alto)
+        paneles_dom.append((etq, dcc.Graph(figure=fig, config={"displayModeBar": False, "responsive": True}, style={"height": f"{alto}px"})))
+    if not paneles_dom:
+        paneles_dom = [("Edad", html.Div())]
+    attrs = {"data-grupo": grupo} if grupo else {}
+    return _carrusel(id_, titulo, paneles_dom, sin_botones=bool(grupo), botones_abajo=botones_abajo, **attrs)
+
+
+def _medias_por_dimension(suma_perf_sexo, cuenta_perf_sexo, perfiles):
+    """suma/cuenta: arrays (n_perf, 2) ya sumados en el tiempo (dist["*_suma"/"*_cuenta" o "*_total"]).
+    Devuelve (edad, ruta, sexo) -> {categoria: media}, marginalizando perfil=edad×ruta y sexo donde
+    corresponde (promedio Monte Carlo correcto: suma de numeradores / suma de denominadores)."""
+    edades, rutas = {}, {}
+    for i, (g, r) in enumerate(perfiles):
+        ea = edades.setdefault(g, [0.0, 0.0]); ea[0] += suma_perf_sexo[i].sum(); ea[1] += cuenta_perf_sexo[i].sum()
+        ra = rutas.setdefault(r, [0.0, 0.0]); ra[0] += suma_perf_sexo[i].sum(); ra[1] += cuenta_perf_sexo[i].sum()
+    sexos = {"Mujer": [suma_perf_sexo[:, 0].sum(), cuenta_perf_sexo[:, 0].sum()],
+             "Hombre": [suma_perf_sexo[:, 1].sum(), cuenta_perf_sexo[:, 1].sum()]}
+
+    def _media(d):
+        return {k: (v[0] / v[1] if v[1] else 0.0) for k, v in d.items()}
+    return _media(edades), _media(rutas), _media(sexos)
+
+
+
+
+def modulo_pct_capacidad(total_p50, cap, fin, tema):
+    """Modulo de la vista Camas (20-nov): % de dias con la ocupacion mediana por encima de la capacidad,
+    desde el dia 1 de la simulacion hasta el cursor, junto a los mismos % REALES de 2023-2026 — MISMA
+    definicion que dashboard/pages/ocupacion.py (lamina "ocu-sobre"): % de dias con el nivel diario por
+    encima de la capacidad (alla el nivel diario es ocup_hosp_media; aqui, la mediana simulada del dia)."""
+    arr = np.asarray(total_p50[:max(fin, 1)], dtype=float)
+    pct_sim = 100 * float((arr > cap).mean()) if len(arr) else 0.0
+    anios = [a for a in ANIOS_HIST if a in HIST_OCUPACION]
+    cats = ["Simulación"] + [ETIQUETA_ANIO[a] for a in anios]
+    vals = [pct_sim] + [HIST_OCUPACION[a] for a in anios]
+    cols = [AZUL] + [GRIS] * len(anios)
+    return _modulo_grafico("% de sobre cupo de camas",
+                           _figura_barras_comparativas(cats, vals, cols, tema))
+
+
+def modulo_estancias_largas_tendencia(dist, fechas, fin, ancho, tema):
+    """Modulo de la vista Camas (20-nov): tendencia de %>14 y %>30 dias de estancia, en bloques del mismo
+    ancho que la ventana de la radiografia (dia/semana/mes segun la velocidad elegida), desde el dia 1 hasta
+    el cursor — usa dist["estancia_total"/"larga14"/"larga30"] (src/simulador_integral.py)."""
+    total = np.asarray(dist["estancia_total"], dtype=float).sum(axis=(1, 2))
+    l14 = np.asarray(dist["estancia_larga14"], dtype=float).sum(axis=(1, 2))
+    l30 = np.asarray(dist["estancia_larga30"], dtype=float).sum(axis=(1, 2))
+    n = max(fin, 1)
+    paso = max(ancho, 1)
+    xs, y14, y30 = [], [], []
+    for ini_b in range(0, n, paso):
+        fin_b = min(ini_b + paso, n)
+        t = total[ini_b:fin_b].sum()
+        if t <= 0:
+            continue
+        xs.append(pd.Timestamp(fechas[fin_b - 1]))
+        y14.append(100 * l14[ini_b:fin_b].sum() / t)
+        y30.append(100 * l30[ini_b:fin_b].sum() / t)
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=xs, y=y14, mode="lines+markers", line=dict(color=AZUL, width=2), name="Más de 14 días",
+                             hovertemplate="%{x|%d %b}: %{y:.1f} %<extra>más de 14 días</extra>"))
+    fig.add_trace(go.Scatter(x=xs, y=y30, mode="lines+markers", line=dict(color=GRIS, width=2), name="Más de 30 días",
+                             hovertemplate="%{x|%d %b}: %{y:.1f} %<extra>más de 30 días</extra>"))
+    fig.update_layout(template="simple_white", margin=dict(l=36, r=10, t=4, b=24), height=190, hovermode="x unified",
+                      legend=dict(orientation="h", y=1.2, x=0, xanchor="left", yanchor="bottom", font=dict(size=10)))
+    fig.update_xaxes(showgrid=False, ticks="")
+    fig.update_yaxes(showgrid=True, gridwidth=1, ticks="", showline=False, zeroline=False, ticksuffix=" %", rangemode="tozero")
+    tg.aplicar(fig, tg.es_oscuro(tema))
+    return _modulo_grafico("Estancias largas en el tiempo", fig)
+
+
+def carrusel_estancias_largas(dist, perfiles, fin, tema, alto=220):
+    """Vista Camas (21-nov; antes modulo_estancias_largas_perfil, 3 paneles chicos fijos en 14 dias): "Estancias
+    largas" como carrusel de edad/sexo/ruta, movido AFUERA de la radiografia, con un switch sutil (14/30 dias,
+    arriba a la derecha) que cambia las 3 vistas a la vez — cada panel lleva AMBAS figuras (14 y 30 dias) ya
+    renderizadas; el CSS (.simint-carrusel[data-umbral]) decide cual se ve, sin volver a llamar al servidor."""
+    n = max(fin, 1)
+    total = np.asarray(dist["estancia_total"], dtype=float)[:n].sum(axis=0)   # (n_perf, 2)
+    l14 = np.asarray(dist["estancia_larga14"], dtype=float)[:n].sum(axis=0)
+    l30 = np.asarray(dist["estancia_larga30"], dtype=float)[:n].sum(axis=0)
+    edad14, ruta14, sexo14 = _medias_por_dimension(100 * l14, total, perfiles)  # *100 arriba: la media sale directo en %
+    edad30, ruta30, sexo30 = _medias_por_dimension(100 * l30, total, perfiles)
+
+    def _grafico(cats, cols, m, alto_=alto):
+        fig = _figura_barras_comparativas(cats, [m[c] for c in cats], cols, tema, sufijo=" %", alto=alto_)
+        return dcc.Graph(figure=fig, config={"displayModeBar": False, "responsive": True}, style={"height": f"{alto_}px"})
+
+    def _panel(cats, cols, m14, m30):
+        if not cats:
+            return None
+        return html.Div([
+            html.Div(_grafico(cats, cols, m14), className="simint-carrusel__u14"),
+            html.Div(_grafico(cats, cols, m30), className="simint-carrusel__u30"),
+        ])
+
+    edad_cats = [g for g in EDAD_ORDEN if g in edad14]
+    sexo_cats = [s for s in ("Mujer", "Hombre") if s in sexo14]
+    ruta_cats = [r for r in RUTA_ORDEN if r in ruta14]
+    paneles_dom = []
+    p = _panel(edad_cats, [EDAD_COLORES.get(g, GRIS) for g in edad_cats], edad14, edad30)
+    if p is not None:
+        paneles_dom.append(("Edad", p))
+    p = _panel(sexo_cats, [ROSA, AZUL][:len(sexo_cats)], sexo14, sexo30)
+    if p is not None:
+        paneles_dom.append(("Sexo", p))
+    p = _panel(ruta_cats, [AZUL, NARANJA, GRIS][:len(ruta_cats)], ruta14, ruta30)
+    if p is not None:
+        paneles_dom.append(("Ruta", p))
+    if not paneles_dom:
+        paneles_dom = [("Edad", html.Div())]
+    switch = html.Div(className="simint-switch", title="Cambiar entre estancias de más de 14 y de más de 30 días", children=[
+        html.Span("14", className="simint-switch__txt"),
+        html.Span(html.Span(className="simint-switch__thumb"), className="simint-switch__track"),
+        html.Span("30", className="simint-switch__txt"),
+    ])
+    return _carrusel("simint-carr-estancias-largas", "Estancias largas", paneles_dom, extra_header=switch, sin_botones=True,
+                     **{"data-umbral": "14", "data-grupo": "camas-dim"})
+
+
 FRANJA_HORAS = {"madrugada": "0–7 h", "mañana": "7–14 h", "tarde": "14–19 h", "noche": "19–24 h"}
 FRANJA_COLOR = {"madrugada": "#4a5fa8", "mañana": "#e0a82a", "tarde": "#e0862a", "noche": "#2a3f7a"}
 
@@ -812,14 +1050,17 @@ def icono_franja(nombre):
                             "WebkitMaskRepeat": "no-repeat", "maskRepeat": "no-repeat", "WebkitMaskPosition": "center", "maskPosition": "center"})
 
 
-def modulo_llegadas_franja(llegadas_franja, ini, fin):
-    """Modulo de la vista "Flujo" (21-nov): de las llegadas al hospital de la ventana, cuantas caen en la madrugada,
-    la manana, la tarde y la noche. Suma los dias de la ventana [ini, fin); el reparto es el historico real por dia de
-    la semana (src/simulador_integral.py, repartir_por_franja), no cambia con los filtros de edad/ruta/sexo."""
+FRANJAS_NOMBRES = ("madrugada", "mañana", "tarde", "noche")
+
+
+def _contenido_llegadas_franja(llegadas_franja, ini, fin):
+    """Contenido (sin titulo propio: lo pone el carrusel) de las tarjetas por franja del dia — era
+    modulo_llegadas_franja() hasta el 21-nov, cuando se fusiono con el patron semanal en UN carrusel
+    (modulo_llegadas_franja_carrusel) dentro de la radiografia de la vista Flujo."""
     cifras = {n: float(np.sum(v[ini:fin])) if v else 0.0 for n, v in (llegadas_franja or {}).items()}
     total = sum(cifras.values())
     tarjetas = []
-    for nombre in ("madrugada", "mañana", "tarde", "noche"):
+    for nombre in FRANJAS_NOMBRES:
         n = cifras.get(nombre, 0.0)
         pct = 100 * n / total if total > 0 else 0.0
         tarjetas.append(html.Div(className="simint-franja", title=f"{nombre.capitalize()} ({FRANJA_HORAS[nombre]}): {pct:.0f} % de las llegadas", children=[
@@ -828,11 +1069,212 @@ def modulo_llegadas_franja(llegadas_franja, ini, fin):
             html.Div(className="simint-franja__barra", children=html.Div(style={"width": f"{pct:.0f}%", "height": "100%", "background": FRANJA_COLOR[nombre], "borderRadius": "5px"})),
             html.Div(f"{pct:.0f} % de las llegadas", className="simint-radio__cap simint-franja__pie"),
         ]))
-    return html.Div(className="simint-radio__modulo", children=[
-        html.Div("Llegadas por franja del día", className="simint-radio__modulo-titulo"),
+    return html.Div([
         html.Div(className="simint-franjas", children=tarjetas),
         html.Div("Reparto según la hora real de llegada de 2024–2025 (por día de la semana).", className="simint-radio__cap", style={"marginTop": "14px"}),
     ])
+
+
+def _contenido_patron_semanal(llegadas_hora, fechas, fin, tema):
+    """Contenido (sin titulo propio) del heatmap dia de semana x HORA (0-23) de llegada, acumulado desde el
+    dia 1 hasta el cursor — era modulo_patron_semanal_llegadas() hasta el 21-nov. Emula el heatmap real de
+    demanda.py (resultado 01), usando el reparto horario real 2024-2025 por dia de semana. Limite compartido
+    con el resto del motor: ese reparto viene de pacientes que SI llegaron a hospitalizarse (no hay hora
+    individual real para quien no llega a cama). El patron horario es un peso historico FIJO: lo que
+    "converge" al reproducir es la magnitud por dia de semana, no la forma del dia."""
+    if not fechas:
+        return html.Div("Se mostrará aquí al reproducir la simulación.", className="simint-radio__cap", style={"padding": "40px 0", "textAlign": "center"})
+    n = max(fin, 1)
+    dias_semana = pd.to_datetime(fechas[:n]).dayofweek.to_numpy()
+    mat = np.zeros((7, 24))
+    for h in range(24):
+        v = np.asarray((llegadas_hora or {}).get(str(h), [0.0] * n)[:n], dtype=float)
+        np.add.at(mat[:, h], dias_semana, v)
+    cont = np.array([max((dias_semana == d).sum(), 1) for d in range(7)], dtype=float)
+    prom = mat / cont[:, None]
+    dias_es = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]
+    escala = [[0, "#171d25"], [1, "#58c0ec"]] if tg.es_oscuro(tema) else [[0, "#f4f7fb"], [1, "#0a4f8f"]]
+    fig = go.Figure(go.Heatmap(z=prom, x=list(range(24)), y=dias_es, colorscale=escala, xgap=2, ygap=2,
+                               colorbar=dict(title=dict(text="llegadas", side="right"), thickness=10, len=0.9, outlinewidth=0),
+                               hovertemplate="%{y}, %{x}:00 · %{z:.1f} llegadas por hora<extra></extra>"))
+    fig.update_layout(template="simple_white", margin=dict(l=70, r=10, t=4, b=24), height=220)
+    fig.update_yaxes(autorange="reversed", showgrid=False)
+    fig.update_xaxes(tickmode="array", tickvals=list(range(0, 24, 3)), ticktext=[f"{h}:00" for h in range(0, 24, 3)], showgrid=False, showline=False)
+    tg.aplicar(fig, tg.es_oscuro(tema))
+    return dcc.Graph(figure=fig, config={"displayModeBar": False, "responsive": True}, style={"height": "220px"})
+
+
+def modulo_llegadas_franja_carrusel(llegadas_franja, llegadas_hora, ini, fin, fechas, tema):
+    """Vista Flujo (21-nov): "Llegadas por franja del día" y "Patrón semanal de llegadas (por hora)" comparten
+    AHORA un solo título y una sola sección, dentro de la radiografía, como dos vistas del mismo carrusel
+    (dashboard/assets/carrusel.js) que rota sola cada pocos segundos — antes eran dos módulos separados."""
+    paneles_dom = [("Por franja", _contenido_llegadas_franja(llegadas_franja, ini, fin)),
+                   ("Por hora", _contenido_patron_semanal(llegadas_hora, fechas, fin, tema))]
+    return _carrusel("simint-carr-llegadas-franja", "Llegadas por franja del día", paneles_dom)
+
+
+def modulo_mezcla_rutas(composicion_ingresos, perfiles, fin, tema):
+    """Modulo de la vista Flujo (20-nov; 21-nov: se mueve AFUERA de la radiografia, al panel del grafico,
+    a todo el ancho): % de ingresos a cama por ruta (Urgencias/TU/Ambulatorio), simulación en curso (desde el
+    día 1 hasta el cursor) vs años reales 2023-2025 — útil para ver el efecto del slider "Perfiles de
+    estrés", que mueve justo esta mezcla."""
+    n = max(fin, 1)
+    arr = np.asarray(composicion_ingresos[:n], dtype=float).sum(axis=(0, 2))
+    rutas = {}
+    for i, (g, r) in enumerate(perfiles):
+        rutas[r] = rutas.get(r, 0.0) + arr[i]
+    total = sum(rutas.values()) or 1.0
+    cats = [r for r in RUTA_ORDEN if r in rutas]
+    anios = [a for a in ("2023", "2024", "2025") if a in HIST_RUTA]
+    fig = go.Figure()
+    fig.add_trace(go.Bar(name="Simulación", x=cats, y=[100 * rutas[r] / total for r in cats], marker_color=AZUL))
+    for a in anios:
+        fig.add_trace(go.Bar(name=ETIQUETA_ANIO[a], x=cats, y=[HIST_RUTA[a].get(r, 0.0) for r in cats], marker_color=GRIS))
+    fig.update_layout(template="simple_white", margin=dict(l=36, r=10, t=4, b=24), height=210, barmode="group", bargap=0.28, bargroupgap=0.08,
+                      legend=dict(orientation="h", y=1.22, x=0, xanchor="left", yanchor="bottom", font=dict(size=9)))
+    fig.update_xaxes(showgrid=False, ticks="")
+    fig.update_yaxes(showgrid=True, gridwidth=1, ticks="", showline=False, zeroline=False, ticksuffix=" %", rangemode="tozero")
+    tg.aplicar(fig, tg.es_oscuro(tema))
+    return _modulo_grafico("Mezcla de rutas de ingreso vs años anteriores", fig, alto=210)
+
+
+def modulo_espera_por_franja(dist, fin, tema):
+    """Modulo de la vista Espera (20-nov; 21-nov: renombrado y movido de la vista Flujo a la vista Espera,
+    dentro de la radiografia, ARRIBA del ranking de perfiles; 22-nov: se quitaron los iconos del eje x):
+    espera promedio de cama por franja de LLEGADA (madrugada/mañana/tarde/noche), acumulado desde el dia 1
+    hasta el cursor — usa dist["espera_franja_suma"/"cuenta"]. Es media aproximada (el motor no acumula
+    mediana exacta por franja, solo suma/conteo)."""
+    n = max(fin, 1)
+    suma = np.asarray(dist["espera_franja_suma"], dtype=float)[:n].sum(axis=0)
+    cuenta = np.asarray(dist["espera_franja_cuenta"], dtype=float)[:n].sum(axis=0)
+    vals = [suma[i] / cuenta[i] if cuenta[i] else 0.0 for i in range(4)]
+    cats = [nombre.capitalize() for nombre in FRANJAS_NOMBRES]
+    cols = [FRANJA_COLOR[nombre] for nombre in FRANJAS_NOMBRES]
+    fig = _figura_barras_comparativas(cats, vals, cols, tema, sufijo=" h", alto=210)
+    return _modulo_grafico("Espera de cama por franja de llegada", fig, alto=210)
+
+
+def carrusel_llegan_dia(composicion_llegadas, perfiles, fin, tema):
+    """Vista Flujo (21-nov; antes modulo_indicador_llegan_dia con 3 paneles chicos lado a lado): llegadas por
+    día por edad/ruta/sexo, como carrusel de 1 grafico a tamaño completo con 3 vistas, movido AFUERA de la
+    radiografia (composicion["llegadas"] ya trae sexo, ver src/simulador_integral.py: SEXO_LLEG_VEC —
+    reparto esperado, no sorteado por paciente)."""
+    n = max(fin, 1)
+    arr = np.asarray(composicion_llegadas[:n], dtype=float).sum(axis=0) / n     # (n_perf, 2): promedio por día
+    edades, rutas = {}, {}
+    for i, (g, r) in enumerate(perfiles):
+        edades[g] = edades.get(g, 0.0) + arr[i].sum()
+        rutas[r] = rutas.get(r, 0.0) + arr[i].sum()
+    sexos = {"Mujer": float(arr[:, 0].sum()), "Hombre": float(arr[:, 1].sum())}
+    return _carrusel_indicador("simint-carr-llegan-dia", "Llegan por día", edades, rutas, sexos, "", tema, grupo="flujo-dim")
+
+
+def carrusel_hospitalizan(composicion_llegadas, composicion_ingresos, perfiles, fin, tema):
+    """Vista Flujo (21-nov; antes modulo_indicador_hospitalizan, con si.P_CAMA fijo y sin vista de sexo): %
+    de llegadas de la ventana que terminan en cama, por edad/ruta/SEXO — a pedido del usuario se agrega sexo,
+    que si.P_CAMA no tiene (el sexo no entra en esa probabilidad en ningun punto del motor). En vez del
+    parametro fijo del modelo, se calcula la tasa REALIZADA en esta corrida (ingresos a cama de la ventana /
+    llegadas de la ventana, por perfil), mas fiel a "lo que pasó en la simulación" y que de paso ya trae
+    sexo gratis (mismo truco de _medias_por_dimension: numerador/denominador ya marginalizados)."""
+    n = max(fin, 1)
+    lleg = np.asarray(composicion_llegadas[:n], dtype=float).sum(axis=0)
+    ing = np.asarray(composicion_ingresos[:n], dtype=float).sum(axis=0)
+    edad_m, ruta_m, sexo_m = _medias_por_dimension(100 * ing, lleg, perfiles)
+    return _carrusel_indicador("simint-carr-hospitalizan", "Se hospitalizan", edad_m, ruta_m, sexo_m, " %", tema, grupo="flujo-dim")
+
+
+TRAMOS_ETQ = ["0–6 h", "6–12 h", "12–24 h", "24–48 h", "48–72 h", "72–120 h", "> 120 h"]
+
+
+def carrusel_espera_media(dist, perfiles, fin, tema):
+    """Vista Espera (21-nov; antes modulo_indicador_espera_cama con 3 paneles chicos): espera de cama (media
+    aprox.) por edad, ruta y sexo, como carrusel de 1 grafico, movido AFUERA de la radiografia — usa
+    dist["espera_suma"/"espera_cuenta"], que ya llevan sexo como 3a dimensión."""
+    n = max(fin, 1)
+    suma = np.asarray(dist["espera_suma"], dtype=float)[:n].sum(axis=0)
+    cuenta = np.asarray(dist["espera_cuenta"], dtype=float)[:n].sum(axis=0)
+    edad_m, ruta_m, sexo_m = _medias_por_dimension(suma, cuenta, perfiles)
+    return _carrusel_indicador("simint-carr-espera-media", "Espera de cama (media aprox.)", edad_m, ruta_m, sexo_m, " h", tema, botones_abajo=True)
+
+
+def carrusel_estancia_media(dist, perfiles, fin, tema):
+    """Vista Camas (21-nov; antes modulo_indicador_estancia_cama con 3 paneles chicos): estancia en cama
+    (media) por edad, ruta y sexo, como carrusel de 1 grafico, movido AFUERA de la radiografia — usa
+    dist["estancia_suma"/"estancia_total"]."""
+    n = max(fin, 1)
+    suma = np.asarray(dist["estancia_suma"], dtype=float)[:n].sum(axis=0)
+    cuenta = np.asarray(dist["estancia_total"], dtype=float)[:n].sum(axis=0)
+    edad_m, ruta_m, sexo_m = _medias_por_dimension(suma, cuenta, perfiles)
+    return _carrusel_indicador("simint-carr-estancia-media", "Estancia en cama (media)", edad_m, ruta_m, sexo_m, " h", tema, grupo="camas-dim")
+
+
+def modulo_distribucion_espera(dist, perfiles, fin, filtro, tema):
+    """Modulo de la vista Espera (20-nov; 21-nov: se mueve AFUERA de la radiografia, a todo el ancho del panel
+    del grafico — sin texto aparte del titulo, regla de esa zona): histograma de 7 tramos de espera (mismos
+    cortes que dashboard/pages/espera.py), filtrable por edad y ruta (los chips de SEXO de la radiografía no
+    aplican aquí: dist no separa por sexo, simplificación aprobada del 20-nov). Barras ≥24h en azul, <24h en
+    gris."""
+    n = max(fin, 1)
+    filtro = filtro or {}
+    edad_f, ruta_f = filtro.get("edad"), filtro.get("ruta")
+    idxs = [i for i, (g, r) in enumerate(perfiles) if (not edad_f or g == edad_f) and (not ruta_f or r == ruta_f)]
+    tramo = np.asarray(dist["espera_tramo"], dtype=float)[:n]
+    tramo = tramo[:, idxs, :].sum(axis=(0, 1)) if idxs else np.zeros(7)
+    total = tramo.sum() or 1.0
+    pct = 100 * tramo / total
+    cols = [GRIS] * 3 + [AZUL] * 4
+    fig = go.Figure(go.Bar(x=TRAMOS_ETQ, y=pct, marker_color=cols, text=[f"{v:.0f} %" for v in pct], textposition="outside", cliponaxis=False,
+                           hovertemplate="%{x}: %{y:.1f} % de las hospitalizaciones<extra></extra>"))
+    fig.update_layout(template="simple_white", margin=dict(l=36, r=10, t=28, b=24), height=200, bargap=0.35)
+    fig.update_xaxes(showgrid=False, ticks="")
+    fig.update_yaxes(showgrid=True, gridwidth=1, ticks="", showline=False, zeroline=False, ticksuffix=" %", rangemode="tozero")
+    tg.aplicar(fig, tg.es_oscuro(tema))
+    sufijo_filtro = " · " + " ".join(x for x in (edad_f, ruta_f) if x) if (edad_f or ruta_f) else ""
+    return html.Div(className="simint-radio__modulo", children=[
+        html.Div("Distribución de la espera" + sufijo_filtro, className="simint-radio__modulo-titulo"),
+        dcc.Graph(figure=fig, config={"displayModeBar": False, "responsive": True}, style={"height": "200px"}),
+    ])
+
+
+def modulo_espera_exceso(dist, fin, tema):
+    """Modulo de la vista Espera (20-nov; 21-nov: se mueve AFUERA de la radiografia — sin texto aparte del
+    titulo, regla de esa zona): %>24h/48h/72h (de espera_tramo) sobre el total de hospitalizaciones."""
+    n = max(fin, 1)
+    tramo = np.asarray(dist["espera_tramo"], dtype=float)[:n].sum(axis=(0, 1))
+    total = tramo.sum() or 1.0
+    pct24, pct48, pct72 = (100 * tramo[k:].sum() / total for k in (3, 4, 5))
+    fig = _figura_barras_comparativas(["> 24 h", "> 48 h", "> 72 h"], [pct24, pct48, pct72], [AZUL] * 3, tema)
+    return html.Div(className="simint-radio__modulo", children=[
+        html.Div("Espera en exceso", className="simint-radio__modulo-titulo"),
+        dcc.Graph(figure=fig, config={"displayModeBar": False, "responsive": True}, style={"height": "190px"}),
+    ])
+
+
+def modulo_ranking_perfiles_espera(dist, perfiles, fin, tema):
+    """Modulo de la vista Espera (20-nov; 21-nov: renombrado, eje y con el codigo de la ruta, barra coloreada
+    por edad; 22-nov: se quito el icono de paciente): ranking de perfiles (edad×ruta) por espera típica BASAL
+    — no contrasta pico vs resto (eso hacían g1/g2 de perfiles.py, lo opuesto de lo pedido); es la espera
+    media aproximada de cada perfil, sin importar si el hospital está lleno o llegan muchos pacientes
+    seguidos."""
+    n = max(fin, 1)
+    suma = np.asarray(dist["espera_suma"], dtype=float)[:n].sum(axis=(0, 2))
+    cuenta = np.asarray(dist["espera_cuenta"], dtype=float)[:n].sum(axis=(0, 2))
+    filas = [(g, r, suma[i] / cuenta[i]) for i, (g, r) in enumerate(perfiles) if cuenta[i] >= 5]
+    filas.sort(key=lambda x: x[2], reverse=True)
+    filas = filas[:8][::-1]
+    if not filas:
+        return html.Div()
+    cats = [f"{g} años · {RUTA_ABREV.get(r, r)}" for g, r, _ in filas]
+    vals = [v for _, _, v in filas]
+    cols = [EDAD_COLORES.get(g, GRIS) for g, _, _ in filas]
+    fig = go.Figure(go.Bar(x=vals, y=cats, orientation="h", marker_color=cols,
+                           text=[f"{v:.0f} h" for v in vals], textposition="outside", cliponaxis=False,
+                           hovertemplate="%{y}: %{x:.1f} h<extra></extra>"))
+    fig.update_layout(template="simple_white", margin=dict(l=150, r=30, t=4, b=24), height=230, bargap=0.3)
+    fig.update_xaxes(showgrid=True, gridwidth=1, ticks="", ticksuffix=" h", rangemode="tozero")
+    fig.update_yaxes(showgrid=False, ticks="")
+    tg.aplicar(fig, tg.es_oscuro(tema))
+    return _modulo_grafico("Perfiles que más esperan", fig, alto=230)
 
 
 def _agregar(etapa, comp_etapa, ini, fin):
@@ -1168,10 +1610,14 @@ def layout():
                     ]),
                 ]),
                 html.Div(className="simint-grafico-panel", children=[
-                    # 720px (antes 640px, 17-nov): la leyenda horizontal de abajo se quito (ahora vive una
-                    # mini leyenda por fila, dentro de cada grafico) y ese espacio libre pasa a las 3 filas,
-                    # que crecen proporcionalmente (mismas fracciones de alto en `alturas`, mas pixeles).
+                    # 720px en "Todo" (antes 640px, 17-nov): la leyenda horizontal de abajo se quito (ahora
+                    # vive una mini leyenda por fila, dentro de cada grafico) y ese espacio libre pasa a las
+                    # 3 filas, que crecen proporcionalmente (mismas fracciones de alto en `alturas`, mas
+                    # pixeles). En las vistas Flujo/Camas/Espera (21-nov) el grafico baja al tamaño que tiene
+                    # DENTRO de "Todo" (mostrar() pone la altura exacta via Output de estilo) y el espacio
+                    # libre lo llenan los modulos de simint-grafico-extra (antes vivian en la radiografia).
                     dcc.Graph(id="simint-grafico", config={"displaylogo": False}, style={"height": "720px"}),
+                    html.Div(id="simint-grafico-extra", className="simint-grafico-extra"),
                 ]),
             ]),
         ]),
@@ -1265,7 +1711,9 @@ def _ejecutar(dias, pct_lleg, pct_est, pct_esp, recorte, adelanto, estres, compa
     data["pct_sat"] = round(100 * float((out["total"] > scm.CAPACIDAD["total"]).mean()), 1)
     data["perfiles"] = info["perfiles"]
     data["composicion"] = info["composicion"]
+    data["dist"] = info.get("dist")      # 20-nov: acumuladores de duracion (espera_h/estancia_h) por dia x perfil, ver src/simulador_integral.py
     data["llegadas_franja"] = {k: v["media"] for k, v in info["llegadas_franja"].items()}     # llegadas medias por dia y franja del dia
+    data["llegadas_hora"] = {k: v["media"] for k, v in info["llegadas_hora"].items()}          # llegadas medias por dia y hora 0-23 (claves string)
     probs = 100 * (out["total"] > scm.CAPACIDAD["total"]).mean(axis=0)
     idx48 = np.minimum(np.arange(len(fechas)) + 2, len(fechas) - 1)
     data["prob_sat_48h"] = np.round(probs[idx48], 1).tolist()
@@ -1569,6 +2017,28 @@ def actualizar_filtro(_n_edad, _n_sexo, _n_ruta, filtro):
 
 FILAS_VISTA_GRAFICO = {"todo": ["flujo", "camas", "espera"], "flujo": ["flujo"], "camas": ["camas"], "espera": ["espera"]}
 TITULO_FILA = {"flujo": "Flujo: llegan, entran a cama, salen de alta", "camas": "Camas ocupadas", "espera": "Pacientes esperando cama a la vez (cota inferior)"}
+# Alto del grafico principal por vista (21-nov): en Flujo/Camas/Espera se reduce al tamaño que esa misma fila
+# tiene DENTRO de "Todo" (720px repartidos 0.28/0.42/0.30 entre flujo/camas/espera, menos margenes y el hueco
+# entre filas), para dejarle espacio a los modulos de simint-grafico-extra debajo. "Todo" no cambia (720px).
+ALTURA_GRAFICO_VISTA = {"todo": 720, "flujo": 260, "camas": 340, "espera": 260}
+
+
+def _trazas_umbral(y, cap):
+    """Dos series del mismo largo que `y` (NaN donde no aplica): `azul` para los dias con `y <= cap`, `rojo`
+    para los `y >= cap` (20-nov, mejora pedida para la vista Camas). En cada cruce, AMBAS series incluyen los
+    dos dias del segmento que cruza, para que el cambio de color caiga justo en ese segmento — no se inventa
+    una hora de cruce fraccionaria: la simulacion es diaria, esa seria una precision que el dato no tiene."""
+    y = np.asarray(y, dtype=float)
+    n = len(y)
+    azul, rojo = np.full(n, np.nan), np.full(n, np.nan)
+    debajo = y <= cap
+    azul[debajo] = y[debajo]
+    rojo[~debajo] = y[~debajo]
+    cruces = np.nonzero(debajo[:-1] != debajo[1:])[0]
+    for i in cruces:
+        azul[i] = y[i]; azul[i + 1] = y[i + 1]
+        rojo[i] = y[i]; rojo[i + 1] = y[i + 1]
+    return azul.tolist(), rojo.tolist()
 
 
 def _hover_tpl(etiqueta, gran, modo="suma"):
@@ -1586,7 +2056,7 @@ def _hover_tpl(etiqueta, gran, modo="suma"):
     return f"Del %{{customdata[1]}} al %{{customdata[2]}}<br>%{{customdata[0]:.0f}} {etiqueta} {cola}<extra></extra>"
 
 
-@callback(Output("simint-grafico", "figure"),
+@callback(Output("simint-grafico", "figure"), Output("simint-grafico", "style"),
           Input("simint-datos", "data"), Input("simint-capacidad", "value"), Input("simint-vista-radio", "value"),
           Input("simint-velocidad", "value"), Input("simint-mostrar-cfg", "value"), State("simint-cursor", "data"), State("theme-store", "data"))
 def mostrar(data, capacidad, vista, velocidad, mostrar_cfg, cursor, tema):
@@ -1594,13 +2064,18 @@ def mostrar(data, capacidad, vista, velocidad, mostrar_cfg, cursor, tema):
     el trace, no es un velo encima). Cada trace recortable lleva su serie COMPLETA en `meta.fullY` (y la
     fecha completa en `layout.meta.fullX`) para que el clientside de reproduccion solo tenga que extenderla
     tick a tick con Plotly.restyle, sin volver a pedirle nada al servidor. El eje x queda FIJO al rango
-    completo para que el recorte no encoja el eje."""
+    completo para que el recorte no encoja el eje. El segundo Output (estilo) fija el alto segun la vista
+    (ALTURA_GRAFICO_VISTA, 21-nov): en Flujo/Camas/Espera el grafico baja al tamaño de esa fila dentro de
+    "Todo", dejando espacio a simint-grafico-extra debajo."""
+    alto_px = ALTURA_GRAFICO_VISTA.get(vista or "todo", 720)
+    estilo = {"height": f"{alto_px}px"}
     if not data:
         fig = go.Figure()
         fig.add_annotation(text="Presiona ▶ Reproducir para simular", showarrow=False,
                            font=dict(size=14, color=GRIS), xref="paper", yref="paper", x=0.5, y=0.5)
         tg.aplicar(fig, tg.es_oscuro(tema))      # el estado vacio tambien debe adaptarse a claro/oscuro
-        return fig
+        fig.update_layout(height=alto_px)
+        return fig, estilo
     fechas = pd.to_datetime(data["fechas"])
     cap = int(capacidad or scm.CAPACIDAD["total"])
     es_horario = data.get("es_horario", False)
@@ -1685,9 +2160,14 @@ def mostrar(data, capacidad, vista, velocidad, mostrar_cfg, cursor, tema):
             fig.add_trace(go.Scatter(x=fechas_vis, y=recorte(data["total_p10"]), mode="lines", line=dict(width=0),
                                      fill="tonexty", fillcolor="rgba(42,111,176,0.15)", name="Banda 10-90 %",
                                      legend=legend_id, meta={"fullY": data["total_p10"]}, hoverinfo="skip"), row=r, col=1)
-            fig.add_trace(go.Scatter(x=fechas_vis, y=recorte(data["total_p50"]), mode="lines", line=dict(color=AZUL, width=2),
-                                     name="Camas ocupadas (mediana)", legend=legend_id, meta={"fullY": data["total_p50"]},
+            azul_full, rojo_full = _trazas_umbral(data["total_p50"], cap)
+            fig.add_trace(go.Scatter(x=fechas_vis, y=recorte(azul_full), mode="lines", line=dict(color=AZUL, width=2),
+                                     name="Camas ocupadas (mediana)", legend=legend_id, meta={"fullY": azul_full}, connectgaps=False,
                                      customdata=customdatas.get("total_p50"),
+                                     hovertemplate=_hover_tpl("camas ocupadas", gran, "media")), row=r, col=1)
+            fig.add_trace(go.Scatter(x=fechas_vis, y=recorte(rojo_full), mode="lines", line=dict(color=ROJO, width=2.4),
+                                     name="Camas ocupadas (mediana)", legend=legend_id, meta={"fullY": rojo_full}, connectgaps=False,
+                                     showlegend=False, customdata=customdatas.get("total_p50"),
                                      hovertemplate=_hover_tpl("camas ocupadas", gran, "media")), row=r, col=1)
             fig.add_trace(go.Scatter(x=fechas, y=[cap] * len(fechas), mode="lines",   # linea constante: SIN recortar
                                      line=dict(color=NARANJA, dash="dash"), name=f"Capacidad HUN ({cap})", legend=legend_id,
@@ -1721,8 +2201,14 @@ def mostrar(data, capacidad, vista, velocidad, mostrar_cfg, cursor, tema):
 
     fig.update_layout(template="simple_white", margin=dict(l=40, r=20, t=40, b=16), hovermode="x unified",
                       meta={"fullX": [str(f) for f in fechas]}, **legend_layout)
+    # 21-nov: el titulo de cada fila (flujo/camas/espera) copia el diseño de los titulos de los modulos
+    # nuevos de simint-grafico-extra (.simint-radio__modulo-titulo: negrita, 13px, azul de marca) en vez del
+    # estilo generico de Plotly — mismo criterio visual en toda la pagina. <b> es el unico markup que
+    # entienden las anotaciones de Plotly (no hay forma de aplicar una clase CSS a un texto SVG).
+    brand_strong = BRAND_STRONG_OSCURO if dark else BRAND_STRONG_CLARO
     for ann in fig.layout.annotations:
-        ann.font = dict(size=12)
+        ann.text = f"<b>{ann.text}</b>"
+        ann.font = dict(size=13, color=brand_strong)
         ann.x = 0.0
         ann.xanchor = "left"
 
@@ -1732,14 +2218,16 @@ def mostrar(data, capacidad, vista, velocidad, mostrar_cfg, cursor, tema):
 
     fig.update_xaxes(range=[fechas[0], fechas[-1]], autorange=False, showspikes=True, spikemode="across",
                      spikesnap="cursor", spikethickness=1, spikedash="dot", spikecolor=GRIS)
+    fig.update_layout(height=alto_px)
     tg.aplicar(fig, dark)
-    return fig
+    return fig, estilo
 
 
 @callback(Output("simint-radiografia-titulo", "children"), Output("simint-radiografia-body", "children"),
           Input("simint-grafico", "hoverData"), Input("simint-cursor", "data"), Input("simint-datos", "data"),
-          Input("simint-vista-radio", "value"), Input("simint-filtro", "data"), Input("simint-velocidad", "value"))
-def radiografia(hoverData, cursor, data, vista, filtro, velocidad):
+          Input("simint-vista-radio", "value"), Input("simint-filtro", "data"), Input("simint-velocidad", "value"),
+          Input("simint-capacidad", "value"), Input("theme-store", "data"))
+def radiografia(hoverData, cursor, data, vista, filtro, velocidad, capacidad, tema):
     vista = vista or "todo"
     if not data or "composicion" not in data:
         # Estado cero (antes de reproducir, o vista horaria sin perfiles): la MISMA ventana con metricas en
@@ -1751,7 +2239,7 @@ def radiografia(hoverData, cursor, data, vista, filtro, velocidad):
         if vista == "camas":
             cuerpo.append(modulo_tablero_camas(0, 0))
         if vista == "flujo":
-            cuerpo.append(modulo_llegadas_franja(None, 0, 0))
+            cuerpo.append(modulo_llegadas_franja_carrusel(None, None, 0, 0, [], tema))
         cuerpo.append(panel_filtros(filtro))
         return "Presiona ▶ Reproducir para simular", cuerpo
     fechas = data["fechas"]
@@ -1805,15 +2293,83 @@ def radiografia(hoverData, cursor, data, vista, filtro, velocidad):
         filas_metricas.append(fila_metrica(nombre_e, f"{total:.0f}", escala_efectiva, pic, flecha))
 
     cuerpo = [html.Div(filas_metricas, className="simint-radio__filas")]
+    dist = data.get("dist")
     if vista == "camas":
+        # 21-nov: "Estancias largas en el tiempo", "Estancias largas" (carrusel) y "Estancia en cama (media)"
+        # (carrusel) se movieron AFUERA de la radiografia, al panel del grafico (ver grafico_extra()); aqui
+        # solo quedan el Tablero de camas y el % de sobrecupo, con mas espaciado entre ambos.
         ventana_n = max(fin - ini, 1)
         ad = float(np.mean(data["adultos_p50"][ini:fin])) if ventana_n > 1 else data["adultos_p50"][idx]
         ni = float(np.mean(data["ninos_p50"][ini:fin])) if ventana_n > 1 else data["ninos_p50"][idx]
         cuerpo.append(modulo_tablero_camas(ad, ni))
+        cap = int(capacidad or scm.CAPACIDAD["total"])
+        cuerpo.append(modulo_pct_capacidad(data["total_p50"], cap, fin, tema))
     if vista == "flujo":
-        cuerpo.append(modulo_llegadas_franja(data.get("llegadas_franja"), ini, fin))
+        # 21-nov: "Llegadas por franja del dia" y "Patron semanal de llegadas (por hora)" se fusionan en UN
+        # carrusel (mismo titulo, 2 vistas); el resto (mezcla de rutas, llegan por dia, se hospitalizan,
+        # espera por franja) se movio AFUERA, al panel del grafico, o a la vista Espera.
+        cuerpo.append(modulo_llegadas_franja_carrusel(data.get("llegadas_franja"), data.get("llegadas_hora"), ini, fin, fechas, tema))
+    if vista == "espera" and dist:
+        # 21-nov: "Espera de cama por franja de llegada" se movio aqui desde Flujo (ARRIBA del ranking); la
+        # distribucion, el exceso y la espera media (carrusel) se movieron AFUERA, al panel del grafico.
+        cuerpo.append(modulo_espera_por_franja(dist, fin, tema))
+        cuerpo.append(modulo_ranking_perfiles_espera(dist, perfiles, fin, tema))
     cuerpo.append(panel_filtros(filtro))
     return titulo_txt, cuerpo
+
+
+@callback(Output("simint-grafico-extra", "children"),
+          Input("simint-cursor", "data"), Input("simint-datos", "data"), Input("simint-vista-radio", "value"),
+          Input("simint-velocidad", "value"), Input("simint-filtro", "data"), State("theme-store", "data"))
+def grafico_extra(cursor, data, vista, velocidad, filtro, tema):
+    """Modulos movidos AFUERA de la radiografia (21-nov), al panel del grafico de las vistas Flujo/Camas/
+    Espera: dos lado a lado (aprovechando el ancho que deja el grafico principal, ya mas chico) y uno a
+    ancho completo debajo — mismo criterio que la fila flujo/camas/espera de la vista "Todo". En Flujo y
+    Camas, los dos carruseles de la fila comparten UNA fila de botones externa (fila_vista_switch, centrada
+    debajo de ambos) en vez de tener cada uno la suya; en Espera solo uno de los dos es carrusel, asi que
+    mantiene sus propios botones. En "Todo" no hay nada que mostrar aqui (las 3 filas del grafico ya ocupan
+    todo el espacio). Ningun modulo de aqui lleva texto aparte de su titulo (regla de esta zona)."""
+    vista = vista or "todo"
+    if vista == "todo" or not data or "composicion" not in data:
+        return []
+    fechas = data["fechas"]
+    fin = (cursor + 1) if isinstance(cursor, int) else len(fechas)
+    fin = max(1, min(fin, len(fechas)))
+    perfiles = data["perfiles"]
+    dist = data.get("dist")
+    if vista == "flujo":
+        bloque = html.Div(className="simint-extra__bloque", children=[
+            html.Div(className="simint-extra__fila", children=[
+                carrusel_llegan_dia(data["composicion"]["llegadas"], perfiles, fin, tema),
+                carrusel_hospitalizan(data["composicion"]["llegadas"], data["composicion"]["ingresos_cama"], perfiles, fin, tema),
+            ]),
+            fila_vista_switch("flujo-dim"),
+        ])
+        full = modulo_mezcla_rutas(data["composicion"]["ingresos_cama"], perfiles, fin, tema)
+        return [bloque, full]
+    if not dist:
+        return []
+    if vista == "camas":
+        bloque = html.Div(className="simint-extra__bloque", children=[
+            html.Div(className="simint-extra__fila", children=[
+                carrusel_estancia_media(dist, perfiles, fin, tema),
+                carrusel_estancias_largas(dist, perfiles, fin, tema),
+            ]),
+            fila_vista_switch("camas-dim"),
+        ])
+        ancho = velocidad if isinstance(velocidad, int) else 1
+        full = modulo_estancias_largas_tendencia(dist, fechas, fin, ancho, tema)
+        return [bloque, full]
+    if vista == "espera":
+        # 22-nov: "Espera de cama (media aprox.)" pasa a ocupar todo el ancho (antes iba junto a "Espera en
+        # exceso"); esta ultima baja a la fila de abajo, al lado de "Distribución de la espera".
+        completo = carrusel_espera_media(dist, perfiles, fin, tema)
+        fila = html.Div(className="simint-extra__fila", children=[
+            modulo_espera_exceso(dist, fin, tema),
+            modulo_distribucion_espera(dist, perfiles, fin, filtro, tema),
+        ])
+        return [completo, fila]
+    return []
 
 
 # ----------------------------------------------------------------------

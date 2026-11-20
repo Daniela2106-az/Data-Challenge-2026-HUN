@@ -69,7 +69,7 @@ def _lamina_efecto():
 
 def layout():
     return pagina(
-        portada("Resultados · Diagnósticos", "Lo urgente consigue cama rápido; lo quirúrgico y lo urológico espera cuatro veces más",
+        portada("Clínico · Diagnósticos", "Lo urgente consigue cama rápido; lo quirúrgico y lo urológico espera cuatro veces más",
                 "Un infarto o una neumonía reciben cama en horas. Los pacientes estables que esperan cirugía, urología u ortopedia son "
                 "los que hacen la cola larga.",
                 [cifra("39 h", "de espera mediana en musculoesquelético y dolor"), cifra("9 h", "en cardiovascular y respiratorio"),

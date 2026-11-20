@@ -123,6 +123,32 @@ REPARTO_FRANJA, _N_REAL_FRANJA = _cargar_reparto_franja()
 REPARTO_LLEGADA, _N_REAL_LLEGADA = _cargar_reparto_franja("llegada")   # hora real de LLEGADA al hospital (de los pacientes que luego tuvieron cama)        # (7 dias x 4 franjas); n de ingresos reales por dia de la semana
 
 
+def _cargar_reparto_hora(columna="llegada"):
+    """Como _cargar_reparto_franja pero con las 24 HORAS del dia en vez de las 4 franjas (20-nov-2026, para
+    el heatmap dia-semana x hora del dashboard, que asi emula el heatmap real de demanda.py). Misma fuente y
+    mismo limite ya declarado de REPARTO_LLEGADA: solo pacientes que terminaron hospitalizados (no hay hora
+    individual real para quien no llega a cama)."""
+    e = scm.est[scm.est[columna].notna() & scm.est.ingreso_cama.notna()]
+    e = e[(e.ingreso_cama >= scm.VENTANA_BOOTSTRAP[0]) & (e.ingreso_cama < scm.VENTANA_BOOTSTRAP[1])]
+    t = pd.to_datetime(e[columna])
+    cuenta = pd.crosstab(t.dt.dayofweek, t.dt.hour).reindex(index=range(7), columns=range(24), fill_value=0)
+    return (cuenta.div(cuenta.sum(axis=1), axis=0)).to_numpy()
+
+
+REPARTO_HORA_LLEGADA = _cargar_reparto_hora("llegada")   # (7 dias x 24 horas)
+
+
+def repartir_por_hora(fechas, ingresos_rep, reparto=None):
+    """Como repartir_por_franja pero con las 24 horas del dia (claves "0".."23", string porque son claves de
+    un dict que viaja a JSON). Solo la media (no percentiles: el heatmap del dashboard solo necesita eso)."""
+    pesos = (REPARTO_HORA_LLEGADA if reparto is None else reparto)[pd.DatetimeIndex(fechas).dayofweek.to_numpy()]
+    res = {}
+    for h in range(24):
+        m = ingresos_rep * pesos[:, h]
+        res[str(h)] = {"media": m.mean(axis=0).round(2).tolist()}
+    return res
+
+
 def titulo(t):
     print("\n" + "=" * 70 + "\n" + t + "\n" + "=" * 70)
 
@@ -291,15 +317,26 @@ titulo("4. MOTOR INTEGRADO (agentes: llegada -> espera -> cama -> estancia -> al
 
 
 UMBRAL_LARGA_H = 14 * 24                                   # estancia "larga" de R7: mas de 14 dias (docs/recomendaciones.md)
+UMBRAL_MUY_LARGA_H = 30 * 24                                # estancia "muy larga" (20-nov, dashboard simulador): mas de 30 dias
+TRAMOS_EDGES = np.array([6, 12, 24, 48, 72, 120], dtype=float)  # mismos cortes que dashboard/pages/espera.py (TRAMOS): 7 bins
 SEXO_IDX = {"Mujer": 0, "Hombre": 1}                        # indice de la 3a dimension de composicion por sexo (16-nov)
 
 
 def _una_repeticion(lam_lleg, p_eff, rng, ajuste_estancia, ajuste_espera, n0_camas, q0_cola, comp=None,
-                    prob_lleg=None, recorte_largas=0.0, factor_lleg=None, rng_extra=None, acoplar_estancia=False, registro=None):
+                    prob_lleg=None, recorte_largas=0.0, factor_lleg=None, rng_extra=None, acoplar_estancia=False, registro=None, dist=None):
     """Una repeticion sobre len(lam_lleg) dias. Devuelve dict de arrays diarios (ver SERIES_SALIDA).
     `comp` (opcional, Etapa 1 del plan del 16-nov): dict {etapa: array (n_dias, n_perfiles)} donde se ACUMULA
     la composicion por dia x perfil de 5 etapas (llegadas, ingresos_cama, altas, en_cama, esperando). Solo
     cuenta sorteos ya hechos — no consume numeros aleatorios, asi que la regresion de semilla se mantiene.
+    `dist` (opcional, 20-nov-2026, simulador del dashboard): dict de acumuladores de DURACION por paciente
+    (espera_h, estancia_h) a traves de las repeticiones — `comp` solo cuenta pacientes, nunca su duracion.
+    Igual que `comp`, solo suma valores ya sorteados (`np.add.at`, sin RNG nuevo). Claves esperadas:
+    "espera_suma"/"espera_cuenta" (dias x perfiles x 2 sexo), "espera_franja_suma"/"espera_franja_cuenta"
+    (dias x 4, sin sexo), "espera_tramo" (dias x perfiles x 7, cortes TRAMOS_EDGES, sin sexo) y
+    "estancia_total"/"estancia_suma"/"estancia_larga14"/"estancia_larga30" (dias x perfiles x 2 sexo; indice
+    de sexo = SEXO_IDX, 0=Mujer 1=Hombre). La cola SEMBRADA (q0_cola) se excluye de los acumuladores de
+    espera: su espera sorteada es COMPLETA, no la restante (limite ya declarado del motor), y su hora de
+    llegada se fuerza a 0 — incluirla sesgaria la franja "madrugada" y el perfil en los primeros dias.
     `prob_lleg` (Etapa 5): mezcla de perfiles de las llegadas (por defecto la real de 2025, PROB_LLEG).
     `recorte_largas` (Etapa 5, palanca R7): fraccion 0-1 que reduce SOLO las estancias (ya ajustadas) que
     superan UMBRAL_LARGA_H — gestion de casos sobre los largos, no un recorte uniforme. 0 = sin efecto.
@@ -431,6 +468,27 @@ def _una_repeticion(lam_lleg, p_eff, rng, ajuste_estancia, ajuste_espera, n0_cam
     altas = np.bincount(dia_alta[alta_valida], minlength=n_dias)[:n_dias].astype(float)
     alta0 = dur0[dur0 < n_dias]
     altas += np.bincount(alta0, minlength=n_dias)[:n_dias]
+
+    if dist is not None:
+        es_sembrada = np.arange(total) < q0_cola
+        con = en_horizonte & ~es_sembrada            # espera: excluye la cola sembrada (espera completa, no restante; hora forzada a 0)
+        sx_con = (sexo_ag[con] != "Mujer").astype(int)         # 0=Mujer, 1=Hombre (ver SEXO_IDX)
+        np.add.at(dist["espera_suma"], (dia_lleg[con], perf[con], sx_con), espera[con])
+        np.add.at(dist["espera_cuenta"], (dia_lleg[con], perf[con], sx_con), 1.0)
+        franja = franja_de_hora(hora[con])
+        np.add.at(dist["espera_franja_suma"], (dia_lleg[con], franja), espera[con])
+        np.add.at(dist["espera_franja_cuenta"], (dia_lleg[con], franja), 1.0)
+        tramo = np.searchsorted(TRAMOS_EDGES, espera[con], side="right")
+        np.add.at(dist["espera_tramo"], (dia_lleg[con], perf[con], tramo), 1.0)
+
+        idx_dia_valida, idx_perf_valida = dia_alta[alta_valida], perf[alta_valida]
+        sx_alta = (sexo_ag[alta_valida] != "Mujer").astype(int)
+        np.add.at(dist["estancia_total"], (idx_dia_valida, idx_perf_valida, sx_alta), 1.0)
+        np.add.at(dist["estancia_suma"], (idx_dia_valida, idx_perf_valida, sx_alta), estancia[alta_valida])
+        larga14 = estancia[alta_valida] > UMBRAL_LARGA_H
+        larga30 = estancia[alta_valida] > UMBRAL_MUY_LARGA_H
+        np.add.at(dist["estancia_larga14"], (idx_dia_valida[larga14], idx_perf_valida[larga14], sx_alta[larga14]), 1.0)
+        np.add.at(dist["estancia_larga30"], (idx_dia_valida[larga30], idx_perf_valida[larga30], sx_alta[larga30]), 1.0)
 
     # --- cola de espera por HORA (llegada a cama), promediada por dia (igual que la cola real observada) ---
     q_in = np.clip(np.floor(t_lleg_h).astype(int), 0, n_horas)
@@ -741,9 +799,19 @@ def simular_integral(corte, dias, escenario="historico", ajuste_llegadas=1.0, aj
     q0 = int(round(cola_real))
 
     comp = None
+    dist = None
     if con_composicion:
         comp = {e: np.zeros((dias, len(PERFILES_LLEG), 2))      # 3a dim: sexo, ver SEXO_IDX (0=Mujer, 1=Hombre)
                 for e in ("llegadas", "ingresos_cama", "altas", "en_cama", "esperando")}
+        n_perf = len(PERFILES_LLEG)
+        # 21-nov-2026: espera_suma/cuenta y las 4 de estancia llevan 3a dim de SEXO (0=Mujer, 1=Hombre, ver
+        # SEXO_IDX) para los modulos de indicador por sexo del dashboard; espera_franja/espera_tramo se
+        # quedan sin sexo (no se pidio ese cruce, y ya son (dia x 4) / (dia x perfil x 7) de por si grandes).
+        dist = {"espera_suma": np.zeros((dias, n_perf, 2)), "espera_cuenta": np.zeros((dias, n_perf, 2)),
+                "espera_franja_suma": np.zeros((dias, 4)), "espera_franja_cuenta": np.zeros((dias, 4)),
+                "espera_tramo": np.zeros((dias, n_perf, 7)),
+                "estancia_total": np.zeros((dias, n_perf, 2)), "estancia_suma": np.zeros((dias, n_perf, 2)),
+                "estancia_larga14": np.zeros((dias, n_perf, 2)), "estancia_larga30": np.zeros((dias, n_perf, 2))}
     prob_lleg = _prob_lleg_ajustada(mezcla_edad, mezcla_ruta)
     ajuste_espera_total = ajuste_espera * (1.0 - EFECTO_ADELANTO_POR_PUNTO * adelanto_altas_pct)
     recorte = np.clip(recorte_largas_pct / 100.0, 0.0, 0.9)
@@ -752,7 +820,7 @@ def simular_integral(corte, dias, escenario="historico", ajuste_llegadas=1.0, aj
     for r in range(n_rep):
         reg = {} if (registrar_rep is not None and r == registrar_rep) else None
         rep = _una_repeticion(lam_lleg, p_eff, rng, ajuste_estancia, ajuste_espera_total, n0, q0, comp=comp,
-                              prob_lleg=prob_lleg, recorte_largas=recorte, factor_lleg=factor_lleg, rng_extra=rng_extra, acoplar_estancia=acoplar_estancia, registro=reg)
+                              prob_lleg=prob_lleg, recorte_largas=recorte, factor_lleg=factor_lleg, rng_extra=rng_extra, acoplar_estancia=acoplar_estancia, registro=reg, dist=dist)
         if reg is not None:
             registro_cap = reg
         for s in SERIES_SALIDA:
@@ -762,11 +830,17 @@ def simular_integral(corte, dias, escenario="historico", ajuste_llegadas=1.0, aj
             "ingresos_franja": repartir_por_franja(fechas, out["ingresos_cama"]),
             # llegadas al hospital por franja (hora real de llegada, por dia de la semana)
             "llegadas_franja": repartir_por_franja(fechas, out["llegadas"], REPARTO_LLEGADA),
+            # llegadas al hospital por HORA (0-23), mismo criterio, para el heatmap dia x hora del dashboard
+            "llegadas_hora": repartir_por_hora(fechas, out["llegadas"], REPARTO_HORA_LLEGADA),
             "ingresos_esperados_dia": float(pron_ing.values.mean()), "llegadas_esperadas_dia": float(lam_lleg.mean()),
             "modelos": modelos, "casos": casos, "factor_llegadas": f_lleg, "factor_ingresos": f_ing}
     if comp is not None:
         info["perfiles"] = [[g, r] for g, r in PERFILES_LLEG]
         info["composicion"] = {e: np.round(v / n_rep, 2).tolist() for e, v in comp.items()}
+        # dist: sumas/conteos CRUDOS a traves de las repeticiones (sin dividir por n_rep) — asi el dashboard
+        # puede combinar numerador/denominador de varias ventanas de dias sin perder la ponderacion correcta
+        # (promedio/porcentaje Monte Carlo = suma de numeradores / suma de denominadores, nunca promedio de razones).
+        info["dist"] = {k: np.round(v, 1).tolist() for k, v in dist.items()}
     if registro_cap is not None:
         info["pacientes"] = registro_cap          # una repeticion con sus pacientes (ejemplo para el dashboard)
     return fechas, out, info

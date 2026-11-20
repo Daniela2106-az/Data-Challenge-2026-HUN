@@ -188,11 +188,11 @@ def _relacionadas(ruta):
     from documentacion_paginas import conexiones
     from navegacion import SECCIONES
     nombres = {p["path"]: p["name"] for p in dash.page_registry.values()}
-    prediccion = {r for t, _d, rs in SECCIONES if t == "Predicción" for r in rs}
+    prediccion = {r for t, _d, rs in SECCIONES if t == "Módulos" for r in rs}
     con = [(r, mot) for r, mot in conexiones(ruta) if r in nombres]
     filas = []
     if con:
-        rotulo = "Resultado relacionado (qué pasa)" if ruta in prediccion else "Predicción relacionada (qué se espera)"
+        rotulo = "Resultado relacionado (qué pasa)" if ruta in prediccion else "Módulo relacionado (qué se espera)"
         filas.append(html.Div(className="doc-rel__fila", children=[
             html.Span(rotulo, className="doc-rel__rotulo"),
             html.Div(className="doc-rel__chips", children=[

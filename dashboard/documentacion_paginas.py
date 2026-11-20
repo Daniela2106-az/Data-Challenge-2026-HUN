@@ -16,7 +16,7 @@ RELACION = {
     "/comparar": ["/camas"],
     "/altas": ["/camas"],
     "/factores": ["/paciente"],
-    "/estancia": ["/camas"],
+    "/estancia": ["/camas", "/paciente-cama"],
     "/diagnosticos": ["/paciente"],
     "/perfiles": ["/paciente"],
     "/alertas": ["/pronostico", "/paciente", "/simulador"],
@@ -32,6 +32,7 @@ MOTIVO = {  # (resultado, prediccion) -> por que se conectan
     ("/altas", "/camas"): "el escenario de adelantar altas se simula en la planeación de camas",
     ("/factores", "/paciente"): "los factores de la espera son entradas del estimador",
     ("/estancia", "/camas"): "la estancia larga es lo que más sube la ocupación",
+    ("/estancia", "/paciente-cama"): "la estancia de cada paciente se estima con el mismo patrón de supervivencia que ya usa la espera de cama",
     ("/diagnosticos", "/paciente"): "el tipo de paciente cambia su tiempo de espera",
     ("/alertas", "/pronostico"): "el pronóstico de llegadas da el total esperado del día que la alerta compara",
     ("/alertas", "/paciente"): "el estimador hora a hora alimenta el aviso temprano de paciente sin cama",
@@ -92,7 +93,7 @@ DETALLE = {
         "pasos": [
             "Entrenamiento con feb-2023 a 9-abr-2026; los días desde el 10-abr se dejan fuera del nivel, del calendario y del error.",
             "El rango probable del 80 % sale de los errores reales de la prueba (cobertura 78–82 % en llegadas).",
-            "La forma del año se explica en «Forma del año» (Resultados): es una entrada de este modelo."],
+            "La forma del año se explica en «Forma del año» (Flujo): es una entrada de este modelo."],
         "modelo": [
             ("Regresión de Poisson (elegido)", "7,9 % de error a 1–7 días y 11,5 % a un año en llegadas", "Son conteos y cada efecto se lee como un porcentaje"),
             ("SARIMAX y otros modelos de series", "Mejores en validación, peores a 1–7 días y en 2026", "Menos preciso a corto plazo y difícil de explicar"),

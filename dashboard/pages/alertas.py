@@ -54,7 +54,7 @@ def layout(alerta=None, **_):
     a1, a2, a3, a4 = (_rec(tabla, t) for t in ("A1", "A2", "A3", "A4"))
     total = tabla[(tabla.recomendada == 1) & tabla.alerta_id.isin(["A1", "A2", "A3"])].alertas_por_dia.sum()
     return pagina(
-        portada("Resultados · Alertas", "Las alertas avisan a tiempo y cada una apunta a la recomendación que dispara",
+        portada("Riesgo · Alertas", "Las alertas avisan a tiempo y cada una apunta a la recomendación que dispara",
                 "Se probó reproduciendo, día por día, los primeros meses de 2026: qué habría avisado cada alerta, cuántas veces acertó y cuántas fueron falsas alarmas.",
                 [cifra(f"{a1.deteccion_pct:.0f} %", "de los días congestionados se detecta a las 12 h (13 de 15)"),
                  cifra(f"{a3.alertas_por_dia:.0f} por día", "pacientes cumplen 48 horas sin cama; la mitad terminará esperando más de 72"),

@@ -78,7 +78,7 @@ def layout():
     if leer("espera_cubo.csv") is None or leer("espera_por_mes.csv") is None:
         return aviso_datos(TITULO, ["espera_cubo.csv", "espera_por_mes.csv"])
     return pagina(
-        portada("Resultados · Espera de cama", TITULO,
+        portada("Capacidad · Espera de cama", TITULO,
                 "Es el cuello de botella del hospital: casi toda esa espera (el 98 %) ocurre en urgencias, antes de que se asigne la cama.",
                 id_cifras="esp-cifras"),
         html.Div(className="filtros", children=[

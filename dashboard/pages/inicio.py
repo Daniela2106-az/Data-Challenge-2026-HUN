@@ -52,6 +52,8 @@ TARJETAS = {
                         "Qué épocas del año traen más pacientes y cuánto mejora el pronóstico al saberlo."),
     "/paciente": ("Paciente en espera",
                   "Describe a un paciente y estima en qué momento del día es más probable que reciba cama, con su rango típico."),
+    "/paciente-cama": ("Paciente en cama",
+                       "Describe a un paciente ya hospitalizado y estima en qué día es más probable que reciba el alta, con su rango típico."),
     "/camas": ("Planeación de camas",
                "Simula «¿qué pasaría si…?»: más ingresos, menos estancia u otra mezcla de perfiles, y mira la ocupación proyectada."),
     "/simulador": ("Simulador integral",
@@ -96,7 +98,7 @@ def grupo(titulo, descripcion, paginas):
         tarjetas.append(tarjeta_menu(p["path"], ICONOS.get(p["path"], "ico-profiles"), nombre, texto))
     return html.Section(className="home-group", children=[
         html.Div(className="home-group__head", children=[
-            html.Div(titulo, className="section-title"), html.Div(descripcion, className="home-group__sub")]),
+            html.Div(titulo or "Asistente", className="section-title"), html.Div(descripcion, className="home-group__sub")]),
         html.Div(className="card-grid", children=tarjetas),
     ])
 
