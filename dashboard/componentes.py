@@ -192,7 +192,9 @@ def _relacionadas(ruta):
     con = [(r, mot) for r, mot in conexiones(ruta) if r in nombres]
     filas = []
     if con:
-        rotulo = "Resultado relacionado (qué pasa)" if ruta in prediccion else "Módulo relacionado (qué se espera)"
+        rotulo = "Módulos relacionados (qué se espera)" if ruta not in prediccion else "Resultados relacionados (qué pasa)"
+        if ruta in ("/datos", "/resumen", "/periodo"):
+            rotulo = "Páginas relacionadas"
         filas.append(html.Div(className="doc-rel__fila", children=[
             html.Span(rotulo, className="doc-rel__rotulo"),
             html.Div(className="doc-rel__chips", children=[
@@ -225,12 +227,14 @@ def metodo(como, no_dice, fuente="", ruta=None, antes=None, despues=None, pasos=
     `pasos` y `modelo` en False cuando esas partes ya las trae la propia pagina. `ruta` busca el detalle en documentacion_paginas.py."""
     from documentacion_paginas import DETALLE
     det = DETALLE.get(ruta, {}) if ruta else {}
+    from navegacion import RUTAS_MODULOS
+    es_modulo = ruta in RUTAS_MODULOS
 
     cajas = [html.Div(className="metodo__caja", children=[html.Div("Cómo se calculó", className="metodo__rotulo"), dcc.Markdown(como, className="ctx__text")])]
     if no_dice:
         cajas.append(html.Div(className="metodo__caja metodo__caja--no", children=[html.Div("Qué NO dice", className="metodo__rotulo"), dcc.Markdown(no_dice, className="ctx__text")]))
     bloques = [*(antes or []), html.Div(className="metodo__grid", children=cajas)]
-    if pasos and det.get("pasos"):
+    if det.get("pasos"):      # todas las paginas muestran el paso a paso (el parametro `pasos` se conserva solo por compatibilidad)
         bloques.append(html.Div(className="metodo__fila", children=[
             html.Div("Paso a paso", className="metodo__rotulo"),
             html.Ol([html.Li(dcc.Markdown(p, className="ctx__text")) for p in det["pasos"]], className="metodo__pasos")]))
@@ -238,15 +242,16 @@ def metodo(como, no_dice, fuente="", ruta=None, antes=None, despues=None, pasos=
         filas = [html.Tr([html.Th("Qué se evaluó"), html.Th("Qué mostró"), html.Th("Por qué")])] + [
             html.Tr([html.Td(a, className="mt__elegido" if "(elegido)" in a else None), html.Td(b), html.Td(c)]) for a, b, c in det["modelo"]]
         bloques.append(html.Div(className="metodo__fila", children=[
-            html.Div("Por qué este modelo y no otro", className="metodo__rotulo"),
-            html.P("Cada alternativa se probó con el mismo método: entrenar con el pasado y medir en meses que el modelo no había visto.", className="metodo__nota"),
+            html.Div("Qué se probó y se descartó", className="metodo__rotulo"),
+            html.P("Cada alternativa se probó con el mismo método: entrenar con el pasado y medir en meses que el modelo no había visto." if es_modulo else
+                   "Lo que se revisó o se probó, lo que mostró y cómo se trató.", className="metodo__nota"),
             html.Div(html.Table(filas, className="metodo__tabla"), className="metodo__scroll")]))
     bloques += despues or []
     pie = [html.P(fuente, className="page-foot")] if fuente else []
     rel = _relacionadas(ruta) if ruta else []
     return html.Details(className="metodo", children=[
         html.Summary([html.Span("Documentación de esta sección", className="metodo__titulo"),
-                      html.Span("cómo se calculó, qué no dice" + (", por qué este modelo" if (modelo and det.get("modelo")) or despues else ""), className="metodo__sub")]),
+                      html.Span("cómo se calculó, qué no dice, paso a paso y qué se descartó", className="metodo__sub")]),
         *bloques, html.Div(rel, className="doc-rel doc-rel--dentro") if rel else None, html.Div(pie, className="metodo__pie") if pie else None])
 
 
@@ -277,7 +282,7 @@ def ficha_de(ruta):
         html.Summary([html.Span("Ficha técnica", className="metodo__titulo"), html.Span(f["sub"], className="metodo__sub")]),
         html.Div(className="metodo__apilado", children=[
             html.Div([html.Div("Etapas de construcción (pasa el mouse sobre cada una)", className="metodo__rotulo"), html.Div(className="pipeline", children=pasos)]),
-            html.Div([html.Div("Qué se probó y qué se descartó", className="metodo__rotulo"), html.Div(tabla, className="metodo__scroll"),
+            html.Div([html.Div("Qué se probó y se descartó", className="metodo__rotulo"), html.Div(tabla, className="metodo__scroll"),
                       dcc.Markdown(f["nota"], className="metodo__nota") if f.get("nota") else None])])])
 
 

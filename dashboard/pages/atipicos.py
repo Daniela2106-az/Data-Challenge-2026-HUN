@@ -81,7 +81,7 @@ def layout():
             "festivos y el Carnaval. Con ese umbral se esperan unos 3 días por azar en cada serie.",
             "Que dos días parezcan cortes del sistema es una **hipótesis sin comprobar**: los datos no dicen qué pasó. La caída desde "
             "abril de 2026 no es un día atípico sino un cambio del registro, y se trata aparte. Se asume que el hospital está en Barranquilla.",
-            "Fuente: docs/dias_atipicos.md · src/dias_atipicos.py.", ruta="/atipicos", modelo=False),
+            "Fuente: docs/dias_atipicos.md · src/dias_atipicos.py.", ruta="/atipicos"),
     )
 
 

@@ -275,7 +275,7 @@ def panel_tecnico():
                 html.Div(className="pipeline", children=pasos),
             ]),
             html.Div([
-                html.Div("Comparativo contra las alternativas", className="metodo__rotulo"),
+                html.Div("Qué se probó y se descartó", className="metodo__rotulo"),
                 html.Div("Mejora frente a dar el mismo rango a todos (pérdida de cuantiles), probado con 5.430 "
                          "estancias de jul-2025 a 9-abr-2026 que ningún modelo vio.", style={"fontSize": "12px", "color": GRIS, "marginBottom": "4px"}),
                 dcc.Graph(figure=grafico_mejora(), config={"displaylogo": False}),
@@ -420,7 +420,7 @@ def layout():
                "«cama» es la asignación administrativa, que puede ser una camilla de apoyo. En las primeras horas, parte de la probabilidad refleja "
                "el trámite de registro, no una predicción.",
                "Fuente: src/estimador_tiempo_restante.py (modelo guardado, versión 9) y las tablas de src/utilidad_estimador.py. Detalle: documentación, sección 6.4, y docs/estimador_tiempos.md.", ruta="/paciente",
-               antes=secciones(panel_interpretacion(), solo=("Qué estás viendo", "Qué significa cada cosa del gráfico")) + [html.Div([html.Div("Avisos de esta estimación", className="metodo__rotulo"), html.Div(id="pac-nota")])], despues=secciones(panel_tecnico(), solo=ETAPAS_Y_PRUEBAS), pasos=False, modelo=False),
+               antes=secciones(panel_interpretacion(), solo=("Qué estás viendo", "Qué significa cada cosa del gráfico")) + [html.Div([html.Div("Avisos de esta estimación", className="metodo__rotulo"), html.Div(id="pac-nota")])], despues=secciones(panel_tecnico(), solo=ETAPAS_Y_PRUEBAS), modelo=False),
     ])
 
 

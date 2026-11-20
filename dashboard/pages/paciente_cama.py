@@ -159,7 +159,7 @@ def panel_tecnico():
                 html.Div(className="pipeline", children=pasos),
             ]),
             html.Div([
-                html.Div("Comparativo contra el rango por perfil", className="metodo__rotulo"),
+                html.Div("Qué se probó y se descartó", className="metodo__rotulo"),
                 html.Div("Mejora frente al rango por perfil que ya usa el dashboard (que_esperar.py), medida con "
                          "estancias de jul-2025 a 9-ene-2026 que el modelo no vio (90 días de margen para que las "
                          "estancias largas alcancen a resolverse). No es R²: esa métrica solo se cita arriba para los "
@@ -255,7 +255,7 @@ def layout():
                "No usa la gravedad clínica (UCI, procedimientos), que es de lo que más depende la estancia real. La mejora medida es mucho menor que la del estimador de espera: la mayor parte de cuánto dura una "
                "estancia no está en lo que la base registra. A horas ya avanzadas (120-168 h) el rango es, sobre todo, descriptivo.",
                "Fuente: src/estimador_estancia_restante.py y src/comparar_estimadores_estancia.py. Detalle: documentación, sección 6.10.", ruta="/paciente-cama",
-               antes=secciones(panel_interpretacion(), solo=("Qué estás viendo", "Qué significa cada cosa del gráfico")) + [html.Div([html.Div("Avisos de esta estimación", className="metodo__rotulo"), html.Div(id="pec-nota")])], despues=secciones(panel_tecnico(), solo=ETAPAS_Y_PRUEBAS), pasos=False, modelo=False),
+               antes=secciones(panel_interpretacion(), solo=("Qué estás viendo", "Qué significa cada cosa del gráfico")) + [html.Div([html.Div("Avisos de esta estimación", className="metodo__rotulo"), html.Div(id="pec-nota")])], despues=secciones(panel_tecnico(), solo=ETAPAS_Y_PRUEBAS), modelo=False),
     ])
 
 

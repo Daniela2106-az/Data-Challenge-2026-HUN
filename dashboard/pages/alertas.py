@@ -110,7 +110,7 @@ def layout(alerta=None, **_):
             "alerta de paciente sin cama solo cuenta a quienes después se hospitalizan: la carga real es mayor. La alerta por zona (niños y adultos "
             "por separado) no se probó. Una alerta no dice qué hacer: eso lo decide el hospital.",
             "Fuente: src/alertas.py · documentación, sección 6.2.", ruta="/alertas",
-            despues=secciones(ficha_de("/alertas"), solo=("Etapas", "Qué se probó")), pasos=False, modelo=False),
+            despues=secciones(ficha_de("/alertas"), solo=("Etapas", "Qué se probó")), modelo=False),
     )
 
 
