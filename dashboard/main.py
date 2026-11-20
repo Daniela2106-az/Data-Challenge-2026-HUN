@@ -49,6 +49,7 @@ import dash
 from dash import Dash, Input, Output, State, callback, dcc, html
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import asistente_ui  # noqa: E402  (chat del asistente de preguntas en todas las paginas)
 from navegacion import CAPITULOS, DENTRO_DE_DOCUMENTACION, ICONOS, SECCIONES, agrupar, capitulos_documento, documentacion_de, recorrido  # noqa: E402
 
 app = Dash(__name__, use_pages=True, pages_folder="pages", title="Dashboard HUN",
@@ -184,6 +185,7 @@ def servir_layout():
             barra_superior(),
             html.Main(className="content", children=[dash.page_container, html.Div(id="doc-rel", className="doc-pie"), html.Nav(id="paso-nav", className="paso")]),
         ]),
+        asistente_ui.chat_flotante(),
     ])
 
 

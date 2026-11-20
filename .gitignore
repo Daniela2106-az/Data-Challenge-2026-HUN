@@ -33,3 +33,6 @@ resultados/respaldo_*/
 
 # Config local de PyCharm (no es del proyecto)
 .idea/
+
+# Claves locales (asistente de preguntas: ANTHROPIC_API_KEY). Nunca al repositorio
+.env

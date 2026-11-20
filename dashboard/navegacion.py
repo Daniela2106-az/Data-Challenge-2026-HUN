@@ -11,7 +11,7 @@ import re
 ICONOS = {"/": "ico-home", "/pronostico": "ico-forecast", "/paciente": "ico-patient", "/camas": "ico-bed", "/simulador": "ico-models",
           "/perfiles": "ico-profiles", "/recomendaciones": "ico-recs", "/documentacion": "ico-docs", "/datos": "ico-data",
           "/demanda": "ico-demand", "/ocupacion": "ico-occup", "/espera": "ico-wait", "/altas": "ico-clock",
-          "/estacionalidad": "ico-season", "/alertas": "ico-alert", "/factores": "ico-factors", "/estancia": "ico-stay",
+          "/estacionalidad": "ico-season", "/alertas": "ico-alert", "/preguntas": "ico-chat", "/factores": "ico-factors", "/estancia": "ico-stay",
           "/diagnosticos": "ico-dx", "/atipicos": "ico-outlier", "/resumen": "ico-summary", "/comparar": "ico-compare", "/periodo": "ico-period"}
 
 # (titulo de la seccion, que responde, rutas en orden)
@@ -21,7 +21,7 @@ SECCIONES = [
      ["/demanda", "/estacionalidad", "/ocupacion", "/espera", "/comparar", "/periodo", "/altas", "/factores", "/estancia", "/diagnosticos", "/perfiles", "/atipicos", "/alertas"]),
     ("Predicción", "Qué se espera y qué pasaría si algo cambia",
      ["/pronostico", "/paciente", "/camas", "/simulador"]),
-    ("Propuestas", "Qué hacer con lo que se encontró", ["/recomendaciones", "/documentacion"]),
+    ("Propuestas", "Qué hacer con lo que se encontró", ["/recomendaciones", "/preguntas", "/documentacion"]),
 ]
 
 
