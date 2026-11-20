@@ -227,7 +227,7 @@ Enlace al repositorio de GitHub, `README.md` («Cómo reproducirlo»), orden de 
 
 # 4. Cómo armarlo en Dash
 
-- **Estructura de la app:** una app multipágina (`dash.page_registry`) con un menú lateral. Una carpeta `dashboard/` con `app.py` (menú y tema), `pages/` (una página por sección), `componentes.py` (tarjeta, panel de contexto, pie de fuente, aviso de limitación), `datos.py` (carga de las tablas una sola vez) y `assets/` (estilos y tema de colores).
+- **Estructura de la app:** una app multipágina (`dash.page_registry`) con un menú lateral (arriba, un botón azul «Simular» abre la página `/simular` con los módulos interactivos; el resto del menú agrupa las páginas por categoría). Una carpeta `dashboard/` con `app.py` (menú y tema), `pages/` (una página por sección), `componentes.py` (tarjeta, panel de contexto, pie de fuente, aviso de limitación), `datos.py` (carga de las tablas una sola vez) y `assets/` (estilos y tema de colores).
 - **Datos:** leer solo tablas agregadas de una carpeta `dashboard/datos/` (copia de las tablas que se publican). La app no abre la base.
 - **Páginas de texto** (Parte 1 y 5): Markdown renderizado con `dcc.Markdown`, con figuras como imágenes de `resultados/graficos/` o gráficas de Plotly.
 - **Panel de contexto:** un componente reutilizable con las cuatro pestañas (*qué ves, cómo se calculó, qué significa, qué no dice*) para no repetir código.

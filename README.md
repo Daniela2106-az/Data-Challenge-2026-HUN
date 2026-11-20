@@ -67,6 +67,8 @@ Para detenerlo, vuelve a la terminal y presiona `Ctrl + C`. La próxima vez solo
 
 ## El asistente de preguntas (opcional)
 
+**Cómo moverte:** arriba del menú lateral está el botón azul **Simular**, que abre «¿Qué quieres hacer hoy?» con los cinco módulos interactivos: Simulador integral, Pronosticador, Planeación de camas, Paciente en espera y Paciente en cama. Cada tarjeta dice en una frase qué permite hacer y muestra una animación al pasar el mouse. El resto del menú agrupa las páginas de resultados por categoría (Contexto, Flujo, Capacidad, Clínico, Riesgo y Conclusiones).
+
 El dashboard trae un asistente donde se pregunta en lenguaje natural sobre el análisis (página «Asistente HUN», o el botón de la esquina de cada página). Para activarlo hace falta una clave de la API de Anthropic:
 
 1. Crea un archivo llamado `.env` en la carpeta del proyecto, con una sola línea: `ANTHROPIC_API_KEY=tu-clave`. Ese archivo no se sube a GitHub. Si publicas el dashboard en un servicio como Render, pon la clave en sus variables de entorno, nunca en el repositorio.

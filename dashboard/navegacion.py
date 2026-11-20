@@ -8,7 +8,7 @@ Una pagina nueva que no este en SECCIONES aparece sola al final, bajo "Más": pa
 import re
 
 # Icono (clase CSS de theme.css) de cada ruta. Una ruta sin entrada usa el icono generico de perfiles.
-ICONOS = {"/": "ico-chat", "/pronostico": "ico-forecast", "/paciente": "ico-patient", "/paciente-cama": "ico-stay", "/camas": "ico-bed", "/simulador": "ico-models", "/simular": "ico-models",
+ICONOS = {"/": "ico-chat", "/pronostico": "ico-forecast", "/paciente": "ico-patient", "/paciente-cama": "ico-stay", "/camas": "ico-bed", "/simulador": "ico-models", "/simular": "ico-models", "/simular": "ico-models",
           "/perfiles": "ico-profiles", "/recomendaciones": "ico-recs", "/documentacion": "ico-docs", "/datos": "ico-data",
           "/demanda": "ico-demand", "/ocupacion": "ico-occup", "/espera": "ico-wait", "/altas": "ico-clock",
           "/estacionalidad": "ico-season", "/alertas": "ico-alert", "/factores": "ico-factors", "/estancia": "ico-stay",
@@ -22,15 +22,16 @@ NOMBRE_EN_MENU = {"/": "Asistente HUN"}
 SECCIONES = [
     ("Contexto", "El proyecto en una pantalla, y qué datos hay detrás", ["/resumen", "/datos"]),
     ("Flujo", "Cuántos pacientes llegan, a qué hora y cómo cambia con los años", ["/demanda", "/altas", "/estacionalidad", "/comparar"]),
-    ("Capacidad", "Cuánto se llena el hospital y por qué se espera por una cama", ["/ocupacion", "/espera", "/camas", "/factores", "/estancia"]),
+    ("Capacidad", "Cuánto se llena el hospital y por qué se espera por una cama", ["/ocupacion", "/espera", "/factores", "/estancia"]),
     ("Clínico", "Qué diagnósticos esperan más y dónde se acumula el tiempo", ["/diagnosticos", "/periodo"]),
     ("Riesgo", "Quiénes y cuándo se complica el flujo, y cómo avisar a tiempo", ["/perfiles", "/atipicos", "/alertas"]),
-    ("Módulos", "Qué se espera y qué pasaría si algo cambia", ["/pronostico", "/paciente", "/paciente-cama", "/simulador"]),
+    ("Módulos", "Qué se espera y qué pasaría si algo cambia", ["/pronostico", "/paciente", "/paciente-cama", "/camas", "/simulador"]),
     ("Conclusiones", "Qué hacer con lo que se encontró", ["/recomendaciones", "/documentacion"]),
 ]
-# 20-nov-2026: los cuatro modulos interactivos no van en el menu lateral: se abren con el boton azul «Simular» (pagina /simular).
+# 20-nov-2026: los modulos interactivos no van en el menu lateral: se abren con el boton azul «Simular» (pagina /simular).
 SECCIONES_FUERA_DEL_MENU = ("Módulos",)
 RUTAS_SIN_SECCION = ("/simular",)
+RUTAS_MODULOS = tuple(r for t, _d, rs in SECCIONES if t in SECCIONES_FUERA_DEL_MENU for r in rs)      # las paginas que se abren desde «Simular»
 CATEGORIAS_RESULTADOS = ("Flujo", "Capacidad", "Clínico", "Riesgo")       # lo que antes era la seccion «Resultados»
 
 

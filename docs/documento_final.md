@@ -708,7 +708,7 @@ externos son de antes y después, sin grupo de comparación.
 ## 8. El dashboard
 
 **Herramienta:** Dash (Python y Plotly), aceptado por los organizadores. Un solo programa (`dashboard/main.py`, puerto 8050) con una página por tema en
-`dashboard/pages/`, organizadas en siete categorías de menú que siguen el orden del reto: Contexto; Flujo, Capacidad, Clínico y Riesgo (los resultados); Módulos (las herramientas de predicción y simulación) y Conclusiones. La página de inicio es el asistente: quien abre el enlace cae ahí, y debajo tiene una guía corta para explorar por categoría. **No se conecta a la base:** solo lee tablas agregadas, ninguna con una fila por paciente.
+`dashboard/pages/`, organizadas en siete categorías de menú que siguen el orden del reto: Contexto; Flujo, Capacidad, Clínico y Riesgo (los resultados); Módulos (las herramientas de predicción y simulación) y Conclusiones. Los cinco módulos no van en el menú lateral: se abren con el botón azul **Simular** que está arriba del menú, una página «¿Qué quieres hacer hoy?» con una tarjeta por módulo (el simulador integral primero, luego pronóstico, planeación de camas, paciente en espera y paciente en cama), cada una con una descripción breve de lo que permite hacer y una animación al pasar el mouse. La página de inicio es el asistente: quien abre el enlace cae ahí, y debajo tiene una guía corta para explorar por categoría. **No se conecta a la base:** solo lee tablas agregadas, ninguna con una fila por paciente.
 
 **Estructura de cada página de resultados (Flujo, Capacidad, Clínico y Riesgo):** un encabezado con cifras clave, una frase que resume la conclusión, las gráficas numeradas (cada una con su titular, una explicación y un dato), una sección de cuatro tarjetas,
 «Qué significa para el hospital» y un único panel plegable de **Documentación de esta sección**, con cómo se calculó, qué no dice y a qué otra página se conecta. Las páginas de Módulos siguen el mismo orden: la elección del modelo
@@ -732,6 +732,7 @@ va como una tarjeta antes de «Qué significa» y la documentación reúne lo qu
 | Perfiles y picos (`/perfiles`) | Riesgo | Cómo cambian la espera y la estancia según el perfil del paciente y la carga del momento |
 | Días atípicos (`/atipicos`) | Riesgo | Los días que se salen del patrón y qué dicen del problema de la espera |
 | Alertas (`/alertas`) | Riesgo | Las alertas (día congestionado, ocupación alta, paciente sin cama y cola de espera): cuándo avisar, qué tanto aciertan y qué recomendación dispara cada una; y las cinco que saltan en el simulador integral, con sus umbrales |
+| Simular (`/simular`) | Módulos | Puerta de entrada a los cinco módulos interactivos: una tarjeta por módulo con lo que permite hacer; se abre con el botón azul «Simular» del menú |
 | Pronóstico de demanda (`/pronostico`) | Módulos | Cuántos pacientes llegarán y cuántos irán a cama, desde hoy hasta un año, con su banda del 80 % |
 | Paciente en espera (`/paciente`) | Módulos | Cuándo es más probable que un paciente que ya espera reciba cama (estimador A6), con sus avisos |
 | Paciente en cama (`/paciente-cama`) | Módulos | Cuánto tiempo más seguirá en cama un paciente ya hospitalizado (estimador A6b, 6.10) |
