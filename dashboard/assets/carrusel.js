@@ -14,6 +14,11 @@
   var REDUCIR_MOVIMIENTO = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var carruseles = [];   // carruseles SIN grupo (data-grupo ausente): {el, timer, idx}
   var grupos = {};       // clave de grupo -> {timer, idx}
+  // 22-nov-2026: la vista elegida SOBREVIVE al redibujado. Durante la reproduccion Dash reemplaza el panel de
+  // graficos de abajo a cada paso (nodos nuevos, sin transform ni is-active), y la vista volvia a «Edad»
+  // casi al instante: parecia que los botones no funcionaban. Se guarda por id de carrusel y se reaplica.
+  var estadoCar = {};    // id de carrusel sin grupo -> indice elegido
+  var estadoUmbral = {}; // id de carrusel -> '14' | '30' (switch de estancias largas)
 
   function paneles(el) {
     var track = el.querySelector('.simint-carrusel__track');
@@ -22,19 +27,24 @@
 
   // Mueve UN carrusel a `idx` (ajustado a su propio numero de paneles) y actualiza sus botones PROPIOS, si
   // los tiene (los carruseles de un grupo no dibujan botones propios, ver sin_botones en simulador.py).
-  function mostrarEnCarrusel(el, idx) {
+  function mostrarEnCarrusel(el, idx, sinAnimar) {
     var ps = paneles(el);
     if (!ps.length) { return idx; }
     var real = ((idx % ps.length) + ps.length) % ps.length;
     var track = el.querySelector('.simint-carrusel__track');
-    if (track) { track.style.transform = 'translateX(-' + (real * 100) + '%)'; }
+    if (track) {
+      if (sinAnimar) { track.style.transition = 'none'; }     // nodo recien redibujado: colocarlo sin deslizar
+      track.style.transform = 'translateX(-' + (real * 100) + '%)';
+      if (sinAnimar) { void track.offsetWidth; track.style.transition = ''; }
+    }
     var botones = el.querySelectorAll('.simint-carrusel__boton');   // vacio si el carrusel no dibuja los suyos (sin_botones=True)
     botones.forEach(function (b, i) { b.classList.toggle('is-active', i === real); });
     return real;
   }
 
-  function mostrar(car, idx) {
-    car.idx = mostrarEnCarrusel(car.el, idx);
+  function mostrar(car, idx, sinAnimar) {
+    car.idx = mostrarEnCarrusel(car.el, idx, sinAnimar);
+    if (car.el.id) { estadoCar[car.el.id] = car.idx; }
   }
 
   function reiniciarTimer(car) {
@@ -47,9 +57,9 @@
     if (el.hasAttribute('data-grupo')) { return; }   // lo maneja el mecanismo de grupos, mas abajo
     if (el._carruselListo) { return; }
     el._carruselListo = true;
-    var car = { el: el, timer: null, idx: 0 };
+    var car = { el: el, timer: null, idx: (el.id && estadoCar[el.id]) || 0 };
     carruseles.push(car);
-    mostrar(car, 0);
+    mostrar(car, car.idx, true);
     reiniciarTimer(car);
     el.addEventListener('click', function (e) {
       var btn = e.target.closest ? e.target.closest('.simint-carrusel__boton') : null;
@@ -62,16 +72,25 @@
   }
 
   // Mueve TODOS los carruseles de un grupo (y la fila de botones externa que los acompaña) a la misma vista.
-  function mostrarGrupo(clave, idx) {
+  function mostrarGrupo(clave, idx, sinAnimar) {
     var els = document.querySelectorAll('.simint-carrusel[data-grupo="' + clave + '"]');
     var max = 0;
     els.forEach(function (el) { max = Math.max(max, paneles(el).length); });
     if (!max) { return idx; }
     var real = ((idx % max) + max) % max;
-    els.forEach(function (el) { mostrarEnCarrusel(el, real); });
+    els.forEach(function (el) { mostrarEnCarrusel(el, real, sinAnimar); el._grupoAplicado = true; });
     document.querySelectorAll('.simint-vista-switch[data-grupo="' + clave + '"] .simint-carrusel__boton')
-      .forEach(function (b, i) { b.classList.toggle('is-active', i === real); });
+      .forEach(function (b, i) { b.classList.toggle('is-active', i === real); b.parentElement._grupoAplicado = true; });
     return real;
+  }
+
+  // Reaplica la vista del grupo a los nodos que Dash acaba de redibujar (carruseles o fila de botones nuevos).
+  function reaplicarGrupo(clave) {
+    var g = grupos[clave]; if (!g) { return; }
+    var nuevo = false;
+    document.querySelectorAll('.simint-carrusel[data-grupo="' + clave + '"], .simint-vista-switch[data-grupo="' + clave + '"]')
+      .forEach(function (el) { if (!el._grupoAplicado) { nuevo = true; } });
+    if (nuevo) { g.idx = mostrarGrupo(clave, g.idx, true); }
   }
 
   function reiniciarTimerGrupo(clave) {
@@ -84,7 +103,7 @@
   function registrarGrupo(clave) {
     if (grupos[clave]) { return; }
     grupos[clave] = { idx: 0, timer: null };
-    grupos[clave].idx = mostrarGrupo(clave, 0);
+    grupos[clave].idx = mostrarGrupo(clave, 0, true);
     reiniciarTimerGrupo(clave);
   }
 
@@ -112,11 +131,18 @@
     document.querySelectorAll('.simint-switch').forEach(function (sw) {
       if (sw._switchListo) { return; }
       sw._switchListo = true;
+      var car0 = sw.closest('.simint-carrusel');
+      if (car0 && car0.id && estadoUmbral[car0.id] === '30') {      // reaplica lo elegido antes del redibujado
+        sw.classList.add('is-on'); car0.setAttribute('data-umbral', '30');
+      }
       sw.addEventListener('click', function () {
         var encendido = !sw.classList.contains('is-on');
         sw.classList.toggle('is-on', encendido);
         var car = sw.closest('.simint-carrusel');
-        if (car) { car.setAttribute('data-umbral', encendido ? '30' : '14'); }
+        if (car) {
+          car.setAttribute('data-umbral', encendido ? '30' : '14');
+          if (car.id) { estadoUmbral[car.id] = encendido ? '30' : '14'; }
+        }
       });
     });
   }
@@ -134,6 +160,7 @@
       clavesVivas[el.getAttribute('data-grupo')] = true;
     });
     Object.keys(clavesVivas).forEach(registrarGrupo);
+    Object.keys(clavesVivas).forEach(reaplicarGrupo);
     Object.keys(grupos).forEach(function (clave) {
       if (!clavesVivas[clave]) { clearInterval(grupos[clave].timer); delete grupos[clave]; }
     });
@@ -141,5 +168,13 @@
     registrarSwitches();
   }
   setInterval(barrido, 1000);
+  // Ademas del barrido de 1 s, se reaplica al instante cuando Dash redibuja nodos (sin esto, entre un redibujado y
+  // el siguiente barrido se veria un parpadeo a «Edad»). Solo childList: los cambios de estilo/clase propios no lo disparan.
+  var pendiente = false;
+  new MutationObserver(function () {
+    if (pendiente) { return; }
+    pendiente = true;
+    requestAnimationFrame(function () { pendiente = false; barrido(); });
+  }).observe(document.documentElement, { childList: true, subtree: true });
   if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', barrido); } else { barrido(); }
 })();

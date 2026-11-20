@@ -62,7 +62,8 @@ def agrupar(paginas, menu=False):
 def recorrido(paginas):
     """Las paginas en el orden en que se recorre el dashboard, como una presentacion: el inicio y luego cada seccion."""
     inicio = [p for p in paginas if p["path"] == "/"]
-    return inicio + [p for titulo, _descripcion, grupo in agrupar(paginas) if titulo for p in grupo]      # el asistente (sin titulo) no va en el recorrido
+    # el asistente (sin titulo) no va en el recorrido, ni los modulos (se abren desde «Simular», no son parte del menu)
+    return inicio + [p for titulo, _descripcion, grupo in agrupar(paginas) if titulo and titulo not in SECCIONES_FUERA_DEL_MENU for p in grupo]
 
 
 # ---------------------------------------------------------------- documentacion que respalda cada pagina (14-nov-2026)

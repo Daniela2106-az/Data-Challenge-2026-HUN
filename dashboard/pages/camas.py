@@ -289,7 +289,7 @@ def panel_tecnico():
             ]),
             html.Div([
                 html.Div("Qué hace cada control", className="metodo__rotulo"),
-                html.Div(f"El botón «Simular» corre el motor de Monte Carlo con n = {N_REP_INTERACTIVO} repeticiones: "
+                html.Div(f"Al cambiar el plazo o un control, el motor de Monte Carlo corre solo con n = {N_REP_INTERACTIVO} repeticiones: "
                          "es una aproximación rápida pensada para moverse con los sliders sin esperar — los documentos "
                          "oficiales (docs/modelo_camas.md, docs/simulacion.md) citan la cifra final con 1.000 "
                          "repeticiones. La diferencia entre ambas es chica: comparando el mismo escenario base con "
@@ -378,18 +378,20 @@ def layout():
                     campo_slider("Mezcla de pacientes", "escenario_d", dcc.Slider(id="camas-intensidad_d", min=0, max=100, step=10, value=0)),
                 ]),
                 html.Div(style={"marginTop": "18px"}, children=[
-                    html.Button("Simular", id="camas-simular", n_clicks=0, className="btn-primary", style={"width": "100%"}),
-                    html.Div(id="camas-nota_r7", style={"fontSize": "12px", "marginTop": "10px"}),
+                    html.Div(id="camas-nota_r7", style={"fontSize": "12px"}),
                 ]),
             ]),
             html.Div(style={"flex": "1 1 600px"}, children=[
-                dcc.Loading(type="dot", color="#0071bc", children=[
+                dcc.Loading(parent_className="camas-carga", color="#0071bc",
+                            custom_spinner=html.Div(className="camas-carga__velo", children=["Simulando el hospital…", html.Span("Puede tardar unos segundos en este servicio", style={"fontWeight": 500, "fontSize": "13px"})]),
+                            children=[
                     html.Div(id="camas-metricas"),
-                    dcc.Graph(id="camas-grafico_proyeccion", config={"displaylogo": False})]),
+                    dcc.Graph(id="camas-grafico_proyeccion", config={"displaylogo": False}),
+                    # El Store va DENTRO del contenedor de carga: asi el icono aparece mientras corre la simulacion (que es lo lento), no solo al dibujar
+                    dcc.Store(id="camas-censos_guardados")]),
             ]),
         ]),
 
-        dcc.Store(id="camas-censos_guardados"),
         html.P("Supuestos: B y C se aplican de forma uniforme en todo el horizonte; D es un caso de estrés explícito "
                "(no un pronóstico); ningún escenario cambia la capacidad física (106/18/88, dato del HUN). Asociación, "
                "no causa.", style={"fontSize": "11px", "color": GRIS, "marginTop": "10px"}),
@@ -408,10 +410,9 @@ def layout():
 
 
 @callback(Output("camas-censos_guardados", "data"), Output("camas-nota_r7", "children"),
-          Input("camas-simular", "n_clicks"),
-          State("camas-ajuste_ingresos", "value"), State("camas-ajuste_estancia", "value"),
-          State("camas-intensidad_d", "value"), State("camas-plazo", "value"))
-def correr_simulacion(_, pct_ingresos, pct_estancia, intensidad_d, dias):
+          Input("camas-ajuste_ingresos", "value"), Input("camas-ajuste_estancia", "value"),
+          Input("camas-intensidad_d", "value"), Input("camas-plazo", "value"))
+def correr_simulacion(pct_ingresos, pct_estancia, intensidad_d, dias):
     llave = (pct_ingresos, pct_estancia, intensidad_d, int(dias), str(pd.Timestamp.today().date()))
     if llave in _CACHE:
         return _CACHE[llave]
