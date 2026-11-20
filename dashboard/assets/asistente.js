@@ -62,6 +62,18 @@
   function disponible() { var r = $('asis-raiz'); return !r || r.getAttribute('data-ok') === '1'; }
   function motivo() { var r = $('asis-raiz'); return r ? r.getAttribute('data-motivo') : ''; }
 
+  // Panel «Explorar el dashboard»: abierto mientras no hay conversacion y plegado a una linea cuando la hay. Solo se pliega solo al empezar a conversar:
+  // si despues el usuario lo abre, se queda abierto.
+  var explorarHabiaConversacion = null;
+  function fijarExplorar(abierto) {
+    var b = $('asis-explorar-b'), c = $('asis-explorar-c'); if (!b || !c) { return; }
+    b.setAttribute('aria-expanded', String(abierto)); c.hidden = !abierto;
+  }
+  function plegarExplorar(hayConversacion) {
+    if (explorarHabiaConversacion === hayConversacion) { return; }
+    explorarHabiaConversacion = hayConversacion; fijarExplorar(!hayConversacion);
+  }
+
   function paginasDash() {
     try { return JSON.parse(($('asis-raiz') || {getAttribute: function () { return '{}'; }}).getAttribute('data-pags') || '{}'); } catch (e) { return {}; }
   }
@@ -130,7 +142,7 @@
 
   window.asisPintar = function (hist, cita, quedan) {
     esperando = false;
-    var ex = $('asis-explorar'); if (ex) { ex.style.display = hist.length ? 'none' : ''; }
+    plegarExplorar(hist.length > 0);
     ['asis-log', 'asis-log-mini'].forEach(function (id) {
       var el = $(id); if (!el) { return; }
       el.innerHTML = hist.length ? hist.map(burbuja).join('') : bienvenida(id === 'asis-log-mini');
@@ -154,7 +166,7 @@
     ['asis-log', 'asis-log-mini'].forEach(function (id) {
       var el = $(id); if (!el) { return; }
       var v = el.querySelector('.asis-bienvenida'); if (v) { v.remove(); }
-      var ex = $('asis-explorar'); if (ex) { ex.style.display = 'none'; }
+      plegarExplorar(true);
       el.insertAdjacentHTML('beforeend', html); el.scrollTop = el.scrollHeight;
       if (id === 'asis-log') { window.scrollTo({top: document.documentElement.scrollHeight, behavior: 'smooth'}); }
     });
@@ -165,6 +177,14 @@
       if (esperando && window._asisUltimo) { window.asisPintar.apply(null, window._asisUltimo); }
       esperando = false;
     }, 120000);
+  }
+
+  // vacia una caja de texto de Dash (hay que usar el setter nativo y avisar con un evento 'input' para que React se entere)
+  function limpiar(el) {
+    if (!el) { return; }
+    Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value').set.call(el, '');
+    el.dispatchEvent(new Event('input', {bubbles: true}));
+    el.style.height = 'auto';
   }
 
   function abrir(si) {
@@ -185,6 +205,8 @@
       if (txt) { set('asis-cita', {data: txt.slice(0, MAX_CITA)}); abrir(true); }
       return;
     }
+    var xb = t.closest('#asis-explorar-b');
+    if (xb) { fijarExplorar(xb.getAttribute('aria-expanded') !== 'true'); return; }
     var enl = t.closest('.asis-pagina-link');
     if (enl) {                                               // abre la pagina del dashboard sin recargar (Dash escucha popstate)
       e.preventDefault();
@@ -208,8 +230,13 @@
       var mini = b.id === 'asis-enviar-mini';
       var texto = (($(mini ? 'asis-input-mini' : 'asis-input') || {}).value || '');
       if (!texto.trim()) { e.preventDefault(); e.stopPropagation(); return; }
-      var citaEl = mini ? document.querySelector('#asis-cita-mini .asis-cita__texto') : null;
-      pendiente(texto.trim(), citaEl ? citaEl.textContent : null);
+      var citaEl = mini ? document.querySelector('#asis-cita-mini .asis-cita__texto') : null, cita = citaEl ? citaEl.textContent : null;
+      e.preventDefault(); e.stopPropagation();
+      // La pregunta sale por el mismo Store que las sugerencias (asis-directa): asi la caja se vacia aqui mismo y no depende de que Dash devuelva el valor.
+      limpiar($(mini ? 'asis-input-mini' : 'asis-input'));
+      if (cita) { set('asis-cita', {data: null}); }
+      pendiente(texto.trim(), cita);
+      set('asis-directa', {data: {q: texto.trim(), cita: cita, n: Date.now()}});
     }
   }, true);
 
@@ -287,7 +314,7 @@
     }
     var log = $('asis-log');
     if (log && !log.getAttribute('data-pintado')) {                       // se llego al inicio: pinta lo que ya hay (o el mosaico)
-      log.setAttribute('data-pintado', '1');
+      log.setAttribute('data-pintado', '1'); explorarHabiaConversacion = null;           // la pagina se acaba de montar: el panel se acomoda segun haya o no conversacion
       window.asisPintar.apply(null, window._asisUltimo || [[], null, null]);
     }
     var mini = $('asis-log-mini');

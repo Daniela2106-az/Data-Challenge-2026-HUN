@@ -50,7 +50,7 @@ from dash import Dash, Input, Output, State, callback, dcc, html
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import asistente_ui  # noqa: E402  (chat del asistente de preguntas en todas las paginas)
-from navegacion import CAPITULOS, DENTRO_DE_DOCUMENTACION, ICONOS, SECCIONES, agrupar, capitulos_documento, documentacion_de, recorrido  # noqa: E402
+from navegacion import NOMBRE_EN_MENU, CAPITULOS, DENTRO_DE_DOCUMENTACION, ICONOS, SECCIONES, agrupar, capitulos_documento, documentacion_de, recorrido  # noqa: E402
 
 app = Dash(__name__, use_pages=True, pages_folder="pages", title="Dashboard HUN",
            update_title="Actualizando…")
@@ -86,9 +86,10 @@ def _paginas_ordenadas():
 def enlace_nav(pagina, ruta_activa):
     ico = ICONOS.get(pagina["path"], "ico-profiles")
     activo = " is-active" if pagina["path"] == ruta_activa else ""
+    nombre = NOMBRE_EN_MENU.get(pagina["path"], pagina["name"])
     return dcc.Link(href=pagina["path"], className="nav__item" + activo, title=pagina["name"], children=[
         html.Span(className="nav__ico " + ico),
-        html.Span(pagina["name"]),
+        html.Span(nombre),
     ])
 
 

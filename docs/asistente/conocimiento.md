@@ -16,7 +16,7 @@ Este documento se arma solo con `src/armar_conocimiento.py` a partir de la docum
 - **Forma del año**: `/estacionalidad`
 - **Estancias largas**: `/estancia`
 - **Factores de la espera**: `/factores`
-- **Inicio**: `/`
+- **Asistente de flujo HUN**: `/`
 - **Ocupación de camas**: `/ocupacion`
 - **Paciente en espera**: `/paciente`
 - **Paciente en cama**: `/paciente-cama`

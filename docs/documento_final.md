@@ -715,7 +715,7 @@ va como una tarjeta antes de «Qué significa» y la documentación reúne lo qu
 
 | Página | Categoría | Qué responde |
 |---|---|---|
-| Inicio (`/`) | Inicio | El asistente de flujo HUN: preguntas en lenguaje natural sobre el análisis (responde solo con la documentación del proyecto, con tarjetas de cifras y la página del dashboard donde se ve cada cosa), cuatro cifras del hospital, una guía por categorías y el recorrido guiado |
+| Asistente de flujo HUN (`/`) | Inicio | El asistente de flujo HUN: preguntas en lenguaje natural sobre el análisis (responde solo con la documentación del proyecto, con tarjetas de cifras y la página del dashboard donde se ve cada cosa), un panel plegable para explorar por categorías y el recorrido guiado |
 | Resumen (`/resumen`) | Contexto | El proyecto en una pantalla: los ocho hallazgos en tarjetas deslizables y las siete acciones que se proponen (leídas de la tabla de recomendaciones) |
 | Datos y calidad (`/datos`) | Contexto | Qué había en la base, qué se corrigió y hasta qué fecha son confiables los datos |
 | Demanda (`/demanda`) | Flujo | A qué hora y qué día llegan los pacientes, y si la demanda crece entre años |

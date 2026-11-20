@@ -86,15 +86,6 @@ def enviar_directa(d, hist, uid):
     return enviar(d["q"], hist, uid, d.get("cita"))
 
 
-@callback(Output("asis-hist", "data", allow_duplicate=True), Output("asis-input-mini", "value"), Output("asis-cita", "data", allow_duplicate=True),
-          Output("asis-restantes", "data", allow_duplicate=True),
-          Input("asis-enviar-mini", "n_clicks"), State("asis-input-mini", "value"), State("asis-hist", "data"), State("asis-uid", "data"),
-          State("asis-cita", "data"), prevent_initial_call=True)
-def enviar_mini(_n, pregunta, hist, uid, cita):
-    nuevo, quedan = enviar(pregunta, hist, uid, cita)
-    return nuevo, "", None, quedan
-
-
 # Pintar la conversacion y la cita (JavaScript, dashboard/assets/asistente.js): en el chat pequeno y, si esta en pantalla, en la pagina de inicio.
 clientside_callback(
     """function(hist, cita, quedan) { if (window.asisPintar) { window.asisPintar(hist || [], cita, quedan); } return ''; }""",

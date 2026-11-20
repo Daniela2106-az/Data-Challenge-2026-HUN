@@ -8,11 +8,14 @@ Una pagina nueva que no este en SECCIONES aparece sola al final, bajo "Más": pa
 import re
 
 # Icono (clase CSS de theme.css) de cada ruta. Una ruta sin entrada usa el icono generico de perfiles.
-ICONOS = {"/": "ico-home", "/pronostico": "ico-forecast", "/paciente": "ico-patient", "/paciente-cama": "ico-stay", "/camas": "ico-bed", "/simulador": "ico-models",
+ICONOS = {"/": "ico-chat", "/pronostico": "ico-forecast", "/paciente": "ico-patient", "/paciente-cama": "ico-stay", "/camas": "ico-bed", "/simulador": "ico-models",
           "/perfiles": "ico-profiles", "/recomendaciones": "ico-recs", "/documentacion": "ico-docs", "/datos": "ico-data",
           "/demanda": "ico-demand", "/ocupacion": "ico-occup", "/espera": "ico-wait", "/altas": "ico-clock",
           "/estacionalidad": "ico-season", "/alertas": "ico-alert", "/factores": "ico-factors", "/estancia": "ico-stay",
           "/diagnosticos": "ico-dx", "/atipicos": "ico-outlier", "/resumen": "ico-summary", "/comparar": "ico-compare", "/periodo": "ico-period"}
+
+# Texto del menu lateral cuando el nombre de la pagina es largo (la barra superior sigue usando el nombre completo)
+NOMBRE_EN_MENU = {"/": "Asistente HUN"}
 
 # (titulo de la seccion, que responde, rutas en orden). El asistente es la pagina de inicio (/), fuera de las categorias.
 # 20-nov-2026: «Resultados» (13 paginas) se reparte en cuatro categorias de una palabra; «Prediccion» pasa a «Módulos» y «Propuestas» a «Conclusiones».

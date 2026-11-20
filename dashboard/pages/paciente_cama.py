@@ -22,9 +22,8 @@ sin maquillarla, en la ficha tecnica de esta pagina. Se publica igual, con esos 
 CAMBIOS RESPECTO A /paciente (no es un espejo literal)
   - "Horas que lleva esperando" -> "Horas que lleva en cama" (el reloj es desde la asignacion de cama).
   - Se quita el bloque de "etapas en urgencias": no aplica a una estancia ya iniciada.
-  - Se mantiene, visible y desplegable, "Si ya estuvo hospitalizado antes" (a diferencia del rediseno
-    del 14-nov de /paciente, que lo escondio): aqui se deja porque el historial de estancias previas es
-    la unica fuente de diagnostico que no tiene riesgo de fuga.
+  - 20-nov-2026: se quitan "Fecha y hora de ahora" (se usa la hora actual de Colombia y la fecha se muestra arriba), "Si ya estuvo hospitalizado antes",
+    la pregunta "si le tomaron laboratorios" (basta con marcar lo que salio fuera de rango) y "Camas ocupadas ahora en su zona" (se usa la ocupacion tipica).
   - El grafico usa bloques POR DIA (1 a 10 dias + "mas de 10 dias"), no por franja de 4 bloques: la
     estancia mediana (~70 h) es mucho mayor que la espera mediana (~18,6 h) y los bloques de 4 franjas
     por dia dejarian casi toda la probabilidad en "despues".
@@ -180,7 +179,8 @@ def panel_tecnico():
 
 
 def layout():
-    ahora = pd.Timestamp.now().floor("h")
+    hoy = pd.Timestamp.now(tz="America/Bogota")
+    meses = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"]
     return html.Div(className="page-container", children=[
         html.Div(className="page-head", children=[
             html.H2("¿Cuánto le falta de estancia a este paciente?"),
@@ -189,6 +189,7 @@ def layout():
         ]),
         html.Div(style={"display": "flex", "flexWrap": "wrap", "gap": "32px", "alignItems": "flex-start"}, children=[
             html.Div(className="form-panel", style={"flex": "0 0 320px"}, children=[
+                html.Div(f"Hoy, {hoy.day} de {meses[hoy.month - 1]} de {hoy.year}", className="field-group__help", style={"marginBottom": "10px", "fontWeight": 600}),
                 html.Div(className="field-group", children=[
                     html.Span("Edad (años)", className="field-group__label"),
                     stepper("pec-edad", 67, 0, 110),
@@ -213,37 +214,11 @@ def layout():
                     html.Span("Horas que lleva en cama", className="field-group__label"),
                     stepper("pec-horas", 0, 0, cee.MAX_H_ESTANCIA - 1),
                 ]),
-                html.Div(className="field-group", children=[
-                    html.Span("Fecha y hora de ahora", className="field-group__label"),
-                    dcc.Input(id="pec-ahora", type="text", value=f"{ahora:%Y-%m-%d %H:%M}", style={"width": "100%"}),
-                    html.Div("formato AAAA-MM-DD HH:MM", className="field-group__help"),
-                ]),
-                html.Details(className="field-group", open=True, children=[
-                    html.Summary("Si ya estuvo hospitalizado antes (opcional)", className="field-group__label", style={"cursor": "pointer"}),
-                    html.Div("Su historial ayuda a afinar la estimación. Si nunca estuvo hospitalizado, déjalo en 0.", className="field-group__help"),
-                    html.Span("Veces que estuvo hospitalizado", className="field-group__label"),
-                    dcc.Input(id="pec-prev-n", type="number", min=0, step=1, value=0, style={"width": "100%"}),
-                    html.Span("Horas que esperó cama la última vez", className="field-group__label"),
-                    dcc.Input(id="pec-prev-espera", type="number", min=0, step=1, style={"width": "100%"}),
-                    html.Span("Días que estuvo hospitalizado la última vez", className="field-group__label"),
-                    dcc.Input(id="pec-prev-estancia", type="number", min=0, step=1, style={"width": "100%"}),
-                    html.Span("Hace cuántos días salió", className="field-group__label"),
-                    dcc.Input(id="pec-prev-dias", type="number", min=0, step=1, style={"width": "100%"}),
-                    html.Span("Diagnóstico de esa visita anterior", className="field-group__label"),
-                    dcc.Dropdown(id="pec-dx-previo", options=GRUPOS_DX, placeholder="No se sabe", clearable=True),
-                ]),
                 html.Details(className="field-group", children=[
                     html.Summary("Laboratorios del ingreso (primeras 6 horas de la visita, opcional)", className="field-group__label", style={"cursor": "pointer"}),
-                    html.Div("Lo que se sabía al llegar a la cama (no cambia durante la estancia en esta versión). Marca lo que salió fuera de rango.", className="field-group__help"),
-                    dcc.RadioItems(id="pec-labs-si", className="pill-switch pill-switch--compact", value="no",
-                                   options=[{"label": "No le tomaron", "value": "no"}, {"label": "Sí le tomaron", "value": "si"}]),
+                    html.Div("Lo que se sabía al llegar a la cama (no cambia durante la estancia en esta versión). Marca solo lo que salió fuera de rango; si no marcas nada, no se usan.", className="field-group__help"),
                     dcc.Checklist(id="pec-labs", options=[{"label": t, "value": k} for k, (_c, _v, t) in LABS_FUERA.items()], value=[],
                                   style={"display": "grid", "gap": "4px", "marginTop": "8px", "fontSize": "13px"}),
-                ]),
-                html.Div(className="field-group", children=[
-                    html.Span("Camas ocupadas ahora en su zona (opcional)", className="field-group__label"),
-                    dcc.Input(id="pec-ocup", type="number", min=0, step=1, style={"width": "100%"}),
-                    html.Div("Si no lo sabes, se usa la ocupación típica de los últimos meses.", className="field-group__help"),
                 ]),
                 html.Button("Estimar", id="pec-estimar", n_clicks=0, className="btn-primary", style={"width": "100%", "marginTop": "6px"}),
                 html.Div(id="pec-alerta-perfil"),
@@ -322,20 +297,15 @@ def construir_grafico_acumulada(v, ventana_mas_probable, dark):
 @callback(Output("pec-ventanas-datos", "data"), Output("pec-lead", "children"), Output("pec-rango", "children"),
           Output("pec-nota", "children"), Output("pec-alerta-perfil", "children"),
           Input("pec-estimar", "n_clicks"),
-          State("pec-edad", "value"), State("pec-sexo", "value"), State("pec-tipo", "value"), State("pec-horas", "value"), State("pec-ahora", "value"),
-          State("pec-prev-n", "value"), State("pec-prev-espera", "value"), State("pec-prev-estancia", "value"), State("pec-prev-dias", "value"),
-          State("pec-dx-previo", "value"), State("pec-labs-si", "value"), State("pec-labs", "value"), State("pec-ocup", "value"))
-def actualizar(_, edad, sexo, tipo, horas, ahora, prev_n, prev_espera, prev_estancia, prev_dias, dx_previo, labs_si, labs, ocup):
+          State("pec-edad", "value"), State("pec-sexo", "value"), State("pec-tipo", "value"), State("pec-horas", "value"),
+          State("pec-labs", "value"))
+def actualizar(_, edad, sexo, tipo, horas, labs):
     try:
         horas = float(horas or 0)
-        previa = None
-        if prev_n and int(prev_n) > 0 and None not in (prev_espera, prev_estancia, prev_dias):
-            previa = {"espera_h": float(prev_espera), "estancia_h": 24.0 * float(prev_estancia), "dias_desde": float(prev_dias), "n_previas": int(prev_n)}
-        valores_lab = None
-        if labs_si == "si":
-            valores_lab = {LABS_FUERA[k][0]: LABS_FUERA[k][1] for k in (labs or []) if k in LABS_FUERA} or {"leuc_max": 8.0}
-        r = eer.estimar_estancia_restante(float(edad), sexo, tipo, horas, ahora, ocupacion_zona=float(ocup) if ocup else None,
-                                          hospitalizacion_previa=previa, diagnostico_previo=dx_previo or None, laboratorios_ingreso=valores_lab)
+        ahora = pd.Timestamp.now(tz="America/Bogota").strftime("%Y-%m-%d %H:%M")      # la hora actual, en Colombia (el servidor puede estar en otra zona)
+        valores_lab = {LABS_FUERA[k][0]: LABS_FUERA[k][1] for k in (labs or []) if k in LABS_FUERA} or None      # sin nada marcado, no se usan los laboratorios
+        r = eer.estimar_estancia_restante(float(edad), sexo, tipo, horas, ahora, ocupacion_zona=None,
+                                          hospitalizacion_previa=None, diagnostico_previo=None, laboratorios_ingreso=valores_lab)
     except Exception as err:
         return None, [], [], f"No se pudo estimar: {err}", []
     v = pd.DataFrame(r["ventanas"])
@@ -348,7 +318,7 @@ def actualizar(_, edad, sexo, tipo, horas, ahora, prev_n, prev_espera, prev_esta
     perfil = cp.clasificar_perfil(edad, sexo, tipo)
     avisos_html = [html.Li(a) for a in r["avisos"]]
     nota = html.Div([
-        html.P(f"Zona: {'niños' if r['zona'] == 'ninos' else 'adultos'}; camas ocupadas usadas: {r['ocupacion_usada']:.0f} ({'la que indicaste' if ocup else 'típico de los últimos meses'}).",
+        html.P(f"Zona: {'niños' if r['zona'] == 'ninos' else 'adultos'}; camas ocupadas usadas: {r['ocupacion_usada']:.0f} (típico de los últimos meses).",
                style={"margin": "0 0 4px 0"}),
         html.Ul(avisos_html, style={"margin": 0, "paddingLeft": "18px"}),
     ])
