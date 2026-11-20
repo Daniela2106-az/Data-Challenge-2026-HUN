@@ -317,7 +317,7 @@ def panel_tecnico():
                          style={"fontSize": "12px", "color": GRIS}),
             ], className="tech-table-wrap"),
             html.Div([
-                html.Div("Qué se probó y qué se descartó", className="metodo__rotulo"),
+                html.Div("Qué se probó y se descartó", className="metodo__rotulo"),
                 html.Div(html.Table(filas_decision, className="metodo__tabla"), className="metodo__scroll"),
             ]),
             html.Div([
@@ -403,7 +403,7 @@ def layout():
                "No predice la estancia de ningún paciente concreto (R² cerca de 0). Arranca del último censo confiable (9-abr-2026), no del de hoy, porque después el registro "
                "de etapas está incompleto: se simulan los días hasta hoy y se muestra desde mañana, como el pronóstico de demanda. Las camas totales (106) son lo que informó el HUN; el exceso observado puede ser camas de apoyo o camillas.",
                "Fuente: src/simulacion_camas_montecarlo.py. Detalle: documentación, sección 6.5, y docs/modelo_camas.md.", ruta="/camas",
-               antes=[], despues=secciones(panel_tecnico(), solo=ETAPAS_Y_PRUEBAS), pasos=False, modelo=False),
+               antes=[], despues=secciones(panel_tecnico(), solo=ETAPAS_Y_PRUEBAS), modelo=False),
     ])
 
 

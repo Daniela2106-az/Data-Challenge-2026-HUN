@@ -17,13 +17,25 @@ from documento import DOC, capitulos, referencias, titulo_limpio  # noqa: E402
 dash.register_page(__name__, path="/documentacion", name="Documentación", title="Documentación del proyecto - HUN", order=6)
 
 
+# Los capitulos que no tienen subsecciones (###) no tendrian texto en su tarjeta: se les pone aqui una lista corta de lo que contienen.
+CONTENIDO_SIN_SUBSECCIONES = {
+    1: ["La pregunta del reto y los cuatro componentes", "Los ocho hallazgos, con sus cifras", "Lo que se propone"],
+    2: ["Qué pide el instructivo y cómo se valora", "Los cuatro componentes y cuáles abordamos", "Los entregables: documentación, repositorio y dashboard"],
+    4: ["Llegadas por hora y por día", "El recorrido: llegada, urgencias y cama", "La estancia y los reingresos"],
+    7: ["Las siete acciones, de la más básica a la más específica", "La evidencia del HUN y la de otros hospitales", "Lo que no recomendamos"],
+    8: ["Las páginas del dashboard y cómo se organizan", "El botón Simular y los cinco módulos interactivos", "El asistente de preguntas"],
+    9: ["Calidad del registro y lo que no está en la base", "Capacidad, validación y datos externos de 2026", "Diagnósticos y causalidad"],
+}
+
+
 def layout():
     if not DOC.exists():
         return html.Div(className="page-container", children=[html.H2("Documentación"), html.P("No se encontró docs/documento_final.md.")])
     caps = capitulos()
     tarjetas = []
     for n, c in sorted(caps.items()):
-        subs = html.Ul([html.Li(titulo_limpio(t)) for t, _ in c["subs"]], className="doc-card__subs") if c["subs"] else None
+        items = [titulo_limpio(t) for t, _ in c["subs"]] or CONTENIDO_SIN_SUBSECCIONES.get(n, [])
+        subs = html.Ul([html.Li(t) for t in items], className="doc-card__subs") if items else None
         tarjetas.append(dcc.Link(href=f"/documentacion/{n}", className="doc-card", children=[
             html.Div(f"{n:02d}", className="doc-card__num"), html.Div(c["titulo"], className="doc-card__titulo"),
             subs, html.Div("Abrir capítulo →", className="doc-card__ir")]))

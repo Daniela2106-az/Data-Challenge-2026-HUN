@@ -225,7 +225,7 @@ def panel_tecnico():
                          style={"fontSize": "13px", "color": GRIS}),
             ]),
             html.Div([
-                html.Div("Qué se probó y qué se descartó", className="metodo__rotulo"),
+                html.Div("Qué se probó y se descartó", className="metodo__rotulo"),
                 html.Div(html.Table(filas_decision, className="metodo__tabla"), className="metodo__scroll"),
                 html.Div("Detalle completo de cada ronda de prueba (datos, fuentes y por qué se descartó cada una): "
                          "docs/estacionalidad_anual.md. Documento final del equipo con las 7 recomendaciones y sus "
@@ -313,7 +313,7 @@ def layout():
                "cuántos pacientes quedarán sin atender ni cuánto esperará cada uno (eso está en «Paciente en espera»). Las llegadas incluyen ~4 % de "
                "registros replicados, estables en el tiempo.",
                "Fuente: src/modelo_pronostico.py sobre panel_diario.csv (agregado por día, sin pacientes). Detalle: documentación, sección 6.1, y docs/estacionalidad_anual.md.", ruta="/pronostico",
-               antes=[], despues=secciones(panel_tecnico(), solo=ETAPAS_Y_PRUEBAS), pasos=False, modelo=False),
+               antes=[], despues=secciones(panel_tecnico(), solo=ETAPAS_Y_PRUEBAS), modelo=False),
     ])
 
 

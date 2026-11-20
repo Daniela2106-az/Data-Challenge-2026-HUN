@@ -20,7 +20,7 @@ from dash import Input, Output, callback, dcc, html
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from catalogo import enlaces_alertas, enlaces_paginas, recomendaciones  # noqa: E402
 import tema_graficos as tg  # noqa: E402
-from componentes import (AZUL, PIZARRA, TENUE, bloque as titulo_bloque, cifra, coma, estilo, filtro, frase, grafico, lamina, leer,  # noqa: E402
+from componentes import (AZUL, NARANJA, PIZARRA, TENUE, bloque as titulo_bloque, cifra, coma, estilo, filtro, frase, grafico, lamina, leer,  # noqa: E402
                          mensaje, portada, tarjetas)
 
 dash.register_page(__name__, path="/recomendaciones", name="Recomendaciones", title="Recomendaciones - HUN", order=5)
@@ -39,6 +39,118 @@ NO_RECOMENDAMOS = [
     ("Un centro de comando solo", "El estudio mejor diseñado (Bradford, Reino Unido) no encontró efecto."),
     ("Calcular cuántas camas más", "Los datos no lo permiten con certeza: antes de pensar en camas nuevas, atacar la estancia y la asignación."),
 ]
+
+# Una grafica por recomendacion (21-nov-2026), con tablas agregadas que ya usa el dashboard: lo que se ve en ella y por que importa para esa accion
+PIE_GRAFICA = {
+    1: "De 1,7 millones de visitas en la base quedan 337 mil episodios utilizables: registrar mejor evita perder datos en la limpieza.",
+    2: "La espera mediana casi no cambia, pero el exceso medio sube de 17 a 24 horas: por eso conviene seguirla cada mes.",
+    3: "El aviso de día congestionado mejora a medida que avanza la mañana: a las 12 h detecta 87 % de los días (AUC 0,94).",
+    4: "Si el 30 % de las altas pasara a la mañana, la ocupación de las 12 h bajaría unas 5 camas (cota, no predicción).",
+    5: "A las 48 h sin cama el aviso acierta 52 % con unas 4 alertas al día; antes avisa de más y después llega tarde.",
+    6: "Quien llega por la tarde espera más por cama: pedirla antes acorta el tramo que más pesa.",
+    7: "Los días de cama que ocupan las estancias largas cada mes: el seguimiento semanal evita que se acumulen.",
+}
+
+
+def _vacia(msg):
+    fig = go.Figure()
+    fig.add_annotation(text=msg, showarrow=False, font=dict(size=12, color=PIZARRA))
+    fig.update_xaxes(visible=False); fig.update_yaxes(visible=False)
+    return fig
+
+
+def _g1(tema):
+    t = leer("embudo_datos.csv")
+    if t is None:
+        return _vacia("Falta embudo_datos.csv")
+    et = ["En la base", "Cerradas", "Sin copias", "Episodios"]
+    fig = go.Figure(go.Bar(y=et[::-1], x=(t.visitas / 1000).tolist()[::-1], orientation="h", marker_color=[AZUL, TENUE, TENUE, TENUE],
+                           text=[f"{coma(v / 1000, 0)} mil" for v in t.visitas][::-1], textposition="outside", cliponaxis=False,
+                           hovertemplate="%{y}: %{x:,.0f} mil visitas<extra></extra>"))
+    estilo(fig, tema); fig.update_layout(margin=dict(l=80, r=60, t=8, b=28), bargap=0.35)
+    fig.update_xaxes(title="Visitas (miles)", showgrid=True); fig.update_yaxes(showgrid=False)
+    return fig
+
+
+def _g2(tema):
+    t = leer("exceso_por_anio.csv")
+    if t is None:
+        return _vacia("Falta exceso_por_anio.csv")
+    fig = go.Figure([go.Bar(x=t.anio.astype(str), y=t.mediana_h, name="Espera mediana", marker_color=TENUE, hovertemplate="%{x}: %{y:.1f} h<extra>Mediana</extra>"),
+                     go.Bar(x=t.anio.astype(str), y=t.exceso_medio_h, name="Exceso medio", marker_color=AZUL, hovertemplate="%{x}: %{y:.1f} h<extra>Exceso medio</extra>")])
+    estilo(fig, tema, leyenda=True); fig.update_layout(barmode="group", margin=dict(l=44, r=10, t=30, b=28), bargap=0.3)
+    fig.update_yaxes(title="Horas")
+    return fig
+
+
+def _g3(tema):
+    t = leer("alertas_tabla.csv")
+    if t is None:
+        return _vacia("Falta alertas_tabla.csv")
+    a = t[t.alerta_id == "A1"].sort_values("orden")
+    fig = go.Figure([go.Bar(x=a.momento, y=a.deteccion_pct, name="Días detectados (%)", marker_color=[AZUL if r else TENUE for r in a.recomendada],
+                            text=[f"{coma(v, 0)} %" for v in a.deteccion_pct], textposition="outside", cliponaxis=False, hovertemplate="%{x}: detecta %{y:.0f} %<extra></extra>")])
+    estilo(fig, tema); fig.update_layout(margin=dict(l=44, r=10, t=14, b=28))
+    fig.update_yaxes(title="% de días congestionados avisados", range=[0, 105])
+    return fig
+
+
+def _g4(tema):
+    t = leer("escenario_camas_por_hora.csv")
+    if t is None:
+        return _vacia("Falta escenario_camas_por_hora.csv")
+    fig = go.Figure([go.Scatter(x=t.hora, y=t.ocupacion_base, name="Hoy", mode="lines", line=dict(color=PIZARRA, width=2.5), hovertemplate="%{x} h: %{y:.0f} camas<extra>Hoy</extra>"),
+                     go.Scatter(x=t.hora, y=t.ocupacion_escenario, name="Con 30 % de altas en la mañana", mode="lines", line=dict(color=AZUL, width=3), fill="tonexty",
+                                fillcolor="rgba(42,111,176,0.15)", hovertemplate="%{x} h: %{y:.0f} camas<extra>Escenario</extra>")])
+    fig.add_hline(y=106, line=dict(color=NARANJA, width=1.5, dash="dot"), annotation_text="106 camas", annotation_position="top left", annotation_font=dict(size=11, color=NARANJA))
+    estilo(fig, tema, leyenda=True); fig.update_layout(margin=dict(l=44, r=10, t=34, b=28))
+    fig.update_xaxes(title="Hora del día", dtick=3); fig.update_yaxes(title="Camas ocupadas")
+    return fig
+
+
+def _g5(tema):
+    t = leer("alertas_tabla.csv")
+    if t is None:
+        return _vacia("Falta alertas_tabla.csv")
+    a = t[t.alerta_id == "A3"].sort_values("orden")
+    et = [f"{m.replace('A las ', '').replace(' sin cama', '')}<br>{coma(x, 1)}/día" for m, x in zip(a.momento, a.alertas_por_dia)]
+    fig = go.Figure(go.Bar(x=et, y=a.precision_pct, marker_color=[AZUL if r else TENUE for r in a.recomendada], text=[f"{coma(v, 0)} %" for v in a.precision_pct],
+                           textposition="outside", cliponaxis=False, hovertemplate="%{x}: acierta %{y:.0f} %<extra></extra>"))
+    estilo(fig, tema); fig.update_layout(margin=dict(l=44, r=10, t=14, b=40))
+    fig.update_yaxes(title="% de alertas que aciertan", range=[0, 100])
+    return fig
+
+
+def _g6(tema):
+    t = leer("asignacion_cama_por_hora_llegada.csv")
+    if t is None:
+        return _vacia("Falta asignacion_cama_por_hora_llegada.csv")
+    fig = go.Figure(go.Bar(x=t.hora_llegada, y=t.espera_p50_h, marker_color=[AZUL if h >= 12 else TENUE for h in t.hora_llegada],
+                           hovertemplate="Llega a las %{x} h: espera mediana %{y:.1f} h<extra></extra>"))
+    estilo(fig, tema); fig.update_layout(margin=dict(l=44, r=10, t=10, b=34), bargap=0.2)
+    fig.update_xaxes(title="Hora de llegada", dtick=3); fig.update_yaxes(title="Espera mediana de cama (h)")
+    return fig
+
+
+def _g7(tema):
+    t = leer("disparadas_por_mes.csv")
+    if t is None:
+        return _vacia("Falta disparadas_por_mes.csv")
+    fig = go.Figure(go.Scatter(x=t.mes, y=t.dias_cama_de_largas_por_dia, mode="lines", line=dict(color=AZUL, width=3), fill="tozeroy", fillcolor="rgba(42,111,176,0.15)",
+                               hovertemplate="%{x|%b %Y}: %{y:.0f} días de cama por día<extra></extra>"))
+    estilo(fig, tema); fig.update_layout(margin=dict(l=48, r=10, t=10, b=34))
+    fig.update_yaxes(title="Días de cama por día", rangemode="tozero")
+    return fig
+
+
+GRAFICAS = {1: _g1, 2: _g2, 3: _g3, 4: _g4, 5: _g5, 6: _g6, 7: _g7}
+
+
+@callback([Output(f"rec-g{n}", "figure") for n in range(1, 8)], Input("theme-store", "data"))
+def graficas_por_recomendacion(tema):
+    """Una grafica pertinente en cada una de las siete recomendaciones (se redibujan con el modo claro u oscuro)."""
+    return [GRAFICAS[n](tema) for n in range(1, 8)]
+
 
 # ---------------------------------------------------------------- acciones que sugiere el diagnostico de un periodo
 PERIODOS = [("todo", "Todo el periodo"), ("2023", "2023"), ("2024", "2024"), ("2025", "2025"), ("2026", "2026 (hasta el 9 de abril)"),
@@ -112,6 +224,7 @@ def carta(r):
         html.Div(className="rec-corta__cab", children=[html.Div(f"R{n}", className="hecho__num"),
                                                        html.Div([html.Span(TIPO.get(n, ""), className="rec-chip"), chip(r.firmeza)], className="rec-corta__chips")]),
         html.Div(r.titulo_accion, className="hecho__titulo"),
+        html.Div(className="rec-corta__graf", children=[grafico(f"rec-g{n}", alto=190), html.P(PIE_GRAFICA.get(n, ""), className="rec-corta__pie")]),
         html.Div("Qué cambiar", className="rec-corta__rotulo"),
         html.Ol([html.Li(x) for x in pasos], className="rec-corta__pasos"),
         html.Div(className="rec-corta__meta", children=[html.Span("Meta", className="rec-corta__rotulo"), html.Span(r.meta)]),

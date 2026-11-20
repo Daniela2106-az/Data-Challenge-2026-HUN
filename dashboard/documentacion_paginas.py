@@ -20,6 +20,9 @@ RELACION = {
     "/diagnosticos": ["/paciente"],
     "/perfiles": ["/paciente"],
     "/alertas": ["/pronostico", "/paciente", "/simulador"],
+    "/datos": ["/demanda", "/ocupacion"],
+    "/resumen": ["/espera", "/recomendaciones"],
+    "/periodo": ["/comparar"],
 }
 MOTIVO = {  # (resultado, prediccion) -> por que se conectan
     ("/demanda", "/pronostico"): "las llegadas por hora y día son lo que el pronóstico proyecta",
@@ -38,6 +41,11 @@ MOTIVO = {  # (resultado, prediccion) -> por que se conectan
     ("/alertas", "/paciente"): "el estimador hora a hora alimenta el aviso temprano de paciente sin cama",
     ("/alertas", "/simulador"): "el simulador dispara estas alertas mientras corre y muestra la recomendación de cada una",
     ("/perfiles", "/paciente"): "los perfiles que esperan más son los que el estimador distingue",
+    ("/datos", "/demanda"): "la limpieza define los episodios que cuentan las llegadas",
+    ("/datos", "/ocupacion"): "la regla de estancia única define cuántas camas se cuentan ocupadas",
+    ("/resumen", "/espera"): "el cuello de botella es el primero de los ocho hallazgos",
+    ("/resumen", "/recomendaciones"): "las siete acciones que se proponen a partir de los hallazgos",
+    ("/periodo", "/comparar"): "es el mismo diagnóstico repetible, aquí por periodo y allá por año",
 }
 
 
@@ -137,3 +145,24 @@ DETALLE = {
             ("Proyección con altas esperadas", "Peor que «lo mismo que ahora»", "Persistencia y modelo de flujo para la cola"),
             ("Ley de Little sola", "Coherente (19,8 × 5,31 ≈ 105) pero sin incertidumbre", "Se usa como comprobación, no como modelo")]},
 }
+
+# 20-nov-2026: todas las paginas tienen el mismo panel (como se calculo, que NO dice, paso a paso, que se probo y descarto, paginas relacionadas).
+# Lo que faltaba se completa aqui con lo que ya dicen las propias paginas y el documento final.
+DETALLE.setdefault("/demanda", {})["modelo"] = [('Deduplicar las llegadas (≈4 % de réplicas)', 'Cambia el error del pronóstico en ±0,15 puntos; la proporción es estable en el tiempo', 'No se deduplican'), ('Contar visitas en vez de episodios', '≈30 % de la base son visitas copia', 'Se cuentan episodios'), ('Hora de la visita como hora de llegada', 'No es confiable en ~45 % de los casos', 'Se usa la hora de la primera etapa')]
+DETALLE.setdefault("/estacionalidad", {})["modelo"] = [('Estacionalidad solo con los tres años del hospital', 'No distingue una temporada real de una casualidad', 'Datos públicos de muchos años'), ('Siete fuentes públicas', 'Entró solo lo que mejoró el error en jul–dic 2025 sin empeorar el corto plazo', 'Dengue en las llegadas; infección respiratoria y diarrea en los ingresos')]
+DETALLE.setdefault("/ocupacion", {})["modelo"] = [('Contar todas las filas de hospitalización', 'Había 2.179 duplicados', 'Regla de estancia única'), ('Atribuir la subida a más ingresos', 'Los ingresos casi no cambian; la estancia sí (media de 94 a 105 camas)', 'La subida se explica por estancias más largas')]
+DETALLE.setdefault("/espera", {})["modelo"] = [('El «hueco sin registro» como parte de la espera', 'Era un artefacto de duplicados', 'Se corrigió: urgencias antes de la cama concentra el 98 % de las horas'), ('Camas de baja actividad clínica', 'Son ~6 y no crecen', 'No explican el cuello de botella')]
+DETALLE.setdefault("/comparar", {})["modelo"] = [('Atribuir el cambio a una sola causa', 'Todo son asociaciones, no causas', 'Se mide cuánto cambió cada componente de la espera')]
+DETALLE.setdefault("/altas", {})["modelo"] = [('Leer el 30 % adelantado como predicción', 'Es una cota, no una predicción', 'Se presenta como escenario'), ('Asignar la cama según la hora de llegada', 'La mediana de asignación es 17–18 h sin importar la hora de llegada', 'Se explica por el proceso de altas')]
+DETALLE.setdefault("/factores", {})["modelo"] = [('Predecir la espera con todos los factores', 'El modelo explica solo el 16 % de la variación', 'Se publica como «explica, no predice»'), ('Día de la semana y festivos', 'Casi no cambian la espera', 'No se destacan como factor'), ('Edad y sexo de la persona equivocada en estancias gemelas', 'Sesgaba el modelo', 'Se usa la persona real de cada estancia')]
+DETALLE.setdefault("/estancia", {})["modelo"] = [('Predecir la estancia de cada paciente al ingreso', 'R² de 0 a 0,02', 'Se trabaja la estancia en conjunto'), ('«Camas fantasma» en las estancias de más de 30 días', '~7 de las 11 camas son pacientes con actividad diaria (laboratorios, UCI)', 'No son camas fantasma'), ('Modelo explicativo de estancia', 'R² de 7,9 a 10,8 %', 'Se declara «explica, no predice»')]
+DETALLE.setdefault("/diagnosticos", {})["modelo"] = [('Contar filas de diagnóstico', 'Un mismo diagnóstico se repite cientos de veces en una visita', 'Se cuentan diagnósticos distintos'), ('Los ~300 diagnósticos más frecuentes por separado', 'Demasiados para leerlos', 'Agrupados a mano: borrador, falta validación clínica')]
+DETALLE.setdefault("/perfiles", {})["modelo"] = [('Alertar por riesgo al llegar', 'Marcaría al 44 % con 4 de cada 10 falsas alarmas', 'No se usa; se alerta a las 12 o 48 h'), ('Edad y sexo de la estancia duplicada', 'Podían ser de otra persona', 'Se usa la persona real de cada estancia')]
+DETALLE.setdefault("/resumen", {})["pasos"] = ['Se toman los ocho hallazgos del resumen ejecutivo (capítulo 1 del documento final).', 'Cada cifra remite a la página donde se calcula y se explica.', 'Los escenarios llevan sus supuestos escritos y las recomendaciones, su firmeza.']
+DETALLE.setdefault("/resumen", {})["modelo"] = [('Presentar causas o promesas', 'Casi todo son asociaciones y escenarios con supuestos', 'Los supuestos se escriben junto a cada cifra')]
+DETALLE.setdefault("/datos", {})["pasos"] = ['Se extraen las tablas de la base del hospital (modelo OMOP, enero de 2023 a julio de 2026).', 'Se descartan etapas ambulatorias de duración cero y etapas abiertas al extraer.', 'Se quitan las visitas copia y las estancias duplicadas con reglas documentadas.', 'Se fija el periodo confiable: 1-feb-2023 a 9-abr-2026.']
+DETALLE.setdefault("/datos", {})["modelo"] = [('Etapas ambulatorias (duración cero)', 'Son eventos administrativos', 'Se descartan'), ('Etapas abiertas al extraer (2.053)', 'Su fin trae milisegundos, no una hora real', 'Se descartan'), ('Registro desde el 10-abr-2026', 'Etapas incompletas; el hospital no explicó la causa', 'No se usa en el análisis')]
+DETALLE.setdefault("/periodo", {})["pasos"] = ['Cada reporte se calcula de antemano con el diagnóstico repetible del cuello de botella.', 'Se mide cuánto espera cada estancia por encima de «lo normal»: la espera de los momentos con menos pacientes.', 'Esa referencia se calcula con el periodo con el que se compara.', 'Se muestran años y semestres, hasta el 9-abr-2026.']
+DETALLE.setdefault("/periodo", {})["modelo"] = [('Un rango libre de fechas', 'Cada reporte se calcula de antemano', 'Se ofrecen años y semestres'), ('Una referencia fija de «lo normal»', 'La referencia depende del periodo con que se compara', 'Se recalcula con cada periodo')]
+DETALLE.setdefault("/paciente-cama", {})["pasos"] = ['Un modelo por cada hora ya pasada en cama estima la probabilidad de recibir el alta en la hora siguiente.', 'Encadenadas, esas probabilidades dan el rango completo de lo que falta.', 'Se entrena con las estancias del periodo confiable; las que aún no tienen alta aportan como censuradas.', 'El diagnóstico entra solo si se indica.']
+DETALLE.setdefault("/simulador", {})["pasos"] = ['Cada llegada simulada recibe un perfil real (edad × ruta).', 'Se hospitaliza con la probabilidad histórica de su perfil y, si va a cama, hereda la trayectoria de un paciente real parecido.', 'Se repite varias veces para mostrar el rango; parte del 9-abr-2026 con el censo y la cola reales.', 'Las alertas se evalúan sobre cada repetición mientras corre.']

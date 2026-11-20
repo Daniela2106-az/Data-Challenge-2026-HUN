@@ -275,7 +275,7 @@ def panel_tecnico():
                 html.Div(className="pipeline", children=pasos),
             ]),
             html.Div([
-                html.Div("Comparativo contra las alternativas", className="metodo__rotulo"),
+                html.Div("Qué se probó y se descartó", className="metodo__rotulo"),
                 html.Div("Mejora frente a dar el mismo rango a todos (pérdida de cuantiles), probado con 5.430 "
                          "estancias de jul-2025 a 9-abr-2026 que ningún modelo vio.", style={"fontSize": "12px", "color": GRIS, "marginBottom": "4px"}),
                 dcc.Graph(figure=grafico_mejora(), config={"displaylogo": False}),
@@ -327,7 +327,8 @@ def panel_tecnico():
 
 
 def layout():
-    ahora = pd.Timestamp.now().floor("h")
+    hoy = pd.Timestamp.now(tz="America/Bogota")
+    meses = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"]
     return html.Div(className="page-container", children=[
         html.Div(className="page-head", children=[
             html.H2("¿Cuándo recibirá cama este paciente?"),
@@ -336,6 +337,7 @@ def layout():
         ]),
         html.Div(style={"display": "flex", "flexWrap": "wrap", "gap": "32px", "alignItems": "flex-start"}, children=[
             html.Div(className="form-panel", style={"flex": "0 0 320px"}, children=[
+                html.Div(f"Hoy, {hoy.day} de {meses[hoy.month - 1]} de {hoy.year}", className="field-group__help", style={"marginBottom": "10px", "fontWeight": 600}),
                 html.Div(className="field-group", children=[
                     html.Span("Edad (años)", className="field-group__label"),
                     stepper("pac-edad", 67, 0, 110),
@@ -360,13 +362,9 @@ def layout():
                     html.Span("Horas que lleva esperando", className="field-group__label"),
                     stepper("pac-horas", 0, 0, 200),
                 ]),
-                html.Div(className="field-group", children=[
-                    html.Span("Fecha y hora de ahora", className="field-group__label"),
-                    dcc.Input(id="pac-ahora", type="text", value=f"{ahora:%Y-%m-%d %H:%M}", style={"width": "100%"}),
-                    html.Div("formato AAAA-MM-DD HH:MM", className="field-group__help"),
-                ]),
-                html.Div(className="field-group", children=[
+                html.Div(id="pac-grupo-etapas", className="field-group", children=[
                     html.Span("Etapas en urgencias de esta visita", className="field-group__label"),
+                    html.Div(id="pac-aviso-etapas", className="field-group__help"),
                     html.Div(className="chip-row", children=[
                         html.Div(id="pac-etapas-chip-cerr", className="chip", n_clicks=0, children=[
                             html.Div(id="pac-etapas-cerr-value", className="chip__value"), html.Div("Cerradas", className="chip__label")]),
@@ -381,25 +379,9 @@ def layout():
                     html.Div(id="pac-etapas-label-var", className="chip-editing-label"),
                     dcc.Store(id="pac-n_cerr", data=0), dcc.Store(id="pac-n_abie", data=1), dcc.Store(id="pac-etapas-sel", data="abie"),
                 ]),
-                html.Details(className="field-group", children=[
-                    html.Summary("Si ya estuvo hospitalizado antes (opcional)", className="field-group__label", style={"cursor": "pointer"}),
-                    html.Div("Su historial ayuda a afinar la estimación. Si nunca estuvo hospitalizado, déjalo en 0.", className="field-group__help"),
-                    html.Span("Veces que estuvo hospitalizado", className="field-group__label"),
-                    dcc.Input(id="pac-prev-n", type="number", min=0, step=1, value=0, style={"width": "100%"}),
-                    html.Span("Horas que esperó cama la última vez", className="field-group__label"),
-                    dcc.Input(id="pac-prev-espera", type="number", min=0, step=1, style={"width": "100%"}),
-                    html.Span("Días que estuvo hospitalizado la última vez", className="field-group__label"),
-                    dcc.Input(id="pac-prev-estancia", type="number", min=0, step=1, style={"width": "100%"}),
-                    html.Span("Hace cuántos días salió", className="field-group__label"),
-                    dcc.Input(id="pac-prev-dias", type="number", min=0, step=1, style={"width": "100%"}),
-                    html.Span("Diagnóstico de esa visita", className="field-group__label"),
-                    dcc.Dropdown(id="pac-dx-previo", options=GRUPOS_DX, placeholder="No se sabe", clearable=True),
-                ]),
-                html.Details(className="field-group", children=[
+                html.Div(id="pac-aviso-labs", className="field-group__help", style={"margin": "0 0 -8px 2px"}),
+                html.Details(id="pac-grupo-labs", className="field-group", children=[
                     html.Summary("Laboratorios de las primeras 6 horas (opcional)", className="field-group__label", style={"cursor": "pointer"}),
-                    html.Div("Cuentan desde que el paciente lleva 6 horas esperando. Marca lo que salió fuera de rango.", className="field-group__help"),
-                    dcc.RadioItems(id="pac-labs-si", className="pill-switch pill-switch--compact", value="no",
-                                   options=[{"label": "No le tomaron", "value": "no"}, {"label": "Sí le tomaron", "value": "si"}]),
                     dcc.Checklist(id="pac-labs", options=[{"label": t, "value": k} for k, (_c, _v, t) in LABS_FUERA.items()], value=[],
                                   style={"display": "grid", "gap": "4px", "marginTop": "8px", "fontSize": "13px"}),
                 ]),
@@ -438,7 +420,7 @@ def layout():
                "«cama» es la asignación administrativa, que puede ser una camilla de apoyo. En las primeras horas, parte de la probabilidad refleja "
                "el trámite de registro, no una predicción.",
                "Fuente: src/estimador_tiempo_restante.py (modelo guardado, versión 9) y las tablas de src/utilidad_estimador.py. Detalle: documentación, sección 6.4, y docs/estimador_tiempos.md.", ruta="/paciente",
-               antes=secciones(panel_interpretacion(), solo=("Qué estás viendo", "Qué significa cada cosa del gráfico")) + [html.Div([html.Div("Avisos de esta estimación", className="metodo__rotulo"), html.Div(id="pac-nota")])], despues=secciones(panel_tecnico(), solo=ETAPAS_Y_PRUEBAS), pasos=False, modelo=False),
+               antes=secciones(panel_interpretacion(), solo=("Qué estás viendo", "Qué significa cada cosa del gráfico")) + [html.Div([html.Div("Avisos de esta estimación", className="metodo__rotulo"), html.Div(id="pac-nota")])], despues=secciones(panel_tecnico(), solo=ETAPAS_Y_PRUEBAS), modelo=False),
     ])
 
 
@@ -581,24 +563,42 @@ def construir_grafico_acumulada(v, ventana_mas_probable, dark):
     return fig
 
 
+def _horas_donde_aplica(paq, columna):
+    """(primera hora, ultima hora) de espera en las que el modelo correspondiente usa esa columna; None si nunca. Se lee del propio modelo, no se supone."""
+    horas = [h for h in range(0, 200) if columna in etr.modelo_para(paq, h).cols_]
+    return (horas[0], horas[-1]) if horas else None
+
+
+@callback(Output("pac-grupo-etapas", "style"), Output("pac-aviso-etapas", "children"), Output("pac-grupo-labs", "style"), Output("pac-aviso-labs", "children"),
+          Input("pac-horas", "value"))
+def aplicar_campos(horas):
+    """Cada campo debe cambiar la estimacion. El modelo usa las etapas en urgencias solo en las primeras horas de espera y los laboratorios solo desde las 6 h:
+    fuera de ese rango el campo se atenua y dice por que, en vez de dejar escribir algo que no se usa."""
+    try:
+        paq, h = etr._cargar(), float(horas or 0)
+        m = etr.modelo_para(paq, h)
+        r_et, r_lab = _horas_donde_aplica(paq, "n_tu_iniciadas"), _horas_donde_aplica(paq, "con_laboratorio_6h")
+    except Exception:
+        return {}, "", {}, ""
+    atenuado = {"opacity": 0.45}
+    msg_et = "" if "n_tu_iniciadas" in m.cols_ else (f"No se usa con {int(h)} h de espera: el modelo la tiene en cuenta entre {r_et[0]} y {r_et[1]} h." if r_et else "No se usa en esta versión del modelo.")
+    msg_lab = "" if "con_laboratorio_6h" in m.cols_ else (f"No se usan con {int(h)} h de espera: cuentan desde las {r_lab[0]} h." if r_lab else "No se usan en esta versión del modelo.")
+    return ({} if not msg_et else {**atenuado, "pointerEvents": "none"}), msg_et, ({} if not msg_lab else atenuado), msg_lab
+
+
 @callback(Output("pac-ventanas-datos", "data"), Output("pac-lead", "children"), Output("pac-rango", "children"),
           Output("pac-nota", "children"), Output("pac-alerta-perfil", "children"),
           Input("pac-estimar", "n_clicks"),
-          State("pac-edad", "value"), State("pac-sexo", "value"), State("pac-tipo", "value"), State("pac-horas", "value"), State("pac-ahora", "value"),
+          State("pac-edad", "value"), State("pac-sexo", "value"), State("pac-tipo", "value"), State("pac-horas", "value"),
           State("pac-n_cerr", "data"), State("pac-n_abie", "data"),
-          State("pac-prev-n", "value"), State("pac-prev-espera", "value"), State("pac-prev-estancia", "value"), State("pac-prev-dias", "value"),
-          State("pac-dx-previo", "value"), State("pac-labs-si", "value"), State("pac-labs", "value"), State("pac-ocup", "value"))
-def actualizar(_, edad, sexo, tipo, horas, ahora, n_cerr, n_abie, prev_n, prev_espera, prev_estancia, prev_dias, dx_previo, labs_si, labs, ocup):
+          State("pac-labs", "value"), State("pac-ocup", "value"))
+def actualizar(_, edad, sexo, tipo, horas, n_cerr, n_abie, labs, ocup):
     try:
         horas = float(horas or 0)
-        previa = None
-        if prev_n and int(prev_n) > 0 and None not in (prev_espera, prev_estancia, prev_dias):
-            previa = {"espera_h": float(prev_espera), "estancia_h": 24.0 * float(prev_estancia), "dias_desde": float(prev_dias), "n_previas": int(prev_n)}
-        valores_lab = None
-        if labs_si == "si":                                       # con laboratorio y sin nada marcado = todo normal
-            valores_lab = {LABS_FUERA[k][0]: LABS_FUERA[k][1] for k in (labs or []) if k in LABS_FUERA} or {"leuc_max": 8.0}
+        ahora = pd.Timestamp.now(tz="America/Bogota").strftime("%Y-%m-%d %H:%M")      # la hora actual, en Colombia (el servidor puede estar en otra zona)
+        valores_lab = {LABS_FUERA[k][0]: LABS_FUERA[k][1] for k in (labs or []) if k in LABS_FUERA} or None      # sin nada marcado, no se usan los laboratorios
         r = etr.estimar_tiempo_restante(float(edad), sexo, tipo, horas, ahora, ocupacion_zona=float(ocup) if ocup else None,
-                                        hospitalizacion_previa=previa, diagnostico_previo=dx_previo or None, laboratorios_6h=valores_lab,
+                                        hospitalizacion_previa=None, diagnostico_previo=None, laboratorios_6h=valores_lab,
                                         etapas_urgencias=etapas_desde_conteos(n_cerr, n_abie, horas), admisiones=[0.0])
     except Exception as err:                                             # datos mal escritos: mostrar el motivo en vez de romper la pagina
         return None, [], [], f"No se pudo estimar: {err}", []

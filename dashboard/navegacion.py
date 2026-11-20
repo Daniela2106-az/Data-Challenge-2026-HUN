@@ -8,17 +8,18 @@ Una pagina nueva que no este en SECCIONES aparece sola al final, bajo "Más": pa
 import re
 
 # Icono (clase CSS de theme.css) de cada ruta. Una ruta sin entrada usa el icono generico de perfiles.
-ICONOS = {"/": "ico-home", "/pronostico": "ico-forecast", "/paciente": "ico-patient", "/paciente-cama": "ico-stay", "/camas": "ico-bed", "/simulador": "ico-models",
+ICONOS = {"/": "ico-chat", "/pronostico": "ico-forecast", "/paciente": "ico-patient", "/paciente-cama": "ico-stay", "/camas": "ico-bed", "/simulador": "ico-models", "/simular": "ico-models", "/simular": "ico-models",
           "/perfiles": "ico-profiles", "/recomendaciones": "ico-recs", "/documentacion": "ico-docs", "/datos": "ico-data",
           "/demanda": "ico-demand", "/ocupacion": "ico-occup", "/espera": "ico-wait", "/altas": "ico-clock",
-          "/estacionalidad": "ico-season", "/alertas": "ico-alert", "/preguntas": "ico-chat", "/factores": "ico-factors", "/estancia": "ico-stay",
+          "/estacionalidad": "ico-season", "/alertas": "ico-alert", "/factores": "ico-factors", "/estancia": "ico-stay",
           "/diagnosticos": "ico-dx", "/atipicos": "ico-outlier", "/resumen": "ico-summary", "/comparar": "ico-compare", "/periodo": "ico-period"}
 
-# (titulo de la seccion, que responde, rutas en orden). Un titulo vacio es un grupo suelto sin encabezado en el menu (el asistente, justo debajo de Inicio):
-# sirve para dudas de cualquier tema, por eso no vive dentro de una categoria, y queda fuera del recorrido «anterior / siguiente».
+# Texto del menu lateral cuando el nombre de la pagina es largo (la barra superior sigue usando el nombre completo)
+NOMBRE_EN_MENU = {"/": "Asistente HUN"}
+
+# (titulo de la seccion, que responde, rutas en orden). El asistente es la pagina de inicio (/), fuera de las categorias.
 # 20-nov-2026: «Resultados» (13 paginas) se reparte en cuatro categorias de una palabra; «Prediccion» pasa a «Módulos» y «Propuestas» a «Conclusiones».
 SECCIONES = [
-    ("", "Pregunta lo que quieras: cómo usar el dashboard, qué mirar primero o cualquier duda del análisis", ["/preguntas"]),
     ("Contexto", "El proyecto en una pantalla, y qué datos hay detrás", ["/resumen", "/datos"]),
     ("Flujo", "Cuántos pacientes llegan, a qué hora y cómo cambia con los años", ["/demanda", "/altas", "/estacionalidad", "/comparar"]),
     ("Capacidad", "Cuánto se llena el hospital y por qué se espera por una cama", ["/ocupacion", "/espera", "/factores", "/estancia"]),
@@ -27,6 +28,10 @@ SECCIONES = [
     ("Módulos", "Qué se espera y qué pasaría si algo cambia", ["/pronostico", "/paciente", "/paciente-cama", "/camas", "/simulador"]),
     ("Conclusiones", "Qué hacer con lo que se encontró", ["/recomendaciones", "/documentacion"]),
 ]
+# 20-nov-2026: los modulos interactivos no van en el menu lateral: se abren con el boton azul «Simular» (pagina /simular).
+SECCIONES_FUERA_DEL_MENU = ("Módulos",)
+RUTAS_SIN_SECCION = ("/simular",)
+RUTAS_MODULOS = tuple(r for t, _d, rs in SECCIONES if t in SECCIONES_FUERA_DEL_MENU for r in rs)      # las paginas que se abren desde «Simular»
 CATEGORIAS_RESULTADOS = ("Flujo", "Capacidad", "Clínico", "Riesgo")       # lo que antes era la seccion «Resultados»
 
 
@@ -34,17 +39,19 @@ CATEGORIAS_RESULTADOS = ("Flujo", "Capacidad", "Clínico", "Riesgo")       # lo 
 DENTRO_DE_DOCUMENTACION = {}
 
 
-def agrupar(paginas):
+def agrupar(paginas, menu=False):
     """Reparte las paginas registradas (dicts de dash.page_registry, ya ordenadas) en las secciones.
     Devuelve [(titulo, descripcion, [paginas])]; el inicio queda fuera y lo que no este en SECCIONES va a "Más"."""
     paginas = [p for p in paginas if "<" not in p["path"] and not p.get("path_template")]      # las rutas con plantilla (/documentacion/<cap>) no van en el menu
     por_ruta = {p["path"]: p for p in paginas}
-    grupos, usadas = [], {"/"}
+    grupos, usadas = [], {"/", *RUTAS_SIN_SECCION}
     for titulo, descripcion, rutas in SECCIONES:
+        usadas.update(rutas)
+        if menu and titulo in SECCIONES_FUERA_DEL_MENU:
+            continue
         presentes = [por_ruta[r] for r in rutas if r in por_ruta]
         if presentes:
             grupos.append((titulo, descripcion, presentes))
-        usadas.update(rutas)
     usadas.update(DENTRO_DE_DOCUMENTACION)
     resto = [p for p in paginas if p["path"] not in usadas]
     if resto:
@@ -87,7 +94,7 @@ DOCUMENTACION = {
     "/periodo": (6, "6.7 Diagnóstico repetible del cuello de botella", "el diagnóstico de cualquier periodo comparado con una referencia: dónde está el cuello, qué se dispara y qué comparten las esperas largas"),
     "/simulador": (6, "6.9 Simulador integral", "el motor de agentes, su validación, las palancas, las alertas con su recomendación y la operación óptima"),
     "/recomendaciones": (7, "Recomendaciones", "las siete acciones con su evidencia, su firmeza y lo que no recomendamos"),
-    "/preguntas": (8, "El dashboard", "cómo funciona el asistente de preguntas, qué lee, sus límites y cuándo se apaga"),
+    "/": (8, "El dashboard", "cómo funciona el asistente de preguntas (la página de inicio), qué lee, sus límites y cuándo se apaga"),
 }
 
 

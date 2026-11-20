@@ -621,7 +621,7 @@ def panel_tecnico():
         html.Summary("Ficha técnica del simulador integral"),
         html.Div(style={"padding": "14px 4px 4px", "display": "grid", "gap": "22px"}, children=[
             html.Div([
-                html.Div("Etapas del motor (pasa el mouse sobre cada una)", style={"fontWeight": 700, "marginBottom": "4px"}),
+                html.Div("Etapas de construcción (pasa el mouse sobre cada una)", style={"fontWeight": 700, "marginBottom": "4px"}),
                 html.Div(className="pipeline", children=pasos),
             ]),
             html.Div([
@@ -657,7 +657,7 @@ def panel_tecnico():
                          style={"fontSize": "12px", "color": GRIS}),
             ], className="tech-table-wrap"),
             html.Div([
-                html.Div("Decisiones de diseño (qué se descartó y por qué)", style={"fontWeight": 700, "marginBottom": "6px"}),
+                html.Div("Qué se probó y se descartó", style={"fontWeight": 700, "marginBottom": "6px"}),
                 html.Table(filas_decision, style={"width": "100%", "fontSize": "12.5px", "borderCollapse": "collapse"}),
             ]),
             html.Div([
@@ -1647,7 +1647,7 @@ def layout():
             "garantía de que ese patrón se mantenga.",
             "Fuente: src/simulador_integral.py y docs/simulador_integral.md.", ruta="/simulador",
             antes=secciones(panel_interpretacion(), solo=("Qué estás viendo", "Cómo leer cada fila", "Los controles")) + [_seccion_alertas()],
-            despues=secciones(panel_tecnico()), pasos=False, modelo=False),
+            despues=secciones(panel_tecnico()), modelo=False),
     ])
 
 

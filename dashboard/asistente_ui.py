@@ -2,11 +2,11 @@
 dashboard/asistente_ui.py  -  version 1 (19-nov-2026): piezas de pantalla del asistente de preguntas (dashboard/asistente.py)
 
   chat_flotante()   el boton de la esquina inferior derecha y el chat pequeno que abre (va en el layout de main.py, en todas las paginas)
-  enviar()          la llamada al asistente que usan el chat pequeno y la pagina /preguntas; guarda la conversacion en el Store
+  enviar()          la llamada al asistente que usan el chat pequeno y la pagina de inicio (/); guarda la conversacion en el Store
                     `asis-hist` (de la sesion del navegador), que comparten los dos: la misma conversacion se ve en ambos lados.
 
 Lo que pasa en el navegador (pintar la conversacion, el boton «Preguntar sobre esto» al seleccionar texto, Enter para enviar) vive en
-dashboard/assets/asistente.js. La conversacion se pinta con JavaScript y no con callbacks de Dash porque la pagina /preguntas no siempre
+dashboard/assets/asistente.js. La conversacion se pinta con JavaScript y no con callbacks de Dash porque la pagina de inicio (/) no siempre
 esta en pantalla.
 """
 import json
@@ -44,7 +44,7 @@ def enviar(pregunta, hist, uid, cita=None):
 
 def chat_flotante():
     ok, motivo = asistente.estado()
-    datos = {"data-ok": "1" if ok else "0", "data-motivo": motivo, "data-sug": json.dumps(SUGERENCIAS, ensure_ascii=False)}
+    datos = {"data-ok": "1" if ok else "0", "data-motivo": motivo, "data-sug": json.dumps(SUGERENCIAS, ensure_ascii=False), "data-pags": json.dumps(asistente.PAGINAS, ensure_ascii=False)}
     return html.Div(id="asis-raiz", className="asis-raiz", **datos, children=[
         dcc.Store(id="asis-hist", storage_type="session"),
         dcc.Store(id="asis-uid", storage_type="local"),
@@ -58,7 +58,7 @@ def chat_flotante():
             html.Div(className="asis-panel__cab", children=[
                 html.Span(className="asis-logo asis-logo--mini asis-i-slot", **{"data-ico": "pulso"}),
                 html.B("Asistente de flujo HUN"),
-                html.A("Abrir en página", href="/preguntas", className="asis-panel__link"),
+                html.A("Abrir en página", href="/", className="asis-panel__link"),
                 html.Button("✕", id="asis-cerrar", className="asis-panel__cerrar", title="Cerrar", **{"aria-label": "Cerrar"})]),
             html.Div(id="asis-log-mini", className="asis-log asis-log--mini"),
             html.Div(className="asis-pie asis-pie--mini", children=[
@@ -71,6 +71,9 @@ def chat_flotante():
             ]),
         ]),
         html.Button("Preguntar sobre esto", id="asis-sel", className="asis-sel", type="button"),
+        html.Div(id="asis-globo", className="asis-globo", role="status", children=[
+            html.Span("¿Tienes dudas? ", className="asis-globo__b"), "Pregúntame lo que quieras",
+            html.Button("✕", id="asis-globo-x", className="asis-globo__x", title="Cerrar", **{"aria-label": "Cerrar"})]),
     ])
 
 
@@ -83,16 +86,7 @@ def enviar_directa(d, hist, uid):
     return enviar(d["q"], hist, uid, d.get("cita"))
 
 
-@callback(Output("asis-hist", "data", allow_duplicate=True), Output("asis-input-mini", "value"), Output("asis-cita", "data", allow_duplicate=True),
-          Output("asis-restantes", "data", allow_duplicate=True),
-          Input("asis-enviar-mini", "n_clicks"), State("asis-input-mini", "value"), State("asis-hist", "data"), State("asis-uid", "data"),
-          State("asis-cita", "data"), prevent_initial_call=True)
-def enviar_mini(_n, pregunta, hist, uid, cita):
-    nuevo, quedan = enviar(pregunta, hist, uid, cita)
-    return nuevo, "", None, quedan
-
-
-# Pintar la conversacion y la cita (JavaScript, dashboard/assets/asistente.js): en el chat pequeno y, si esta en pantalla, en /preguntas.
+# Pintar la conversacion y la cita (JavaScript, dashboard/assets/asistente.js): en el chat pequeno y, si esta en pantalla, en la pagina de inicio.
 clientside_callback(
     """function(hist, cita, quedan) { if (window.asisPintar) { window.asisPintar(hist || [], cita, quedan); } return ''; }""",
     Output("asis-dummy", "children"), Input("asis-hist", "data"), Input("asis-cita", "data"), Input("asis-restantes", "data"))

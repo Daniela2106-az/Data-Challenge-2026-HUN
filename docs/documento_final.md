@@ -604,8 +604,9 @@ las llegadas incluyen ~4 % de réplicas; los efectos de los factores externos so
   R² = 7,9-10,8 %, declarado como «explica, no predice». Ambos intentaban resolver, de una sola vez al ingresar, la estancia TOTAL; nunca se había
   probado la arquitectura que sí funciona para la espera (un modelo por hora ya transcurrida).
 - **Qué usa:** edad, sexo, tipo de visita, horas ya en cama, la hora, la ocupación del hospital, el historial de hospitalizaciones anteriores (incluido
-  el diagnóstico de esa visita anterior) y sus laboratorios del ingreso. NO usa el diagnóstico de esta estancia (se registra tarde: fuga) ni el
-  recorrido en urgencias (pertenece al tramo antes de la cama).
+  el diagnóstico de esa visita anterior), sus laboratorios del ingreso y, desde el 20-nov-2026, el diagnóstico de la estancia cuando se indica (mejora de
+  2,4 a 4,4 % al asignarse la cama; en los datos históricos el diagnóstico se registra tarde, así que su efecto puede estar algo sobreestimado). NO usa
+  el recorrido en urgencias (pertenece al tramo antes de la cama).
 - **Resultado** (probado con 3.900 estancias de jul-2025 a 9-ene-2026 que el modelo no vio, contra el rango por perfil que ya usa el dashboard): mejora
   **1,6 % al asignarse la cama (IC 95 % 0,9 a 2,4 %)**, bajando con las horas y modestamente negativa desde las 120 h (muestra de prueba ya chica). Es
   real pero mucho menor que el ~9-11 % del estimador de espera: lo que no se registra (servicio, tipo de cama, gravedad clínica) sigue explicando la
@@ -707,15 +708,15 @@ externos son de antes y después, sin grupo de comparación.
 ## 8. El dashboard
 
 **Herramienta:** Dash (Python y Plotly), aceptado por los organizadores. Un solo programa (`dashboard/main.py`, puerto 8050) con una página por tema en
-`dashboard/pages/`, organizadas en siete categorías de menú que siguen el orden del reto: Contexto; Flujo, Capacidad, Clínico y Riesgo (los resultados); Módulos (las herramientas de predicción y simulación) y Conclusiones. El asistente va suelto debajo del inicio, porque sirve para cualquier tema. **No se conecta a la base:** solo lee tablas agregadas, ninguna con una fila por paciente.
+`dashboard/pages/`, organizadas en siete categorías de menú que siguen el orden del reto: Contexto; Flujo, Capacidad, Clínico y Riesgo (los resultados); Módulos (las herramientas de predicción y simulación) y Conclusiones. Los cinco módulos no van en el menú lateral: se abren con el botón azul **Simular** que está arriba del menú, una página «¿Qué quieres hacer hoy?» con una tarjeta por módulo (el simulador integral primero, luego pronóstico, planeación de camas, paciente en espera y paciente en cama), cada una con una descripción breve de lo que permite hacer y una animación al pasar el mouse. La página de inicio es el asistente: quien abre el enlace cae ahí, y debajo tiene una guía corta para explorar por categoría. **No se conecta a la base:** solo lee tablas agregadas, ninguna con una fila por paciente.
 
 **Estructura de cada página de resultados (Flujo, Capacidad, Clínico y Riesgo):** un encabezado con cifras clave, una frase que resume la conclusión, las gráficas numeradas (cada una con su titular, una explicación y un dato), una sección de cuatro tarjetas,
-«Qué significa para el hospital» y un único panel plegable de **Documentación de esta sección**, con cómo se calculó, qué no dice y a qué otra página se conecta. Las páginas de Módulos siguen el mismo orden: la elección del modelo
+«Qué significa para el hospital» y un único panel plegable de **Documentación de esta sección**, igual en todas las páginas: cómo se calculó, qué NO dice, el paso a paso, qué se probó y se descartó, y con qué otras páginas se conecta. Las páginas de Módulos siguen el mismo orden: la elección del modelo
 va como una tarjeta antes de «Qué significa» y la documentación reúne lo que se probó y se descartó.
 
 | Página | Categoría | Qué responde |
 |---|---|---|
-| Inicio (`/`) | Inicio | Portada con las cifras clave del hospital y el menú por secciones |
+| Asistente de flujo HUN (`/`) | Inicio | El asistente de flujo HUN: preguntas en lenguaje natural sobre el análisis (responde solo con la documentación del proyecto, con tarjetas de cifras y la página del dashboard donde se ve cada cosa), un panel plegable para explorar por categorías y el recorrido guiado |
 | Resumen (`/resumen`) | Contexto | El proyecto en una pantalla: los ocho hallazgos en tarjetas deslizables y las siete acciones que se proponen (leídas de la tabla de recomendaciones) |
 | Datos y calidad (`/datos`) | Contexto | Qué había en la base, qué se corrigió y hasta qué fecha son confiables los datos |
 | Demanda (`/demanda`) | Flujo | A qué hora y qué día llegan los pacientes, y si la demanda crece entre años |
@@ -731,13 +732,13 @@ va como una tarjeta antes de «Qué significa» y la documentación reúne lo qu
 | Perfiles y picos (`/perfiles`) | Riesgo | Cómo cambian la espera y la estancia según el perfil del paciente y la carga del momento |
 | Días atípicos (`/atipicos`) | Riesgo | Los días que se salen del patrón y qué dicen del problema de la espera |
 | Alertas (`/alertas`) | Riesgo | Las alertas (día congestionado, ocupación alta, paciente sin cama y cola de espera): cuándo avisar, qué tanto aciertan y qué recomendación dispara cada una; y las cinco que saltan en el simulador integral, con sus umbrales |
+| Simular (`/simular`) | Módulos | Puerta de entrada a los cinco módulos interactivos: una tarjeta por módulo con lo que permite hacer; se abre con el botón azul «Simular» del menú |
 | Pronóstico de demanda (`/pronostico`) | Módulos | Cuántos pacientes llegarán y cuántos irán a cama, desde hoy hasta un año, con su banda del 80 % |
 | Paciente en espera (`/paciente`) | Módulos | Cuándo es más probable que un paciente que ya espera reciba cama (estimador A6), con sus avisos |
 | Paciente en cama (`/paciente-cama`) | Módulos | Cuánto tiempo más seguirá en cama un paciente ya hospitalizado (estimador A6b, 6.10) |
 | Planeación de camas (`/camas`) | Módulos | Riesgo de saturar las camas y escenarios de ingresos y estancia (simulación Monte Carlo, A5) |
 | Simulador integral (`/simulador`) | Módulos | Demanda, cola y ocupación a la vez, con cinco alertas (dos de totales y tres por paciente), su recomendación y la operación óptima comparada con cómo iba antes (6.9) |
-| Recomendaciones (`/recomendaciones`) | Conclusiones | Las siete recomendaciones ordenadas por firmeza, con qué cambiar y la meta de cada una, y qué reglas del diagnóstico se activan cada año |
-| Asistente de flujo HUN (`/preguntas`) | Asistente (suelto) | Preguntas en lenguaje natural sobre el análisis: responde solo con la documentación del proyecto, con tarjetas de cifras y su fuente |
+| Recomendaciones (`/recomendaciones`) | Conclusiones | Las siete recomendaciones ordenadas por firmeza, con qué cambiar, la meta y una gráfica de respaldo de cada una, y qué reglas del diagnóstico se activan cada año |
 | Documentación (`/documentacion`) | Conclusiones | Este documento completo, con sus tablas y figuras, y la descarga en PDF |
 
 - **Asistente de preguntas (20-nov-2026):** una página y un botón en la esquina de todas las páginas, desde donde se puede preguntar en lenguaje natural o seleccionar un texto de la pantalla y pulsar «Preguntar sobre esto». Usa la API de Anthropic (Claude Sonnet 5.5) y **solo recibe `docs/asistente/conocimiento.md`**, un documento armado con `src/armar_conocimiento.py` a partir de esta documentación (unos 43.000 tokens, sin datos de pacientes); si la respuesta no está ahí, lo dice. Tiene un límite de 10 preguntas por persona y 60 por día para todo el sitio, y se apaga solo desde el 1-dic-2026. Configuración, costo y apagado: `docs/asistente.md`. Es opcional: sin la clave el dashboard funciona igual y la página avisa que el asistente no está configurado.

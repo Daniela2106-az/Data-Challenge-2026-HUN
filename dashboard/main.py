@@ -31,12 +31,16 @@ PAGINAS (ver docstring de cada una en dashboard/pages/):
   /atipicos        atipicos.py         Dias atipicos frente al pronostico (Samuel)
   /recomendaciones recomendaciones.py  Las 7 recomendaciones con su evidencia (Samuel)
   /documentacion   documentacion.py    El documento final completo con descarga en PDF (Samuel)
+  /simular         simular.py          «¿Qué quieres hacer hoy?»: puerta a los cinco modulos interactivos (boton azul «Simular» del menu)
 
-MENU (13-nov-2026): la barra lateral agrupa las paginas por seccion (contexto, resultados, prediccion y propuestas) con la
+MENU (13-nov-2026, ajustado el 20-nov): la barra lateral agrupa las paginas por categoria (Contexto, Flujo, Capacidad, Clinico, Riesgo y Conclusiones) con la
 lista de `dashboard/navegacion.py`, la misma que usa el inicio. Una pagina que no este en esa lista aparece al final, bajo "Más".
 Al pie de cada pagina hay botones «anterior» y «siguiente» en ese mismo orden: el dashboard se puede recorrer como una presentacion.
 Las flechas izquierda y derecha del teclado hacen lo mismo, y el boton de modo presentacion de la barra superior oculta el menu
 y agranda la pagina para exponer (assets/recorrido.js). La barra superior muestra la seccion y el nombre de la pagina.
+Los cinco modulos interactivos (Simulador integral, Pronosticador, Planeacion de camas, Paciente en espera y Paciente en cama) no van en el menu:
+se abren desde el boton azul «Simular» (arriba del menu, no se desplaza) y cada uno muestra en la barra superior una flecha «Simular» para volver.
+
 
 COMO CORRERLO  python dashboard/main.py   y abrir http://127.0.0.1:8050
   La primera vez que se visita /paciente, el modelo de A6 se entrena si no existe (~1 min). Las demas paginas
@@ -50,7 +54,7 @@ from dash import Dash, Input, Output, State, callback, dcc, html
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import asistente_ui  # noqa: E402  (chat del asistente de preguntas en todas las paginas)
-from navegacion import CAPITULOS, DENTRO_DE_DOCUMENTACION, ICONOS, SECCIONES, agrupar, capitulos_documento, documentacion_de, recorrido  # noqa: E402
+from navegacion import RUTAS_MODULOS, NOMBRE_EN_MENU, CAPITULOS, DENTRO_DE_DOCUMENTACION, ICONOS, SECCIONES, agrupar, capitulos_documento, documentacion_de, recorrido  # noqa: E402
 
 app = Dash(__name__, use_pages=True, pages_folder="pages", title="Dashboard HUN",
            update_title="Actualizando…")
@@ -86,9 +90,10 @@ def _paginas_ordenadas():
 def enlace_nav(pagina, ruta_activa):
     ico = ICONOS.get(pagina["path"], "ico-profiles")
     activo = " is-active" if pagina["path"] == ruta_activa else ""
-    return dcc.Link(href=pagina["path"], className="nav__item" + activo, title=pagina["name"], children=[
+    nombre = NOMBRE_EN_MENU.get(pagina["path"], pagina["name"])
+    return dcc.Link(href=pagina["path"], className="nav__item" + (" nav__asistente" if pagina["path"] == "/" else "") + activo, title=pagina["name"], children=[
         html.Span(className="nav__ico " + ico),
-        html.Span(pagina["name"]),
+        html.Span(nombre),
     ])
 
 
@@ -96,7 +101,7 @@ def enlaces_nav(ruta_activa):
     """Enlaces del menu: el inicio y luego cada seccion con su titulo (las secciones estan en navegacion.py)."""
     paginas = _paginas_ordenadas()
     hijos = [enlace_nav(p, ruta_activa) for p in paginas if p["path"] == "/"]
-    for titulo, _descripcion, grupo in agrupar(paginas):
+    for titulo, _descripcion, grupo in agrupar(paginas, menu=True):
         if titulo:
             hijos.append(html.Div(titulo, className="nav__label"))
         for p in grupo:
@@ -119,7 +124,8 @@ def barra_lateral(ruta_activa="/"):
             html.Img(className="sidebar__brand-img sidebar__brand-img--oscuro",
                      src=dash.get_asset_url("logo_hun_oscuro.png"), alt="Hospital Universidad del Norte"),
         ]),
-        html.Div("Analítica de flujo", className="nav__label"),
+        dcc.Link(id="btn-simular", href="/simular", className="nav__simular", title="Pronosticar, estimar y simular", children=[
+            html.Span(className="nav__ico ico-models"), html.Span("Simular")]),      # fijo: el menu de abajo es el que se desplaza
         html.Nav(id="nav-principal", className="nav",
                  children=enlaces_nav(ruta_activa)),
         html.Div(className="sidebar__foot", children=[
@@ -164,7 +170,6 @@ def barra_superior():
     return html.Header(className="topbar", children=[
         html.Div("Inicio", id="topbar-titulo", className="topbar__title"),
         html.Div(className="topbar__right", children=[
-            html.Span("Datos confiables hasta 9-abr-2026", className="topbar__chip"),
             html.Button(html.Span(className="nav__ico ico-present"), id="modo-presentacion", className="theme-toggle",
                         title="Modo presentación: oculta el menú y agranda la página (Esc para salir)"),
             html.Button("☾", id="theme-toggle", className="theme-toggle", n_clicks=0,
@@ -194,7 +199,7 @@ app.layout = servir_layout
 
 
 @callback(Output("nav-principal", "children"), Output("topbar-titulo", "children"), Output("paso-nav", "children"),
-          Output("doc-rel", "children"), Input("url", "pathname"))
+          Output("doc-rel", "children"), Output("btn-simular", "className"), Input("url", "pathname"))
 def sincronizar_navegacion(ruta):
     """Resalta el enlace activo en la barra lateral, pone el nombre de la pagina en la barra superior y arma los botones del pie."""
     ruta = ruta or "/"
@@ -202,7 +207,9 @@ def sincronizar_navegacion(ruta):
     actual = next((p["name"] for p in dash.page_registry.values() if p["path"] == ruta), "Documentación" if ruta.startswith("/documentacion") else "Inicio")
     seccion = next((t for t, _d, grupo in agrupar(_paginas_ordenadas()) if any(p["path"] == ruta for p in grupo)), "Conclusiones" if ruta.startswith("/documentacion") or ruta in DENTRO_DE_DOCUMENTACION else "")
     titulo = [html.Span(seccion + " · ", className="topbar__seccion"), actual] if seccion else actual
-    return enlaces, titulo, pasos(ruta), []        # la documentacion y el enlace al capitulo van dentro de «Documentación de esta sección» de cada pagina
+    if ruta in RUTAS_MODULOS:      # los modulos se abren desde «Simular»: flecha para volver a esa pagina
+        titulo = [dcc.Link(href="/simular", className="topbar__volver", title="Volver a «¿Qué quieres hacer hoy?»", children=[html.Span(className="nav__ico ico-chevron"), "Simular"])] + (titulo if isinstance(titulo, list) else [titulo])
+    return enlaces, titulo, pasos(ruta), [], "nav__simular" + (" is-active" if ruta == "/simular" else "")        # la documentacion y el enlace al capitulo van dentro de «Documentación de esta sección» de cada pagina
 
 
 # Modo claro/oscuro: todo del lado del cliente para que sea instantaneo y no necesite al servidor.
