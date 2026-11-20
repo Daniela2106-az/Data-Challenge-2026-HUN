@@ -135,7 +135,7 @@ def layout():
     pct = (g1.espera_mediana_pico_h / g1.espera_mediana_resto_h - 1) * 100
     est = len(grandes(LLEG, "estancia_contraste"))
     return pagina(
-        portada("Resultados · Perfiles y picos", "La carga alarga la espera en los perfiles de urgencias más comunes, pero no cambia quién llega ni cuánto se queda",
+        portada("Riesgo · Perfiles y picos", "La carga alarga la espera en los perfiles de urgencias más comunes, pero no cambia quién llega ni cuánto se queda",
                 "Se cruzó el perfil de cada paciente con lo lleno que estaba el hospital cuando llegó. El efecto existe, pero se concentra en pocos perfiles.",
                 [cifra(f"{len(g1)} de {n}", "perfiles esperan mucho más cuando llegan en un pico de llegadas"),
                  cifra(f"+{pct.min():.0f} a +{pct.max():.0f} %", "más espera en esos perfiles, todos de urgencias"),

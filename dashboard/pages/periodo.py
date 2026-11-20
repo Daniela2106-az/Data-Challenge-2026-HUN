@@ -43,7 +43,7 @@ def layout():
     if _reportes() is None:
         return pagina(aviso_datos("Diagnóstico por periodo", ["cuello_botella_reportes.csv"]))
     return pagina(
-        portada("Resultados · Diagnóstico por periodo", TITULO,
+        portada("Clínico · Diagnóstico por periodo", TITULO,
                 "Elige un periodo y con cuál compararlo. Verás dónde se pierde el tiempo, qué se dispara, qué estancias esperan muchísimo y qué tienen en común, "
                 "y si el cuello de botella cambió frente a la referencia.", id_cifras="per-cifras"),
         html.Div(className="filtros", children=[filtro("per-periodo", "Periodo", PERIODOS, "2025"), filtro("per-ref", "Comparar con", PERIODOS, "2023")]),

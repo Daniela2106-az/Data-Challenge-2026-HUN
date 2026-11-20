@@ -93,7 +93,7 @@ DETALLE = {
         "pasos": [
             "Entrenamiento con feb-2023 a 9-abr-2026; los días desde el 10-abr se dejan fuera del nivel, del calendario y del error.",
             "El rango probable del 80 % sale de los errores reales de la prueba (cobertura 78–82 % en llegadas).",
-            "La forma del año se explica en «Forma del año» (Resultados): es una entrada de este modelo."],
+            "La forma del año se explica en «Forma del año» (Flujo): es una entrada de este modelo."],
         "modelo": [
             ("Regresión de Poisson (elegido)", "7,9 % de error a 1–7 días y 11,5 % a un año en llegadas", "Son conteos y cada efecto se lee como un porcentaje"),
             ("SARIMAX y otros modelos de series", "Mejores en validación, peores a 1–7 días y en 2026", "Menos preciso a corto plazo y difícil de explicar"),

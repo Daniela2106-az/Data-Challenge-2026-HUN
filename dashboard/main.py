@@ -97,7 +97,8 @@ def enlaces_nav(ruta_activa):
     paginas = _paginas_ordenadas()
     hijos = [enlace_nav(p, ruta_activa) for p in paginas if p["path"] == "/"]
     for titulo, _descripcion, grupo in agrupar(paginas):
-        hijos.append(html.Div(titulo, className="nav__label"))
+        if titulo:
+            hijos.append(html.Div(titulo, className="nav__label"))
         for p in grupo:
             hijos.append(enlace_nav(p, ruta_activa))
             if p["path"] == "/documentacion" and (ruta_activa.startswith("/documentacion") or ruta_activa in DENTRO_DE_DOCUMENTACION):   # los capitulos solo se despliegan dentro de la documentacion
@@ -199,7 +200,7 @@ def sincronizar_navegacion(ruta):
     ruta = ruta or "/"
     enlaces = enlaces_nav(ruta)
     actual = next((p["name"] for p in dash.page_registry.values() if p["path"] == ruta), "Documentación" if ruta.startswith("/documentacion") else "Inicio")
-    seccion = next((t for t, _d, grupo in agrupar(_paginas_ordenadas()) if any(p["path"] == ruta for p in grupo)), "Propuestas" if ruta.startswith("/documentacion") or ruta in DENTRO_DE_DOCUMENTACION else "")
+    seccion = next((t for t, _d, grupo in agrupar(_paginas_ordenadas()) if any(p["path"] == ruta for p in grupo)), "Conclusiones" if ruta.startswith("/documentacion") or ruta in DENTRO_DE_DOCUMENTACION else "")
     titulo = [html.Span(seccion + " · ", className="topbar__seccion"), actual] if seccion else actual
     return enlaces, titulo, pasos(ruta), []        # la documentacion y el enlace al capitulo van dentro de «Documentación de esta sección» de cada pagina
 

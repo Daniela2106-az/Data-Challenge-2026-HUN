@@ -89,7 +89,7 @@ def layout():
     if leer("espera_cubo.csv") is None:
         return aviso_datos(TITULO, ["espera_cubo.csv"])
     return pagina(
-        portada("Resultados · Qué influye en la espera", TITULO,
+        portada("Capacidad · Qué influye en la espera", TITULO,
                 "La hora, la edad, el tipo de visita y el diagnóstico pesan poco. El resto depende de lo que la base no registra: el "
                 "servicio, el tipo de cama y la gravedad.",
                 [cifra("16 %", "de las diferencias de espera se explica con lo observado"),

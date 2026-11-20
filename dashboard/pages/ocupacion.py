@@ -65,7 +65,7 @@ def layout():
     o23, o25 = a.ocup.get(2023, float("nan")), a.ocup.get(2025, float("nan"))
     sobre = 100 * (p[p.fecha.dt.year == 2025].ocup_hosp_media > CAMAS).mean()
     return pagina(
-        portada("Resultados · Ocupación de camas", TITULO,
+        portada("Capacidad · Ocupación de camas", TITULO,
                 "El hospital trabaja pegado a su capacidad. No es que entren más pacientes: cada uno ocupa la cama más días.",
                 [cifra(coma(o25, 0), f"camas ocupadas en promedio en 2025 (en 2023: {coma(o23, 0)})"),
                  cifra(f"{coma(sobre, 0)} %", "de los días de 2025 por encima de las 106 camas"),

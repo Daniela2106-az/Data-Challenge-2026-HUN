@@ -419,7 +419,7 @@ más pacientes, así que la tomamos de **datos públicos de muchos años** y la 
 
 En conjunto son unas 4–5 alertas al día: una carga manejable para una reunión diaria de camas.
 
-En el dashboard, la página **Alertas** (sección Resultados) muestra la prueba de cada alerta, y el **simulador integral** (6.9) las dispara mientras corre, con la recomendación de la que se derivan. Cada alerta apunta a una o más de las siete recomendaciones (sección 7): día congestionado y ocupación alta, a la reunión diaria de camas y a adelantar las altas; paciente sin cama, a la alerta con responsable.
+En el dashboard, la página **Alertas** (categoría Riesgo) muestra la prueba de cada alerta, y el **simulador integral** (6.9) las dispara mientras corre, con la recomendación de la que se derivan. Cada alerta apunta a una o más de las siete recomendaciones (sección 7): día congestionado y ocupación alta, a la reunión diaria de camas y a adelantar las altas; paciente sin cama, a la alerta con responsable.
 
 ### 6.3 Días atípicos (`src/dias_atipicos.py`)
 El modelo identifica automáticamente los días que se salen de lo esperado (14 de llegadas, 9 de ingresos y 7 de espera). Los más extremos coinciden con
@@ -533,7 +533,7 @@ procesadas) y sin datos de pacientes en la salida.
 
 Es la base para el seguimiento mensual de la recomendación 2: el hospital puede correrlo cada mes y ver de inmediato si las acciones están funcionando.
 
-**En el dashboard** (página «Diagnóstico por periodo», sección Resultados) se eligen un periodo (todo el periodo, cada año o cada semestre) y otro con el que compararlo; la página muestra el cuello de botella, cuánto cambió frente a la referencia, qué se dispara, qué estancias esperan muchísimo, qué tienen en común y las camas del periodo, cada resultado con su gráfica. Los reportes se calculan de antemano para cada combinación (`src/exportar_reportes_periodo.py`). El paso 5 («qué hacer») ya no se muestra ahí: las acciones se leen en la página de Recomendaciones.
+**En el dashboard** (página «Diagnóstico por periodo», categoría Clínico) se eligen un periodo (todo el periodo, cada año o cada semestre) y otro con el que compararlo; la página muestra el cuello de botella, cuánto cambió frente a la referencia, qué se dispara, qué estancias esperan muchísimo, qué tienen en común y las camas del periodo, cada resultado con su gráfica. Los reportes se calculan de antemano para cada combinación (`src/exportar_reportes_periodo.py`). El paso 5 («qué hacer») ya no se muestra ahí: las acciones se leen en la página de Recomendaciones.
 
 ### 6.8 Alternativas evaluadas
 Parte de la solidez de los modelos está en lo que se comparó para elegirlos. Cada alternativa se probó con el mismo método (datos que el modelo no
@@ -707,44 +707,45 @@ externos son de antes y después, sin grupo de comparación.
 ## 8. El dashboard
 
 **Herramienta:** Dash (Python y Plotly), aceptado por los organizadores. Un solo programa (`dashboard/main.py`, puerto 8050) con una página por tema en
-`dashboard/pages/`, organizadas en cuatro secciones que siguen el orden del reto: contexto, resultados, predicción y propuestas. **No se conecta a la base:** solo lee tablas agregadas, ninguna con una fila por paciente.
+`dashboard/pages/`, organizadas en siete categorías de menú que siguen el orden del reto: Contexto; Flujo, Capacidad, Clínico y Riesgo (los resultados); Módulos (las herramientas de predicción y simulación) y Conclusiones. El asistente va suelto debajo del inicio, porque sirve para cualquier tema. **No se conecta a la base:** solo lee tablas agregadas, ninguna con una fila por paciente.
 
-**Estructura de cada página de Resultados:** un encabezado con cifras clave, una frase que resume la conclusión, las gráficas numeradas (cada una con su titular, una explicación y un dato), una sección de cuatro tarjetas,
-«Qué significa para el hospital» y un único panel plegable de **Documentación de esta sección**, con cómo se calculó, qué no dice y a qué otra página se conecta. Las páginas de Predicción siguen el mismo orden: la elección del modelo
+**Estructura de cada página de resultados (Flujo, Capacidad, Clínico y Riesgo):** un encabezado con cifras clave, una frase que resume la conclusión, las gráficas numeradas (cada una con su titular, una explicación y un dato), una sección de cuatro tarjetas,
+«Qué significa para el hospital» y un único panel plegable de **Documentación de esta sección**, con cómo se calculó, qué no dice y a qué otra página se conecta. Las páginas de Módulos siguen el mismo orden: la elección del modelo
 va como una tarjeta antes de «Qué significa» y la documentación reúne lo que se probó y se descartó.
 
-| Página | Sección | Qué responde |
+| Página | Categoría | Qué responde |
 |---|---|---|
 | Inicio (`/`) | Inicio | Portada con las cifras clave del hospital y el menú por secciones |
 | Resumen (`/resumen`) | Contexto | El proyecto en una pantalla: los ocho hallazgos en tarjetas deslizables y las siete acciones que se proponen (leídas de la tabla de recomendaciones) |
 | Datos y calidad (`/datos`) | Contexto | Qué había en la base, qué se corrigió y hasta qué fecha son confiables los datos |
-| Demanda (`/demanda`) | Resultados | A qué hora y qué día llegan los pacientes, y si la demanda crece entre años |
-| Forma del año (`/estacionalidad`) | Resultados | Qué épocas del año traen más pacientes y cuánto mejora el pronóstico al saberlo |
-| Ocupación de camas (`/ocupacion`) | Resultados | Camas ocupadas frente a las 106 del hospital, y por qué sube la ocupación |
-| Espera de cama (`/espera`) | Resultados | Cuánto se espera por una cama, quién espera más y si los peores casos empeoran |
-| Comparar años (`/comparar`) | Resultados | Qué cambió en la espera entre dos años: en qué tramos, en qué grupos de pacientes y por dónde entran |
-| Diagnóstico por periodo (`/periodo`) | Resultados | El cuello de botella de cualquier periodo comparado con una referencia, cada resultado con su gráfica |
-| Llegada y altas (`/altas`) | Resultados | A qué hora salen las altas, a qué hora se asignan las camas y cuánto espera quien llega a cada hora |
-| Qué influye en la espera (`/factores`) | Resultados | Cuánto de la espera se explica con lo que se sabe del paciente y qué factores pesan |
-| Estancias largas (`/estancia`) | Resultados | Por qué subió la estancia media y qué comparten las estancias de semanas |
-| Diagnósticos (`/diagnosticos`) | Resultados | Qué grupos de diagnóstico esperan más cama y cuáles se quedan más |
-| Perfiles y picos (`/perfiles`) | Resultados | Cómo cambian la espera y la estancia según el perfil del paciente y la carga del momento |
-| Días atípicos (`/atipicos`) | Resultados | Los días que se salen del patrón y qué dicen del problema de la espera |
-| Alertas (`/alertas`) | Resultados | Las alertas (día congestionado, ocupación alta, paciente sin cama y cola de espera): cuándo avisar, qué tanto aciertan y qué recomendación dispara cada una; y las cinco que saltan en el simulador integral, con sus umbrales |
-| Pronóstico de demanda (`/pronostico`) | Predicción | Cuántos pacientes llegarán y cuántos irán a cama, desde hoy hasta un año, con su banda del 80 % |
-| Paciente en espera (`/paciente`) | Predicción | Cuándo es más probable que un paciente que ya espera reciba cama (estimador A6), con sus avisos |
-| Planeación de camas (`/camas`) | Predicción | Riesgo de saturar las camas y escenarios de ingresos y estancia (simulación Monte Carlo, A5) |
-| Simulador integral (`/simulador`) | Predicción | Demanda, cola y ocupación a la vez, con cinco alertas (dos de totales y tres por paciente), su recomendación y la operación óptima comparada con cómo iba antes (6.9) |
-| Recomendaciones (`/recomendaciones`) | Propuestas | Las siete recomendaciones ordenadas por firmeza, con qué cambiar y la meta de cada una, y qué reglas del diagnóstico se activan cada año |
-| Asistente de flujo HUN (`/preguntas`) | Propuestas | Preguntas en lenguaje natural sobre el análisis: responde solo con la documentación del proyecto, con tarjetas de cifras y su fuente |
-| Documentación (`/documentacion`) | Propuestas | Este documento completo, con sus tablas y figuras, y la descarga en PDF |
+| Demanda (`/demanda`) | Flujo | A qué hora y qué día llegan los pacientes, y si la demanda crece entre años |
+| Forma del año (`/estacionalidad`) | Flujo | Qué épocas del año traen más pacientes y cuánto mejora el pronóstico al saberlo |
+| Ocupación de camas (`/ocupacion`) | Capacidad | Camas ocupadas frente a las 106 del hospital, y por qué sube la ocupación |
+| Espera de cama (`/espera`) | Capacidad | Cuánto se espera por una cama, quién espera más y si los peores casos empeoran |
+| Comparar años (`/comparar`) | Flujo | Qué cambió en la espera entre dos años: en qué tramos, en qué grupos de pacientes y por dónde entran |
+| Diagnóstico por periodo (`/periodo`) | Clínico | El cuello de botella de cualquier periodo comparado con una referencia, cada resultado con su gráfica |
+| Llegada y altas (`/altas`) | Flujo | A qué hora salen las altas, a qué hora se asignan las camas y cuánto espera quien llega a cada hora |
+| Qué influye en la espera (`/factores`) | Capacidad | Cuánto de la espera se explica con lo que se sabe del paciente y qué factores pesan |
+| Estancias largas (`/estancia`) | Capacidad | Por qué subió la estancia media y qué comparten las estancias de semanas |
+| Diagnósticos (`/diagnosticos`) | Clínico | Qué grupos de diagnóstico esperan más cama y cuáles se quedan más |
+| Perfiles y picos (`/perfiles`) | Riesgo | Cómo cambian la espera y la estancia según el perfil del paciente y la carga del momento |
+| Días atípicos (`/atipicos`) | Riesgo | Los días que se salen del patrón y qué dicen del problema de la espera |
+| Alertas (`/alertas`) | Riesgo | Las alertas (día congestionado, ocupación alta, paciente sin cama y cola de espera): cuándo avisar, qué tanto aciertan y qué recomendación dispara cada una; y las cinco que saltan en el simulador integral, con sus umbrales |
+| Pronóstico de demanda (`/pronostico`) | Módulos | Cuántos pacientes llegarán y cuántos irán a cama, desde hoy hasta un año, con su banda del 80 % |
+| Paciente en espera (`/paciente`) | Módulos | Cuándo es más probable que un paciente que ya espera reciba cama (estimador A6), con sus avisos |
+| Paciente en cama (`/paciente-cama`) | Módulos | Cuánto tiempo más seguirá en cama un paciente ya hospitalizado (estimador A6b, 6.10) |
+| Planeación de camas (`/camas`) | Módulos | Riesgo de saturar las camas y escenarios de ingresos y estancia (simulación Monte Carlo, A5) |
+| Simulador integral (`/simulador`) | Módulos | Demanda, cola y ocupación a la vez, con cinco alertas (dos de totales y tres por paciente), su recomendación y la operación óptima comparada con cómo iba antes (6.9) |
+| Recomendaciones (`/recomendaciones`) | Conclusiones | Las siete recomendaciones ordenadas por firmeza, con qué cambiar y la meta de cada una, y qué reglas del diagnóstico se activan cada año |
+| Asistente de flujo HUN (`/preguntas`) | Asistente (suelto) | Preguntas en lenguaje natural sobre el análisis: responde solo con la documentación del proyecto, con tarjetas de cifras y su fuente |
+| Documentación (`/documentacion`) | Conclusiones | Este documento completo, con sus tablas y figuras, y la descarga en PDF |
 
 - **Asistente de preguntas (20-nov-2026):** una página y un botón en la esquina de todas las páginas, desde donde se puede preguntar en lenguaje natural o seleccionar un texto de la pantalla y pulsar «Preguntar sobre esto». Usa la API de Anthropic (Claude Sonnet 5.5) y **solo recibe `docs/asistente/conocimiento.md`**, un documento armado con `src/armar_conocimiento.py` a partir de esta documentación (unos 43.000 tokens, sin datos de pacientes); si la respuesta no está ahí, lo dice. Tiene un límite de 10 preguntas por persona y 60 por día para todo el sitio, y se apaga solo desde el 1-dic-2026. Configuración, costo y apagado: `docs/asistente.md`. Es opcional: sin la clave el dashboard funciona igual y la página avisa que el asistente no está configurado.
 - **Cómo correrlo:** `python3 dashboard/main.py` y abrir http://127.0.0.1:8050; el `README.md` explica la descarga y la instalación paso a paso. Las tablas agregadas y la carpeta `datos/procesados` deben estar disponibles.
 - **Cómo recorrerlo:** el menú agrupa las páginas por sección y el inicio tiene el botón «Empezar el recorrido». Cada página lleva al
   pie los botones de anterior y siguiente, que también responden a las flechas del teclado; el botón de modo presentación de la barra
   superior oculta el menú y agranda la página para exponer.
-- **Publicación:** [pendiente: enlace público].
+- **Publicación:** https://data-challenge-hun.onrender.com/ (Render, plan gratuito, desde la rama `render` de este repositorio; los datos agregados se bajan en el servidor desde un repositorio privado aparte y nunca están en este repositorio). Si la página estuvo un rato sin visitas, la primera carga puede tardar un minuto. Detalles y ajustes de rendimiento: `docs/render.md`.
 
 ---
 

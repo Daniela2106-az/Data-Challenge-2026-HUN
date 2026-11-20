@@ -286,7 +286,7 @@ La simulación se reproduce siempre como «hoy». Mientras corre, salta una tarj
 
 **Gravedades y pausa.** Hay dos gravedades: aviso (media) y crítico (alta). **Las dos frenan la simulación**, para poder revisarlas y aplicar la mejora antes de que la condición escale. Una alerta salta cuando **aparece** (20-nov-2026). Si se dejó **sin corregir** (Continuar), al volver no frena otra vez: su fila comprimida queda marcada como activa (el punto late) mientras la condición se cumpla. **Vuelve a saltar** si reaparece después de aplicarle la mejora (la mejora no alcanzó) o si se agrava de aviso a crítico, aunque siga activa. Reiniciar o una corrida nueva borran esa memoria; aplicar una mejora no. Todas las alertas tienen **histéresis**: se encienden en el umbral de aviso y, ya encendidas, solo se apagan al volver claramente a lo normal (cola por debajo de 26; faltarán camas con probabilidad por debajo de 40 % y sin camas faltantes; las por paciente, en su nivel de suelta). Así un vaivén de uno o dos pacientes no cuenta como alerta nueva.
 
-| Alerta | Aviso (gravedad media) | Crítico (gravedad alta) | Recomendación | Alerta en Resultados |
+| Alerta | Aviso (gravedad media) | Crítico (gravedad alta) | Recomendación | Alerta (página Alertas, categoría Riesgo) |
 |---|---|---|---|---|
 | Faltarán camas (se necesitarán más de las 106: probabilidad de superar la capacidad a 48 h y camas que faltan, en la mediana) | desde 50 % o 1 cama que falta (107 ocupadas) | desde 84 % o 12 camas que faltan (118 ocupadas) | R3, R4 y R7 | A2 |
 | Cola de espera larga (pacientes a la vez) | desde 28 | desde 33 (el percentil 90 real) | R5 y R6 | S1 |

@@ -36,7 +36,7 @@ def layout():
     if leer("llegadas_calor.csv") is None or _panel() is None:
         return aviso_datos(TITULO, ["llegadas_calor.csv", "panel_diario.csv"])
     return pagina(
-        portada("Resultados · Demanda", TITULO,
+        portada("Flujo · Demanda", TITULO,
                 "El pico es a media mañana y el lunes es el día más cargado. De un año a otro no llega más gente: la presión sobre "
                 "las camas no viene de ahí.", id_cifras="dem-cifras"),
         html.Div(className="filtros", children=[

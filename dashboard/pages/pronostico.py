@@ -221,7 +221,7 @@ def panel_tecnico():
                           "aceptando solo lo que mejoraba la validación de jul-dic 2025 sin empeorar el corto plazo, y "
                           "confirmándolo después en la prueba de 2026 (datos que no se usaron para elegir)."],
                          style={"marginBottom": "10px", "lineHeight": "1.6"}),
-                html.Div(["El error con y sin la forma del año, por horizonte, está en ", dcc.Link("Resultados · Forma del año", href="/estacionalidad"), "."],
+                html.Div(["El error con y sin la forma del año, por horizonte, está en ", dcc.Link("Flujo · Forma del año", href="/estacionalidad"), "."],
                          style={"fontSize": "13px", "color": GRIS}),
             ]),
             html.Div([

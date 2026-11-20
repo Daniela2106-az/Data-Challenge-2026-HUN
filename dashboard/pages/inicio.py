@@ -98,7 +98,7 @@ def grupo(titulo, descripcion, paginas):
         tarjetas.append(tarjeta_menu(p["path"], ICONOS.get(p["path"], "ico-profiles"), nombre, texto))
     return html.Section(className="home-group", children=[
         html.Div(className="home-group__head", children=[
-            html.Div(titulo, className="section-title"), html.Div(descripcion, className="home-group__sub")]),
+            html.Div(titulo or "Asistente", className="section-title"), html.Div(descripcion, className="home-group__sub")]),
         html.Div(className="card-grid", children=tarjetas),
     ])
 

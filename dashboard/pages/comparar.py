@@ -42,7 +42,7 @@ def layout():
     if leer("espera_cubo.csv") is None:
         return aviso_datos(TITULO, ["espera_cubo.csv"])
     return pagina(
-        portada("Resultados · Comparar años", TITULO,
+        portada("Flujo · Comparar años", TITULO,
                 "Elige dos años y mira qué cambió: cuánto se espera, en qué tramos, en qué grupos de pacientes y por dónde entran.",
                 id_cifras="com-cifras"),
         html.Div(className="filtros", children=[filtro("com-anio", "Año", ANIOS, "2025"), filtro("com-ref", "Comparar con", ANIOS, "2023")]),

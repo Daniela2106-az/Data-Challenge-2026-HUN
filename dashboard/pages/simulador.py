@@ -52,8 +52,9 @@ GRIS, AZUL, NARANJA, VERDE, ROJO, ROSA = "#6b6b6b", "#2a6fb0", "#eb6834", "#2e8b
 # Mismo azul de marca que var(--brand-strong) en theme.css (21-nov), para que el titulo de los 3 graficos
 # principales (flujo/camas/espera) combine exactamente con el de los modulos nuevos (.simint-radio__modulo-titulo).
 BRAND_STRONG_CLARO, BRAND_STRONG_OSCURO = "#0071bc", "#6fcbef"
-N_REP_INTERACTIVO = 200
-N_REP_HORARIO = 300
+from modo import repeticiones  # noqa: E402  (modo ligero en servidores pequenos como Render)
+N_REP_INTERACTIVO = repeticiones(200)
+N_REP_HORARIO = repeticiones(300)
 import pacientes_alerta as pac_alerta  # noqa: E402  (tablas de pacientes de la confirmacion verde)
 from umbrales_alertas import (ARRANQUE_SIN_ALERTAS, UMBRAL_ALERTA, UMBRAL_ALERTA_MEDIA, UMBRAL_COLA, UMBRAL_COLA_CRITICA, UMBRAL_FALTAN,  # noqa: E402,F401
                               UMBRAL_FALTAN_CRITICO, UMBRAL_LLEGADAS_TARDE, FRACCION_COLA_PICO,

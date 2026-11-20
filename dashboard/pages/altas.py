@@ -85,7 +85,7 @@ def layout():
     if leer("camas_por_hora.csv") is None or leer("espera_por_hora.csv") is None or leer("panel_diario.csv") is None:
         return aviso_datos(TITULO, ["camas_por_hora.csv", "espera_por_hora.csv", "panel_diario.csv"])
     return pagina(
-        portada("Resultados · Llegada y altas", TITULO,
+        portada("Flujo · Llegada y altas", TITULO,
                 "Las camas se liberan en bloque después del mediodía. Hasta ese momento casi nadie recibe cama, sin importar a qué hora "
                 "llegó.", id_cifras="alt-cifras"),
         html.Div(className="filtros", children=[

@@ -47,7 +47,7 @@ def _fecha(f):
 
 def layout():
     return pagina(
-        portada("Resultados · Días atípicos", "Ningún día tuvo una espera más alta de lo esperado: el problema es de todos los días",
+        portada("Riesgo · Días atípicos", "Ningún día tuvo una espera más alta de lo esperado: el problema es de todos los días",
                 "En más de tres años, los días raros son casi todos de menos actividad. La espera larga no aparece en días récord, sino "
                 "como algo constante.",
                 [cifra("14", "días atípicos de llegadas entre 2023 y 2026"), cifra("13 de 14", "fueron días con menos llegadas de lo esperado"),

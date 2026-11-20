@@ -2584,3 +2584,8 @@ svg.asis-i { width: 1em; height: 1em; fill: none; stroke: currentColor; stroke-w
 /* Segunda fila de la vista Espera (Espera en exceso + Distribución), apilada bajo "Espera de cama (media
    aprox.)": mismo total visual (56 + 20 de relleno) que el espacio con el grafico de arriba. */
 .simint-grafico-extra > .simint-extra__fila { margin-top: 56px; border-top: 1px solid var(--line); padding-top: 20px; }
+
+/* barra de progreso al cambiar de pagina (assets/navegacion_rapida.js) */
+html.nav-cargando::before { content: ""; position: fixed; top: 0; left: 0; height: 3px; width: 100%; z-index: 2000; pointer-events: none;
+  background: linear-gradient(90deg, transparent, var(--accent), var(--brand-strong), transparent); background-size: 50% 100%; background-repeat: no-repeat; animation: nav-barra 1.1s ease-in-out infinite; }
+@keyframes nav-barra { 0% { background-position: -50% 0; } 100% { background-position: 150% 0; } }

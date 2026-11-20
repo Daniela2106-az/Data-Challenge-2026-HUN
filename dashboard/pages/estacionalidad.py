@@ -46,7 +46,7 @@ def layout():
     if leer("estacionalidad_efecto.csv") is None or leer("estacionalidad_error.csv") is None:
         return aviso_datos(TITULO, ["estacionalidad_efecto.csv", "estacionalidad_error.csv"])
     return pagina(
-        portada("Predicción · Forma del año", TITULO,
+        portada("Flujo · Forma del año", TITULO,
                 "Con datos públicos de vigilancia de muchos años, el pronóstico a varios meses deja de ser una línea plana y el hospital "
                 "puede planear por temporadas.", id_cifras="est-cifras"),
         html.Div(className="filtros", children=[filtro("est-serie", "Serie", SERIES, "llegadas_con_atencion")]),
