@@ -11,14 +11,12 @@ import re
 ICONOS = {"/": "ico-home", "/pronostico": "ico-forecast", "/paciente": "ico-patient", "/paciente-cama": "ico-stay", "/camas": "ico-bed", "/simulador": "ico-models",
           "/perfiles": "ico-profiles", "/recomendaciones": "ico-recs", "/documentacion": "ico-docs", "/datos": "ico-data",
           "/demanda": "ico-demand", "/ocupacion": "ico-occup", "/espera": "ico-wait", "/altas": "ico-clock",
-          "/estacionalidad": "ico-season", "/alertas": "ico-alert", "/preguntas": "ico-chat", "/factores": "ico-factors", "/estancia": "ico-stay",
+          "/estacionalidad": "ico-season", "/alertas": "ico-alert", "/factores": "ico-factors", "/estancia": "ico-stay",
           "/diagnosticos": "ico-dx", "/atipicos": "ico-outlier", "/resumen": "ico-summary", "/comparar": "ico-compare", "/periodo": "ico-period"}
 
-# (titulo de la seccion, que responde, rutas en orden). Un titulo vacio es un grupo suelto sin encabezado en el menu (el asistente, justo debajo de Inicio):
-# sirve para dudas de cualquier tema, por eso no vive dentro de una categoria, y queda fuera del recorrido «anterior / siguiente».
+# (titulo de la seccion, que responde, rutas en orden). El asistente es la pagina de inicio (/), fuera de las categorias.
 # 20-nov-2026: «Resultados» (13 paginas) se reparte en cuatro categorias de una palabra; «Prediccion» pasa a «Módulos» y «Propuestas» a «Conclusiones».
 SECCIONES = [
-    ("", "Pregunta lo que quieras: cómo usar el dashboard, qué mirar primero o cualquier duda del análisis", ["/preguntas"]),
     ("Contexto", "El proyecto en una pantalla, y qué datos hay detrás", ["/resumen", "/datos"]),
     ("Flujo", "Cuántos pacientes llegan, a qué hora y cómo cambia con los años", ["/demanda", "/altas", "/estacionalidad", "/comparar"]),
     ("Capacidad", "Cuánto se llena el hospital y por qué se espera por una cama", ["/ocupacion", "/espera", "/factores", "/estancia"]),
@@ -87,7 +85,7 @@ DOCUMENTACION = {
     "/periodo": (6, "6.7 Diagnóstico repetible del cuello de botella", "el diagnóstico de cualquier periodo comparado con una referencia: dónde está el cuello, qué se dispara y qué comparten las esperas largas"),
     "/simulador": (6, "6.9 Simulador integral", "el motor de agentes, su validación, las palancas, las alertas con su recomendación y la operación óptima"),
     "/recomendaciones": (7, "Recomendaciones", "las siete acciones con su evidencia, su firmeza y lo que no recomendamos"),
-    "/preguntas": (8, "El dashboard", "cómo funciona el asistente de preguntas, qué lee, sus límites y cuándo se apaga"),
+    "/": (8, "El dashboard", "cómo funciona el asistente de preguntas (la página de inicio), qué lee, sus límites y cuándo se apaga"),
 }
 
 

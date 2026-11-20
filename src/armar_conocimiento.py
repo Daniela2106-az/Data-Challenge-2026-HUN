@@ -70,11 +70,30 @@ def paginas():
     return "\n".join(filas)
 
 
+def guia():
+    """Como esta organizado el dashboard (categorias del menu y sus paginas): para responder «como uso este dashboard» y «que miro primero»."""
+    import sys
+    sys.path.insert(0, str(RAIZ / "dashboard"))
+    from navegacion import SECCIONES
+    nombres = {}
+    for linea in paginas().splitlines():
+        m = re.match(r"- \*\*(.+?)\*\*: `(.+?)`", linea)
+        if m:
+            nombres[m.group(2)] = m.group(1)
+    filas = ["## Cómo está organizado el dashboard",
+             "El dashboard se abre en el asistente (la página de inicio), donde se pregunta en lenguaje natural; debajo hay una guía para explorar por categorías y un recorrido guiado que "
+             "empieza en Resumen. El menú lateral tiene estas categorías:"]
+    for titulo, desc, rutas in SECCIONES:
+        filas.append(f"- **{titulo}** ({desc}): " + ", ".join(f"{nombres.get(r, r)} (`{r}`)" for r in rutas))
+    filas.append("Para empezar: Resumen (el proyecto en una pantalla), luego Espera de cama y Ocupación de camas (el problema), Recomendaciones (qué hacer) y, para probar escenarios, el Simulador integral.")
+    return "\n".join(filas)
+
+
 def main():
     bloques = ["# Base de conocimiento del asistente (dashboard HUN)",
                "Este documento se arma solo con `src/armar_conocimiento.py` a partir de la documentación del proyecto. "
                "Es la única fuente del asistente de preguntas: lo que no esté aquí, el proyecto no lo sabe.",
-               "## Páginas del dashboard\n" + paginas()]
+               "## Páginas del dashboard\n" + paginas(), guia()]
     for archivo, titulos, quitados in FUENTES:
         texto = (DOCS / archivo).read_text(encoding="utf-8")
         cuerpo = texto if titulos is None else "\n\n".join(secciones(texto, titulos))

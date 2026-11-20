@@ -22,11 +22,21 @@ Este documento se arma solo con `src/armar_conocimiento.py` a partir de la docum
 - **Paciente en cama**: `/paciente-cama`
 - **Perfiles y picos**: `/perfiles`
 - **Diagnóstico por periodo**: `/periodo`
-- **Asistente HUN**: `/preguntas`
 - **Pronóstico**: `/pronostico`
 - **Recomendaciones**: `/recomendaciones`
 - **Resumen**: `/resumen`
 - **Simulador integral**: `/simulador`
+
+## Cómo está organizado el dashboard
+El dashboard se abre en el asistente (la página de inicio), donde se pregunta en lenguaje natural; debajo hay una guía para explorar por categorías y un recorrido guiado que empieza en Resumen. El menú lateral tiene estas categorías:
+- **Contexto** (El proyecto en una pantalla, y qué datos hay detrás): Resumen (`/resumen`), Datos y calidad (`/datos`)
+- **Flujo** (Cuántos pacientes llegan, a qué hora y cómo cambia con los años): Demanda (`/demanda`), Llegada y altas (`/altas`), Forma del año (`/estacionalidad`), Comparar años (`/comparar`)
+- **Capacidad** (Cuánto se llena el hospital y por qué se espera por una cama): Ocupación de camas (`/ocupacion`), Espera de cama (`/espera`), Factores de la espera (`/factores`), Estancias largas (`/estancia`)
+- **Clínico** (Qué diagnósticos esperan más y dónde se acumula el tiempo): Diagnósticos (`/diagnosticos`), Diagnóstico por periodo (`/periodo`)
+- **Riesgo** (Quiénes y cuándo se complica el flujo, y cómo avisar a tiempo): Perfiles y picos (`/perfiles`), Días atípicos (`/atipicos`), Alertas (`/alertas`)
+- **Módulos** (Qué se espera y qué pasaría si algo cambia): Pronóstico (`/pronostico`), Paciente en espera (`/paciente`), Paciente en cama (`/paciente-cama`), Planeación de camas (`/camas`), Simulador integral (`/simulador`)
+- **Conclusiones** (Qué hacer con lo que se encontró): Recomendaciones (`/recomendaciones`), Documentación (`/documentacion`)
+Para empezar: Resumen (el proyecto en una pantalla), luego Espera de cama y Ocupación de camas (el problema), Recomendaciones (qué hacer) y, para probar escenarios, el Simulador integral.
 
 # Fuente: docs/documento_final.md
 

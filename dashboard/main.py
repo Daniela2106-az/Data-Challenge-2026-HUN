@@ -119,7 +119,6 @@ def barra_lateral(ruta_activa="/"):
             html.Img(className="sidebar__brand-img sidebar__brand-img--oscuro",
                      src=dash.get_asset_url("logo_hun_oscuro.png"), alt="Hospital Universidad del Norte"),
         ]),
-        html.Div("Analítica de flujo", className="nav__label"),
         html.Nav(id="nav-principal", className="nav",
                  children=enlaces_nav(ruta_activa)),
         html.Div(className="sidebar__foot", children=[
@@ -164,7 +163,6 @@ def barra_superior():
     return html.Header(className="topbar", children=[
         html.Div("Inicio", id="topbar-titulo", className="topbar__title"),
         html.Div(className="topbar__right", children=[
-            html.Span("Datos confiables hasta 9-abr-2026", className="topbar__chip"),
             html.Button(html.Span(className="nav__ico ico-present"), id="modo-presentacion", className="theme-toggle",
                         title="Modo presentación: oculta el menú y agranda la página (Esc para salir)"),
             html.Button("☾", id="theme-toggle", className="theme-toggle", n_clicks=0,

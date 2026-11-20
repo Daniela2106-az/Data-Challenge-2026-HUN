@@ -1,5 +1,5 @@
 // dashboard/assets/asistente.js (19-nov-2026, v2): lo que pasa en el navegador con el Asistente de flujo HUN (dashboard/asistente_ui.py)
-//  - dibuja la conversacion (Store asis-hist) en el chat pequeno y, si esta en pantalla, en la pagina /preguntas: el mosaico de sugerencias al inicio y,
+//  - dibuja la conversacion (Store asis-hist) en el chat pequeno y, si esta en pantalla, en la pagina de inicio: el mosaico de sugerencias al inicio y,
 //    despues, cada respuesta como tarjeta (titular, cifras, barras, nota, fuente y preguntas de seguimiento), con el diseno del artifact del equipo
 //  - abre y cierra el chat pequeno (boton de la esquina)
 //  - «Preguntar sobre esto»: al seleccionar texto aparece el boton; el texto queda citado arriba de la caja
@@ -62,6 +62,10 @@
   function disponible() { var r = $('asis-raiz'); return !r || r.getAttribute('data-ok') === '1'; }
   function motivo() { var r = $('asis-raiz'); return r ? r.getAttribute('data-motivo') : ''; }
 
+  function paginasDash() {
+    try { return JSON.parse(($('asis-raiz') || {getAttribute: function () { return '{}'; }}).getAttribute('data-pags') || '{}'); } catch (e) { return {}; }
+  }
+
   function chips(qs) {
     return '<div class="asis-seguir">' + qs.map(function (q) {
       return '<button type="button" class="asis-chip" data-q="' + esc(q) + '">' + ico('chat') + esc(q) + '</button>';
@@ -92,7 +96,12 @@
     }
     if (d.texto) { h += '<div class="asis-texto">' + md(d.texto) + '</div>'; }
     if (d.nota) { h += '<div class="asis-nota-resp">' + ico('alerta') + esc(d.nota) + '</div>'; }
-    if (d.fuente) { h += '<div class="asis-fuente">' + ico('archivo') + '<code>' + esc(d.fuente) + '</code></div>'; }
+    if (d.paginas && d.paginas.length) {                       // las paginas del dashboard donde se ve lo respondido (se abren sin recargar)
+      var nombres = paginasDash();
+      h += '<div class="asis-paginas"><span class="asis-paginas__rotulo">Velo en el dashboard</span>' + d.paginas.filter(function (r) { return nombres[r]; }).map(function (r) {
+        return '<a class="asis-pagina-link" href="' + esc(r) + '">' + ico('grafico') + esc(nombres[r]) + '<span aria-hidden="true">→</span></a>';
+      }).join('') + '</div>';
+    }
     if (d.seguimiento && d.seguimiento.length) { h += chips(d.seguimiento); }
     return h;
   }
@@ -112,7 +121,7 @@
     }
     return '<section class="asis-bienvenida"><div class="asis-hero">' + ico('hospital') + '</div><h1>¿Qué quieres saber del flujo de pacientes?</h1>' +
       (ok ? '' : '<p class="asis-aviso-no">' + esc(motivo()) + '</p>') +
-      '<div class="asis-mosaico">' + sug.map(function (s) {
+      '<div class="asis-mosaico">' + sug.slice(0, 6).map(function (s) {
         return '<button type="button" class="asis-tile" data-q="' + esc(s[1]) + '"' + (ok ? '' : ' disabled') + '><div class="asis-ic">' + ico(s[0]) + '</div><span>' + esc(s[1]) + '</span></button>';
       }).join('') + '</div></section>';
   }
@@ -121,6 +130,7 @@
 
   window.asisPintar = function (hist, cita, quedan) {
     esperando = false;
+    var ex = $('asis-explorar'); if (ex) { ex.style.display = hist.length ? 'none' : ''; }
     ['asis-log', 'asis-log-mini'].forEach(function (id) {
       var el = $(id); if (!el) { return; }
       el.innerHTML = hist.length ? hist.map(burbuja).join('') : bienvenida(id === 'asis-log-mini');
@@ -144,6 +154,7 @@
     ['asis-log', 'asis-log-mini'].forEach(function (id) {
       var el = $(id); if (!el) { return; }
       var v = el.querySelector('.asis-bienvenida'); if (v) { v.remove(); }
+      var ex = $('asis-explorar'); if (ex) { ex.style.display = 'none'; }
       el.insertAdjacentHTML('beforeend', html); el.scrollTop = el.scrollHeight;
       if (id === 'asis-log') { window.scrollTo({top: document.documentElement.scrollHeight, behavior: 'smooth'}); }
     });
@@ -174,6 +185,14 @@
       if (txt) { set('asis-cita', {data: txt.slice(0, MAX_CITA)}); abrir(true); }
       return;
     }
+    var enl = t.closest('.asis-pagina-link');
+    if (enl) {                                               // abre la pagina del dashboard sin recargar (Dash escucha popstate)
+      e.preventDefault();
+      history.pushState({}, '', enl.getAttribute('href')); window.dispatchEvent(new PopStateEvent('popstate'));
+      abrir(false); return;
+    }
+    if (t.closest('#asis-globo-x')) { ocultarGlobo(); return; }
+    if (t.closest('#asis-globo')) { ocultarGlobo(); abrir(true); return; }
     // sugerencia o pregunta de seguimiento
     var q = t.closest('.asis-tile, .asis-chip');
     if (q) {
@@ -240,21 +259,34 @@
     if (intentos++ < 100) { setTimeout(esperarDash, 100); }
   })();
 
+  // Letrero junto al boton de la esquina: aparece unos segundos cada vez que se cambia de pagina (menos en el inicio, que ya es el asistente)
+  var rutaGlobo = location.pathname, relojGlobo = null;
+  function ocultarGlobo() { var g = $('asis-globo'); if (g) { g.classList.remove('is-visible'); } clearTimeout(relojGlobo); }
+  function mostrarGlobo() {
+    var g = $('asis-globo'), p = $('asis-panel');
+    if (!g || !disponible() || location.pathname === '/' || (p && p.classList.contains('is-abierto'))) { return; }
+    g.classList.add('is-visible'); clearTimeout(relojGlobo); relojGlobo = setTimeout(ocultarGlobo, 7000);
+  }
+  setInterval(function () {
+    if (location.pathname !== rutaGlobo) { rutaGlobo = location.pathname; ocultarGlobo(); setTimeout(mostrarGlobo, 900); }
+  }, 250);
+  setTimeout(mostrarGlobo, 2500);                            // tambien al entrar directo a una pagina distinta del inicio
+
   var pintarOriginal = window.asisPintar;
   window.asisPintar = function (hist, cita, quedan) { window._asisUltimo = [hist, cita, quedan]; pintarOriginal(hist, cita, quedan); };
 
-  // iconos de los botones y encabezados (los pone el servidor vacios), el boton de la esquina en /preguntas y el contenido de /preguntas al llegar
+  // iconos de los botones y encabezados (los pone el servidor vacios), el boton de la esquina en el inicio y el contenido de /preguntas al llegar
   setInterval(function () {
     document.querySelectorAll('.asis-i-slot:empty').forEach(function (el) { el.innerHTML = ico(el.getAttribute('data-ico')); });
     var f = $('asis-fab');
-    ['paso-nav', 'doc-rel'].forEach(function (id) { var n = $(id); if (n) { n.style.display = location.pathname === '/preguntas' ? 'none' : ''; } });   // el chat no lleva «anterior / siguiente»
-    var enPagina = location.pathname === '/preguntas';
+    var enPagina = location.pathname === '/';                // la pagina de inicio ES el asistente
+    ['paso-nav', 'doc-rel'].forEach(function (id) { var n = $(id); if (n) { n.style.display = enPagina ? 'none' : ''; } });   // el chat no lleva «anterior / siguiente»
     if (f) {
       f.style.display = enPagina ? 'none' : '';
       if (enPagina && $('asis-panel') && $('asis-panel').classList.contains('is-abierto')) { abrir(false); }
     }
     var log = $('asis-log');
-    if (log && !log.getAttribute('data-pintado')) {                       // se llego a /preguntas: pinta lo que ya hay (o el mosaico)
+    if (log && !log.getAttribute('data-pintado')) {                       // se llego al inicio: pinta lo que ya hay (o el mosaico)
       log.setAttribute('data-pintado', '1');
       window.asisPintar.apply(null, window._asisUltimo || [[], null, null]);
     }

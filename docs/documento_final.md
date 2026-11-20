@@ -707,7 +707,7 @@ externos son de antes y después, sin grupo de comparación.
 ## 8. El dashboard
 
 **Herramienta:** Dash (Python y Plotly), aceptado por los organizadores. Un solo programa (`dashboard/main.py`, puerto 8050) con una página por tema en
-`dashboard/pages/`, organizadas en siete categorías de menú que siguen el orden del reto: Contexto; Flujo, Capacidad, Clínico y Riesgo (los resultados); Módulos (las herramientas de predicción y simulación) y Conclusiones. El asistente va suelto debajo del inicio, porque sirve para cualquier tema. **No se conecta a la base:** solo lee tablas agregadas, ninguna con una fila por paciente.
+`dashboard/pages/`, organizadas en siete categorías de menú que siguen el orden del reto: Contexto; Flujo, Capacidad, Clínico y Riesgo (los resultados); Módulos (las herramientas de predicción y simulación) y Conclusiones. La página de inicio es el asistente: quien abre el enlace cae ahí, y debajo tiene una guía corta para explorar por categoría. **No se conecta a la base:** solo lee tablas agregadas, ninguna con una fila por paciente.
 
 **Estructura de cada página de resultados (Flujo, Capacidad, Clínico y Riesgo):** un encabezado con cifras clave, una frase que resume la conclusión, las gráficas numeradas (cada una con su titular, una explicación y un dato), una sección de cuatro tarjetas,
 «Qué significa para el hospital» y un único panel plegable de **Documentación de esta sección**, con cómo se calculó, qué no dice y a qué otra página se conecta. Las páginas de Módulos siguen el mismo orden: la elección del modelo
@@ -715,7 +715,7 @@ va como una tarjeta antes de «Qué significa» y la documentación reúne lo qu
 
 | Página | Categoría | Qué responde |
 |---|---|---|
-| Inicio (`/`) | Inicio | Portada con las cifras clave del hospital y el menú por secciones |
+| Inicio (`/`) | Inicio | El asistente de flujo HUN: preguntas en lenguaje natural sobre el análisis (responde solo con la documentación del proyecto, con tarjetas de cifras y la página del dashboard donde se ve cada cosa), cuatro cifras del hospital, una guía por categorías y el recorrido guiado |
 | Resumen (`/resumen`) | Contexto | El proyecto en una pantalla: los ocho hallazgos en tarjetas deslizables y las siete acciones que se proponen (leídas de la tabla de recomendaciones) |
 | Datos y calidad (`/datos`) | Contexto | Qué había en la base, qué se corrigió y hasta qué fecha son confiables los datos |
 | Demanda (`/demanda`) | Flujo | A qué hora y qué día llegan los pacientes, y si la demanda crece entre años |
@@ -737,7 +737,6 @@ va como una tarjeta antes de «Qué significa» y la documentación reúne lo qu
 | Planeación de camas (`/camas`) | Módulos | Riesgo de saturar las camas y escenarios de ingresos y estancia (simulación Monte Carlo, A5) |
 | Simulador integral (`/simulador`) | Módulos | Demanda, cola y ocupación a la vez, con cinco alertas (dos de totales y tres por paciente), su recomendación y la operación óptima comparada con cómo iba antes (6.9) |
 | Recomendaciones (`/recomendaciones`) | Conclusiones | Las siete recomendaciones ordenadas por firmeza, con qué cambiar y la meta de cada una, y qué reglas del diagnóstico se activan cada año |
-| Asistente de flujo HUN (`/preguntas`) | Asistente (suelto) | Preguntas en lenguaje natural sobre el análisis: responde solo con la documentación del proyecto, con tarjetas de cifras y su fuente |
 | Documentación (`/documentacion`) | Conclusiones | Este documento completo, con sus tablas y figuras, y la descarga en PDF |
 
 - **Asistente de preguntas (20-nov-2026):** una página y un botón en la esquina de todas las páginas, desde donde se puede preguntar en lenguaje natural o seleccionar un texto de la pantalla y pulsar «Preguntar sobre esto». Usa la API de Anthropic (Claude Sonnet 5.5) y **solo recibe `docs/asistente/conocimiento.md`**, un documento armado con `src/armar_conocimiento.py` a partir de esta documentación (unos 43.000 tokens, sin datos de pacientes); si la respuesta no está ahí, lo dice. Tiene un límite de 10 preguntas por persona y 60 por día para todo el sitio, y se apaga solo desde el 1-dic-2026. Configuración, costo y apagado: `docs/asistente.md`. Es opcional: sin la clave el dashboard funciona igual y la página avisa que el asistente no está configurado.

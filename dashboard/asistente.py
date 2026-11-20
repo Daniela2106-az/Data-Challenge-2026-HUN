@@ -54,6 +54,18 @@ try:
 except OSError:
     _TEXTO = ""
 
+def _paginas():
+    """{ruta: nombre} de las paginas del dashboard (de dashboard/pages/*.py): las unicas que el asistente puede senalar."""
+    import re
+    d = {}
+    for f in sorted((Path(__file__).resolve().parent / "pages").glob("*.py")):
+        m = re.search(r'register_page\([^)]*?path="([^"]+)"[^)]*?name="([^"]+)"', f.read_text(encoding="utf-8"), re.S)
+        if m:
+            d[m.group(1)] = m.group(2)
+    return d
+
+
+PAGINAS = {r: n for r, n in _paginas().items() if r != "/"}      # el asistente no se senala a si mismo (es la pagina de inicio)
 ICONOS = ["reloj", "tendencia", "embudo", "gente", "sol", "cama", "calendario", "frasco", "campana", "grafico", "persona", "alerta", "hospital", "pulso"]
 TONOS = ["neutro", "bueno", "malo", "info"]
 
@@ -79,15 +91,18 @@ ESQUEMA = {
                        "required": ["etiqueta", "valor", "texto", "tono"], "additionalProperties": False}},
         "texto": {"type": "string", "description": "Explicacion breve en Markdown (1 a 4 frases) con el matiz que acompana a la cifra; puede ser vacia"},
         "nota": {"type": "string", "description": "Una advertencia corta (maximo 15 palabras) si la cifra es una asociacion, un escenario, esta pendiente de validar o tiene un limite importante; si no, cadena vacia"},
-        "fuente": {"type": "string", "description": "De donde sale: seccion del documento y pagina del dashboard con su ruta"},
+        "paginas": {"type": "array", "description": "De 0 a 3 paginas del dashboard donde se ve lo que respondes, de la mas relevante a la menos; vacio si no aplica",
+                    "items": {"type": "string", "enum": sorted(PAGINAS)}},
         "seguimiento": {"type": "array", "description": "Exactamente 2 preguntas cortas que el usuario podria hacer a continuacion, respondibles con la base de conocimiento",
                         "items": {"type": "string"}},
     },
-    "required": ["en_alcance", "titulo", "resaltado", "icono", "tarjetas", "barras_titulo", "barras", "texto", "nota", "fuente", "seguimiento"],
+    "required": ["en_alcance", "titulo", "resaltado", "icono", "tarjetas", "barras_titulo", "barras", "texto", "nota", "paginas", "seguimiento"],
     "additionalProperties": False,
 }
 
 INSTRUCCIONES = """Eres el Asistente de flujo HUN, del dashboard del Data Challenge HUN 2026: un análisis del flujo de pacientes, la espera de cama y la ocupación del Hospital Universidad del Norte (Barranquilla), hecho por estudiantes de Ciencia de Datos de la Universidad del Norte.
+
+El dashboard se abre en tu página: tú eres la página de inicio. Si preguntan cómo usar el dashboard o qué mirar primero, oriéntalos con la guía de la base de conocimiento.
 
 Responde SOLO con lo que dice la base de conocimiento que sigue. Reglas:
 - Si la respuesta no está en la base de conocimiento: en_alcance false, titulo «Eso no está en el análisis del proyecto», en texto explica en una o dos frases qué sí se sabe de algo cercano, y deja tarjetas y barras vacías. No completes con conocimiento general, no inventes cifras y no hagas cálculos nuevos que el proyecto no hizo.
@@ -97,7 +112,7 @@ Responde SOLO con lo que dice la base de conocimiento que sigue. Reglas:
 - barras: solo cuando comparas valores de la misma unidad (años, grupos, franjas); si no, vacío. valor es solo el número; texto es el valor con su unidad.
 - texto: Markdown breve, solo lo que añade (matiz, qué significa). No repitas las tarjetas. Puedes dejarlo vacío.
 - nota: una advertencia corta (máximo 15 palabras) cuando la cifra es una asociación, un escenario, algo pendiente de validar o tiene un límite importante; si no hay nada que advertir, vacía.
-- fuente: sección del documento y, si aplica, la página del dashboard con su nombre y ruta, por ejemplo «Espera de cama · /espera».
+- paginas: de 0 a 3 páginas del dashboard donde el usuario puede ver lo que respondes (la ruta exacta de la lista de páginas de la base de conocimiento), de la más relevante a la menos. No pongas la sección del documento ni la ruta en el texto: la interfaz muestra la página como un botón. Si no hay una página que lo muestre, déjala vacía.
 - seguimiento: exactamente 2 preguntas cortas y distintas que se puedan responder con la base de conocimiento.
 - Escribe en español claro, sin jerga técnica: quien pregunta puede ser personal del hospital o un jurado.
 - No des información de pacientes individuales: el proyecto solo publica cifras agregadas.
@@ -208,7 +223,10 @@ def _limpiar(d):
     def tono(x):
         return x if x in TONOS else "neutro"
     out = {"en_alcance": bool(d.get("en_alcance", True)), "titulo": cad(d.get("titulo"), 200), "resaltado": cad(d.get("resaltado"), 200), "icono": ico(d.get("icono")),
-           "tarjetas": [], "barras_titulo": cad(d.get("barras_titulo"), 120), "barras": [], "texto": cad(d.get("texto"), 1800), "nota": cad(d.get("nota"), 160), "fuente": cad(d.get("fuente"), 200), "seguimiento": []}
+           "tarjetas": [], "barras_titulo": cad(d.get("barras_titulo"), 120), "barras": [], "texto": cad(d.get("texto"), 1800), "nota": cad(d.get("nota"), 160), "paginas": [], "seguimiento": []}
+    for r in (d.get("paginas") or [])[:3]:
+        if r in PAGINAS and r not in out["paginas"]:
+            out["paginas"].append(r)
     for t in (d.get("tarjetas") or [])[:3]:
         if isinstance(t, dict) and t.get("valor"):
             out["tarjetas"].append({"valor": cad(t.get("valor"), 30), "etiqueta": cad(t.get("etiqueta"), 120), "tono": tono(t.get("tono")), "icono": ico(t.get("icono"))})
@@ -224,12 +242,12 @@ def _limpiar(d):
 
 
 def _error(texto):
-    return {"en_alcance": False, "titulo": "", "resaltado": "", "icono": "alerta", "tarjetas": [], "barras_titulo": "", "barras": [], "texto": texto, "nota": "", "fuente": "", "seguimiento": [], "error": True}
+    return {"en_alcance": False, "titulo": "", "resaltado": "", "icono": "alerta", "tarjetas": [], "barras_titulo": "", "barras": [], "texto": texto, "nota": "", "paginas": [], "seguimiento": [], "error": True}
 
 
 def _a_texto_de_historial(turno):
     d = turno.get("datos") or {}
-    return json.dumps({k: d.get(k) for k in ("en_alcance", "titulo", "resaltado", "icono", "tarjetas", "barras_titulo", "barras", "texto", "nota", "fuente", "seguimiento")}, ensure_ascii=False)
+    return json.dumps({k: d.get(k) for k in ("en_alcance", "titulo", "resaltado", "icono", "tarjetas", "barras_titulo", "barras", "texto", "nota", "paginas", "seguimiento")}, ensure_ascii=False)
 
 
 def responder(pregunta, historial=None, cita=None, persona="anonimo"):
