@@ -223,7 +223,8 @@ def layout():
                 ]),
                 html.Details(className="field-group", children=[
                     html.Summary("Diagnóstico del paciente (opcional)", className="field-group__label", style={"cursor": "pointer"}),
-                    dcc.Dropdown(id="pec-dx", options=GRUPOS_DX, placeholder="No se sabe", clearable=True),
+                    dcc.RadioItems(id="pec-dx", options=[{"label": "No se sabe", "value": ""}] + [{"label": g, "value": g} for g in GRUPOS_DX], value="",
+                                   style={"display": "grid", "gap": "4px", "marginTop": "8px", "fontSize": "13px"}),
                 ]),
                 html.Button("Estimar", id="pec-estimar", n_clicks=0, className="btn-primary", style={"width": "100%", "marginTop": "6px"}),
                 html.Div(id="pec-alerta-perfil"),
