@@ -103,7 +103,11 @@ MAX_H_ESTANCIA = 720                                   # 30 dias; mas alla se ce
 CONTROLES_ESTANCIA = [6, 12, 24, 48, 72, 120, 168]
 
 COLS_BASE_ESTANCIA = ["transcurrido", "hora_reloj", "dia_semana", "ocup", "edad_cod", "tipo_cod", "sexo_cod", "zona_cod"]
-CATEGORICAS_ESTANCIA = ["hora_reloj", "dia_semana", "tipo_cod", "dx_previo_cod"]
+CATEGORICAS_ESTANCIA = ["hora_reloj", "dia_semana", "tipo_cod", "dx_previo_cod", "dx_cod"]
+# 20-nov-2026: grupo de diagnostico de ESTA estancia como variable del modelo (a pedido: la pagina «Paciente en cama» deja elegir el diagnostico y tiene que usarse).
+# Ojo: en los datos historicos el diagnostico se registra tarde (88 % despues del inicio del episodio), asi que entrenar con el diagnostico final de cada estancia lo
+# trata como conocido desde la asignacion de cama; la medicion del beneficio esta en docs/estimador_estancia.md. Sin diagnostico = valor faltante (el modelo lo maneja).
+CON_DX_ACTUAL = True
 DINAMICAS_ESTANCIA = ["transcurrido", "hora_reloj", "dia_semana", "ocup"]
 
 
@@ -122,6 +126,9 @@ def preparar():
     d["tipo_cod"] = d.tipo_visita.map({v: i for i, v in enumerate(et.TIPOS)})
     d["sexo_cod"] = (d.sexo == "Mujer").astype(int)
     d["zona_cod"] = (d.zona == "ninos").astype(int)
+    dx_validos = d.categoria_dx.where(d.categoria_dx.notna() & (d.categoria_dx != "Sin diagnostico"))
+    ce.GRUPOS_DX = sorted(t.categoria_dx.dropna().unique())          # el mismo orden que usa el historial (y se guarda en el paquete)
+    d["dx_cod"] = dx_validos.map({g: i for i, g in enumerate(ce.GRUPOS_DX)})
     d = d.reset_index(drop=True)
     d["clave"] = np.arange(len(d))
     d = ce.laboratorios(t, d)                                   # banderas de laboratorio de ingreso (reuso: estatico por estancia_id)
@@ -153,7 +160,7 @@ def censura(d):
 
 
 def cols_finales_estancia():
-    return COLS_BASE_ESTANCIA + ce.HIST + (ce.LAB if ce.HAY_LAB else [])
+    return COLS_BASE_ESTANCIA + ce.HIST + (["dx_cod"] if CON_DX_ACTUAL else []) + (ce.LAB if ce.HAY_LAB else [])
 
 
 def estado_en_cama(d, rejilla, estado, horas_despues):

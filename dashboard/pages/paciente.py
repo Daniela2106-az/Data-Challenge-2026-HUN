@@ -362,8 +362,9 @@ def layout():
                     html.Span("Horas que lleva esperando", className="field-group__label"),
                     stepper("pac-horas", 0, 0, 200),
                 ]),
-                html.Div(className="field-group", children=[
+                html.Div(id="pac-grupo-etapas", className="field-group", children=[
                     html.Span("Etapas en urgencias de esta visita", className="field-group__label"),
+                    html.Div(id="pac-aviso-etapas", className="field-group__help"),
                     html.Div(className="chip-row", children=[
                         html.Div(id="pac-etapas-chip-cerr", className="chip", n_clicks=0, children=[
                             html.Div(id="pac-etapas-cerr-value", className="chip__value"), html.Div("Cerradas", className="chip__label")]),
@@ -378,9 +379,9 @@ def layout():
                     html.Div(id="pac-etapas-label-var", className="chip-editing-label"),
                     dcc.Store(id="pac-n_cerr", data=0), dcc.Store(id="pac-n_abie", data=1), dcc.Store(id="pac-etapas-sel", data="abie"),
                 ]),
-                html.Details(className="field-group", children=[
+                html.Div(id="pac-aviso-labs", className="field-group__help", style={"margin": "0 0 -8px 2px"}),
+                html.Details(id="pac-grupo-labs", className="field-group", children=[
                     html.Summary("Laboratorios de las primeras 6 horas (opcional)", className="field-group__label", style={"cursor": "pointer"}),
-                    html.Div("Cuentan desde que el paciente lleva 6 horas esperando. Marca solo lo que salió fuera de rango; si no marcas nada, no se usan.", className="field-group__help"),
                     dcc.Checklist(id="pac-labs", options=[{"label": t, "value": k} for k, (_c, _v, t) in LABS_FUERA.items()], value=[],
                                   style={"display": "grid", "gap": "4px", "marginTop": "8px", "fontSize": "13px"}),
                 ]),
@@ -560,6 +561,29 @@ def construir_grafico_acumulada(v, ventana_mas_probable, dark):
                       xaxis=dict(tickmode="array", tickvals=xs, ticktext=iconos, tickfont=dict(size=15)))
     tg.aplicar(fig, dark)
     return fig
+
+
+def _horas_donde_aplica(paq, columna):
+    """(primera hora, ultima hora) de espera en las que el modelo correspondiente usa esa columna; None si nunca. Se lee del propio modelo, no se supone."""
+    horas = [h for h in range(0, 200) if columna in etr.modelo_para(paq, h).cols_]
+    return (horas[0], horas[-1]) if horas else None
+
+
+@callback(Output("pac-grupo-etapas", "style"), Output("pac-aviso-etapas", "children"), Output("pac-grupo-labs", "style"), Output("pac-aviso-labs", "children"),
+          Input("pac-horas", "value"))
+def aplicar_campos(horas):
+    """Cada campo debe cambiar la estimacion. El modelo usa las etapas en urgencias solo en las primeras horas de espera y los laboratorios solo desde las 6 h:
+    fuera de ese rango el campo se atenua y dice por que, en vez de dejar escribir algo que no se usa."""
+    try:
+        paq, h = etr._cargar(), float(horas or 0)
+        m = etr.modelo_para(paq, h)
+        r_et, r_lab = _horas_donde_aplica(paq, "n_tu_iniciadas"), _horas_donde_aplica(paq, "con_laboratorio_6h")
+    except Exception:
+        return {}, "", {}, ""
+    atenuado = {"opacity": 0.45}
+    msg_et = "" if "n_tu_iniciadas" in m.cols_ else (f"No se usa con {int(h)} h de espera: el modelo la tiene en cuenta entre {r_et[0]} y {r_et[1]} h." if r_et else "No se usa en esta versión del modelo.")
+    msg_lab = "" if "con_laboratorio_6h" in m.cols_ else (f"No se usan con {int(h)} h de espera: cuentan desde las {r_lab[0]} h." if r_lab else "No se usan en esta versión del modelo.")
+    return ({} if not msg_et else {**atenuado, "pointerEvents": "none"}), msg_et, ({} if not msg_lab else atenuado), msg_lab
 
 
 @callback(Output("pac-ventanas-datos", "data"), Output("pac-lead", "children"), Output("pac-rango", "children"),

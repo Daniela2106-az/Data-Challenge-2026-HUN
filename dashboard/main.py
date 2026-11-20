@@ -96,8 +96,10 @@ def enlace_nav(pagina, ruta_activa):
 def enlaces_nav(ruta_activa):
     """Enlaces del menu: el inicio y luego cada seccion con su titulo (las secciones estan en navegacion.py)."""
     paginas = _paginas_ordenadas()
-    hijos = [enlace_nav(p, ruta_activa) for p in paginas if p["path"] == "/"]
-    for titulo, _descripcion, grupo in agrupar(paginas):
+    hijos = [dcc.Link(href="/simular", className="nav__simular" + (" is-active" if ruta_activa == "/simular" else ""), title="Pronosticar, estimar y simular", children=[
+        html.Span(className="nav__ico ico-models"), html.Span("Simular")])]
+    hijos += [enlace_nav(p, ruta_activa) for p in paginas if p["path"] == "/"]
+    for titulo, _descripcion, grupo in agrupar(paginas, menu=True):
         if titulo:
             hijos.append(html.Div(titulo, className="nav__label"))
         for p in grupo:

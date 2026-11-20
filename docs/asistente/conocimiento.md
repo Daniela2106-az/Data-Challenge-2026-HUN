@@ -26,15 +26,16 @@ Este documento se arma solo con `src/armar_conocimiento.py` a partir de la docum
 - **Recomendaciones**: `/recomendaciones`
 - **Resumen**: `/resumen`
 - **Simulador integral**: `/simulador`
+- **Simular**: `/simular`
 
 ## Cómo está organizado el dashboard
 El dashboard se abre en el asistente (la página de inicio), donde se pregunta en lenguaje natural; debajo hay una guía para explorar por categorías y un recorrido guiado que empieza en Resumen. El menú lateral tiene estas categorías:
 - **Contexto** (El proyecto en una pantalla, y qué datos hay detrás): Resumen (`/resumen`), Datos y calidad (`/datos`)
 - **Flujo** (Cuántos pacientes llegan, a qué hora y cómo cambia con los años): Demanda (`/demanda`), Llegada y altas (`/altas`), Forma del año (`/estacionalidad`), Comparar años (`/comparar`)
-- **Capacidad** (Cuánto se llena el hospital y por qué se espera por una cama): Ocupación de camas (`/ocupacion`), Espera de cama (`/espera`), Factores de la espera (`/factores`), Estancias largas (`/estancia`)
+- **Capacidad** (Cuánto se llena el hospital y por qué se espera por una cama): Ocupación de camas (`/ocupacion`), Espera de cama (`/espera`), Planeación de camas (`/camas`), Factores de la espera (`/factores`), Estancias largas (`/estancia`)
 - **Clínico** (Qué diagnósticos esperan más y dónde se acumula el tiempo): Diagnósticos (`/diagnosticos`), Diagnóstico por periodo (`/periodo`)
 - **Riesgo** (Quiénes y cuándo se complica el flujo, y cómo avisar a tiempo): Perfiles y picos (`/perfiles`), Días atípicos (`/atipicos`), Alertas (`/alertas`)
-- **Módulos** (Qué se espera y qué pasaría si algo cambia): Pronóstico (`/pronostico`), Paciente en espera (`/paciente`), Paciente en cama (`/paciente-cama`), Planeación de camas (`/camas`), Simulador integral (`/simulador`)
+- **Módulos** (Qué se espera y qué pasaría si algo cambia): Pronóstico (`/pronostico`), Paciente en espera (`/paciente`), Paciente en cama (`/paciente-cama`), Simulador integral (`/simulador`)
 - **Conclusiones** (Qué hacer con lo que se encontró): Recomendaciones (`/recomendaciones`), Documentación (`/documentacion`)
 Para empezar: Resumen (el proyecto en una pantalla), luego Espera de cama y Ocupación de camas (el problema), Recomendaciones (qué hacer) y, para probar escenarios, el Simulador integral.
 
@@ -524,8 +525,9 @@ precisión qué dato nuevo (gravedad, servicio y hora de la orden de hospitaliza
   R² = 7,9-10,8 %, declarado como «explica, no predice». Ambos intentaban resolver, de una sola vez al ingresar, la estancia TOTAL; nunca se había
   probado la arquitectura que sí funciona para la espera (un modelo por hora ya transcurrida).
 - **Qué usa:** edad, sexo, tipo de visita, horas ya en cama, la hora, la ocupación del hospital, el historial de hospitalizaciones anteriores (incluido
-  el diagnóstico de esa visita anterior) y sus laboratorios del ingreso. NO usa el diagnóstico de esta estancia (se registra tarde: fuga) ni el
-  recorrido en urgencias (pertenece al tramo antes de la cama).
+  el diagnóstico de esa visita anterior), sus laboratorios del ingreso y, desde el 20-nov-2026, el diagnóstico de la estancia cuando se indica (mejora de
+  2,4 a 4,4 % al asignarse la cama; en los datos históricos el diagnóstico se registra tarde, así que su efecto puede estar algo sobreestimado). NO usa
+  el recorrido en urgencias (pertenece al tramo antes de la cama).
 - **Resultado** (probado con 3.900 estancias de jul-2025 a 9-ene-2026 que el modelo no vio, contra el rango por perfil que ya usa el dashboard): mejora
   **1,6 % al asignarse la cama (IC 95 % 0,9 a 2,4 %)**, bajando con las horas y modestamente negativa desde las 120 h (muestra de prueba ya chica). Es
   real pero mucho menor que el ~9-11 % del estimador de espera: lo que no se registra (servicio, tipo de cama, gravedad clínica) sigue explicando la

@@ -604,8 +604,9 @@ las llegadas incluyen ~4 % de réplicas; los efectos de los factores externos so
   R² = 7,9-10,8 %, declarado como «explica, no predice». Ambos intentaban resolver, de una sola vez al ingresar, la estancia TOTAL; nunca se había
   probado la arquitectura que sí funciona para la espera (un modelo por hora ya transcurrida).
 - **Qué usa:** edad, sexo, tipo de visita, horas ya en cama, la hora, la ocupación del hospital, el historial de hospitalizaciones anteriores (incluido
-  el diagnóstico de esa visita anterior) y sus laboratorios del ingreso. NO usa el diagnóstico de esta estancia (se registra tarde: fuga) ni el
-  recorrido en urgencias (pertenece al tramo antes de la cama).
+  el diagnóstico de esa visita anterior), sus laboratorios del ingreso y, desde el 20-nov-2026, el diagnóstico de la estancia cuando se indica (mejora de
+  2,4 a 4,4 % al asignarse la cama; en los datos históricos el diagnóstico se registra tarde, así que su efecto puede estar algo sobreestimado). NO usa
+  el recorrido en urgencias (pertenece al tramo antes de la cama).
 - **Resultado** (probado con 3.900 estancias de jul-2025 a 9-ene-2026 que el modelo no vio, contra el rango por perfil que ya usa el dashboard): mejora
   **1,6 % al asignarse la cama (IC 95 % 0,9 a 2,4 %)**, bajando con las horas y modestamente negativa desde las 120 h (muestra de prueba ya chica). Es
   real pero mucho menor que el ~9-11 % del estimador de espera: lo que no se registra (servicio, tipo de cama, gravedad clínica) sigue explicando la

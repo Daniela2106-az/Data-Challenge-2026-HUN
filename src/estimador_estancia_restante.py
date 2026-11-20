@@ -62,7 +62,8 @@ LIMITE_ENTRENAMIENTO = None                    # None = todo el periodo confiabl
                                                 # recortar ese modelo antes de abril-2026; ver prueba de coherencia entre landmarks, 19-nov)
 DIAS_AVISO = 60
 NIVEL_P90 = 0.90                               # estandar, sin calibrar todavia (a diferencia del modelo de espera, que si tiene un nivel calibrado)
-VERSION_MODELO = 1
+VERSION_MODELO = 2                             # 2 (20-nov-2026): agrega el diagnostico de ESTA estancia (dx_cod) como variable. Un modelo guardado de la version 1 sigue sirviendo (no usa el diagnostico)
+VERSION_MINIMA = 1
 MODELO = Path(os.environ.get("HUN_PROCESADOS", ce.PROC)) / "modelos" / "m1_estancia_restante.joblib"
 _CACHE = {}
 
@@ -79,7 +80,8 @@ def _entrenar_y_guardar():
 def _cargar():
     if "m" not in _CACHE:
         paq = joblib.load(MODELO) if MODELO.exists() else None
-        _CACHE["m"] = paq if paq is not None and paq.get("version") == VERSION_MODELO else _entrenar_y_guardar()
+        # Una version anterior guardada se acepta tal cual (no se reentrena en pleno servicio: en un servidor pequeno el entrenamiento no termina); solo se reentrena si no hay modelo.
+        _CACHE["m"] = paq if paq is not None and paq.get("version", 0) >= VERSION_MINIMA else _entrenar_y_guardar()
     return _CACHE["m"]
 
 
@@ -107,12 +109,13 @@ def ventanas_de_alta(S, c, horas_en_cama, ahora, dias=DIAS_VENTANA):
 
 
 def estimar_estancia_restante(edad, sexo, tipo_visita, horas_en_cama=0, ahora=None, ocupacion_zona=None,
-                              hospitalizacion_previa=None, diagnostico_previo=None, laboratorios_ingreso=None):
+                              hospitalizacion_previa=None, diagnostico_previo=None, laboratorios_ingreso=None, diagnostico=None):
     """Tiempo que le falta a un paciente YA hospitalizado para recibir el alta.
     sexo: 'Mujer' u 'Hombre'; tipo_visita: 'Urgencias', 'Treatment urgency' o 'Ambulatorio'.
     hospitalizacion_previa: dict con espera_h, estancia_h, dias_desde y n_previas (o None si nunca estuvo hospitalizado antes).
     diagnostico_previo: grupo de diagnostico de una visita ANTERIOR (como en datos/referencia/mapeo_dx.csv), o None. NUNCA el de esta estancia.
-    laboratorios_ingreso: dict con los valores de las primeras 6 h de la visita (igual formato que estimador_tiempo_restante.py), o None."""
+    laboratorios_ingreso: dict con los valores de las primeras 6 h de la visita (igual formato que estimador_tiempo_restante.py), o None.
+    diagnostico: grupo de diagnostico de ESTA estancia (mismos grupos), o None si no se sabe. Entra al modelo como la variable dx_cod (version 2 del modelo en adelante)."""
     if sexo not in ("Mujer", "Hombre") or tipo_visita not in et.TIPOS:
         raise ValueError(f"sexo debe ser Mujer u Hombre y tipo_visita uno de {et.TIPOS}")
     if not 0 <= horas_en_cama < cee.MAX_H_ESTANCIA - 1:
@@ -124,6 +127,8 @@ def estimar_estancia_restante(edad, sexo, tipo_visita, horas_en_cama=0, ahora=No
     ocup = paq["ocup_tipica"][zona] if ocupacion_zona is None else float(ocupacion_zona)
     grupo = str(pd.cut([edad], [-1, 4, 14, 29, 44, 59, 74, 200], labels=et.EDADES)[0])
     hp = hospitalizacion_previa or {}
+    if diagnostico is not None and diagnostico not in paq["grupos_dx"]:
+        raise ValueError(f"diagnostico debe ser uno de {paq['grupos_dx']}")
     if diagnostico_previo is not None and diagnostico_previo not in paq["grupos_dx"]:
         raise ValueError(f"diagnostico_previo debe ser uno de {paq['grupos_dx']}")
     banderas = ({c: 0.0 for c in ce.LAB} if not laboratorios_ingreso else
@@ -137,6 +142,7 @@ def estimar_estancia_restante(edad, sexo, tipo_visita, horas_en_cama=0, ahora=No
                       "espera_prev_h": hp.get("espera_h", np.nan), "estancia_prev_h": hp.get("estancia_h", np.nan),
                       "n_hosp_previas": hp.get("n_previas", 1 if hp else 0), "dias_desde_hosp": hp.get("dias_desde", np.nan),
                       "dx_previo_cod": paq["grupos_dx"].index(diagnostico_previo) if diagnostico_previo else np.nan,
+                      "dx_cod": paq["grupos_dx"].index(diagnostico) if diagnostico else np.nan,
                       **{c2: float(v) for c2, v in banderas.items()}})[m.cols_]
     p = m.predict_proba(X)[:, 1]
     S = np.concatenate([[1.0], np.cumprod(1 - p)])[None, :]            # S[j] = P(sigue en cama j horas despues de 'c')
@@ -145,8 +151,13 @@ def estimar_estancia_restante(edad, sexo, tipo_visita, horas_en_cama=0, ahora=No
     pct = np.clip(pct - (horas_en_cama - c), 0, None)
     ventanas = ventanas_de_alta(S[0], c, horas_en_cama, ahora)
     avisos = ["Rango de pacientes parecidos, no una promesa individual.",
-              "No usa el diagnóstico de esta estancia (se registra tarde, la mayoría después de la mitad de la estancia); solo el de una hospitalización anterior, si la hubo.",
               "Solo para pacientes ya hospitalizados (con cama asignada)."]
+    if diagnostico is not None:
+        if "dx_cod" in m.cols_:
+            avisos.append("Usa el diagnóstico que indicaste como si se conociera desde que se asignó la cama. En los datos históricos el diagnóstico se registra tarde (88 % después del inicio de la visita), "
+                          "así que su efecto puede estar algo sobreestimado.")
+        else:
+            avisos.append("Esta versión del modelo todavía no usa el diagnóstico de la estancia: el que indicaste no cambió la estimación.")
     atraso = (ahora - pd.Timestamp(paq["entrenado_hasta"])).days
     if atraso > DIAS_AVISO:
         avisos.append(f"Modelo entrenado hasta {paq['entrenado_hasta']} ({atraso} dias antes de la fecha consultada): el hospital pudo cambiar.")

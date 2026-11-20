@@ -2630,3 +2630,46 @@ html.nav-cargando::before { content: ""; position: fixed; top: 0; left: 0; heigh
 
 /* «Cómo se eligió este modelo»: separado de lo de arriba */
 .card.eleccion { margin-top: 28px; }
+
+/* ---- Boton «Simular» del menu y pagina /simular (20-nov-2026) ---- */
+.nav__simular { display: flex; align-items: center; gap: 10px; margin: 2px 0 10px; padding: 11px 14px; border-radius: 10px; background: var(--brand-strong); color: #fff !important; font-weight: 700; text-decoration: none; box-shadow: 0 2px 8px rgba(0,113,188,.35); transition: transform .15s, box-shadow .15s, filter .15s; }
+.nav__simular:hover, .nav__simular.is-active { filter: brightness(1.1); transform: translateY(-1px); box-shadow: 0 4px 14px rgba(0,113,188,.45); }
+.nav__simular .nav__ico { background-color: #fff; }
+:root.sidebar-colapsado .nav__simular { justify-content: center; padding: 11px 0; gap: 0; }
+:root.sidebar-colapsado .nav__simular span:not(.nav__ico) { display: none; }
+:root[data-theme="dark"] .nav__simular { background: #0f6fa8; }
+
+.sim-pag { max-width: 1100px; margin: 0 auto; padding: 28px 8px 40px; }
+.sim-pag__titulo { font-size: 38px; font-weight: 800; color: var(--brand-ink); text-align: center; margin: 0 0 6px; }
+.sim-pag__sub { text-align: center; color: var(--muted, #5b6b7b); margin: 0 0 32px; }
+.sim-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 22px; }
+@media (max-width: 760px) { .sim-grid { grid-template-columns: 1fr; } }
+.sim-card { display: flex; flex-direction: column; gap: 10px; padding: 22px; border-radius: 16px; background: var(--card, #fff); border: 1px solid rgba(0,113,188,.18); text-decoration: none; color: inherit; transition: transform .2s, box-shadow .2s, border-color .2s; }
+.sim-card:hover { transform: translateY(-4px); border-color: var(--brand); box-shadow: 0 10px 28px rgba(0,113,188,.2); }
+.sim-card__anim { height: 120px; border-radius: 12px; background: rgba(0,147,208,.08); display: flex; align-items: center; justify-content: center; }
+.sim-card__anim svg { width: 100%; height: 100%; }
+.sim-card__t { font-size: 22px; font-weight: 800; color: var(--brand-strong); margin: 4px 0 0; }
+.sim-card__d { font-size: 15px; color: inherit; opacity: .85; margin: 0; }
+.sim-card svg .st { stroke: var(--brand-strong); fill: none; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.sim-card svg .fl { fill: var(--brand); }
+.sim-card svg .gr { stroke: var(--brand-strong); opacity: .25; stroke-width: 2; }
+/* 1 Pronosticador: la linea se dibuja y sube */
+.a-linea { stroke-dasharray: 260; stroke-dashoffset: 0; }
+.sim-card:hover .a-linea { animation: a-dibuja 1.4s ease-out; }
+@keyframes a-dibuja { from { stroke-dashoffset: 260; } to { stroke-dashoffset: 0; } }
+.a-punta { opacity: 1; }
+.sim-card:hover .a-punta { animation: a-aparece 1.4s; }
+@keyframes a-aparece { 0%, 80% { opacity: 0; } 100% { opacity: 1; } }
+/* 2 Paciente en espera: reloj con manecilla que gira */
+.a-aguja { transform-origin: 100px 60px; }
+.sim-card:hover .a-aguja { animation: a-gira 1.6s linear infinite; }
+@keyframes a-gira { to { transform: rotate(360deg); } }
+/* 3 Paciente en cama: la barra de estancia se llena */
+.a-barra { transform-origin: 40px 0; transform: scaleX(.35); transition: transform 1.2s ease-out; }
+.sim-card:hover .a-barra { transform: scaleX(1); }
+/* 4 Simulador: las palancas se mueven */
+.a-p1 { transition: transform .9s ease-in-out; }
+.sim-card:hover .a-p1 { transform: translateX(50px); }
+.sim-card:hover .a-p2 { transform: translateX(-45px); }
+.sim-card:hover .a-p3 { transform: translateX(35px); }
+.a-p2, .a-p3 { transition: transform .9s ease-in-out; }

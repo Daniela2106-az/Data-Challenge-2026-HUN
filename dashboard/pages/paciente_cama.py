@@ -73,9 +73,11 @@ ETAPAS_PIPELINE_A6B = [
     ("3. Censura correcta", "Las estancias sin alta resuelta (aún hospitalizadas, o que terminan después del "
      "periodo confiable) no se descartan: siguen aportando como censuradas (en riesgo, sin marcar un alta que "
      "no se sabe si ocurrió). Los dos intentos anteriores las descartaban, sesgando contra las estancias largas."),
-    ("4. Evitar la fuga del diagnóstico", "Casi todos los diagnósticos se registran tarde (la mayoría después "
-     "de la mitad de la estancia). Por eso el modelo NO usa el diagnóstico de esta estancia, solo el de una "
-     "hospitalización anterior, si la hubo."),
+    ("4. El diagnóstico, con cuidado", "Casi todos los diagnósticos se registran tarde (la mayoría después "
+     "de la mitad de la estancia), así que en los datos históricos se tratan como conocidos desde que se asigna la cama, lo que puede "
+     "sobreestimar su efecto. Aun así lo incluimos porque sí mejora la estimación (de 2,4 a 4,4 % frente al rango por perfil al asignarse la cama, "
+     "probado con estancias que el modelo no vio) y porque en el uso real el médico conoce el diagnóstico del paciente que ya está en cama. "
+     "Si no se indica, el modelo funciona igual."),
     ("5. Medir contra el rango por perfil", "El punto de comparación no es R² (ya se sabía que falla, ver "
      "abajo) sino la pérdida de cuantiles frente al rango por perfil que ya usa el dashboard (que_esperar.py)."),
 ]
@@ -139,9 +141,9 @@ def panel_tecnico():
                          "«dado que el paciente sigue en cama ahora, ¿cuál es la probabilidad de que le den el alta en la "
                          "próxima hora?». Encadenando esas probabilidades hora por hora se construye la curva completa. "
                          "Usa edad, sexo, tipo de visita, horas ya en cama, hora del reloj, día de la semana, ocupación de "
-                         "la zona y, si estuvo hospitalizado antes, su historial.", style={"fontSize": "13px", "lineHeight": "1.6"}),
-                html.Div("No usa el diagnóstico de esta estancia (fuga: se registra tarde) ni el recorrido en urgencias "
-                         "(eso es el tramo antes de la cama, no la estancia en ella).", style={"fontSize": "12px", "color": GRIS, "marginTop": "4px"}),
+                         "la zona, los laboratorios del ingreso y el diagnóstico del paciente, cuando se indican.", style={"fontSize": "13px", "lineHeight": "1.6"}),
+                html.Div("El diagnóstico es opcional: si se indica, el modelo lo usa como dato conocido (en los datos históricos se registra tarde, así que su efecto "
+                         "puede estar algo sobreestimado). No usa el recorrido en urgencias (eso es el tramo antes de la cama, no la estancia en ella).", style={"fontSize": "12px", "color": GRIS, "marginTop": "4px"}),
             ]),
             html.Div([
                 html.Div("Por qué los intentos anteriores no funcionaban", className="metodo__rotulo"),
@@ -170,9 +172,9 @@ def panel_tecnico():
                          "no se registra (servicio, tipo de cama, gravedad clínica) sigue explicando la mayor parte de "
                          "cuánto dura una estancia. A horas ya avanzadas (120-168 h) la muestra de prueba es chica y la "
                          "ventaja frente al rango por perfil se vuelve inestable; en esos casos el rango que se muestra "
-                         "es, sobre todo, una descripción de pacientes parecidos, no una predicción afinada. No usa el "
-                         "diagnóstico de esta estancia ni la gravedad clínica (UCI, procedimientos): esos datos no tienen "
-                         "una hora confiable antes del alta.", style={"fontSize": "12.5px", "color": GRIS}),
+                         "es, sobre todo, una descripción de pacientes parecidos, no una predicción afinada. No usa la "
+                         "gravedad clínica (UCI, procedimientos): esos datos no tienen una hora confiable antes del alta. "
+                         "El diagnóstico, si se indica, sí entra, pero en los datos históricos se registra tarde.", style={"fontSize": "12.5px", "color": GRIS}),
             ]),
         ]),
     ])
@@ -216,9 +218,12 @@ def layout():
                 ]),
                 html.Details(className="field-group", children=[
                     html.Summary("Laboratorios del ingreso (primeras 6 horas de la visita, opcional)", className="field-group__label", style={"cursor": "pointer"}),
-                    html.Div("Lo que se sabía al llegar a la cama (no cambia durante la estancia en esta versión). Marca solo lo que salió fuera de rango; si no marcas nada, no se usan.", className="field-group__help"),
                     dcc.Checklist(id="pec-labs", options=[{"label": t, "value": k} for k, (_c, _v, t) in LABS_FUERA.items()], value=[],
                                   style={"display": "grid", "gap": "4px", "marginTop": "8px", "fontSize": "13px"}),
+                ]),
+                html.Details(className="field-group", children=[
+                    html.Summary("Diagnóstico del paciente (opcional)", className="field-group__label", style={"cursor": "pointer"}),
+                    dcc.Dropdown(id="pec-dx", options=GRUPOS_DX, placeholder="No se sabe", clearable=True),
                 ]),
                 html.Button("Estimar", id="pec-estimar", n_clicks=0, className="btn-primary", style={"width": "100%", "marginTop": "6px"}),
                 html.Div(id="pec-alerta-perfil"),
@@ -245,8 +250,8 @@ def layout():
                "ingreso. Encadenando esas probabilidades sale el rango completo de lo que falta. Se entrena con las estancias del periodo confiable, "
                "y las estancias sin alta resuelta aportan como censuradas en vez de descartarse. Probado con estancias que no había visto: mejora "
                "modesta frente a darle a cada perfil su propio rango (ver cifras reales en la ficha técnica).",
-               "No usa el diagnóstico de esta estancia (se registra tarde) ni la gravedad clínica (UCI, procedimientos), que es de lo que más "
-               "depende la estancia real. La mejora medida es mucho menor que la del estimador de espera: la mayor parte de cuánto dura una "
+               "El diagnóstico entra si se indica (en los datos históricos se registra tarde, así que su efecto puede estar algo sobreestimado). "
+               "No usa la gravedad clínica (UCI, procedimientos), que es de lo que más depende la estancia real. La mejora medida es mucho menor que la del estimador de espera: la mayor parte de cuánto dura una "
                "estancia no está en lo que la base registra. A horas ya avanzadas (120-168 h) el rango es, sobre todo, descriptivo.",
                "Fuente: src/estimador_estancia_restante.py y src/comparar_estimadores_estancia.py. Detalle: documentación, sección 6.10.", ruta="/paciente-cama",
                antes=secciones(panel_interpretacion(), solo=("Qué estás viendo", "Qué significa cada cosa del gráfico")) + [html.Div([html.Div("Avisos de esta estimación", className="metodo__rotulo"), html.Div(id="pec-nota")])], despues=secciones(panel_tecnico(), solo=ETAPAS_Y_PRUEBAS), pasos=False, modelo=False),
@@ -298,14 +303,14 @@ def construir_grafico_acumulada(v, ventana_mas_probable, dark):
           Output("pec-nota", "children"), Output("pec-alerta-perfil", "children"),
           Input("pec-estimar", "n_clicks"),
           State("pec-edad", "value"), State("pec-sexo", "value"), State("pec-tipo", "value"), State("pec-horas", "value"),
-          State("pec-labs", "value"))
-def actualizar(_, edad, sexo, tipo, horas, labs):
+          State("pec-labs", "value"), State("pec-dx", "value"))
+def actualizar(_, edad, sexo, tipo, horas, labs, dx):
     try:
         horas = float(horas or 0)
         ahora = pd.Timestamp.now(tz="America/Bogota").strftime("%Y-%m-%d %H:%M")      # la hora actual, en Colombia (el servidor puede estar en otra zona)
         valores_lab = {LABS_FUERA[k][0]: LABS_FUERA[k][1] for k in (labs or []) if k in LABS_FUERA} or None      # sin nada marcado, no se usan los laboratorios
         r = eer.estimar_estancia_restante(float(edad), sexo, tipo, horas, ahora, ocupacion_zona=None,
-                                          hospitalizacion_previa=None, diagnostico_previo=None, laboratorios_ingreso=valores_lab)
+                                          hospitalizacion_previa=None, diagnostico_previo=None, laboratorios_ingreso=valores_lab, diagnostico=dx or None)
     except Exception as err:
         return None, [], [], f"No se pudo estimar: {err}", []
     v = pd.DataFrame(r["ventanas"])
