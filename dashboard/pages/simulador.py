@@ -51,8 +51,9 @@ dash.register_page(__name__, path="/simulador", name="Simulador integral", title
 GRIS, AZUL, NARANJA, VERDE, ROJO, ROSA = "#6b6b6b", "#2a6fb0", "#eb6834", "#2e8b57", "#c0392b", "#c2185b"
 N_REP_INTERACTIVO = 200
 N_REP_HORARIO = 300
+import pacientes_alerta as pac_alerta  # noqa: E402  (tablas de pacientes de la confirmacion verde)
 from umbrales_alertas import (ARRANQUE_SIN_ALERTAS, UMBRAL_ALERTA, UMBRAL_ALERTA_MEDIA, UMBRAL_COLA, UMBRAL_COLA_CRITICA, UMBRAL_FALTAN,  # noqa: E402,F401
-                              UMBRAL_FALTAN_CRITICO)
+                              UMBRAL_FALTAN_CRITICO, UMBRAL_LLEGADAS_TARDE, FRACCION_COLA_PICO)
 
 # Escenarios con nombre: cada uno fija las palancas (el simulador mueve los controles y despues recalcula). Los factores externos no cambian.
 PALANCAS_CERO = {"llegadas": 0, "estancia": 0, "espera": 0, "capacidad": 106, "estres": 0, "recorte": 0, "adelanto": 0}
@@ -122,8 +123,7 @@ def _plan_de_mejora(tipo, o, cap, c, altas_dia, perfiles_top):
     donde = [f"**Dónde empezar.** Los grupos que más camas ocupan ese día: {perfiles_top[0][0]} (~{perfiles_top[0][1]:.0f}) y {perfiles_top[1][0]} (~{perfiles_top[1][1]:.0f})."] if len(perfiles_top) > 1 else []
     if tipo == "saturacion":
         resto = f" Con esa meta se liberan ~{libres:.0f} de las ~{falta:.0f} camas que faltan; el resto necesita otras medidas." if libres < falta - 0.5 else ""
-        situacion = f"se esperan ~{o:.0f} camas ocupadas, ~{falta:.0f} por encima de las {cap}" if falta >= UMBRAL_FALTAN else f"se esperan ~{o:.0f} camas ocupadas, al límite de las {cap}"
-        r3 = f"**R3 · Reunión de camas.** Reunir antes del mediodía a camas, urgencias y pisos: {situacion}; listar a los ~{larga_camas:.0f} pacientes con más de 14 días."
+        r3 = f"**R3 · Reunión de camas.** Reunir antes del mediodía a camas, urgencias y pisos y listar a los ~{larga_camas:.0f} pacientes con más de 14 días."
         r4 = (f"**R4 · Adelantar altas.** Pasar el {ADELANTO_ALTAS} % de las altas de la tarde a la mañana (≈{altas_tarde * ADELANTO_ALTAS / 100:.0f} de las ~{altas_tarde:.0f} altas diarias de la tarde): "
               "ronda médica a primera hora, alta preparada el día anterior y la cama liberada asignada enseguida.")
         return [r3, r4, r7 + resto, *donde], {"recorte": dosis, "adelanto": ADELANTO_ALTAS}
@@ -133,7 +133,7 @@ def _plan_de_mejora(tipo, o, cap, c, altas_dia, perfiles_top):
     return [r5, r6], {"espera": ESPERA_PEDIR_ANTES}
 
 
-def _alertas_dia(fechas, total_p50, cola_p50, probs48, capacidad, horas=False, altas_dia=19.6, comp=None, perfiles=None):
+def _alertas_dia(fechas, total_p50, cola_p50, probs48, capacidad, horas=False, altas_dia=19.6, comp=None, perfiles=None, llegadas_tarde=None):
     """Reglas de negocio sobre las series simuladas: la alerta de cada dia (o de cada hora), o None. Cada una dice su tipo, su gravedad (media: aviso; alta: critica),
     por que salto, la recomendacion especifica con cifras de la simulacion y las palancas que la aplican (`_plan_de_mejora`).
     Faltaran camas (se necesitaran mas de las 106; fusiona las antiguas saturacion y ocupacion alta, que decian lo mismo): aviso desde 50 % de probabilidad de superar la capacidad a 48 h
@@ -152,14 +152,19 @@ def _alertas_dia(fechas, total_p50, cola_p50, probs48, capacidad, horas=False, a
             cuando = f"{p:.0f} % de probabilidad de superar las {capacidad} camas dentro de 48 {'horas' if horas else 'horas (pasado mañana)'}"
             cuanto = (f"faltarían unas {falta:.0f} camas (se esperan ~{o:.0f} ocupadas)" if round(falta) != 1 else f"faltaría 1 cama (se esperan ~{o:.0f} ocupadas)") if falta >= UMBRAL_FALTAN else f"se esperan ~{o:.0f} camas ocupadas, al límite de la capacidad"
             cand.append(("Alta" if (p >= UMBRAL_ALERTA or falta >= UMBRAL_FALTAN_CRITICO) else "Media", 0, {
-                "tipo": "saturacion", "titulo": "Faltarán camas",
+                "tipo": "saturacion", "titulo": "Faltarán camas", "metrica": f"~{o:.0f} de {capacidad} camas",
                 "texto": f"{cuando}; {cuanto}.",
                 "acciones": ac, "palancas": pal, "mejora": True, "rec": 3, "alerta": "A2"}))
-        if c >= UMBRAL_COLA:
+        lt = float(llegadas_tarde[i]) if llegadas_tarde is not None and i < len(llegadas_tarde) else 0.0
+        pico_tarde = lt >= UMBRAL_LLEGADAS_TARDE and c >= FRACCION_COLA_PICO * UMBRAL_COLA          # 19-nov: pico de llegadas de la tarde con la cola ya alta
+        if c >= UMBRAL_COLA or pico_tarde:
             ac, pal = _plan_de_mejora("cola", o, capacidad, c, altas_dia, top)
+            texto_cola = (f"Unos {c:.0f} pacientes esperando cama a la vez, más de lo habitual (cerca de 26)." if c >= UMBRAL_COLA else
+                          f"Llegan unos {lt:.0f} pacientes entre las 14 y las 19 h (lo habitual son ~65 y solo 1 de cada 10 días pasa de {UMBRAL_LLEGADAS_TARDE}) y la cola ya es de ~{c:.0f}: "
+                          "la ola de la tarde la va a alargar.")
             cand.append(("Alta" if c >= UMBRAL_COLA_CRITICA else "Media", 1, {
-                "tipo": "cola", "titulo": "Cola de espera larga",
-                "texto": f"Unos {c:.0f} pacientes esperando cama a la vez, más de lo habitual (cerca de 26).",
+                "tipo": "cola", "titulo": "Cola de espera larga", "metrica": f"{c:.0f} pacientes esperando",
+                "texto": texto_cola,
                 "acciones": ac, "palancas": pal, "mejora": True, "rec": 5, "alerta": "S1"}))
         if not cand:
             salida.append([])
@@ -941,6 +946,11 @@ def layout():
         # pasar el mouse es absolute y SI se superpone sobre el contenido de abajo (eso si es lo esperado).
         # El resto del contenido (alerta/radiografia/grafico) usa todo el ancho disponible.
         html.Div(children=[
+            html.Div(id="simint-confirmacion", className="simint-confirmacion", children=[
+                html.Div(id="simint-confirmacion-cuerpo"),
+                html.Div(className="simint-conf__acciones", children=[
+                    html.Button("Continuar con la mejora", id="simint-confirmar", n_clicks=0, className="btn-primary simint-conf__boton")])]),
+            html.Div(id="simint-alerta-cols", className="simint-cols", style={"display": "none"}),
             html.Div(id="simint-alerta", className="alert-inline simint-alerta simint-alerta--idle", style={"display": "flex"}, children=[
                 html.Div(className="simint-alerta__espera", children=[
                     html.Span(className="nav__ico ico-alert simint-alerta__espera-ico"),
@@ -954,7 +964,8 @@ def layout():
                 html.Div(className="simint-alerta__cuerpo", children=[
                     html.Div(className="simint-alerta__cab", children=[
                         html.Span(id="simint-alerta-grav", className="rec-chip"), html.Span("Sin alertas por ahora", id="simint-alerta-titulo", className="simint-alerta__titulo"),
-                        html.Span(id="simint-alerta-fecha", className="simint-alerta__fecha")]),
+                        html.Span(id="simint-alerta-fecha", className="simint-alerta__fecha"),
+                        html.Button("Cerrar ✕", id="simint-alerta-cerrar", type="button", className="simint-alerta__cerrar", title="Volver a la versión comprimida")]),
                     html.Div(className="simint-alerta__bloque", children=[html.Span("Qué pasó", className="simint-alerta__rotulo"), html.Span("Las alertas saltarán aquí mientras corre la simulación, y la tarjeta se queda a la vista.", id="simint-alerta-detalle")]),
                     html.Div(className="simint-alerta__bloque", children=[html.Span("Recomendación", className="simint-alerta__rotulo"),
                                                                            dcc.Markdown(id="simint-alerta-acciones", className="simint-alerta__vinetas"), html.Span(id="simint-alerta-paso", className="simint-alerta__paso")]),
@@ -1090,6 +1101,7 @@ def layout():
         html.Div(id="simint-dummy-cfg", style={"display": "none"}),
         dcc.Store(id="simint-cursor", storage_type="session"),
         dcc.Store(id="simint-datos", storage_type="session"),
+        dcc.Store(id="simint-pacientes", storage_type="session"),      # pacientes de ejemplo de la corrida (una repeticion), para las tablas de la confirmacion verde
         dcc.Store(id="simint-filtro", data={}, storage_type="session"),
         dcc.Store(id="simint-sync-hover"),   # salida de callbacks cliente "silenciosos" (no se usa su valor)
         mensaje("**Sirve para ver el efecto de una decisión sobre todo el flujo a la vez, no para adivinar un día.** Bajar la estancia descarga las camas; bajar la espera descarga "
@@ -1152,8 +1164,9 @@ def _ejecutar(dias, pct_lleg, pct_est, pct_esp, recorte, adelanto, estres, compa
                                             ajuste_espera=1 + pct_esp / 100, n_rep=N_REP_INTERACTIVO,
                                             modelos=MODELOS_FIJOS, casos=casos, con_composicion=True,
                                             recorte_largas_pct=recorte or 0, adelanto_altas_pct=adelanto or 0,
-                                            mezcla_edad=me, mezcla_ruta=mr, acoplar_estancia=True, cambios=[{"dia": c["dia"], "valores": c["valores"]} for c in cambios] if cambios else None)
+                                            mezcla_edad=me, mezcla_ruta=mr, acoplar_estancia=True, registrar_rep=0, cambios=[{"dia": c["dia"], "valores": c["valores"]} for c in cambios] if cambios else None)
     data = {"fechas": [str(f.date()) for f in fechas], "es_horario": False}
+    data["pacientes"] = info.get("pacientes")        # ejemplo de una repeticion: va a su propio Store (_sacar_pacientes), no en simint-datos
     # Los controles con los que arranco esta corrida y los que valen ahora (si hubo cambios a mitad de camino): sirven para saber, al continuar, si el usuario cambio algo.
     data["controles_ini"] = {"llegadas": pct_lleg or 0, "estancia": pct_est or 0, "espera": pct_esp or 0, "recorte": recorte or 0, "adelanto": adelanto or 0, "estres": estres or 0}
     data["cambios"] = cambios or []
@@ -1171,7 +1184,8 @@ def _ejecutar(dias, pct_lleg, pct_est, pct_esp, recorte, adelanto, estres, compa
     data["prob_sat_48h"] = np.round(probs[idx48], 1).tolist()
     data["umbral_alerta"] = UMBRAL_ALERTA
     data["alertas_dia"] = _alertas_dia(data["fechas"], data["total_p50"], data["cola_p50"], data["prob_sat_48h"], scm.CAPACIDAD["total"],
-                                       altas_dia=data["medias"]["altas"], comp=data["composicion"]["en_cama"], perfiles=data["perfiles"])
+                                       altas_dia=data["medias"]["altas"], comp=data["composicion"]["en_cama"], perfiles=data["perfiles"],
+                                       llegadas_tarde=data["llegadas_franja"].get("tarde"))
     data["sat_por_capacidad"] = {str(c): round(100 * float((out["total"] > c).mean()), 1) for c in range(96, 131, 2)}
     hay_palancas = any([pct_lleg, pct_est, pct_esp, recorte, adelanto, estres, casos])
     cambios_l = list(cambios or [])
@@ -1225,6 +1239,12 @@ def _ejecutar(dias, pct_lleg, pct_est, pct_esp, recorte, adelanto, estres, compa
     return data, (html.Div([nota_casos, nota]) if (nota_casos != "" and nota != "") else (nota_casos or nota))
 
 
+def _sacar_pacientes(data):
+    """Separa los pacientes de ejemplo del resto de los datos: simint-datos viaja al servidor en cada paso del grafico y no debe cargarlos."""
+    pac = data.pop("pacientes", None)
+    return data, pac
+
+
 def _reanudable_py(datos, cursor, lleg, est, esp, rec, adel, estr, dias):
     """Hay una corrida a medias y los controles siguen como estaban: se reanuda desde ese dia (ver simintReanudable en assets/simint_cola.js)."""
     if not datos or datos.get("es_horario") or not isinstance(cursor, int) or not datos.get("controles"):
@@ -1240,7 +1260,7 @@ def _reanudable_py(datos, cursor, lleg, est, esp, rec, adel, estr, dias):
     return all((v.get(k) or 0) == ahora[k] for k in ahora)
 
 
-@callback(Output("simint-datos", "data"), Output("simint-nota", "children"),
+@callback(Output("simint-datos", "data"), Output("simint-nota", "children"), Output("simint-pacientes", "data"),
           Input("simint-play", "n_clicks"),
           State("simint-tick", "disabled"), State("simint-datos", "data"), State("simint-cursor", "data"),
           State("simint-ajuste_llegadas", "value"), State("simint-ajuste_estancia", "value"),
@@ -1255,8 +1275,9 @@ def correr_simulacion(_, tick_disabled, datos, cursor, pct_lleg, pct_est, pct_es
         raise dash.exceptions.PreventUpdate      # el click fue para PAUSAR: no se vuelve a simular
     if _reanudable_py(datos, cursor, pct_lleg, pct_est, pct_esp, recorte, adelanto, estres, dias):
         raise dash.exceptions.PreventUpdate      # se reanuda en la cola de reproduccion (clientside), sin volver a simular
-    return _ejecutar(dias, pct_lleg, pct_est, pct_esp, recorte, adelanto, estres, comparar,
-                     valores_casos, ids_casos)
+    data, nota = _ejecutar(dias, pct_lleg, pct_est, pct_esp, recorte, adelanto, estres, comparar, valores_casos, ids_casos)
+    data, pac = _sacar_pacientes(data)
+    return data, nota, pac
 
 
 @callback(Output("simint-velocidad", "options"), Output("simint-velocidad", "value"), Input("simint-plazo", "value"))
@@ -1278,17 +1299,21 @@ def _palancas(clave):
 
 @callback(Output("simint-pendiente", "data"), Output("simint-comparar", "value"),
           Output("simint-escenario-desc", "children"), Output("simint-escenario-desc", "style"),
+          Output("simint-confirmacion-cuerpo", "children"), Output("simint-confirmacion", "className"),
           Input("simint-aplicar", "n_clicks"), State("simint-pendiente", "data"), State("simint-alerta-palancas", "data"),
           State("simint-ajuste_llegadas", "value"), State("simint-ajuste_estancia", "value"), State("simint-ajuste_espera", "value"),
           State("simint-mezcla_estres", "value"), State("simint-recorte_largas", "value"), State("simint-adelanto_altas", "value"),
-          State("simint-cursor", "data"), prevent_initial_call=True)
-def aplicar_mejora(_n, anterior, alerta, lleg, estancia, espera, estres, recorte, adelanto, cursor):
+          State("simint-cursor", "data"), State("simint-pacientes", "data"), prevent_initial_call=True)
+def aplicar_mejora(_n, anterior, alerta, lleg, estancia, espera, estres, recorte, adelanto, cursor, ejemplo):
     """Unica accion de la alerta: aplicar SU mejora, la de la recomendacion que se esta viendo. Aqui se guardan los controles tal como estan (para que la linea de «antes» salga con ellos);
     lo que se ve (el panel que se abre, los controles que se desplazan y despues el calculo) lo hace el navegador, en ese orden."""
     alerta = alerta or {}
     pal = alerta.get("palancas") or {}
     previos = {"llegadas": lleg or 0, "estancia": estancia or 0, "espera": espera or 0, "estres": estres or 0, "recorte": recorte or 0, "adelanto": adelanto or 0}
-    return ({"n": (anterior or {}).get("n", 0) + 1, "palancas": pal, "previos": previos}, ["si"], _descripcion_escenario(pal, alerta.get("titulo", ""), (cursor + 1 if isinstance(cursor, int) else None)), {"display": "block"})
+    # 19-nov-2026: antes de reanudar, panel VERDE con los pacientes a los que afecta la mejora; la simulacion sigue en pausa hasta pulsar «Continuar con la mejora»
+    panel = pac_alerta.panel_confirmacion(alerta.get("tipo"), alerta.get("titulo"), alerta.get("fecha"), ejemplo, cursor if isinstance(cursor, int) else None)
+    return ({"n": (anterior or {}).get("n", 0) + 1, "palancas": pal, "previos": previos}, ["si"], _descripcion_escenario(pal, alerta.get("titulo", ""), (cursor + 1 if isinstance(cursor, int) else None)), {"display": "block"},
+            panel, "simint-confirmacion simint-confirmacion--visible")
 
 
 clientside_callback(
@@ -1313,27 +1338,44 @@ clientside_callback(
             espera += DESLIZA + 300;
         });
         var fin = espera + 300;                                                        // todos ya terminaron de moverse
-        setTimeout(function() {                                                        // cierra solo el panel y lleva la vista al grafico que se va a volver a ejecutar
+        setTimeout(function() {                                                        // cierra solo el panel de configuracion; la vista se queda en el panel verde
             if (el) { el.classList.remove('simint-config--abierto'); if (document.activeElement) { document.activeElement.blur(); } }
-            var g = document.getElementById('simint-grafico');
-            if (g && g.scrollIntoView) { g.scrollIntoView({behavior: 'smooth', block: 'start'}); }
+            var c = document.getElementById('simint-confirmacion');
+            if (c && c.scrollIntoView) { c.scrollIntoView({behavior: 'smooth', block: 'start'}); }
         }, fin);
-        setTimeout(function() { set('simint-escenario', {data: {n: p.n, palancas: p.palancas, previos: p.previos}}); }, fin + 700);
+        window._simintPendienteEscenario = {n: p.n, palancas: p.palancas, previos: p.previos};   // se reanuda cuando el usuario pulsa «Continuar con la mejora» (simint-confirmar)
         return '';
     }
     """,
     Output("simint-dummy-cfg", "children"), Input("simint-pendiente", "data"), prevent_initial_call=True)
 
+clientside_callback(
+    """
+    function(n) {          // «Continuar con la mejora»: ahora si se vuelve a simular desde este dia con la mejora y se reanuda
+        var ns = window.dash_clientside, p = window._simintPendienteEscenario;
+        if (!n || !p) { return ns.no_update; }
+        window._simintPendienteEscenario = null;
+        ns.set_props('simint-confirmacion', {className: 'simint-confirmacion'});
+        ns.set_props('simint-escenario', {data: {n: p.n, palancas: p.palancas, previos: p.previos}});
+        var g = document.getElementById('simint-grafico');
+        if (g && g.scrollIntoView) { g.scrollIntoView({behavior: 'smooth', block: 'start'}); }
+        return '';
+    }
+    """,
+    Output("simint-dummy-cfg", "children", allow_duplicate=True), Input("simint-confirmar", "n_clicks"), prevent_initial_call=True)
+
 
 @callback(*[Output(i, "value", allow_duplicate=True) for _, i in SLIDERS_ESCENARIO], Output("simint-escenario-desc", "children", allow_duplicate=True),
-          Output("simint-escenario-desc", "style", allow_duplicate=True), Input("simint-play-reiniciar", "n_clicks"), prevent_initial_call=True)
+          Output("simint-escenario-desc", "style", allow_duplicate=True), Output("simint-confirmacion", "className", allow_duplicate=True),
+          Input("simint-play-reiniciar", "n_clicks"), prevent_initial_call=True)
 def volver_a_hoy(_n):
     """«Reiniciar» deja todo como al principio: los controles en cero (la operacion de hoy) y sin la nota de la mejora."""
     pal = _palancas("hoy")
-    return (*[pal[k] for k, _ in SLIDERS_ESCENARIO], [], {"display": "none"})
+    return (*[pal[k] for k, _ in SLIDERS_ESCENARIO], [], {"display": "none"}, "simint-confirmacion")
 
 
 @callback(Output("simint-datos", "data", allow_duplicate=True), Output("simint-nota", "children", allow_duplicate=True),
+          Output("simint-pacientes", "data", allow_duplicate=True),
           Input("simint-escenario", "data"), State("simint-plazo", "value"),
           State({"type": "simint-caso", "caso": ALL}, "value"), State({"type": "simint-caso", "caso": ALL}, "id"),
           State("simint-datos", "data"), State("simint-cursor", "data"), prevent_initial_call=True)
@@ -1345,7 +1387,8 @@ def aplicar_escenario(estado, dias, valores_casos, ids_casos, datos, cursor):
     ahora = {**datos["controles"], **{k: v for k, v in pal.items() if k in CONTROLES_EN_VIVO}}
     data, nota = _continuar(datos, cursor, dias, ahora, "alerta", valores_casos, ids_casos, [k for k in pal if k in CONTROLES_EN_VIVO])
     data["conserva_historial"] = True          # las alertas anteriores siguen a la vista (marcadas como resueltas)
-    return data, nota
+    data, pac = _sacar_pacientes(data)
+    return data, nota, pac
 
 
 def _continuar(datos, cursor, dias, ahora, origen, valores_casos, ids_casos, claves):
@@ -1385,6 +1428,7 @@ def _descripcion_cambio(fecha, dia, antes, ahora):
 
 @callback(Output("simint-datos", "data", allow_duplicate=True), Output("simint-nota", "children", allow_duplicate=True),
           Output("simint-escenario-desc", "children", allow_duplicate=True), Output("simint-escenario-desc", "style", allow_duplicate=True),
+          Output("simint-pacientes", "data", allow_duplicate=True),
           Input("simint-play-continuar", "n_clicks"), Input("simint-continuar", "n_clicks"),
           State("simint-datos", "data"), State("simint-cursor", "data"), State("simint-plazo", "value"),
           State("simint-ajuste_llegadas", "value"), State("simint-ajuste_estancia", "value"), State("simint-ajuste_espera", "value"),
@@ -1404,7 +1448,8 @@ def cambiar_en_vivo(_n1, _n2, datos, cursor, dias, lleg, estancia, espera, recor
         raise dash.exceptions.PreventUpdate
     claves = [k for k in CONTROLES_EN_VIVO if (vigentes.get(k) or 0) != ahora[k]]
     data, nota = _continuar(datos, cursor, dias, ahora, "config", valores_casos, ids_casos, claves)
-    return data, nota, _descripcion_cambio(datos["fechas"][cursor + 1], cursor + 1, vigentes, ahora), {"display": "block"}
+    data, pac = _sacar_pacientes(data)
+    return data, nota, _descripcion_cambio(datos["fechas"][cursor + 1], cursor + 1, vigentes, ahora), {"display": "block"}, pac
 
 
 @callback(Output("simint-filtro", "data"),
@@ -1840,7 +1885,7 @@ clientside_callback(
             window._simintCola = (window._simintCola || []).concat(pendientes);
             var a0 = nuevas[0];
             var ob = {tipo: a0.tipo, gravedad: a0.gravedad, titulo: a0.titulo, texto: a0.texto, fecha: data.fechas[c],
-                      acciones: a0.acciones, palancas: a0.palancas, mejora: a0.mejora, rec: a0.rec, alerta: a0.alerta, pausada: true};
+                      acciones: a0.acciones, palancas: a0.palancas, mejora: a0.mejora, rec: a0.rec, alerta: a0.alerta, metrica: a0.metrica, pausada: true};
             var hist = window._simintHist = window._simintHist || [];
             hist.push(ob); window._simintVista = hist.length - 1;
             var o1 = Object.assign({}, ob, {pos: hist.length + ' de ' + hist.length, ultima: true});
@@ -1881,7 +1926,7 @@ clientside_callback(
                 (a.acciones || []).map(function(x) { return '- ' + x; }).join('\\n'), '', a.pos || '', clase, boton,
                 '/alertas#alerta-' + (a.alerta || 'A2'), '/recomendaciones#rec-R' + (a.rec || 4),
                 '',
-                {palancas: a.palancas || {}, titulo: a.titulo}, a.fecha ? "Día " + a.fecha : ""];
+                {palancas: a.palancas || {}, titulo: a.titulo, tipo: a.tipo, fecha: a.fecha}, a.fecha ? "Día " + a.fecha : ""];
     }
     """,
     Output("simint-alerta-grav", "children"), Output("simint-alerta-titulo", "children"), Output("simint-alerta-detalle", "children"),

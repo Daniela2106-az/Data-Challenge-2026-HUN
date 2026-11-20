@@ -295,7 +295,7 @@ SEXO_IDX = {"Mujer": 0, "Hombre": 1}                        # indice de la 3a di
 
 
 def _una_repeticion(lam_lleg, p_eff, rng, ajuste_estancia, ajuste_espera, n0_camas, q0_cola, comp=None,
-                    prob_lleg=None, recorte_largas=0.0, factor_lleg=None, rng_extra=None, acoplar_estancia=False):
+                    prob_lleg=None, recorte_largas=0.0, factor_lleg=None, rng_extra=None, acoplar_estancia=False, registro=None):
     """Una repeticion sobre len(lam_lleg) dias. Devuelve dict de arrays diarios (ver SERIES_SALIDA).
     `comp` (opcional, Etapa 1 del plan del 16-nov): dict {etapa: array (n_dias, n_perfiles)} donde se ACUMULA
     la composicion por dia x perfil de 5 etapas (llegadas, ingresos_cama, altas, en_cama, esperando). Solo
@@ -480,6 +480,17 @@ def _una_repeticion(lam_lleg, p_eff, rng, ajuste_estancia, ajuste_espera, n0_cam
         np.add.at(dq2, (q_out[con_espera], perf[con_espera], sx_idx[con_espera]), -1.0)
         comp["esperando"] += np.cumsum(dq2, axis=0)[:n_horas].reshape(n_dias, 24, n_perf, 2).mean(axis=1)
 
+    if registro is not None:
+        # 19-nov-2026: los pacientes de ESTA repeticion (para mostrar ejemplos en el dashboard). Solo copia lo ya sorteado: no consume numeros aleatorios
+        # del motor (el sexo de los sembrados en cama, que no tienen trayectoria propia, sale de un generador aparte).
+        perf0_r = np.array([_map.get(scm.PERFILES_HIST[i], 0) for i in idx0], dtype=int)
+        sexo0 = (np.random.default_rng(20261119).random(n0_camas) >= SEXO_LLEG_VEC[perf0_r]).astype(int)      # 0 = mujer, 1 = hombre (misma convencion que SEXO_IDX)
+        registro.update({
+            "perfiles": [[g, r] for g, r in PERFILES_LLEG],
+            "nuevos": {"perf": perf.tolist(), "sexo": (sexo_ag != "Mujer").astype(int).tolist(), "t_lleg_h": np.round(t_lleg_h, 1).tolist(),
+                       "espera_h": np.round(espera, 1).tolist(), "estancia_h": np.round(estancia, 1).tolist(), "dia_cama": dia_cama.tolist(),
+                       "dia_alta": dia_alta.tolist(), "cola_sembrada": (np.arange(total) < q0_cola).astype(int).tolist()},
+            "sembrados": {"perf": perf0_r.tolist(), "sexo": sexo0.tolist(), "dur_dias": dur0.tolist()}})
     return {"llegadas": n_lleg.astype(float), "ingresos_cama": ingresos, "altas": altas, "cola": cola,
             "total": censo_total, "ninos": censo_ninos, "adultos": censo_adultos}
 
@@ -659,7 +670,7 @@ EFECTO_ADELANTO_POR_PUNTO = 0.001
 def simular_integral(corte, dias, escenario="historico", ajuste_llegadas=1.0, ajuste_estancia=1.0,
                      ajuste_espera=1.0, n_rep=N_REP, semilla=SEMILLA, modelos=None, casos=None,
                      con_composicion=False, recorte_largas_pct=0.0, adelanto_altas_pct=0.0,
-                     mezcla_edad=None, mezcla_ruta=None, cambios=None, acoplar_estancia=False):
+                     mezcla_edad=None, mezcla_ruta=None, cambios=None, acoplar_estancia=False, registrar_rep=None):
     """Simula `dias` dias despues de `corte`. Devuelve (fechas, salidas, info) donde salidas es un dict
     {serie: array (n_rep, dias)} con las 7 series de SERIES_SALIDA e info trae kappa y las siembras.
 
@@ -737,9 +748,13 @@ def simular_integral(corte, dias, escenario="historico", ajuste_llegadas=1.0, aj
     ajuste_espera_total = ajuste_espera * (1.0 - EFECTO_ADELANTO_POR_PUNTO * adelanto_altas_pct)
     recorte = np.clip(recorte_largas_pct / 100.0, 0.0, 0.9)
     out = {s: np.zeros((n_rep, dias)) for s in SERIES_SALIDA}
+    registro_cap = None
     for r in range(n_rep):
+        reg = {} if (registrar_rep is not None and r == registrar_rep) else None
         rep = _una_repeticion(lam_lleg, p_eff, rng, ajuste_estancia, ajuste_espera_total, n0, q0, comp=comp,
-                              prob_lleg=prob_lleg, recorte_largas=recorte, factor_lleg=factor_lleg, rng_extra=rng_extra, acoplar_estancia=acoplar_estancia)
+                              prob_lleg=prob_lleg, recorte_largas=recorte, factor_lleg=factor_lleg, rng_extra=rng_extra, acoplar_estancia=acoplar_estancia, registro=reg)
+        if reg is not None:
+            registro_cap = reg
         for s in SERIES_SALIDA:
             out[s][r] = rep[s]
     info = {"kappa": kappa, "n0_camas": n0, "q0_cola": q0,
@@ -752,6 +767,8 @@ def simular_integral(corte, dias, escenario="historico", ajuste_llegadas=1.0, aj
     if comp is not None:
         info["perfiles"] = [[g, r] for g, r in PERFILES_LLEG]
         info["composicion"] = {e: np.round(v / n_rep, 2).tolist() for e, v in comp.items()}
+    if registro_cap is not None:
+        info["pacientes"] = registro_cap          # una repeticion con sus pacientes (ejemplo para el dashboard)
     return fechas, out, info
 
 

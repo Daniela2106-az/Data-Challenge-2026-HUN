@@ -308,3 +308,15 @@ El pronóstico de ingresos a cama ahora se reparte en cuatro franjas del día: *
 - **Garantías:** no usa números aleatorios nuevos (las series existentes salen idénticas) y las medias de las cuatro franjas suman el total diario. Los percentiles son bandas, no suman exacto.
 - **Vista horaria (72 h):** `ingresos_por_franja_horario(horas_idx, out)` agrupa las horas simuladas en las mismas franjas.
 - **Límite:** el reparto es el promedio histórico; no cambia con la saturación ni con los controles del simulador.
+
+## Confirmación verde al aplicar una mejora y pico de llegadas de la tarde (19-nov-2026)
+
+- **Pacientes de ejemplo:** `simular_integral(..., registrar_rep=0)` devuelve `info["pacientes"]` con los pacientes de **una** repetición (perfil, sexo, llegada, espera, estancia, día de cama y de alta; los que ya estaban en cama el día 0 aparte). No usa números aleatorios del motor: las series salen idénticas con o sin el registro. El sexo de los sembrados en cama sale de un generador aparte.
+- **Panel verde (`dashboard/pacientes_alerta.py`):** al pulsar «Aplicar mejora y comparar», los controles se mueven y la simulación **queda en pausa** con un panel verde hasta pulsar «Continuar con la mejora».
+  - *Faltarán camas:* las altas del día (llegada + espera + estancia) y el 30 % de ellas que pasaría a la mañana (se sortea con semilla fija, así que el mismo día da el mismo resultado); y los pacientes de 14 días o más, separados en «ya llevan 14 días o más en cama» y «estimados de 14 días o más».
+  - *Cola de espera:* para 48 h y para 72 h, «esperando ese tiempo o más ahora mismo» (al cierre del día) y «estimados» (llevan menos, pero su espera asignada es de ese tiempo o más).
+- **Límites:** las tablas son una corrida, no el promedio; la cifra del texto de la recomendación (~34) sale de promedios y puede diferir. Los pacientes que ya estaban en cama el día 0 no tienen fecha de ingreso, así que solo entran en «estimados». Las estancias y esperas «estimadas» son las del simulador según el perfil, no las del modelo de «Paciente en espera». La vista horaria no tiene estas tablas.
+- **R3 («Reunión de camas»):** ya no repite las camas esperadas, que están en «Qué pasó».
+- **Estancia y espera acopladas (supuesto):** con `acoplar_estancia=True` (lo usa el dashboard) la espera de cada paciente sube en la misma proporción que la estancia. No está calibrado con datos.
+- **Pico de llegadas de la tarde:** la alerta de cola también salta si las llegadas de 14 a 19 h llegan a 81 o más ese día (percentil 90 de los datos reales; promedio 65) y la cola ya es de al menos el 80 % del umbral (22 de 28). Con la operación normal del simulador nunca se supera (máximo 76,7 en 90 días); con 15 % más de llegadas se supera 19 de 90 días. Es un indicador del volumen del día, no una medida independiente, porque el reparto por franja es fijo por día de la semana.
+- **Alertas:** una alerta salta cuando **aparece**; si ya estaba activa no vuelve a saltar, y si se va y reaparece salta de nuevo. Las que coinciden el mismo día se encolan y se muestran una tras otra.
