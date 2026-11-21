@@ -38,7 +38,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "src"))
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))        # dashboard/ para el tema de graficos
 import modelo_pronostico as mp  # noqa: E402
 import tema_graficos as tg  # noqa: E402
-from componentes import mensaje, metodo  # noqa: E402
+from componentes import con_carga, mensaje, metodo  # noqa: E402
 
 from eleccion_modelos import tarjeta_eleccion  # noqa: E402
 from componentes import ETAPAS_Y_PRUEBAS, secciones  # noqa: E402
@@ -300,7 +300,7 @@ def layout():
             ]),
         ]),
 
-        html.Div(className="page-section", children=[dcc.Graph(id="pron-grafico", config={"displaylogo": False})]),
+        html.Div(className="page-section", children=[con_carga(dcc.Graph(id="pron-grafico", config={"displaylogo": False}))]),
         tarjeta_eleccion("/pronostico"),
         mensaje("**Sirve para planear la semana, no para adivinar un día.** A una semana el pronóstico de llegadas se equivoca cerca de 8 % y a un "
                 "año cerca de 10 %. Los ingresos a cama de un día son más ruidosos (~18 %), pero por semana el error baja a ~9,5 %, que es como se "

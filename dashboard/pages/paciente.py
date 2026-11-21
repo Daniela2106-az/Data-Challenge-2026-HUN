@@ -48,7 +48,7 @@ import confianza_perfil as cp  # noqa: E402
 import estimador_tiempo_restante as etr  # noqa: E402
 import estimador_tiempos as et  # noqa: E402
 import tema_graficos as tg  # noqa: E402
-from componentes import mensaje, metodo  # noqa: E402
+from componentes import con_carga, mensaje, metodo  # noqa: E402
 
 from eleccion_modelos import tarjeta_eleccion  # noqa: E402
 from componentes import ETAPAS_Y_PRUEBAS, secciones  # noqa: E402
@@ -402,8 +402,7 @@ def layout():
                     dcc.RadioItems(id="pac-vista", className="pill-switch", value="normal", options=[
                         {"label": "Normal", "value": "normal"}, {"label": "Acumulada", "value": "acumulada"}]),
                 ]),
-                dcc.Graph(id="pac-grafico", config={"displaylogo": False}),
-                dcc.Store(id="pac-ventanas-datos"),
+                con_carga(dcc.Graph(id="pac-grafico", config={"displaylogo": False}), dcc.Store(id="pac-ventanas-datos")),
             ]),
         ]),
         tarjeta_eleccion("/paciente"),
