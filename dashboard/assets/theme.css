@@ -2776,3 +2776,4 @@ html.nav-cargando::before { content: ""; position: fixed; top: 0; left: 0; heigh
   background: color-mix(in srgb, var(--surface) 80%, transparent); backdrop-filter: blur(2px); border-radius: var(--r-md);
   font-size: 15px; font-weight: 700; color: var(--brand-strong); text-align: center; }
 .camas-carga__velo::before { content: ""; width: 56px; height: 56px; border-radius: 50%; border: 6px solid var(--surface-2); border-top-color: var(--brand-strong); animation: grafica-gira .8s linear infinite; }
+.grafica-carga { position: relative; }

@@ -44,7 +44,7 @@ import simulador_integral as si  # noqa: E402  (import liviano: no corre backtes
 import simulacion_camas_montecarlo as scm  # noqa: E402
 import tema_graficos as tg  # noqa: E402
 import catalogo as _catalogo  # noqa: E402
-from componentes import mensaje, metodo, secciones, leer  # noqa: E402
+from componentes import con_carga, mensaje, metodo, secciones, leer  # noqa: E402
 
 dash.register_page(__name__, path="/simulador", name="Simulador integral", title="Simulador integral - HUN", order=7)
 
@@ -1616,7 +1616,9 @@ def layout():
                     # pixeles). En las vistas Flujo/Camas/Espera (21-nov) el grafico baja al tamaño que tiene
                     # DENTRO de "Todo" (mostrar() pone la altura exacta via Output de estilo) y el espacio
                     # libre lo llenan los modulos de simint-grafico-extra (antes vivian en la radiografia).
-                    dcc.Graph(id="simint-grafico", config={"displaylogo": False}, style={"height": "720px"}),
+                    # Con velo de carga: el Store de los datos va dentro, asi el aviso aparece mientras corre la simulacion (lo lento). Demora 600 ms para no parpadear en la reproduccion.
+                    con_carga(dcc.Graph(id="simint-grafico", config={"displaylogo": False}, style={"height": "720px"}),
+                              dcc.Store(id="simint-datos", storage_type="session"), texto="Simulando el hospital…", demora=600),
                     html.Div(id="simint-grafico-extra", className="simint-grafico-extra"),
                 ]),
             ]),
@@ -1631,7 +1633,6 @@ def layout():
         dcc.Store(id="simint-alerta-palancas"),
         html.Div(id="simint-dummy-cfg", style={"display": "none"}),
         dcc.Store(id="simint-cursor", storage_type="session"),
-        dcc.Store(id="simint-datos", storage_type="session"),
         dcc.Store(id="simint-pacientes", storage_type="session"),      # pacientes de ejemplo de la corrida (una repeticion), para las tablas de la confirmacion verde
         dcc.Store(id="simint-filtro", data={}, storage_type="session"),
         dcc.Store(id="simint-sync-hover"),   # salida de callbacks cliente "silenciosos" (no se usa su valor)

@@ -97,12 +97,20 @@ def filtro(id_, etiqueta, opciones, valor):
         dcc.RadioItems(id=id_, options=ops, value=valor, className="pildoras", inline=True)])
 
 
+def con_carga(*hijos, texto="Calculando el gráfico…", demora=250):
+    """Envuelve una grafica (y los Store que la alimentan) con un velo + aro de carga EXPLICITO que aparece cuando el calculo tarda
+    mas de `demora` ms (en Render a veces tarda varios segundos y una grafica quieta parece un error). La vieja se ve tenue debajo."""
+    velo = html.Div(className="camas-carga__velo", children=[texto, html.Span("Puede tardar unos segundos en este servicio", style={"fontWeight": 500, "fontSize": "13px"})])
+    return dcc.Loading(parent_className="grafica-carga", custom_spinner=velo, delay_show=demora, color="#0071bc",
+                       overlay_style={"visibility": "visible", "opacity": 0.3}, children=list(hijos))
+
+
 def grafico(id_, alto=330):
     # responsive=True (16-nov-2026): deja que Plotly se reajuste solo cuando el contenedor cambia de ancho
     # (p. ej. al expandirse una lamina del acordeon, o en modo presentacion), sin tener que forzar un resize
     # manual desde JS.
-    return dcc.Graph(id=id_, config={"displaylogo": False, "displayModeBar": False, "responsive": True},
-                     style={"height": f"{alto}px"})
+    return con_carga(dcc.Graph(id=id_, config={"displaylogo": False, "displayModeBar": False, "responsive": True},
+                               style={"height": f"{alto}px"}))
 
 
 def dato(valor, texto):

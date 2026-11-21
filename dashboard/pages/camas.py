@@ -55,7 +55,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "src"))
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))        # dashboard/ para el tema de graficos
 import simulacion_camas_montecarlo as scm  # noqa: E402  (import liviano desde el 10-nov: ~1-2 s, no corre el backtest)
 import tema_graficos as tg  # noqa: E402
-from componentes import bloque, coma, leer, mensaje, metodo  # noqa: E402
+from componentes import bloque, coma, con_carga, leer, mensaje, metodo  # noqa: E402
 
 from eleccion_modelos import tarjeta_eleccion  # noqa: E402
 from componentes import ETAPAS_Y_PRUEBAS, secciones  # noqa: E402
@@ -235,7 +235,7 @@ def panel_altas():
             dcc.Slider(id="camas-altas", min=0, max=100, step=10, value=30, marks={0: "0 %", 30: "30 %", 50: "50 %", 100: "100 %"},
                        tooltip={"placement": "bottom", "always_visible": True})]),
         html.Div(id="camas-altas-cifras", className="hechos"),
-        dcc.Graph(id="camas-altas-grafico", config={"displaylogo": False, "displayModeBar": False}, style={"height": "300px"}),
+        con_carga(dcc.Graph(id="camas-altas-grafico", config={"displaylogo": False, "displayModeBar": False}, style={"height": "300px"})),
         html.P(id="camas-altas-nota", style={"fontSize": "12px", "color": GRIS}),
     ])
 
