@@ -3,7 +3,7 @@
 //   - Siguiente: →, espacio, AvPág, Enter o el clicker. Anterior: ←, RePág o Retroceso. F: pantalla completa. Esc sale de pantalla completa.
 //   - Diapositiva con data-auto="secuencia": sus piezas «.pres-frag» aparecen solas, una tras otra; si se pulsa Siguiente antes, aparecen todas.
 //   - El lienzo mide 1600 x 900 y se escala para llenar la pantalla sin deformarse.
-//   - Diapositiva del simulador (data-auto="simulador"): la primera vez que se entra pulsa «Reproducir»; cuando salta una alerta, la deja ver
+//   - Diapositiva del simulador (data-auto="simulador"): al entrar queda quieto; la siguiente pulsacion (Siguiente) pulsa «Reproducir»; cuando salta una alerta, la deja ver
 //     unos segundos y aplica la mejora (solo la primera vez) o continua; la confirmacion verde tambien se acepta sola. Si se vuelve a ella desde la
 //     diapositiva anterior, arranca de nuevo; si se vuelve desde la siguiente, se queda como iba.
 //   - Diapositiva del asistente (data-auto="asistente"): escribe las dos preguntas y muestra las respuestas guardadas, con el diseno del asistente.
@@ -52,7 +52,11 @@
     var c = $('pres-contador'); if (c) { c.textContent = i ? (i + ' / ' + (ds.length - 1)) : ''; }
     contar(d);
     var auto = d.getAttribute('data-auto');
-    if (auto === 'simulador') { if (estado.sim && desde === i - 1) { reiniciarSimulador(); } else { arrancarSimulador(); } }
+    // El simulador no arranca solo (lo arranca la siguiente pulsacion, en siguiente()). Si se sale de el hacia atras, se deja limpio en ese momento,
+    // para que al volver no se vea la corrida anterior ni sus notificaciones.
+    var dDesde = ds[desde];
+    if (dDesde && dDesde.getAttribute('data-auto') === 'simulador' && i < desde && estado.sim) { reiniciarSimulador(); }
+    if (auto === 'simulador' && estado.sim && desde === i - 1) { reiniciarSimulador(); }
     if (auto === 'secuencia') { secuencia(d); }
     if (auto === 'asistente') { if (estado.asis && desde === i - 1) { reiniciarAsistente(); } else { arrancarAsistente(); } }
     setTimeout(function () { window.dispatchEvent(new Event('resize')); }, 30);      // las graficas de la diapositiva se ajustan a su caja
@@ -84,6 +88,7 @@
     var d = diapos()[estado.i]; if (!d) { return; }
     var ocultos = frags(d).filter(function (f) { return !f.classList.contains('is-visible'); });
     if (ocultos.length) { clearInterval(estado.secT); ocultos.forEach(function (f) { f.classList.add('is-visible'); }); return; }
+    if (d.getAttribute('data-auto') === 'simulador' && !estado.sim) { arrancarSimulador(); return; }   // primero se explica el caso; esta pulsacion lo pone a correr
     mostrar(estado.i + 1);
   }
   function anterior() { clearInterval(estado.secT); mostrar(estado.i - 1); }
@@ -145,6 +150,7 @@
     var st = estado.sim;
     if (st) { clearInterval(st.vigilante); clearTimeout(st.t); clearTimeout(st.confT); }
     estado.sim = {aplicada: false, firma: '', t: null, confT: null, reiniciando: true};
+    var g0 = $('pres-sim-ganancia'); if (g0) { Array.prototype.forEach.call(g0.children, function (n) { n.classList.remove('is-visible'); }); }
     var play = $('simint-play');
     if (play && /Pausa/.test(play.textContent)) { play.click(); }
     setTimeout(function () {
@@ -152,10 +158,7 @@
       window._simintHist = []; window._simintCola = []; window._simintVista = -1; window._simintPendienteEscenario = null;
       var cols = $('simint-alerta-cols'); if (cols) { cols.innerHTML = ''; }
       var rev = $('simint-alerta-rev'); if (rev) { rev.style.display = 'none'; }
-      setTimeout(function () {
-        estado.sim = null;
-        arrancarSimulador();
-      }, 1500);
+      setTimeout(function () { estado.sim = null; }, 1500);      // queda listo: la siguiente pulsacion lo arranca de nuevo
     }, 500);
   }
   // Cursor visible: se desplaza hasta el boton, hace un pulso y entonces pulsa (para que se vea que se esta aplicando la mejora)

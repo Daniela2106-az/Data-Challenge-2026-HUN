@@ -21,7 +21,7 @@ pages/ una sola vez y una importacion propia registraria sus callbacks dos veces
 CASO EN VIVO: temporada alta (llega 10 % mas pacientes) durante 90 dias desde el 9-abr-2026. En ese caso la alerta «Faltarán camas» propone sola la
 operacion optima (R7 15 % + R4 30 %). CIFRAS FIJAS (diapositivas 7, 8 y 11): src/impacto_presentacion.py (mismo caso y plazo, 400 repeticiones,
 semilla fija), corrido el 26-nov-2026; todas las diapositivas citan las mismas. La validacion de la diapositiva 9 se calcula en vivo con el mismo motor (backtest ene a 9-abr-2026, entrenado hasta
-dic-2025), sin los dos dias de la caida del sistema (4 y 5 de marzo de 2026, docs/CONTEXTO_TECNICO.md).
+dic-2025), con la serie real completa.
 """
 import json
 import sys
@@ -43,7 +43,6 @@ dash.register_page(__name__, path="/presentacion", name="Presentación", title="
 CAMAS = 106
 DIAS_SIM = 90                       # «90 días» en el selector del simulador (PLAZOS de pages/simulador.py): la reproduccion dura menos de un minuto
 LLEGADAS_CASO = 10                  # caso en vivo: temporada alta, llega 10 % mas pacientes
-CAIDA_SISTEMA = ("2026-03-04", "2026-03-05")      # caida total del registro: no son dias reales de ocupacion
 
 # ---------------------------------------------------------------- cifras fijas (src/impacto_presentacion.py, 26-nov-2026)
 # 90 dias desde el 9-abr-2026, 400 repeticiones. «sat» = % de dias con mas pacientes que las 106 camas; «faltan» = camas que faltan en promedio.
@@ -459,7 +458,6 @@ def _backtest():
         d = pd.DataFrame({"fecha": fechas})
         for s, real in (("total", si.scm.ocup_d["mean"]), ("cola", si.COLA_REAL_D)):
             r = real.reindex(fechas).copy()
-            r[r.index.isin(pd.to_datetime(CAIDA_SISTEMA))] = np.nan        # la caida del sistema no es ocupacion real
             d[f"{s}_real"] = r.values
             for p in (10, 50, 90):
                 d[f"{s}_p{p}"] = np.percentile(out[s], p, axis=0)
@@ -484,7 +482,6 @@ def _backtest_camas():
         dias = (pd.Timestamp("2026-04-09") - pd.Timestamp(scm.BACKTEST_CORTE)).days
         fechas, censos = scm.simular(scm.serie_ingresos, scm.BACKTEST_CORTE, dias, n_rep=repeticiones(300))
         real = scm.ocup_d["mean"].reindex(fechas).copy()
-        real[real.index.isin(pd.to_datetime(CAIDA_SISTEMA))] = np.nan
         t = censos["total"]
         _BT_CAMAS["d"] = pd.DataFrame({"fecha": fechas, "real": real.values, "p10": np.percentile(t, 10, axis=0),
                                        "p50": np.percentile(t, 50, axis=0), "p90": np.percentile(t, 90, axis=0)})
