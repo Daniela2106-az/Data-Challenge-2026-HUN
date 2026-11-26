@@ -369,16 +369,25 @@ def d10():
 
 
 def d11():
+    """Cierre: el mismo tablero de 106 camas de la portada, ahora vaciando el desborde y liberando camas (en verde), junto a la frase final.
+    Ilustrativo, sin cifras: las cifras ya se dijeron en «Qué gana el hospital»."""
+    verbos = [("ico-forecast", "Anticipar", "cuántos pacientes llegarán"), ("ico-models", "Simular", "qué pasará en el hospital"),
+              ("ico-recs", "Decidir", "qué hacer antes de que pase")]
+    camas = ([html.Span(style={"--k": str(k)}) for k in range(CAMAS - 4)] +
+             [html.Span(className="libre", style={"--k": str(k)}) for k in range(4)] +
+             [html.Span(className="sobre", style={"--k": str(k)}) for k in range(8)])
     return html.Section(className="pres-diapo pres-cierre-final", **{"data-n": "11", "data-etapa": ""}, children=[
         html.Div(className="hero__heart"),
         dcc.Markdown(ECG, dangerously_allow_html=True, className="pres-ecg-caja"),
-        html.H2("Más que faltar camas, falta liberarlas, asignarlas y desocuparlas a tiempo", className="pres-cierre-final__t"),
-        html.Div(className="pres-cierre-final__nums", children=[
-            html.Div(className="pres-cierre-final__n", children=[contador(18.6, 1, suf=" h"), html.Span("espera hoy un paciente por una cama")]),
-            html.Div(className="pres-cierre-final__n", children=[contador(CAMAS_LIBRES, 1), html.Span("camas desocupadas cada día en temporada alta, con nuestras recomendaciones")]),
-            html.Div(className="pres-cierre-final__n", children=[contador(int(round(EXTRA_ANIO, -1)), 0, pre="~"), html.Span("pacientes hospitalizados más al año, con las mismas camas")])]),
-        html.Div(className="pres-cierre-final__mod", children=[html.Span([html.Span(className="nav__ico " + a), b], className="pres-chip-blanco") for a, b in MODULOS]),
-        html.Div("Gracias", className="pres-cierre-final__gracias")])
+        html.Div(className="pres-cierre-final__izq", children=[
+            html.H2("Más que faltar camas, falta liberarlas, asignarlas y desocuparlas a tiempo", className="pres-cierre-final__t"),
+            html.Div(className="pres-cierre-final__verbos", children=[
+                html.Div(className="pres-verbo", style={"--v": str(k)}, children=[html.Span(className="nav__ico " + a), html.B(b), html.Span(c)])
+                for k, (a, b, c) in enumerate(verbos)]),
+            html.Div("Gracias", className="pres-cierre-final__gracias")]),
+        html.Div(className="pres-portada__camas pres-cierre-final__camas", children=[
+            html.Div(className="pres-portada__grid", children=camas),
+            html.Div("El mismo hospital, preparado antes de que pase", className="pres-portada__camas-t")])])
 
 
 def _preguntas():

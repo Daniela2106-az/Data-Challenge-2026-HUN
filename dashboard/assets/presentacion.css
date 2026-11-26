@@ -435,3 +435,27 @@ html.pres-pantalla body { overflow: hidden; }
 .pres-sim-fila .pres-ajustar > .pres-sim-caja > .pres-sim { position: static; width: 100%; transform: none; }
 .pres-previa { position: absolute; left: 0; right: 0; top: 62px; z-index: 25; background: var(--bg); transition: opacity .4s var(--ease); }
 .pres-previa.pres-previa--oculta { opacity: 0; pointer-events: none; }
+
+/* ============================================================================ cierre v2: el tablero de la portada, ahora liberando camas */
+.pres-cierre-final { flex-direction: row; text-align: left; justify-content: center; gap: 70px; }
+.pres-cierre-final__izq { position: relative; z-index: 2; flex: 1 1 auto; display: flex; flex-direction: column; gap: 34px; max-width: 900px; }
+.pres-cierre-final__t { font-size: 56px; text-align: left; }
+.pres-cierre-final__verbos { display: flex; flex-direction: column; gap: 14px; }
+.pres-verbo { display: flex; align-items: center; gap: 18px; background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.28); border-radius: 20px; padding: 14px 22px; }
+.pres-verbo .nav__ico { width: 34px; height: 34px; flex: 0 0 34px; background-color: #fff; }
+.pres-verbo b { font-size: 34px; font-weight: 800; min-width: 210px; }
+.pres-verbo span:last-child { font-size: 21px; opacity: .92; }
+.pres-cierre-final__gracias { font-size: 64px; text-align: left; }
+.pres-cierre-final.is-activa .pres-verbo { animation: presEntraIzq .7s var(--ease) calc(.8s + var(--v) * .55s) both; }
+.pres-cierre-final.is-activa .pres-cierre-final__t { animation: presEntra .8s var(--ease) .15s both; }
+.pres-cierre-final.is-activa .pres-cierre-final__gracias { animation: presCrece .9s var(--ease) 2.8s both; }
+.pres-cierre-final.is-activa > .pres-cierre-final__izq, .pres-cierre-final.is-activa > .pres-cierre-final__camas { animation: none; }
+/* el tablero: empieza como termino la portada (lleno y desbordado) y se va liberando */
+.pres-cierre-final__camas { position: relative; z-index: 2; }
+.pres-cierre-final .pres-portada__grid span { background: #fff; }
+.pres-cierre-final .pres-portada__grid span.sobre { background: #ff7a59; }
+.pres-cierre-final.is-activa .pres-portada__grid span { animation: none; }
+.pres-cierre-final.is-activa .pres-portada__grid span.sobre { animation: presVacia .6s ease-in calc(1.2s + (7 - var(--k)) * 140ms) both; }
+.pres-cierre-final.is-activa .pres-portada__grid span.libre { animation: presLibera .7s ease-out calc(2.4s + var(--k) * 180ms) both; }
+@keyframes presVacia { from { opacity: 1; transform: none; } to { opacity: 0; transform: scale(.3); } }
+@keyframes presLibera { from { background: #fff; } to { background: #3ddc84; box-shadow: 0 0 0 3px rgba(61,220,132,.35); } }
