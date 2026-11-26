@@ -1,0 +1,113 @@
+[
+ {
+  "pregunta": "¿Quién espera más por una cama?",
+  "datos": {
+   "en_alcance": true,
+   "titulo": "Esperan más los adultos desde 30 años y las mujeres: 22,3 h frente a 14,3 h en hombres",
+   "resaltado": "las mujeres: 22,3 h frente a 14,3 h",
+   "icono": "gente",
+   "tarjetas": [
+    {
+     "valor": "22,3 h",
+     "etiqueta": "Mediana de espera de cama en mujeres",
+     "tono": "malo",
+     "icono": "persona"
+    },
+    {
+     "valor": "14,3 h",
+     "etiqueta": "Mediana de espera de cama en hombres",
+     "tono": "neutro",
+     "icono": "persona"
+    },
+    {
+     "valor": "7,8 h",
+     "etiqueta": "Mediana de espera en niños de 0 a 4 años",
+     "tono": "bueno",
+     "icono": "reloj"
+    }
+   ],
+   "barras_titulo": "Espera de cama mediana por edad (horas)",
+   "barras": [
+    {
+     "etiqueta": "Niños 0–4",
+     "valor": 7.8,
+     "texto": "7,8 h",
+     "tono": "bueno"
+    },
+    {
+     "etiqueta": "5–14 años",
+     "valor": 12.3,
+     "texto": "12,3 h",
+     "tono": "neutro"
+    },
+    {
+     "etiqueta": "15–29 años",
+     "valor": 17.2,
+     "texto": "17,2 h",
+     "tono": "neutro"
+    },
+    {
+     "etiqueta": "Desde 30 años (24–27 h)",
+     "valor": 27.0,
+     "texto": "hasta 27 h",
+     "tono": "malo"
+    }
+   ],
+   "texto": "Por diagnóstico, esperan menos los cardiovasculares, neurológicos y respiratorios (~9–13 h) y más los musculoesqueléticos, renales, de cáncer y digestivos (29–39 h). Por hora de llegada, quien llega por la tarde espera ~25 h y de madrugada 12–15 h. Por servicio, UCI recibe cama en 2,7 h y urología espera 37,7 h. La diferencia entre mujeres y hombres sigue (+27 %) controlando edad, tipo de visita, franja y año; es un hallazgo abierto.",
+   "nota": "Son asociaciones: todo lo observado explica solo el 16 % de la variación de la espera.",
+   "paginas": [
+    "/perfiles",
+    "/factores",
+    "/diagnosticos"
+   ],
+   "seguimiento": [
+    "¿Por qué las mujeres esperan más por una cama?",
+    "¿Se puede predecir cuánto esperará cada paciente?"
+   ]
+  },
+  "ok": true
+ },
+ {
+  "pregunta": "¿Qué pasaría si damos más altas en la mañana?",
+  "datos": {
+   "en_alcance": true,
+   "titulo": "Mover el 30 % de las altas de la tarde a la mañana dejaría hasta 5,1 camas libres a las 12 h",
+   "resaltado": "hasta 5,1 camas libres a las 12 h",
+   "icono": "sol",
+   "tarjetas": [
+    {
+     "valor": "14 %",
+     "etiqueta": "altas antes del mediodía hoy",
+     "tono": "malo",
+     "icono": "sol"
+    },
+    {
+     "valor": "62,7 %",
+     "etiqueta": "altas entre las 14:00 y las 18:59",
+     "tono": "neutro",
+     "icono": "reloj"
+    },
+    {
+     "valor": "5,1 camas",
+     "etiqueta": "libres a las 12 h si se adelanta el 30 % de las altas de la tarde",
+     "tono": "bueno",
+     "icono": "cama"
+    }
+   ],
+   "barras_titulo": "",
+   "barras": [],
+   "texto": "La propuesta (recomendación 4) es empezar con una meta de **25–30 % de altas antes de las 12 h**, con ronda médica temprano y el alta preparada desde el día anterior. Rinde más si la cama liberada se asigna enseguida: en la mañana tarda una mediana de 1,8 h en reasignarse, aunque haya unos 26 pacientes esperando. En otros hospitales universitarios se pasó de 11 % a 38 % y de 9,5 % a 26,8 %.",
+   "nota": "Es un escenario con supuestos, no una promesa; firmeza media, y adelantar altas ayuda poco por sí solo.",
+   "paginas": [
+    "/recomendaciones",
+    "/altas",
+    "/simulador"
+   ],
+   "seguimiento": [
+    "¿Por qué la cama llega en dos olas, por la tarde y por la noche?",
+    "¿Qué pasaría si bajamos la estancia 5 %?"
+   ]
+  },
+  "ok": true
+ }
+]

@@ -139,6 +139,9 @@
   }
 
   var PENSANDO = '<div class="asis-msg asis-msg--bot asis-msg--pensando"><div class="asis-avatar">' + ico('pulso') + '</div><div class="asis-burbuja"><div class="asis-escribiendo"><i></i><i></i><i></i></div></div></div>';
+  // 26-nov-2026: la diapositiva del asistente en /presentacion pinta sus respuestas guardadas con este mismo diseno
+  window.asisBurbuja = burbuja;
+  window.asisPensando = PENSANDO;
 
   window.asisPintar = function (hist, cita, quedan) {
     esperando = false;

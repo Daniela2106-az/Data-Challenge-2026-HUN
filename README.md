@@ -67,6 +67,8 @@ Para detenerlo, vuelve a la terminal y presiona `Ctrl + C`. La próxima vez solo
 
 ## El asistente de preguntas (opcional)
 
+**Presentación de la final:** la página «Presentación» (arriba del menú lateral) tiene las diapositivas de la final, con pantalla completa y todo automático; cómo se usa y de dónde salen sus cifras: `docs/presentacion.md`.
+
 **Cómo moverte:** arriba del menú lateral está el botón azul **Simular**, que abre «¿Qué quieres hacer hoy?» con los cinco módulos interactivos: Simulador integral, Pronosticador, Planeación de camas, Paciente en espera y Paciente en cama. Cada tarjeta dice en una frase qué permite hacer y muestra una animación al pasar el mouse. El resto del menú agrupa las páginas de resultados por categoría (Contexto, Flujo, Capacidad, Clínico, Riesgo y Conclusiones).
 
 El dashboard trae un asistente donde se pregunta en lenguaje natural sobre el análisis (página «Asistente HUN», o el botón de la esquina de cada página). Para activarlo hace falta una clave de la API de Anthropic:
