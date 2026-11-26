@@ -267,7 +267,10 @@ def d5():
                  html.Div(className="pres-sim-fila", children=[
                      html.Div(className="pres-caso", children=[html.Div("El caso", className="pres-caso__t"),
                                                                *[item(b, c, a) for a, b, c in caso]]),
-                     html.Div(className="pres-ajustar", children=_simulador())]),
+                     html.Div(className="pres-ajustar", children=html.Div(className="pres-sim-caja", children=[
+                         _simulador(),
+                         html.Div(id="pres-previa", className="pres-previa", children=dcc.Graph(
+                             id="pres-previa-graf", config={"displayModeBar": False, "responsive": True}, style={"height": "720px"}))]))]),
                  html.Div(id="pres-sim-ganancia", className="pres-notifs", children=[
                      html.Div(className="pres-notif", children=[ico(a, "pres-ico--blanco"), html.Div([html.B(b), html.Span(c)])]) for a, b, c in (
                          ("ico-bed", f"{coma(CAMAS_LIBRES, 1)} camas desocupadas cada día", "con la mejora, sin construir camas nuevas"),
@@ -604,3 +607,22 @@ def _ranking_espera(sim, dist, perfiles, n, tema):
         html.Div("Perfiles que más esperan cama (horas en promedio)", className="simint-radio__modulo-titulo"),
         html.Div("URG = urgencias · TU = Treatment urgency · AMB = consulta", className="pres-leyenda"),
         dcc.Graph(figure=fig, config={"displayModeBar": False, "responsive": True}, style={"height": "380px"})])
+
+
+# ---------------------------------------------------------------- vista previa del simulador (diapositiva 5)
+# Antes de pulsar, encima del simulador se ve el resultado completo del caso (sin la mejora), quieto, para explicar las tres graficas. Es la misma
+# figura del simulador (su funcion mostrar() con la corrida entera); al pulsar, se oculta y el simulador corre desde cero. Se guarda en memoria:
+# es la misma corrida cada vez (semilla fija).
+_PREVIA = {}
+
+
+@callback(Output("pres-previa-graf", "figure"), Input("theme-store", "data"))
+def vista_previa(tema):
+    sim = _modulo("/simulador")
+    if sim is None:
+        return go.Figure()
+    if "d" not in _PREVIA:
+        ids = [{"type": "simint-caso", "caso": k} for k in sim.MODELOS_FIJOS]
+        data, _nota = sim._ejecutar(DIAS_SIM, LLEGADAS_CASO, 0, 0, 0, 0, 0, ["si"], [0] * len(ids), ids)
+        _PREVIA["d"], _ = sim._sacar_pacientes(data)
+    return sim.mostrar(_PREVIA["d"], CAMAS, "todo", 7, [], None, tema)[0]

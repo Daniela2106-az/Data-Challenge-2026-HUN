@@ -9,7 +9,7 @@
 //   - Diapositiva del asistente (data-auto="asistente"): escribe las dos preguntas y muestra las respuestas guardadas, con el diseno del asistente.
 (function () {
   var ANCHO = 1600, ALTO = 900;
-  var LEER_ALERTA = 7000, LEER_OTRA_ALERTA = 250, LEER_CONFIRMACION = 7500;   // la alerta de la mejora y las listas de pacientes se dejan leer       // ms que se deja ver la alerta y el panel verde antes de seguir
+  var LEER_ALERTA = 12000, LEER_OTRA_ALERTA = 250, LEER_CONFIRMACION = 7500;   // la alerta de la mejora y las listas de pacientes se dejan leer       // ms que se deja ver la alerta y el panel verde antes de seguir
   var raizActual = null, estado = null;
 
   function $(id) { return document.getElementById(id); }
@@ -28,7 +28,8 @@
     raizActual.querySelectorAll('.pres-ajustar').forEach(function (caja) {
       var hijo = caja.firstElementChild; if (!hijo) { return; }
       var s = Math.min(1, caja.clientWidth / hijo.offsetWidth, caja.clientHeight / Math.max(1, hijo.offsetHeight));
-      hijo.style.transform = 'translateX(-50%) scale(' + s.toFixed(4) + ')';
+      var t = 'translateX(-50%) scale(' + s.toFixed(3) + ')';
+      if (hijo.style.transform !== t) { hijo.style.transform = t; }
     });
   }
 
@@ -141,7 +142,8 @@
         clearInterval(espera);
         var g = $('pres-sim-ganancia'); if (g) { Array.prototype.forEach.call(g.children, function (n) { n.classList.remove('is-visible'); }); }
         var sim = raizActual.querySelector('.pres-sim'); if (sim) { sim.classList.remove('pres-sim--callada'); }
-        if (b) { setTimeout(function () { clicVisible(b); }, 900); estado.sim.vigilante = setInterval(vigilarSimulador, 400); }
+        if (b) { setTimeout(function () { clicVisible(b, function () { var pv = $('pres-previa'); if (pv) { pv.classList.add('pres-previa--oculta'); } }); }, 900);
+                 estado.sim.vigilante = setInterval(vigilarSimulador, 400); }
       }
     }, 200);
   }
@@ -158,7 +160,10 @@
       window._simintHist = []; window._simintCola = []; window._simintVista = -1; window._simintPendienteEscenario = null;
       var cols = $('simint-alerta-cols'); if (cols) { cols.innerHTML = ''; }
       var rev = $('simint-alerta-rev'); if (rev) { rev.style.display = 'none'; }
-      setTimeout(function () { estado.sim = null; }, 1500);      // queda listo: la siguiente pulsacion lo arranca de nuevo
+      setTimeout(function () {                                   // queda listo: vuelve la vista previa y la siguiente pulsacion lo arranca de nuevo
+        estado.sim = null;
+        var pv = $('pres-previa'); if (pv) { pv.classList.remove('pres-previa--oculta'); }
+      }, 1500);
     }, 500);
   }
   // Cursor visible: se desplaza hasta el boton, hace un pulso y entonces pulsa (para que se vea que se esta aplicando la mejora)
@@ -190,12 +195,12 @@
   function texto(id) { var el = $(id); return el ? el.textContent : ''; }
   function vigilarSimulador() {
     var st = estado && estado.sim; if (!st) { return; }
-    realzarLineas();
     var pct = texto('simint-player-pct'), g = $('pres-sim-ganancia');      // al terminar con la mejora aplicada, aparecen los resultados como notificaciones
     var n = parseInt(pct, 10);                                             // la barra marca 100 % un instante mientras recalcula: solo cuenta si ya avanzo con la mejora
     if (st.aplicada && n >= 20 && n < 100) { st.avanzo = true; }
     if (g && st.aplicada && st.avanzo && n === 100 && !st.notificado) {
       st.notificado = true;
+      realzarLineas();
       Array.prototype.forEach.call(g.children, function (n, k) { setTimeout(function () { n.classList.add('is-visible'); }, 400 + k * 900); });
     }
     var conf = $('simint-confirmacion'), cfg = $('simint-config');
@@ -294,5 +299,5 @@
     else if (!r && raizActual) { terminar(); }
   }, 250);
   window.addEventListener('resize', function () { if (raizActual) { ajustar(); } });
-  setInterval(function () { if (raizActual) { ajustarInternos(); } }, 1000);     // el simulador cambia de alto al aparecer alertas
+  setInterval(function () { if (raizActual) { ajustarInternos(); } }, 2500);     // por si el simulador cambia de alto (el ResizeObserver ya lo cubre)
 })();

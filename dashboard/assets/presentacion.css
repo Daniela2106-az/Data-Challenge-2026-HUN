@@ -429,3 +429,9 @@ html.pres-pantalla body { overflow: hidden; }
 /* el texto no tiembla mientras aparecen las cajas: capas propias, sin reacomodar el texto del encabezado */
 .pres-flujo, .pres-cab { transform: translateZ(0); backface-visibility: hidden; }
 .pres-diapo[data-n="4"].is-activa .pres-cab > * { animation: none; }
+
+/* vista previa del simulador: el resultado completo, quieto, encima del simulador hasta que se pulsa */
+.pres-ajustar > .pres-sim-caja { position: absolute; left: 50%; top: 0; width: 1180px; transform-origin: top center; transform: translateX(-50%) scale(.85); }
+.pres-sim-fila .pres-ajustar > .pres-sim-caja > .pres-sim { position: static; width: 100%; transform: none; }
+.pres-previa { position: absolute; left: 0; right: 0; top: 62px; z-index: 25; background: var(--bg); transition: opacity .4s var(--ease); }
+.pres-previa.pres-previa--oculta { opacity: 0; pointer-events: none; }
