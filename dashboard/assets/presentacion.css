@@ -502,3 +502,4 @@ html.pres-pantalla body { overflow: hidden; }
 .pres-sim-video.is-activa .pres-sim-video__izq > :nth-child(2) { animation-delay: .15s; }
 .pres-sim-video.is-activa .pres-video-marco { animation: presEntra .6s var(--ease) .2s both; }
 .pres-sim-video .pres-video { height: auto; max-height: 100%; background: transparent; }
+.pres-chat--sola { flex: 1 1 auto; min-height: 0; width: 100%; max-width: 1240px; align-self: center; }

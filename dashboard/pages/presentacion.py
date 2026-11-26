@@ -352,20 +352,9 @@ def d7():
 
 
 def d8():
-    h, o = IMPACTO["hoy"], IMPACTO["optima"]
-    pasos = [("ico-forecast", "1. Pronosticador", "anticipa cuántos pacientes llegarán en la temporada"),
-             ("ico-wait", "2. Paciente en espera y Paciente en cama", "estiman cuánto esperará y cuánto se quedará cada paciente: el simulador usa esos mismos tiempos reales"),
-             ("ico-models", "3. Planeación de camas y Simulador integral", "calculan cuántas camas faltarán y prueban la mejora antes de aplicarla"),
-             ("ico-recs", "4. Se aplican las recomendaciones antes", "y el hospital llega preparado a la temporada")]
     return diapo(8, "Resultados", "Prepararse antes: si viene una temporada alta, el simulador dice cuántas camas faltarán",
                  "Camas que faltarían en promedio cada día durante 3 meses, sin y con nuestras recomendaciones.",
-                 html.Div(className="pres-dos", children=[
-                     tarjeta(None, g("pres-g8", 540), clase="pres-col--ancha"),
-                     html.Div(className="pres-col", children=[
-                         html.Div(className="pres-lista-num", children=[item(b, c, a) for a, b, c in pasos]),
-                         html.Div(className="pres-nota", children=[
-                             html.B("Para que el sobrecupo sea raro "), f"(1 de cada 10 días) harían falta {h['cap10']} camas en operación normal y {A['cap10']} en temporada alta; "
-                             f"con nuestras recomendaciones, {o['cap10']} y {M['cap10']}. Antes de pensar en camas nuevas, conviene acortar las estancias largas."])])]))
+                 tarjeta(None, g("pres-g8", 520), clase="pres-g8-sola"))
 
 
 def d9():
@@ -383,25 +372,12 @@ def d9():
 
 
 def d10():
-    uso = [("ico-clock", "Cada mañana", "Reunión de camas", "El Pronosticador y las alertas dicen si el día viene congestionado: la alerta de las 12 h detecta 13 de cada 15 días."),
-           ("ico-stay", "Cada semana", "Coordinación de altas", "Paciente en cama y la lista de estancias largas dicen a quién revisar primero."),
-           ("ico-models", "Antes de cada temporada", "Dirección del hospital", "El Simulador integral prueba escenarios: cuántas camas harán falta y qué mejora aplicar.")]
     return diapo(10, "Aplicación", "Cómo lo usaría el hospital en su día a día",
                  "Se conecta a la base del hospital: con datos nuevos se limpian y recalculan los cinco módulos (con 2027 se planea 2028).",
-                 html.Div(className="pres-dos", children=[
-                     html.Div(className="pres-col", children=[
-                         html.Div(className="pres-uso", children=[
-                             html.Div(className="pres-uso__f", children=[ico(a, "pres-ico--grande"), html.Div(className="pres-uso__txt", children=[
-                                 html.Div([html.B(b), html.Span(" · " + c)], className="pres-uso__cab"), html.Span(d)])]) for a, b, c, d in uso]),
-                         html.Div(className="pres-nota", children=[html.B("Son prácticas permanentes, no solo para el periodo simulado: "),
-                                                                   "7 recomendaciones que se aplican siempre, y el sistema mide cada mes si están funcionando para ir mejorando poco a poco."]),
-                         html.Div(className="pres-nota pres-nota--pedido", children=[
-                             html.B("Lo que pedimos: "), "registrar el triage y el servicio al llegar. Con eso, Paciente en espera duplica su mejora (de 8,4 % a 16,9 %)."])]),
-                     html.Div(className="pres-col pres-col--ancha", children=[
-                         html.Div(className="pres-chat asis-scope", children=[
-                             html.Div(className="pres-chat__cab", children=[ico("ico-chat"), html.B("Asistente de flujo HUN"),
-                                                                             html.Span("preguntas en lenguaje natural sobre el análisis", className="pres-chat__sub")]),
-                             html.Div(id="pres-chat-log", className="asis-log pres-chat__log")])])]),
+                 html.Div(className="pres-chat pres-chat--sola asis-scope", children=[
+                     html.Div(className="pres-chat__cab", children=[ico("ico-chat"), html.B("Asistente de flujo HUN"),
+                                                                     html.Span("preguntas en lenguaje natural sobre el análisis", className="pres-chat__sub")]),
+                     html.Div(id="pres-chat-log", className="asis-log pres-chat__log")]),
                  auto="asistente")
 
 
