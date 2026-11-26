@@ -53,6 +53,9 @@ IMPACTO = {
     "alta":        {"camas": 119.3, "sat": 86.8, "cola": 28.3, "faltan": 14.0, "ingresos": 21.23, "cap10": 134},
     "alta_optima": {"camas": 115.3, "sat": 78.6, "cola": 27.5, "faltan": 10.5, "ingresos": 21.24, "cap10": 130},
     "tu_doble":    {"camas": 123.3, "sat": 92.4, "cola": 26.6, "faltan": 17.6, "ingresos": 21.07, "cap10": 138},
+    # un año completo (365 dias, 1000 repeticiones), operacion normal, sin y con todas las recomendaciones medibles (R7 + R4); totales del año
+    "anio_hoy":    {"camas": 112.13, "dias_sobre": 246.5, "faltan": 8.48, "cola_dias": 9229.8, "ingresos_anio": 7167.7, "llegadas_anio": 94477.4},
+    "anio_todas":  {"camas": 107.40, "dias_sobre": 192.0, "faltan": 5.47, "cola_dias": 8950.3, "ingresos_anio": 7168.7, "llegadas_anio": 94477.4},
 }
 A, M = IMPACTO["alta"], IMPACTO["alta_optima"]                                      # el caso en vivo, sin y con la mejora
 CAMAS_LIBRES = A["camas"] - M["camas"]                                             # 4,0 camas desocupadas en promedio
@@ -62,6 +65,17 @@ EXTRA_DIA = CAMAS_LIBRES / ESTANCIA_MEDIA                                       
 EXTRA_CASO, EXTRA_ANIO = EXTRA_DIA * DIAS_SIM, EXTRA_DIA * 365
 EXTRA_ANIO_TXT = f"~{int(round(EXTRA_ANIO, -1))}"
 EXTRA_CASO_TXT = f"~{int(round(EXTRA_CASO))}"
+# Qué gana el hospital en un año completo con todas las recomendaciones
+YH, YT = IMPACTO["anio_hoy"], IMPACTO["anio_todas"]
+ANIO_DIAS_CAMA = (YH["camas"] - YT["camas"]) * 365                                  # ~1.730 dias-cama liberados en el año
+ANIO_PACIENTES = ANIO_DIAS_CAMA / ESTANCIA_MEDIA                                     # ~320 pacientes hospitalizados mas
+ANIO_DIAS_SOBRE = YH["dias_sobre"] - YT["dias_sobre"]                                # ~54 dias menos con sobrecupo
+ANIO_HORAS_ESPERA = (YH["cola_dias"] - YT["cola_dias"]) * 24                         # ~6.700 horas menos de espera por cama
+ANIO_MENOS_FALTAN = 100 * (1 - YT["faltan"] / YH["faltan"])                          # 35 % menos camas faltantes
+
+
+def _redondo(x, a):
+    return f"{int(round(x / a) * a):,}".replace(",", ".")
 
 ETAPAS = ["Problema", "Solución", "Resultados", "Confianza", "Aplicación"]
 MODULOS = [("ico-forecast", "Pronosticador"), ("ico-wait", "Paciente en espera"), ("ico-stay", "Paciente en cama"),
@@ -273,9 +287,8 @@ def d5():
                              id="pres-previa-graf", config={"displayModeBar": False, "responsive": True}, style={"height": "720px"}))]))]),
                  html.Div(id="pres-sim-ganancia", className="pres-notifs", children=[
                      html.Div(className="pres-notif", children=[ico(a, "pres-ico--blanco"), html.Div([html.B(b), html.Span(c)])]) for a, b, c in (
-                         ("ico-bed", f"{coma(CAMAS_LIBRES, 1)} camas desocupadas cada día", "con la mejora, sin construir camas nuevas"),
+                         ("ico-bed", f"{coma(CAMAS_LIBRES, 1)} camas desocupadas cada día", "con la mejora, sin adquirir camas nuevas"),
                          ("ico-patient", f"{EXTRA_CASO_TXT} pacientes hospitalizados más", "en estos 3 meses de temporada alta"),
-                         ("ico-season", f"{EXTRA_ANIO_TXT} pacientes más al año", "si se mantiene ese ritmo"),
                          ("ico-occup", f"{coma(MENOS_FALTAN, 0)} % menos camas faltantes", f"de {coma(A['faltan'], 1)} a {coma(M['faltan'], 1)} en promedio"),
                          ("ico-alert", f"{coma(100 * (1 - M['sat'] / A['sat']), 0)} % menos días con sobrecupo", f"de {coma(A['sat'], 0)} % a {coma(M['sat'], 0)} % de los días"))]),
                  html.Div(id="pres-cursor", className="pres-cursor"), clase="pres-diapo--sim", auto="simulador")
@@ -290,28 +303,30 @@ def d6():
 
 def d7():
     filas = [("ico-stay", "Revisión semanal de estancias largas", "15 % menos de duración en las estancias de más de 14 días", "Desocupa las camas: casi toda la ganancia viene de aquí"),
-             ("ico-clock", "Altas antes del mediodía", "30 % de las altas de la tarde pasa a la mañana", f"Menos pacientes esperando cama a la vez: {coma(A['cola'], 1)} → {coma(M['cola'], 1)}"),
+             ("ico-clock", "Altas antes del mediodía", "30 % de las altas de la tarde pasa a la mañana", "Menos pacientes esperando cama a la vez"),
              ("ico-recs", "Reunión diaria de camas y alerta a las 48 h", "Lo que permite actuar a tiempo sobre lo anterior", "En otros hospitales, la espera bajó de 16,6 a 9,5 h (Alotaibi 2021)")]
-    return diapo(7, "Resultados", "Qué gana el hospital: atender a más pacientes con las mismas camas",
-                 f"En la temporada alta que acabamos de simular (3 meses), aplicando la mejora que propuso la alerta.",
+    return diapo(7, "Resultados", "Qué gana el hospital en un año, con las mismas camas",
+                 "Un año completo de operación normal, sin y con todas nuestras recomendaciones aplicadas.",
                  html.Div(className="pres-ganancias", children=[
-                     html.Div(className="pres-gran", children=[ico("ico-patient", "pres-ico--blanco"), html.B(EXTRA_CASO_TXT),
-                                                               html.Span("pacientes hospitalizados más en la temporada"),
-                                                               html.Small(f"~{coma(EXTRA_DIA, 1)} pacientes más cada día")]),
-                     html.Div(className="pres-gran", children=[ico("ico-season", "pres-ico--blanco"), html.B(EXTRA_ANIO_TXT),
-                                                               html.Span("pacientes hospitalizados más al año"),
-                                                               html.Small("si se mantiene ese ritmo todo el año")]),
-                     html.Div(className="pres-gran pres-gran--claro", children=[ico("ico-bed"), html.B(coma(CAMAS_LIBRES, 1)),
-                                                                                html.Span("camas desocupadas cada día, en promedio"),
-                                                                                html.Small("sin construir ni una cama nueva")]),
-                     html.Div(className="pres-gran pres-gran--claro", children=[ico("ico-occup"), html.B(f"−{coma(MENOS_FALTAN, 0)} %"),
-                                                                                html.Span("de camas faltantes"),
-                                                                                html.Small(f"de {coma(A['faltan'], 1)} a {coma(M['faltan'], 1)} en promedio")])]),
+                     html.Div(className="pres-gran", children=[ico("ico-patient", "pres-ico--blanco"), html.B(f"~{_redondo(ANIO_PACIENTES, 10)}"),
+                                                               html.Span("pacientes más hospitalizados al año"),
+                                                               html.Small("capacidad extra para quienes necesitan cama")]),
+                     html.Div(className="pres-gran", children=[ico("ico-bed", "pres-ico--blanco"), html.B(f"≈{int(round(YH['camas'] - YT['camas']))}"),
+                                                               html.Span("camas ganadas, sin adquirirlas"),
+                                                               html.Small(f"{coma(YH['camas'] - YT['camas'], 1)} camas libres más cada día")]),
+                     html.Div(className="pres-gran pres-gran--claro", children=[ico("ico-wait"), html.B(f"~{_redondo(ANIO_HORAS_ESPERA, 100)}"),
+                                                                                html.Span("horas menos esperando cama"),
+                                                                                html.Small(f"entre los ~{_redondo(YT['ingresos_anio'], 100)} pacientes que la necesitan al año")]),
+                     html.Div(className="pres-gran pres-gran--claro", children=[ico("ico-occup"), html.B(f"−{coma(ANIO_MENOS_FALTAN, 0)} %"),
+                                                                                html.Span("camas faltantes"),
+                                                                                html.Small(f"de {coma(YH['faltan'], 1)} a {coma(YT['faltan'], 1)} en promedio cada día")])]),
                  html.Div(className="pres-recs", children=[
                      html.Div(className="pres-rec", children=[ico(a, "pres-ico--grande"), html.Div([html.B(b), html.Span(c), html.Em(d)], className="pres-rec__txt")])
                      for a, b, c, d in filas]),
-                 fuente(f"Simulación de 90 días desde el 9-abr-2026 con 10 % más llegadas, 400 repeticiones. Pacientes más = camas desocupadas ÷ estancia media "
-                        f"({coma(ESTANCIA_MEDIA, 1)} días): es una aproximación."))
+                 html.Div(className="pres-nota pres-nota--sim", children=[ico("ico-models"), html.Span([
+                     html.B("Antes de invertir: "), "el Simulador integral muestra escenarios futuros antes de comprar camas, contratar personal o cambiar procesos."])]),
+                 fuente(f"Simulador integral, 365 días desde el 9-abr-2026, 1.000 repeticiones; mejoras medidas: estancias largas −15 % y 30 % de altas a la mañana. "
+                        f"Pacientes más = días-cama liberados ÷ estancia media ({coma(ESTANCIA_MEDIA, 1)} días): es una aproximación."))
 
 
 def d8():

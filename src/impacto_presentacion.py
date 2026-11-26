@@ -52,5 +52,15 @@ for nombre, k in ESCENARIOS:
     res[nombre] = dict(camas=round(float(t.mean()), 1), sat=round(100 * float((t > CAP).mean()), 1), cola=round(float(o["cola"].mean()), 1),
                        faltan=round(float(np.maximum(t - CAP, 0).mean()), 2), ingresos=round(float(o["ingresos_cama"].mean()), 2), cap10=camas_para_10(t))
     print(nombre, res[nombre], flush=True)
+
+# Un año completo (365 dias, 1000 repeticiones) con la operacion de hoy y con todas las recomendaciones medibles (R7 + R4):
+# diapositiva «Qué gana el hospital». Totales del año, promedio entre repeticiones.
+for nombre, k in (("anio_hoy", {}), ("anio_todas", OPTIMA)):
+    o = si.simular_integral(scm.ULTIMO_CONFIABLE, 365, n_rep=1000, acoplar_estancia=True, modelos=MOD, casos={}, **k)[1]
+    t = o["total"]
+    res[nombre] = dict(camas=round(float(t.mean()), 2), dias_sobre=round(float((t > CAP).sum(1).mean()), 1),
+                       faltan=round(float(np.maximum(t - CAP, 0).mean()), 2), cola_dias=round(float(o["cola"].sum(1).mean()), 1),
+                       ingresos_anio=round(float(o["ingresos_cama"].sum(1).mean()), 1), llegadas_anio=round(float(o["llegadas"].sum(1).mean()), 1))
+    print(nombre, res[nombre], flush=True)
 if len(sys.argv) > 1:
     json.dump(res, open(sys.argv[1], "w"), indent=1)

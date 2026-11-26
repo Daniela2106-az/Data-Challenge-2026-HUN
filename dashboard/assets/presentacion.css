@@ -459,3 +459,21 @@ html.pres-pantalla body { overflow: hidden; }
 .pres-cierre-final.is-activa .pres-portada__grid span.libre { animation: presLibera .7s ease-out calc(2.4s + var(--k) * 180ms) both; }
 @keyframes presVacia { from { opacity: 1; transform: none; } to { opacity: 0; transform: scale(.3); } }
 @keyframes presLibera { from { background: #fff; } to { background: #3ddc84; box-shadow: 0 0 0 3px rgba(61,220,132,.35); } }
+
+/* Qué gana el hospital: nota «Antes de invertir» */
+.pres-nota--sim { display: flex; align-items: center; gap: 14px; border-left: 5px solid var(--brand); font-size: 18px; }
+.pres-nota--sim .ico { flex: none; width: 30px; height: 30px; }
+.pres-diapo[data-n="7"] .pres-ganancias .pres-gran { padding: 18px 24px; gap: 6px; }
+.pres-diapo[data-n="7"] .pres-ganancias .pres-gran b { font-size: 68px; }
+.pres-diapo[data-n="7"] .pres-rec { padding-top: 16px; padding-bottom: 16px; }
+.pres-diapo[data-n="7"] .pres-ganancias { flex: none; }
+.pres-diapo[data-n="7"] .pres-ganancias .pres-gran { justify-content: center; min-height: 0; }
+.pres-diapo[data-n="7"] .pres-fuente { margin-bottom: 18px; }
+/* Qué gana: cuatro tarjetas iguales, contenido alineado arriba y a la misma altura */
+.pres-diapo[data-n="7"] .pres-ganancias { grid-template-columns: repeat(4, 1fr); }
+.pres-diapo[data-n="7"] .pres-ganancias .pres-gran { justify-content: flex-start; padding: 26px 26px 24px; gap: 8px; }
+.pres-diapo[data-n="7"] .pres-ganancias .pres-gran .ico { margin-bottom: 6px; }
+.pres-diapo[data-n="7"] .pres-ganancias .pres-gran b { font-size: 72px; }
+.pres-diapo[data-n="7"] .pres-ganancias .pres-gran span { font-size: 21px; line-height: 1.25; min-height: 2.5em; }
+.pres-diapo[data-n="7"] .pres-ganancias .pres-gran small { font-size: 16px; line-height: 1.35; }
+.pres-diapo[data-n="7"] .pres-rec { min-height: 0; padding: 20px 22px; }
