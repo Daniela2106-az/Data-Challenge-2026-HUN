@@ -9,7 +9,7 @@
 //   - Diapositiva del asistente (data-auto="asistente"): escribe las dos preguntas y muestra las respuestas guardadas, con el diseno del asistente.
 (function () {
   var ANCHO = 1600, ALTO = 900;
-  var LEER_ALERTA = 12000, LEER_OTRA_ALERTA = 250, LEER_CONFIRMACION = 7500;   // la alerta de la mejora y las listas de pacientes se dejan leer       // ms que se deja ver la alerta y el panel verde antes de seguir
+  var LEER_ALERTA = 16000, LEER_OTRA_ALERTA = 250, LEER_CONFIRMACION = 7500;   // la alerta de la mejora y las listas de pacientes se dejan leer       // ms que se deja ver la alerta y el panel verde antes de seguir
   var raizActual = null, estado = null;
 
   function $(id) { return document.getElementById(id); }
@@ -132,8 +132,23 @@
   });
 
   // ------------------------------------------------------------ simulador: se reproduce y atiende las alertas solo
+  function notifs(ver) {
+    var g = $('pres-sim-ganancia'); if (!g) { return; }
+    Array.prototype.forEach.call(g.children, function (n, k) {
+      if (ver) { setTimeout(function () { n.classList.add('is-visible'); }, 400 + k * 900); } else { n.classList.remove('is-visible'); }
+    });
+  }
+  // Con el video grabado (pres-video): se reproduce desde el inicio; al terminar salen las notificaciones
+  function arrancarVideo(v) {
+    estado.sim = {video: true};
+    notifs(false);
+    v.onended = function () { if (estado.sim && estado.sim.video) { notifs(true); } };
+    try { v.currentTime = 0; } catch (e) {}
+    var p = v.play(); if (p && p.catch) { p.catch(function () {}); }
+  }
   function arrancarSimulador() {
     if (estado.sim) { return; }                     // ya corrio: no se reinicia
+    var v = $('pres-video'); if (v) { arrancarVideo(v); return; }
     estado.sim = {aplicada: false, firma: '', t: null, confT: null};
     var intentos = 0;
     var espera = setInterval(function () {
@@ -150,6 +165,8 @@
   // Volver a empezar: pausa si esta corriendo, pulsa «Reiniciar» (vuelve los controles a como opera hoy y borra la corrida) y reproduce de nuevo.
   function reiniciarSimulador() {
     var st = estado.sim;
+    var v = $('pres-video');
+    if (v) { notifs(false); v.onended = null; v.pause(); v.load(); estado.sim = null; return; }   // vuelve al cuadro fijo (poster)
     if (st) { clearInterval(st.vigilante); clearTimeout(st.t); clearTimeout(st.confT); }
     estado.sim = {aplicada: false, firma: '', t: null, confT: null, reiniciando: true};
     var g0 = $('pres-sim-ganancia'); if (g0) { Array.prototype.forEach.call(g0.children, function (n) { n.classList.remove('is-visible'); }); }
@@ -273,9 +290,18 @@
   }
 
   // ------------------------------------------------------------ montaje: Dash dibuja la pagina despues de cargar, y se puede entrar y salir
+  // El video del simulador se descarga entero al abrir la presentacion: al darle play no depende de la red
+  function precargarVideo() {
+    var v = $('pres-video'); if (!v || v.getAttribute('data-precargado') || !window.fetch) { return; }
+    v.setAttribute('data-precargado', '1');
+    fetch(v.getAttribute('src')).then(function (r) { return r.blob(); }).then(function (b) {
+      if (!estado || !estado.sim) { v.src = URL.createObjectURL(b); v.load(); }
+    }).catch(function () {});
+  }
   function iniciar(raiz) {
     raizActual = raiz;
     estado = {i: -1, sim: null, asis: false, secT: null};
+    setTimeout(precargarVideo, 50);
     document.documentElement.classList.add('en-presentacion');
     var i = 0; try { i = parseInt(sessionStorage.getItem('pres-diapo') || '0', 10) || 0; } catch (e) {}
     if (i === 5 || i === 6) { i = 4; }        // si se recarga en la diapositiva del simulador, se vuelve a la anterior para que arranque al entrar

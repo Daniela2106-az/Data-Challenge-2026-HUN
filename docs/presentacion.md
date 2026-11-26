@@ -18,3 +18,11 @@ Página `/presentacion` del dashboard (menú lateral, sección «Presentación»
 
 ## Reutiliza, no recalcula
 Las gráficas de Resumen, Llegada y altas, Espera de cama y Estancias largas se llaman desde sus páginas; el Simulador integral se incrusta completo (su `layout()`, sin persistencia de sesión). Los módulos de `pages/` se toman de `dash.page_registry`: Dash ejecuta cada archivo de `pages/` una sola vez y una importación propia registraría sus callbacks dos veces.
+
+## Video del simulador (diapositiva 5)
+
+En Render el simulador se trababa al recalcular después de aplicar la mejora, así que la diapositiva 5 reproduce un video de una corrida real
+hecha en local (`dashboard/assets/presentacion_simulador.mp4`, con su cuadro fijo `.jpg`). El video se descarga entero al abrir la presentación.
+La diapositiva 6 usa esa misma corrida, guardada en `dashboard/presentacion_simulacion.json` (solo series simuladas y agregadas).
+Para regenerarlo: `PRES_GRABAR=1 python3 dashboard/main.py` y luego `python3 src/grabar_video_presentacion.py`.
+`/presentacion?grabar=1` muestra el simulador en vivo, como antes.

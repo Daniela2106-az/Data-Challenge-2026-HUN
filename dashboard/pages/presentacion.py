@@ -4,8 +4,8 @@ dashboard/pages/presentacion.py  -  «Presentación» de la final del Data Chall
 Doce diapositivas para presentar en 10 minutos ante el hospital, con el mismo estilo del dashboard. Nadie toca el computador: solo se pasa de
 diapositiva (flechas, AvPág/RePág, espacio o el clicker). Lo demas ocurre solo (dashboard/assets/presentacion.js):
   - todo entra con una animacion escalonada; «Qué construimos» arma la cadena de modulos sola, una pieza tras otra;
-  - el Simulador integral se reproduce al llegar; cuando salta una alerta se deja ver y se aplica sola la mejora (la primera vez) o se continua.
-    Si se vuelve a su diapositiva desde la anterior, arranca de nuevo; si se vuelve desde la siguiente, se queda como iba;
+  - el Simulador integral es un VIDEO de una corrida real grabada en local (src/grabar_video_presentacion.py): se ve quieto con el resultado
+    completo y la pulsacion de «siguiente» lo reproduce; al terminar salen las notificaciones. Con ?grabar=1 (o sin video) corre en vivo;
   - las dos preguntas del asistente se «escriben» solas con respuestas reales del asistente guardadas antes (presentacion_asistente.json).
 
 Orden (lo pidieron los organizadores: valor agregado, solidez de la metodologia, resultados y aplicabilidad en el hospital):
@@ -24,6 +24,7 @@ semilla fija), corrido el 26-nov-2026; todas las diapositivas citan las mismas. 
 dic-2025), con la serie real completa.
 """
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -41,6 +42,11 @@ from modo import repeticiones  # noqa: E402
 dash.register_page(__name__, path="/presentacion", name="Presentación", title="Presentación - HUN", order=0.2)
 
 CAMAS = 106
+# Video de la corrida del simulador (diapositiva 5): se graba en local con ?grabar=1 (docs/presentacion.md) para que en la final no dependa de la red.
+# Sin el video, o con ?grabar=1, la diapositiva usa el simulador en vivo. PRES_GRABAR=1 guarda la corrida en DATOS_SIM para la diapositiva 6.
+ASSETS = Path(__file__).resolve().parent.parent / "assets"
+VIDEO, POSTER = "presentacion_simulador.mp4", "presentacion_simulador.jpg"
+DATOS_SIM = Path(__file__).resolve().parent.parent / "presentacion_simulacion.json"
 DIAS_SIM = 90                       # «90 días» en el selector del simulador (PLAZOS de pages/simulador.py): la reproduccion dura menos de un minuto
 LLEGADAS_CASO = 10                  # caso en vivo: temporada alta, llega 10 % mas pacientes
 
@@ -269,29 +275,45 @@ def d4():
                  auto="secuencia")
 
 
-def d5():
+def d5(grabar=False):
     caso = [("ico-season", "Periodo", "3 meses desde el 9 de abril de 2026"),
             ("ico-demand", "Situación", f"temporada alta: llega {LLEGADAS_CASO} % más pacientes, como en una temporada de infecciones respiratorias"),
             ("ico-group", "Pacientes", "todos los perfiles, con la mezcla real de 2025 (edad y forma de llegada)"),
-            ("ico-alert", "Alerta", "«Faltarán camas»: propone revisar las estancias largas (15 % menos) y adelantar el 30 % de las altas de la tarde"),
-            ("ico-occup", "Qué se ve", "arriba, llegadas y altas; en el medio, camas ocupadas frente a las 106; abajo, pacientes esperando cama. "
-                                       "En gris punteado, cómo habría seguido sin la mejora")]
-    return diapo(5, "Resultados", "Simulador integral: una temporada alta, en vivo",
+            ("ico-alert", "Alerta", "«Faltarán camas»: propone revisar las estancias largas (15 % menos) y adelantar el 30 % de las altas de la tarde")]
+    titulo = "Simulador integral: una temporada alta, día a día"
+    bajada = "Los cinco módulos juntos: el hospital corre día a día, salta la alerta y se aplica la mejora de nuestras recomendaciones."
+    notifs = html.Div(id="pres-sim-ganancia", className="pres-notifs", children=[
+        html.Div(className="pres-notif", children=[ico(a, "pres-ico--blanco"), html.Div([html.B(b), html.Span(c)])]) for a, b, c in (
+            ("ico-bed", f"{coma(CAMAS_LIBRES, 1)} camas desocupadas cada día", "con la mejora, sin adquirir camas nuevas"),
+            ("ico-patient", f"{EXTRA_CASO_TXT} pacientes hospitalizados más", "en estos 3 meses de temporada alta"),
+            ("ico-occup", f"{coma(MENOS_FALTAN, 0)} % menos camas faltantes", f"de {coma(A['faltan'], 1)} a {coma(M['faltan'], 1)} en promedio"),
+            ("ico-alert", f"{coma(100 * (1 - M['sat'] / A['sat']), 0)} % menos días con sobrecupo", f"de {coma(A['sat'], 0)} % a {coma(M['sat'], 0)} % de los días"))])
+    if not grabar and (ASSETS / VIDEO).exists():          # pantalla dividida: a la izquierda los textos, a la derecha el video entero
+        return html.Section(className="pres-diapo pres-diapo--sim pres-sim-video", **{"data-n": "5", "data-etapa": "Resultados", "data-auto": "simulador"}, children=[
+            html.Div(className="pres-sim-video__izq", children=[
+                html.Header([html.Div("Resultados", className="pres-eyebrow"), html.H2(titulo, className="pres-titulo"),
+                             dcc.Markdown(bajada, className="pres-bajada")], className="pres-cab"),
+                html.Div(className="pres-caso", children=[html.Div("El caso", className="pres-caso__t"), *[item(b, c, a) for a, b, c in caso]])]),
+            _caja_simulador(grabar), notifs])
+    return diapo(5, "Resultados", titulo,
                  "Los cinco módulos juntos: el hospital corre día a día, salta la alerta y se aplica la mejora de nuestras recomendaciones.",
                  html.Div(className="pres-sim-fila", children=[
                      html.Div(className="pres-caso", children=[html.Div("El caso", className="pres-caso__t"),
                                                                *[item(b, c, a) for a, b, c in caso]]),
-                     html.Div(className="pres-ajustar", children=html.Div(className="pres-sim-caja", children=[
-                         _simulador(),
-                         html.Div(id="pres-previa", className="pres-previa", children=dcc.Graph(
-                             id="pres-previa-graf", config={"displayModeBar": False, "responsive": True}, style={"height": "720px"}))]))]),
-                 html.Div(id="pres-sim-ganancia", className="pres-notifs", children=[
-                     html.Div(className="pres-notif", children=[ico(a, "pres-ico--blanco"), html.Div([html.B(b), html.Span(c)])]) for a, b, c in (
-                         ("ico-bed", f"{coma(CAMAS_LIBRES, 1)} camas desocupadas cada día", "con la mejora, sin adquirir camas nuevas"),
-                         ("ico-patient", f"{EXTRA_CASO_TXT} pacientes hospitalizados más", "en estos 3 meses de temporada alta"),
-                         ("ico-occup", f"{coma(MENOS_FALTAN, 0)} % menos camas faltantes", f"de {coma(A['faltan'], 1)} a {coma(M['faltan'], 1)} en promedio"),
-                         ("ico-alert", f"{coma(100 * (1 - M['sat'] / A['sat']), 0)} % menos días con sobrecupo", f"de {coma(A['sat'], 0)} % a {coma(M['sat'], 0)} % de los días"))]),
+                     _caja_simulador(grabar)]),
+                 notifs,
                  html.Div(id="pres-cursor", className="pres-cursor"), clase="pres-diapo--sim", auto="simulador")
+
+
+def _caja_simulador(grabar):
+    if not grabar and (ASSETS / VIDEO).exists():
+        return html.Div(className="pres-video-marco", children=html.Video(
+            id="pres-video", src=dash.get_asset_url(VIDEO), poster=dash.get_asset_url(POSTER), preload="auto", muted=True, controls=False,
+            className="pres-video", **{"playsInline": True}))
+    return html.Div(className="pres-ajustar", children=html.Div(className="pres-sim-caja", children=[
+        _simulador(),
+        html.Div(id="pres-previa", className="pres-previa", children=dcc.Graph(
+            id="pres-previa-graf", config={"displayModeBar": False, "responsive": True}, style={"height": "720px"}))]))
 
 
 def d6():
@@ -412,9 +434,10 @@ def _preguntas():
         return []
 
 
-def layout(**_parametros):          # Dash pasa aqui los parametros de la direccion (p. ej. ?diapo=5, que usa presentacion.js para ensayar)
-    diapos = [d0(), d1(), d2(), d3(), d4(), d5(), d6(), d7(), d8(), d9(), d10(), d11()]
-    return html.Div(id="pres-raiz", className="pres", **{"data-preguntas": json.dumps(_preguntas(), ensure_ascii=False)}, children=[
+def layout(**parametros):          # Dash pasa aqui los parametros de la direccion (p. ej. ?diapo=5, que usa presentacion.js para ensayar)
+    grabar = parametros.get("grabar") == "1"
+    diapos = [d0(), d1(), d2(), d3(), d4(), d5(grabar), d6(), d7(), d8(), d9(), d10(), d11()]
+    return html.Div(id="pres-raiz", className="pres" + (" pres--grabando" if grabar else ""), **{"data-preguntas": json.dumps(_preguntas(), ensure_ascii=False)}, children=[
         html.Div(className="pres-escenario", id="pres-escenario", children=[
             html.Div(className="pres-lienzo", id="pres-lienzo", children=[
                 html.Div(className="pres-etapas", children=[html.Span(e, className="pres-etapa", **{"data-etapa": e}) for e in ETAPAS]),
@@ -573,6 +596,20 @@ def validacion(tema):
 # ---------------------------------------------------------------- resultados del simulador (diapositiva 6): la misma corrida que se vio correr
 @callback(Output("pres-sim-resultados", "children"), Input("simint-datos", "data"), State("theme-store", "data"), prevent_initial_call=True)
 def resultados_simulacion(data, tema):
+    if data and os.environ.get("PRES_GRABAR") and data.get("sinmej_total_p50"):      # al grabar el video: se guarda la corrida con la mejora
+        DATOS_SIM.write_text(json.dumps({k: v for k, v in data.items() if k != "pacientes"}, ensure_ascii=False))
+    return _resultados(data, tema)
+
+
+@callback(Output("pres-sim-resultados", "children", allow_duplicate=True), Input("theme-store", "data"), prevent_initial_call="initial_duplicate")
+def resultados_grabados(tema):
+    """Con el video, la diapositiva 6 muestra la corrida grabada (la misma que se ve en el video)."""
+    if not DATOS_SIM.exists():
+        return dash.no_update
+    return _resultados(json.loads(DATOS_SIM.read_text()), tema)
+
+
+def _resultados(data, tema):
     sim = _modulo("/simulador")
     if not data or sim is None or "composicion" not in data or not data.get("dist"):
         return dash.no_update
